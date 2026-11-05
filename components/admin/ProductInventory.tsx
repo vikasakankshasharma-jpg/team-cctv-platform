@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { 
   Search, ChevronDown, ChevronRight, Edit2, Copy, Camera, Monitor, Plus, 
   Layers, Zap, Package, HardDrive, Cpu, ShieldCheck,
-  ListFilter, Filter, Wrench, Shield, Tv, Box, Server, Square, CheckSquare, Trash2, X
+  ListFilter, Filter, Wrench, Shield, Tv, Box, Server, Square, CheckSquare, Trash2, X, ArrowUp, ArrowDown, ArrowUpDown
 } from "lucide-react";
 import type { Product } from "@/types";
 import { 
@@ -66,6 +66,42 @@ function Chip({ label, value, dot }: { label: string; value: number; dot: string
 
 // â”€â”€â”€ SubCategory Group â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+
+type SortField = "name" | "brand" | "stock" | "price" | "status" | null;
+type SortDirection = "asc" | "desc";
+
+function sortProducts(products: Product[], field?: SortField, direction?: SortDirection): Product[] {
+  if (!field) return products;
+  const dir = direction || "asc";
+
+  return [...products].sort((a, b) => {
+    let cmp = 0;
+    if (field === "name") {
+      const nameA = (a.display_name || a.technical_name || "").toLowerCase();
+      const nameB = (b.display_name || b.technical_name || "").toLowerCase();
+      cmp = nameA.localeCompare(nameB);
+    } else if (field === "brand") {
+      const brandA = (a.brand || "").toLowerCase();
+      const brandB = (b.brand || "").toLowerCase();
+      cmp = brandA.localeCompare(brandB);
+    } else if (field === "price") {
+      const priceA = sellingPrice(a);
+      const priceB = sellingPrice(b);
+      cmp = priceA - priceB;
+    } else if (field === "stock") {
+      const stockA = typeof a.stock_quantity === "number" ? a.stock_quantity : (a.in_stock ? 100 : -1);
+      const stockB = typeof b.stock_quantity === "number" ? b.stock_quantity : (b.in_stock ? 100 : -1);
+      cmp = stockA - stockB;
+    } else if (field === "status") {
+      const statusA = a.is_active ? 1 : 0;
+      const statusB = b.is_active ? 1 : 0;
+      cmp = statusA - statusB;
+    }
+
+    return dir === "asc" ? cmp : -cmp;
+  });
+}
+
 function SubCategoryGroup({
   label,
   products,
@@ -76,7 +112,10 @@ function SubCategoryGroup({
   selectedIds,
   onToggleSelect,
   onSelectAllGroup,
-  onDeselectAllGroup
+  onDeselectAllGroup,
+  sortField,
+  sortDirection = "asc",
+  onToggleSort
 }: {
   label: string;
   products: Product[];
@@ -89,11 +128,18 @@ function SubCategoryGroup({
   onSelectAllGroup?: (ids: string[]) => void;
   onDeselectAllGroup?: (ids: string[]) => void;
   onAddProduct?: (category: string) => void;
+  sortField?: SortField;
+  sortDirection?: SortDirection;
+  onToggleSort?: (field: SortField) => void;
 }) {
   const [open, setOpen] = useState(true);
+
+  const sortedProducts = useMemo(() => {
+    return sortProducts(products, sortField, sortDirection);
+  }, [products, sortField, sortDirection]);
   
-  const allSelected = products.every(p => p.id && selectedIds?.has(p.id));
-  const someSelected = products.some(p => p.id && selectedIds?.has(p.id));
+  const allSelected = sortedProducts.every(p => p.id && selectedIds?.has(p.id));
+  const someSelected = sortedProducts.some(p => p.id && selectedIds?.has(p.id));
 
   const handleSelectAll = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -137,18 +183,83 @@ function SubCategoryGroup({
               <col style={{ width: '10%' }} />
             </colgroup>
             <thead className="bg-muted/20 border-y border-border">
-              <tr className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                <th className="px-6 py-3 font-medium">SKU / Information</th>
-                <th className="px-6 py-3 font-medium">Manufacturer</th>
+              <tr className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground select-none">
+                <th 
+                  onClick={() => onToggleSort?.("name")} 
+                  className="px-6 py-3 font-medium cursor-pointer hover:text-foreground transition-colors group/header"
+                  title="Click to sort by SKU / Product Name"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>SKU / Information</span>
+                    {sortField === "name" ? (
+                      sortDirection === "asc" ? <ArrowUp className="w-3.5 h-3.5 text-primary shrink-0" /> : <ArrowDown className="w-3.5 h-3.5 text-primary shrink-0" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-muted-foreground/40 opacity-0 group-hover/header:opacity-100 transition-opacity shrink-0" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => onToggleSort?.("brand")} 
+                  className="px-6 py-3 font-medium cursor-pointer hover:text-foreground transition-colors group/header"
+                  title="Click to sort by Manufacturer"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>Manufacturer</span>
+                    {sortField === "brand" ? (
+                      sortDirection === "asc" ? <ArrowUp className="w-3.5 h-3.5 text-primary shrink-0" /> : <ArrowDown className="w-3.5 h-3.5 text-primary shrink-0" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-muted-foreground/40 opacity-0 group-hover/header:opacity-100 transition-opacity shrink-0" />
+                    )}
+                  </div>
+                </th>
                 <th className="px-6 py-3 font-medium">Specs</th>
-                <th className="px-6 py-3 text-center font-medium">Stock</th>
-                <th className="px-6 py-3 text-right font-medium">Pricing</th>
-                <th className="px-6 py-3 text-center font-medium">Status</th>
+                <th 
+                  onClick={() => onToggleSort?.("stock")} 
+                  className="px-6 py-3 text-center font-medium cursor-pointer hover:text-foreground transition-colors group/header"
+                  title="Click to sort by Stock Availability"
+                >
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span>Stock</span>
+                    {sortField === "stock" ? (
+                      sortDirection === "asc" ? <ArrowUp className="w-3.5 h-3.5 text-primary shrink-0" /> : <ArrowDown className="w-3.5 h-3.5 text-primary shrink-0" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-muted-foreground/40 opacity-0 group-hover/header:opacity-100 transition-opacity shrink-0" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => onToggleSort?.("price")} 
+                  className="px-6 py-3 text-right font-medium cursor-pointer hover:text-foreground transition-colors group/header"
+                  title="Click to sort by Pricing"
+                >
+                  <div className="flex items-center justify-end gap-1.5">
+                    <span>Pricing</span>
+                    {sortField === "price" ? (
+                      sortDirection === "asc" ? <ArrowUp className="w-3.5 h-3.5 text-primary shrink-0" /> : <ArrowDown className="w-3.5 h-3.5 text-primary shrink-0" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-muted-foreground/40 opacity-0 group-hover/header:opacity-100 transition-opacity shrink-0" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => onToggleSort?.("status")} 
+                  className="px-6 py-3 text-center font-medium cursor-pointer hover:text-foreground transition-colors group/header"
+                  title="Click to sort by Active / Inactive Status"
+                >
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span>Status</span>
+                    {sortField === "status" ? (
+                      sortDirection === "asc" ? <ArrowUp className="w-3.5 h-3.5 text-primary shrink-0" /> : <ArrowDown className="w-3.5 h-3.5 text-primary shrink-0" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-muted-foreground/40 opacity-0 group-hover/header:opacity-100 transition-opacity shrink-0" />
+                    )}
+                  </div>
+                </th>
                 <th className="px-6 py-3 text-center font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border bg-card">
-              {products.map((p) => {
+              {sortedProducts.map((p) => {
                 const isSelected = p.id ? selectedIds?.has(p.id) : false;
                 return (
                   <tr
@@ -230,7 +341,7 @@ function SubCategoryGroup({
                     </td>
 
                     <td className="px-6 py-4 text-center">
-                      <Badge variant={p.stock_quantity === undefined ? "secondary" : p.stock_quantity <= 0 ? "destructive" : p.stock_quantity < 10 ? "secondary" : "default"} className={`text-[10px] ${p.stock_quantity !== undefined && p.stock_quantity > 0 && p.stock_quantity >= 10 ? 'bg-success/10 text-success hover:bg-success/20' : ''}`}>
+                      <Badge variant={p.stock_quantity === undefined ? "secondary" : p.stock_quantity <= 0 ? "destructive" : p.stock_quantity < 10 ? "secondary" : "default"} className={`text-[10px] ${p.stock_quantity !== undefined && p.stock_quantity > 0 && p.stock_quantity >= 10 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : ''}`}>
                         {p.stock_quantity === undefined ? "N/A" : p.stock_quantity}
                       </Badge>
                     </td>
@@ -242,27 +353,54 @@ function SubCategoryGroup({
                         </span>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className="text-[10px] text-muted-foreground line-through">₹{Number(p.base_cost || 0).toLocaleString()}</span>
-                          <span className="text-[10px] font-medium text-success">+{p.margin_percentage}%</span>
+                          <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">+{p.margin_percentage}%</span>
                         </div>
                       </div>
                     </td>
 
                     <td className="px-6 py-4 text-center">
-                      <div className="flex flex-col items-center gap-1">
+                      <div className="flex flex-col items-center justify-center gap-1.5">
                         <button
+                          type="button"
                           onClick={() => onToggle(p)}
-                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                            p.is_active ? "bg-success" : "bg-muted"
-                          }`}
+                          title={p.is_active ? "Active in Store & Quotes (Click to Deactivate)" : "Inactive / Archived (Click to Activate)"}
+                          className="group/toggle inline-flex items-center gap-2 cursor-pointer focus:outline-none select-none transition-transform active:scale-95"
                         >
-                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${p.is_active ? 'translate-x-4' : 'translate-x-1'}`} />
+                          {/* High-contrast accessible toggle track */}
+                          <span
+                            className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out border ${
+                              p.is_active
+                                ? "bg-emerald-500 border-emerald-600 dark:bg-emerald-600 dark:border-emerald-500"
+                                : "bg-zinc-200 border-zinc-300 dark:bg-zinc-700 dark:border-zinc-600"
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+                                p.is_active ? "translate-x-4" : "translate-x-0"
+                              }`}
+                            />
+                          </span>
+
+                          {/* Explicit visual text badge with indicator dot */}
+                          {p.is_active ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              Active
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium tracking-wide bg-zinc-100 text-zinc-500 border border-zinc-200 dark:bg-zinc-800/60 dark:text-zinc-400 dark:border-zinc-700">
+                              <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                              Inactive
+                            </span>
+                          )}
                         </button>
-                        {/* Stock status badge */}
+
+                        {/* Stock status badge if out of stock */}
                         {(p.stock_status === "out_of_stock" || p.stock_status === "on_order" || p.stock_status === "discontinued") && (
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide ${
-                            p.stock_status === "out_of_stock" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" :
-                            p.stock_status === "on_order" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
-                            "bg-gray-100 text-gray-500 dark:bg-gray-900/30 dark:text-gray-400"
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border ${
+                            p.stock_status === "out_of_stock" ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800" :
+                            p.stock_status === "on_order" ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800" :
+                            "bg-zinc-100 text-zinc-500 border-zinc-200 dark:bg-zinc-900/30 dark:text-zinc-400 dark:border-zinc-800"
                           }`}>
                             {p.stock_status === "out_of_stock" ? "Out of Stock" : p.stock_status === "on_order" ? "On Order" : "Discontinued"}
                           </span>
@@ -315,7 +453,10 @@ function CategorySection({
   onSelectAllGroup,
   onDeselectAllGroup,
   onAddProduct,
-  filterTech = "all"
+  filterTech = "all",
+  sortField,
+  sortDirection = "asc",
+  onToggleSort
 }: {
   categoryKey: string;
   products: Product[];
@@ -329,6 +470,9 @@ function CategorySection({
   onDeselectAllGroup?: (ids: string[]) => void;
   onAddProduct?: (category: string, technology?: string) => void;
   filterTech?: string;
+  sortField?: SortField;
+  sortDirection?: SortDirection;
+  onToggleSort?: (field: SortField) => void;
 }) {
   const [open, setOpen] = useState(true);
   const cfg = CATEGORIES[categoryKey] || { label: categoryKey, icon: Package };
@@ -440,6 +584,9 @@ function CategorySection({
               onSelectAllGroup={onSelectAllGroup}
               onDeselectAllGroup={onDeselectAllGroup}
               onAddProduct={onAddProduct}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              onToggleSort={onToggleSort}
             />
           ))}
         </div>
@@ -494,6 +641,21 @@ export function ProductInventory({
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterBrand, setFilterBrand] = useState<string>("all");
   const [visibleCount, setVisibleCount] = useState<number>(50);
+  const [sortField, setSortField]       = useState<SortField>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  const handleToggleSort = (field: SortField) => {
+    if (sortField !== field) {
+      setSortField(field);
+      const defaultDir = (field === "price" || field === "stock" || field === "status") ? "desc" : "asc";
+      setSortDirection(defaultDir);
+    } else if (sortDirection === "asc") {
+      setSortDirection("desc");
+    } else {
+      setSortField(null);
+      setSortDirection("asc");
+    }
+  };
 
   useEffect(() => {
     onFiltersChange?.({
@@ -670,6 +832,8 @@ export function ProductInventory({
     setFilterBrand("all");
     setFilterTech("all");
     setFilterStatus("all");
+    setSortField(null);
+    setSortDirection("asc");
   };
 
   // Safety fallback effect to prevent stale values
@@ -719,7 +883,7 @@ export function ProductInventory({
   const visibleFiltered = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
   const hasActiveFilters = Boolean(
-    search || filterCat !== "all" || filterBrand !== "all" || filterTech !== "all" || filterStatus !== "all"
+    search || filterCat !== "all" || filterBrand !== "all" || filterTech !== "all" || filterStatus !== "all" || sortField !== null
   );
 
   const hasCoreItems = useMemo(() => {
@@ -771,7 +935,7 @@ export function ProductInventory({
           )}
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <div className="relative lg:col-span-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -826,6 +990,32 @@ export function ProductInventory({
             <option value="active">Active Deployment ({statusCounts.active})</option>
             <option value="inactive">Off-line / Archive ({statusCounts.inactive})</option>
           </select>
+
+          <select 
+            value={sortField ? `${sortField}-${sortDirection}` : "default"} 
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "default") {
+                setSortField(null);
+              } else {
+                const [f, d] = val.split("-") as [SortField, SortDirection];
+                setSortField(f);
+                setSortDirection(d);
+              }
+            }}
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="default">Sort: Default Catalog</option>
+            <option value="price-asc">Pricing: Low to High (₹ ↑)</option>
+            <option value="price-desc">Pricing: High to Low (₹ ↓)</option>
+            <option value="name-asc">Name: A to Z</option>
+            <option value="name-desc">Name: Z to A</option>
+            <option value="brand-asc">Manufacturer: A to Z</option>
+            <option value="brand-desc">Manufacturer: Z to A</option>
+            <option value="stock-desc">Stock: High to Low</option>
+            <option value="status-desc">Status: Active First</option>
+            <option value="status-asc">Status: Inactive First</option>
+          </select>
         </div>
 
         {/* Active Filter Chips */}
@@ -868,6 +1058,20 @@ export function ProductInventory({
               <Badge variant="secondary" className="gap-1.5 pl-2.5 pr-1.5 py-1 text-xs font-normal">
                 Status: {filterStatus === "active" ? "Active" : "Off-line"}
                 <button onClick={() => setFilterStatus("all")} className="hover:bg-muted rounded p-0.5" title="Remove status filter">
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            )}
+            {sortField && (
+              <Badge variant="secondary" className="gap-1.5 pl-2.5 pr-1.5 py-1 text-xs font-normal">
+                Sort: {
+                  sortField === "price" ? (sortDirection === "asc" ? "Pricing: Low to High" : "Pricing: High to Low") :
+                  sortField === "name" ? (sortDirection === "asc" ? "Name: A to Z" : "Name: Z to A") :
+                  sortField === "brand" ? (sortDirection === "asc" ? "Manufacturer: A to Z" : "Manufacturer: Z to A") :
+                  sortField === "stock" ? "Stock: High to Low" :
+                  (sortDirection === "desc" ? "Status: Active First" : "Status: Inactive First")
+                }
+                <button onClick={() => setSortField(null)} className="hover:bg-muted rounded p-0.5" title="Reset sort">
                   <X className="w-3 h-3" />
                 </button>
               </Badge>
@@ -916,6 +1120,9 @@ export function ProductInventory({
                     onDeselectAllGroup={onDeselectAllGroup}
                     onAddProduct={onAddProduct}
                     filterTech={filterTech}
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onToggleSort={handleToggleSort}
                   />
                 );
               })}
@@ -948,6 +1155,9 @@ export function ProductInventory({
                     onSelectAllGroup={onSelectAllGroup}
                     onDeselectAllGroup={onDeselectAllGroup}
                     onAddProduct={onAddProduct}
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onToggleSort={handleToggleSort}
                   />
                 );
               })}

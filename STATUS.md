@@ -547,6 +547,25 @@
 
 ---
 
+
+### Milestone 44: Interactive Column Header Sorting & High-Contrast Visual Status System (`ProductInventory.tsx`)
+- **Resolved Invisible / Bare Status Switch Flaw**:
+  - Replaced the unstyled, low-contrast toggle (which lacked Tailwind v4 theme definitions and text labels) with an accessible, high-contrast, dual-element status component.
+  - **Active State**: High-contrast emerald green toggle switch (`bg-emerald-500 border-emerald-600` with smooth white knob) paired with an explicit badge: `🟢 Active` (`bg-emerald-50 text-emerald-700 border-emerald-200` with pulsing dot).
+  - **Inactive State**: Neutral zinc gray switch (`bg-zinc-200 border-zinc-300`) paired with an explicit badge: `⚪ Inactive` (`bg-zinc-100 text-zinc-500 border-zinc-200`).
+  - **Interactive Clarity**: Dynamic hover tooltips clarify action before clicking (`"Active in Store & Quotes (Click to Deactivate)"` vs `"Inactive / Archived (Click to Activate)"`), eliminating guesswork.
+- **Interactive Multi-Column Header Sorting**:
+  - Clickable sort headers on `SKU / Information`, `Manufacturer`, `Stock`, `Pricing`, and `Status`.
+  - Directional icons: Displays active `ArrowUp` (Ascending) / `ArrowDown` (Descending) when active, and subtle `ArrowUpDown` on hover when inactive.
+  - Natural cycling: `Default` ➔ `Ascending` ➔ `Descending` ➔ `Default` (3-click cycle).
+- **Synchronized Sort By Toolbar Dropdown**:
+  - Integrated 6th dropdown in the inventory filters toolbar for rapid global sorting: Default Catalog, Price Low to High, Price High to Low, Name A-Z, Name Z-A, Brand A-Z, Stock Highest First, Status Active First.
+  - Two-way sync: Selecting from the toolbar immediately updates table sorting and header arrows; clicking table headers immediately reflects in the toolbar dropdown.
+- **Active Filter Sort Chip**:
+  - Active sort states render as a dismissible badge in the Active Filters bar with 1-click removal (`✕`) and `Clear All` reset.
+
+---
+
 ## 4. Operational Maintenance & Ongoing Runbooks
 
 1. **Disaster Recovery & Backup:** [`docs/devops/disaster-recovery.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/devops/disaster-recovery.md) and [`runbooks/BACKUP_RESTORE.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/runbooks/BACKUP_RESTORE.md).
