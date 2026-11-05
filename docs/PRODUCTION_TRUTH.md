@@ -68,6 +68,25 @@
     - Landing on quotation catalogs must never trigger auto-opening blocking popups. Modals open strictly on customer click.
     - Dialogs must be centered with responsive `max-h-[85vh]` and internal scroll containers to prevent viewport clipping on mobile and tablet devices.
 
+16. **Vendor Customer Non-Login Retail Price Parity Invariant:**
+    - All platform customer prices (`unit_price`) must strictly match our primary distributor / vendor's public customer pricing displayed on their website (`megajaipur.com`) without logging in.
+    - Wholesale dealer prices or offline dummy numbers must never overwrite `unit_price`.
+    - `base_cost` is calculated strictly using standard distributor margin rules: $\text{base\_cost} = \text{round}(\text{unit\_price} / (1 + \text{margin}/100))$.
+    - For genuine 24x7 surveillance hard disks, Mega Compu World non-login customer retail prices are strictly enforced:
+      - **2TB:** Toshiba S300 (₹12,065), Seagate SkyHawk (₹12,455), WD Purple (₹12,508).
+      - **4TB:** Seagate SkyHawk (₹17,300), WD Purple (₹17,906).
+      - **6TB:** Seagate SkyHawk (₹26,267), WD Purple (₹26,267).
+      - **8TB:** Seagate SkyHawk (₹38,409), WD Purple Pro (₹38,572).
+      - **10TB:** Toshiba S300 (₹48,941), WD Purple Pro (₹50,950), Seagate SkyHawk (₹51,419).
+
+17. **Refurbished / Economy Storage Transparency Alert Standard:**
+    - Genuine surveillance hard drives start at 2TB in OEM distributor catalogs. For budget options below 2TB (500GB, 1TB) or economy options where competitors secretly bundle refurbished desktop HDDs with branded cameras to artificially lower quotes, our platform explicitly discloses the component honestly.
+    - The platform bundles the Budget Brand HDD option with a prominent Red Warning alert (`⚠️ Refurbished / Economy Storage Alert`):
+      - **Market Transparency:** Explains that competitors secretly bundle refurbished desktop HDDs with branded cameras to display artificially low quotes.
+      - **Physics-Accurate Backup Scaling:** Inversely scales backup days strictly according to camera count, resolution, and H.265 compression (e.g., 500GB yields ~7 days for 4 cameras, ~3 days for 8 cameras).
+      - **Warranty Notice:** Discloses 1-Year Local warranty and high 24x7 failure risk.
+      - **TEAM Advice:** Recommends upgrading to genuine Seagate SkyHawk / WD Purple for official 3-Year Replacement Warranty and 24x7 peace of mind.
+
 ---
 
 ## 4. Catalog Integrity & Test Hygiene Guardrails
