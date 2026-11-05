@@ -612,6 +612,17 @@ interface ProductInventoryProps {
 }
 
 
+function matchesSearch(p: Product, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return (
+    p.display_name.toLowerCase().includes(q) ||
+    Boolean(p.technical_name?.toLowerCase().includes(q)) ||
+    Boolean(p.internal_sku?.toLowerCase().includes(q)) ||
+    Boolean((p.brand || '').toLowerCase().includes(q))
+  );
+}
+
 function matchesTech(p: Product, tech: string): boolean {
   if (tech === "all") return true;
   return Boolean(
@@ -669,11 +680,12 @@ export function ProductInventory({
     setVisibleCount(50);
   }, [search, filterCat, filterTech, filterStatus, filterBrand]);
 
-    // Dynamic available brands based on category, technology, and status
+    // Dynamic available brands based on category, technology, status, and search
   const availableBrands = useMemo(() => {
     const brandCounts = new Map<string, { name: string; count: number }>();
 
     for (const p of products) {
+      if (search && !matchesSearch(p, search)) continue;
       if (filterStatus === "active" && !p.is_active) continue;
       if (filterStatus === "inactive" && p.is_active) continue;
 
@@ -701,13 +713,14 @@ export function ProductInventory({
       if (b.name === "Budget Brand") return 1;
       return a.name.localeCompare(b.name);
     });
-  }, [products, filterCat, filterTech, filterStatus]);
+  }, [products, search, filterCat, filterTech, filterStatus]);
 
-  // Dynamic available categories based on brand, technology, and status
+  // Dynamic available categories based on brand, technology, status, and search
   const availableCategories = useMemo(() => {
     const catCounts = new Map<string, number>();
 
     for (const p of products) {
+      if (search && !matchesSearch(p, search)) continue;
       if (filterStatus === "active" && !p.is_active) continue;
       if (filterStatus === "inactive" && p.is_active) continue;
 
@@ -734,12 +747,13 @@ export function ProductInventory({
     }
 
     return list;
-  }, [products, filterBrand, filterTech, filterStatus]);
+  }, [products, search, filterBrand, filterTech, filterStatus]);
 
-  // Dynamic technology counts based on category, brand, and status
+  // Dynamic technology counts based on category, brand, status, and search
   const techCounts = useMemo(() => {
     const counts = { all: 0, IP: 0, HD: 0, Wireless: 0, both: 0 };
     for (const p of products) {
+      if (search && !matchesSearch(p, search)) continue;
       if (filterStatus === "active" && !p.is_active) continue;
       if (filterStatus === "inactive" && p.is_active) continue;
       if (filterCat !== "all" && (p.category || "addon") !== filterCat) continue;
@@ -752,12 +766,13 @@ export function ProductInventory({
       if (matchesTech(p, "both")) counts.both += 1;
     }
     return counts;
-  }, [products, filterCat, filterBrand, filterStatus]);
+  }, [products, search, filterCat, filterBrand, filterStatus]);
 
-  // Dynamic status counts based on category, brand, and technology
+  // Dynamic status counts based on category, brand, technology, and search
   const statusCounts = useMemo(() => {
     const counts = { all: 0, active: 0, inactive: 0 };
     for (const p of products) {
+      if (search && !matchesSearch(p, search)) continue;
       if (filterCat !== "all" && (p.category || "addon") !== filterCat) continue;
       if (filterBrand !== "all" && !isBrandMatch(p, filterBrand)) continue;
       if (!matchesTech(p, filterTech)) continue;
@@ -767,18 +782,19 @@ export function ProductInventory({
       else counts.inactive += 1;
     }
     return counts;
-  }, [products, filterCat, filterBrand, filterTech]);
+  }, [products, search, filterCat, filterBrand, filterTech]);
 
   // Bidirectional auto-reset handlers
   const handleCategoryChange = (newCat: string) => {
     setFilterCat(newCat);
     if (newCat !== "all" && filterBrand !== "all") {
       const hasProductsForBrand = products.some(p => {
+        const matchSearch = matchesSearch(p, search);
         const matchCat = (p.category || "addon") === newCat;
         const matchBrand = isBrandMatch(p, filterBrand);
         const matchStatus = filterStatus === "all" || (filterStatus === "active" ? p.is_active : !p.is_active);
         const matchTech = matchesTech(p, filterTech);
-        return matchCat && matchBrand && matchStatus && matchTech;
+        return matchSearch && matchCat && matchBrand && matchStatus && matchTech;
       });
       if (!hasProductsForBrand) {
         setFilterBrand("all");
@@ -790,6 +806,7 @@ export function ProductInventory({
     setFilterBrand(newBrand);
     if (newBrand !== "all" && filterCat !== "all") {
       const hasProductsForCat = products.some(p => {
+        const matchSearch = matchesSearch(p, search);
         const matchCat = (p.category || "addon") === filterCat;
         const matchBrand = isBrandMatch(p, newBrand);
         const matchStatus = filterStatus === "all" || (filterStatus === "active" ? p.is_active : !p.is_active);
@@ -856,14 +873,8 @@ export function ProductInventory({
   }, [availableCategories, filterCat]);
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase();
     return products.filter((p) => {
-      const matchSearch =
-        !q ||
-        p.display_name.toLowerCase().includes(q) ||
-        p.technical_name?.toLowerCase().includes(q) ||
-        p.internal_sku?.toLowerCase().includes(q) ||
-        (p.brand || "").toLowerCase().includes(q);
+      const matchSearch = matchesSearch(p, search);
       const matchCat    = filterCat === "all"    || (p.category || "addon") === filterCat;
       const matchTech   = matchesTech(p, filterTech);
       const matchStatus = filterStatus === "all" || (filterStatus === "active" ? p.is_active : !p.is_active);
@@ -911,8 +922,8 @@ export function ProductInventory({
       </div>
 
       {/* ── Filter bar ── */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-6">
+      <Card className="p-4 sm:p-5 sticky top-2 z-20 shadow-md backdrop-blur-md bg-card/95 border-border/80 transition-all">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-secondary text-foreground">
               <ListFilter className="w-4 h-4" />
@@ -935,7 +946,7 @@ export function ProductInventory({
           )}
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5">
           <div className="relative lg:col-span-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -952,7 +963,7 @@ export function ProductInventory({
             onChange={(e) => handleCategoryChange(e.target.value)} 
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
-            <option value="all">All Segments ({availableCategories.reduce((s, c) => s + c.count, 0)})</option>
+            <option value="all">All Categories ({availableCategories.reduce((s, c) => s + c.count, 0)})</option>
             {availableCategories.map(c => (
               <option key={c.key} value={c.key}>{c.label} ({c.count})</option>
             ))}
@@ -963,7 +974,7 @@ export function ProductInventory({
             onChange={(e) => handleBrandChange(e.target.value)} 
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
-            <option value="all">All Manufacturers ({availableBrands.reduce((s, b) => s + b.count, 0)})</option>
+            <option value="all">All Brands ({availableBrands.reduce((s, b) => s + b.count, 0)})</option>
             {availableBrands.map(b => (
               <option key={b.name} value={b.name}>{b.name} ({b.count})</option>
             ))}
@@ -974,7 +985,7 @@ export function ProductInventory({
             onChange={(e) => handleTechChange(e.target.value)} 
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
-            <option value="all">Any Technology ({techCounts.all})</option>
+            <option value="all">All Tech ({techCounts.all})</option>
             {techCounts.IP > 0 && <option value="IP">Digital IP System ({techCounts.IP})</option>}
             {techCounts.HD > 0 && <option value="HD">Analog HD System ({techCounts.HD})</option>}
             {techCounts.Wireless > 0 && <option value="Wireless">Smart Wireless (Wi-Fi) ({techCounts.Wireless})</option>}
@@ -986,7 +997,7 @@ export function ProductInventory({
             onChange={(e) => setFilterStatus(e.target.value)} 
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
-            <option value="all">Any Status ({statusCounts.all})</option>
+            <option value="all">All Status ({statusCounts.all})</option>
             <option value="active">Active Deployment ({statusCounts.active})</option>
             <option value="inactive">Off-line / Archive ({statusCounts.inactive})</option>
           </select>
@@ -1005,7 +1016,7 @@ export function ProductInventory({
             }}
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
-            <option value="default">Sort: Default Catalog</option>
+            <option value="default">Sort: Default</option>
             <option value="price-asc">Pricing: Low to High (₹ ↑)</option>
             <option value="price-desc">Pricing: High to Low (₹ ↓)</option>
             <option value="name-asc">Name: A to Z</option>

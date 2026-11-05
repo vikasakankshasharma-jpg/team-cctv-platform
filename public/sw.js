@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cctvquotation-v12';
+const CACHE_NAME = 'cctvquotation-v13';
 const OFFLINE_URL = '/offline';
 const URLS_TO_CACHE = [
   '/',
