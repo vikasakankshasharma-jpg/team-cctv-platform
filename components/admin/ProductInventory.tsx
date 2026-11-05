@@ -2,10 +2,15 @@ import { useState, useMemo, useEffect } from "react";
 import { 
   Search, ChevronDown, ChevronRight, Edit2, Copy, Camera, Monitor, Plus, 
   Layers, Zap, Package, HardDrive, Cpu, ShieldCheck,
-  ListFilter, Filter, Wrench, Shield, Tv, Box, Server, Square, CheckSquare, Trash2
+  ListFilter, Filter, Wrench, Shield, Tv, Box, Server, Square, CheckSquare, Trash2, X
 } from "lucide-react";
 import type { Product } from "@/types";
-import { getUniqueCanonicalBrands, isBrandMatch } from "@/lib/brand-utils";
+import { 
+  getCanonicalBrandKey, 
+  getCanonicalBrandName, 
+  inferBrandFromName, 
+  isBrandMatch 
+} from "@/lib/brand-utils";
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -459,6 +464,17 @@ interface ProductInventoryProps {
   onAddProduct?: (category: string, technology?: string) => void;
 }
 
+
+function matchesTech(p: Product, tech: string): boolean {
+  if (tech === "all") return true;
+  return Boolean(
+    p.technologies?.includes(tech as any) ||
+    (tech === "Wireless" && (p.technologies?.includes("WiFi" as any) || p.technology === "Wireless" || p.technology === "WiFi" || (p as any).has_wifi)) ||
+    (tech === "both" && (p.technologies?.includes("both" as any) || p.technologies?.includes("Common" as any) || p.technology === "Common")) ||
+    p.technology === tech
+  );
+}
+
 export function ProductInventory({ 
   products, 
   onEdit,
@@ -491,9 +507,189 @@ export function ProductInventory({
     setVisibleCount(50);
   }, [search, filterCat, filterTech, filterStatus, filterBrand]);
 
-  const brands = useMemo(() => {
-    return getUniqueCanonicalBrands(products);
-  }, [products]);
+    // Dynamic available brands based on category, technology, and status
+  const availableBrands = useMemo(() => {
+    const brandCounts = new Map<string, { name: string; count: number }>();
+
+    for (const p of products) {
+      if (filterStatus === "active" && !p.is_active) continue;
+      if (filterStatus === "inactive" && p.is_active) continue;
+
+      const pCat = p.category || "addon";
+      if (filterCat !== "all" && pCat !== filterCat) continue;
+
+      if (!matchesTech(p, filterTech)) continue;
+
+      const rawBrand = p.brand || inferBrandFromName(p.display_name);
+      if (!rawBrand) continue;
+      const key = getCanonicalBrandKey(rawBrand);
+      if (!key || key === "all") continue;
+      const canonicalName = getCanonicalBrandName(rawBrand);
+
+      const existing = brandCounts.get(key);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        brandCounts.set(key, { name: canonicalName, count: 1 });
+      }
+    }
+
+    return Array.from(brandCounts.values()).sort((a, b) => {
+      if (a.name === "Budget Brand") return -1;
+      if (b.name === "Budget Brand") return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [products, filterCat, filterTech, filterStatus]);
+
+  // Dynamic available categories based on brand, technology, and status
+  const availableCategories = useMemo(() => {
+    const catCounts = new Map<string, number>();
+
+    for (const p of products) {
+      if (filterStatus === "active" && !p.is_active) continue;
+      if (filterStatus === "inactive" && p.is_active) continue;
+
+      if (filterBrand !== "all" && !isBrandMatch(p, filterBrand)) continue;
+
+      if (!matchesTech(p, filterTech)) continue;
+
+      const pCat = p.category || "addon";
+      catCounts.set(pCat, (catCounts.get(pCat) || 0) + 1);
+    }
+
+    const list: Array<{ key: string; label: string; count: number }> = [];
+    for (const [key, cfg] of Object.entries(CATEGORIES)) {
+      const count = catCounts.get(key) || 0;
+      if (count > 0) {
+        list.push({ key, label: cfg.label, count });
+      }
+    }
+
+    for (const [key, count] of catCounts.entries()) {
+      if (!CATEGORIES[key] && count > 0) {
+        list.push({ key, label: key.charAt(0).toUpperCase() + key.slice(1), count });
+      }
+    }
+
+    return list;
+  }, [products, filterBrand, filterTech, filterStatus]);
+
+  // Dynamic technology counts based on category, brand, and status
+  const techCounts = useMemo(() => {
+    const counts = { all: 0, IP: 0, HD: 0, Wireless: 0, both: 0 };
+    for (const p of products) {
+      if (filterStatus === "active" && !p.is_active) continue;
+      if (filterStatus === "inactive" && p.is_active) continue;
+      if (filterCat !== "all" && (p.category || "addon") !== filterCat) continue;
+      if (filterBrand !== "all" && !isBrandMatch(p, filterBrand)) continue;
+
+      counts.all += 1;
+      if (matchesTech(p, "IP")) counts.IP += 1;
+      if (matchesTech(p, "HD")) counts.HD += 1;
+      if (matchesTech(p, "Wireless")) counts.Wireless += 1;
+      if (matchesTech(p, "both")) counts.both += 1;
+    }
+    return counts;
+  }, [products, filterCat, filterBrand, filterStatus]);
+
+  // Dynamic status counts based on category, brand, and technology
+  const statusCounts = useMemo(() => {
+    const counts = { all: 0, active: 0, inactive: 0 };
+    for (const p of products) {
+      if (filterCat !== "all" && (p.category || "addon") !== filterCat) continue;
+      if (filterBrand !== "all" && !isBrandMatch(p, filterBrand)) continue;
+      if (!matchesTech(p, filterTech)) continue;
+
+      counts.all += 1;
+      if (p.is_active) counts.active += 1;
+      else counts.inactive += 1;
+    }
+    return counts;
+  }, [products, filterCat, filterBrand, filterTech]);
+
+  // Bidirectional auto-reset handlers
+  const handleCategoryChange = (newCat: string) => {
+    setFilterCat(newCat);
+    if (newCat !== "all" && filterBrand !== "all") {
+      const hasProductsForBrand = products.some(p => {
+        const matchCat = (p.category || "addon") === newCat;
+        const matchBrand = isBrandMatch(p, filterBrand);
+        const matchStatus = filterStatus === "all" || (filterStatus === "active" ? p.is_active : !p.is_active);
+        const matchTech = matchesTech(p, filterTech);
+        return matchCat && matchBrand && matchStatus && matchTech;
+      });
+      if (!hasProductsForBrand) {
+        setFilterBrand("all");
+      }
+    }
+  };
+
+  const handleBrandChange = (newBrand: string) => {
+    setFilterBrand(newBrand);
+    if (newBrand !== "all" && filterCat !== "all") {
+      const hasProductsForCat = products.some(p => {
+        const matchCat = (p.category || "addon") === filterCat;
+        const matchBrand = isBrandMatch(p, newBrand);
+        const matchStatus = filterStatus === "all" || (filterStatus === "active" ? p.is_active : !p.is_active);
+        const matchTech = matchesTech(p, filterTech);
+        return matchCat && matchBrand && matchStatus && matchTech;
+      });
+      if (!hasProductsForCat) {
+        setFilterCat("all");
+      }
+    }
+  };
+
+  const handleTechChange = (newTech: string) => {
+    setFilterTech(newTech);
+    if (newTech !== "all") {
+      if (filterCat !== "all") {
+        const hasProductsInCat = products.some(p => {
+          const matchCat = (p.category || "addon") === filterCat;
+          const matchTech = matchesTech(p, newTech);
+          const matchStatus = filterStatus === "all" || (filterStatus === "active" ? p.is_active : !p.is_active);
+          return matchCat && matchTech && matchStatus;
+        });
+        if (!hasProductsInCat) setFilterCat("all");
+      }
+      if (filterBrand !== "all") {
+        const hasProductsInBrand = products.some(p => {
+          const matchBrand = isBrandMatch(p, filterBrand);
+          const matchTech = matchesTech(p, newTech);
+          const matchStatus = filterStatus === "all" || (filterStatus === "active" ? p.is_active : !p.is_active);
+          return matchBrand && matchTech && matchStatus;
+        });
+        if (!hasProductsInBrand) setFilterBrand("all");
+      }
+    }
+  };
+
+  const handleClearAllFilters = () => {
+    setSearch("");
+    setFilterCat("all");
+    setFilterBrand("all");
+    setFilterTech("all");
+    setFilterStatus("all");
+  };
+
+  // Safety fallback effect to prevent stale values
+  useEffect(() => {
+    if (filterBrand !== "all") {
+      const brandFound = availableBrands.some(b => b.name === filterBrand || isBrandMatch({ brand: b.name }, filterBrand));
+      if (!brandFound) {
+        setFilterBrand("all");
+      }
+    }
+  }, [availableBrands, filterBrand]);
+
+  useEffect(() => {
+    if (filterCat !== "all") {
+      const catFound = availableCategories.some(c => c.key === filterCat);
+      if (!catFound) {
+        setFilterCat("all");
+      }
+    }
+  }, [availableCategories, filterCat]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -505,11 +701,7 @@ export function ProductInventory({
         p.internal_sku?.toLowerCase().includes(q) ||
         (p.brand || "").toLowerCase().includes(q);
       const matchCat    = filterCat === "all"    || (p.category || "addon") === filterCat;
-      const matchTech   = filterTech === "all"   
-        || p.technologies?.includes(filterTech as any)
-        || (filterTech === "Wireless" && (p.technologies?.includes("WiFi" as any) || p.technology === "Wireless" || p.technology === "WiFi" || (p as any).has_wifi))
-        || (filterTech === "both" && (p.technologies?.includes("both" as any) || p.technologies?.includes("Common" as any) || p.technology === "Common"))
-        || p.technology === filterTech;
+      const matchTech   = matchesTech(p, filterTech);
       const matchStatus = filterStatus === "all" || (filterStatus === "active" ? p.is_active : !p.is_active);
       const matchBrand  = filterBrand === "all"  || isBrandMatch(p, filterBrand);
       return matchSearch && matchCat && matchTech && matchStatus && matchBrand;
@@ -526,10 +718,26 @@ export function ProductInventory({
 
   const visibleFiltered = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
+  const hasActiveFilters = Boolean(
+    search || filterCat !== "all" || filterBrand !== "all" || filterTech !== "all" || filterStatus !== "all"
+  );
+
+  const hasCoreItems = useMemo(() => {
+    return Object.keys(MUST_HAVE_CATEGORIES).some(cat => 
+      visibleFiltered.some(p => (p.category || "accessories") === cat)
+    );
+  }, [visibleFiltered]);
+
+  const hasOptionalItems = useMemo(() => {
+    return Object.keys(OPTIONAL_CATEGORIES).some(cat => 
+      visibleFiltered.some(p => (p.category || "accessories") === cat)
+    );
+  }, [visibleFiltered]);
+
   return (
     <div className="space-y-8">
 
-      {/* â”€â”€ Stats bar â”€â”€ */}
+      {/* ── Stats bar ── */}
       <div className="flex flex-wrap gap-4 px-1">
         <Chip label="Total Master Catalog"  value={counts.total}     dot="bg-muted-foreground" />
         <Chip label="Vision Sensors"        value={counts.camera}    dot="bg-primary" />
@@ -538,16 +746,29 @@ export function ProductInventory({
         <Chip label="Active Deployment"     value={counts.active}    dot="bg-success" />
       </div>
 
-      {/* â”€â”€ Filter bar â”€â”€ */}
+      {/* ── Filter bar ── */}
       <Card className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-lg bg-secondary text-foreground">
-             <ListFilter className="w-4 h-4" />
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-secondary text-foreground">
+              <ListFilter className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold tracking-tight">Inventory Filters</h3>
+              <p className="text-xs text-muted-foreground">
+                Showing {filtered.length} of {products.length} SKUs
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-base font-semibold tracking-tight">Inventory Filters</h3>
-            <p className="text-xs text-muted-foreground">Refine your view across {products.length} SKUs</p>
-          </div>
+          {hasActiveFilters && (
+            <button
+              onClick={handleClearAllFilters}
+              className="text-xs text-primary hover:underline font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+              Reset All
+            </button>
+          )}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -562,99 +783,178 @@ export function ProductInventory({
             />
           </div>
 
-          <select value={filterCat} onChange={(e) => setFilterCat(e.target.value)} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-            <option value="all">All Segments</option>
-            {Object.entries(CATEGORIES).map(([val, cfg]) => (
-              <option key={val} value={val}>{cfg.label}</option>
+          <select 
+            value={filterCat} 
+            onChange={(e) => handleCategoryChange(e.target.value)} 
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="all">All Segments ({availableCategories.reduce((s, c) => s + c.count, 0)})</option>
+            {availableCategories.map(c => (
+              <option key={c.key} value={c.key}>{c.label} ({c.count})</option>
             ))}
           </select>
 
-          <select value={filterBrand} onChange={(e) => setFilterBrand(e.target.value)} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-            <option value="all">All Manufacturers</option>
-            {brands.map(b => (
-              <option key={b} value={b}>{b}</option>
+          <select 
+            value={filterBrand} 
+            onChange={(e) => handleBrandChange(e.target.value)} 
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="all">All Manufacturers ({availableBrands.reduce((s, b) => s + b.count, 0)})</option>
+            {availableBrands.map(b => (
+              <option key={b.name} value={b.name}>{b.name} ({b.count})</option>
             ))}
           </select>
 
-          <select value={filterTech} onChange={(e) => setFilterTech(e.target.value)} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-            <option value="all">Any Technology</option>
-            <option value="IP">Digital IP System</option>
-            <option value="HD">Analog HD System</option>
-            <option value="Wireless">Smart Wireless (Wi-Fi)</option>
-            <option value="both">Hybrid Tech</option>
+          <select 
+            value={filterTech} 
+            onChange={(e) => handleTechChange(e.target.value)} 
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="all">Any Technology ({techCounts.all})</option>
+            {techCounts.IP > 0 && <option value="IP">Digital IP System ({techCounts.IP})</option>}
+            {techCounts.HD > 0 && <option value="HD">Analog HD System ({techCounts.HD})</option>}
+            {techCounts.Wireless > 0 && <option value="Wireless">Smart Wireless (Wi-Fi) ({techCounts.Wireless})</option>}
+            {techCounts.both > 0 && <option value="both">Hybrid Tech ({techCounts.both})</option>}
           </select>
 
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-            <option value="all">Any Status</option>
-            <option value="active">Active Deployment</option>
-            <option value="inactive">Off-line / Archive</option>
+          <select 
+            value={filterStatus} 
+            onChange={(e) => setFilterStatus(e.target.value)} 
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="all">Any Status ({statusCounts.all})</option>
+            <option value="active">Active Deployment ({statusCounts.active})</option>
+            <option value="inactive">Off-line / Archive ({statusCounts.inactive})</option>
           </select>
         </div>
+
+        {/* Active Filter Chips */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-border">
+            <span className="text-xs font-medium text-muted-foreground mr-1">Active:</span>
+            {search && (
+              <Badge variant="secondary" className="gap-1.5 pl-2.5 pr-1.5 py-1 text-xs font-normal">
+                Search: &ldquo;{search}&rdquo;
+                <button onClick={() => setSearch("")} className="hover:bg-muted rounded p-0.5" title="Remove search filter">
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            )}
+            {filterCat !== "all" && (
+              <Badge variant="secondary" className="gap-1.5 pl-2.5 pr-1.5 py-1 text-xs font-normal">
+                Segment: {CATEGORIES[filterCat]?.label || filterCat}
+                <button onClick={() => handleCategoryChange("all")} className="hover:bg-muted rounded p-0.5" title="Remove category filter">
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            )}
+            {filterBrand !== "all" && (
+              <Badge variant="secondary" className="gap-1.5 pl-2.5 pr-1.5 py-1 text-xs font-normal">
+                Brand: {filterBrand}
+                <button onClick={() => handleBrandChange("all")} className="hover:bg-muted rounded p-0.5" title="Remove manufacturer filter">
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            )}
+            {filterTech !== "all" && (
+              <Badge variant="secondary" className="gap-1.5 pl-2.5 pr-1.5 py-1 text-xs font-normal">
+                Tech: {filterTech === "IP" ? "Digital IP" : filterTech === "HD" ? "Analog HD" : filterTech === "Wireless" ? "Smart Wireless" : "Hybrid"}
+                <button onClick={() => handleTechChange("all")} className="hover:bg-muted rounded p-0.5" title="Remove technology filter">
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            )}
+            {filterStatus !== "all" && (
+              <Badge variant="secondary" className="gap-1.5 pl-2.5 pr-1.5 py-1 text-xs font-normal">
+                Status: {filterStatus === "active" ? "Active" : "Off-line"}
+                <button onClick={() => setFilterStatus("all")} className="hover:bg-muted rounded p-0.5" title="Remove status filter">
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            )}
+            <button
+              onClick={handleClearAllFilters}
+              className="text-xs text-primary hover:underline font-semibold ml-2 py-0.5 cursor-pointer"
+            >
+              Clear All ({filtered.length} matching)
+            </button>
+          </div>
+        )}
       </Card>
 
-      {/* â”€â”€ Category groups â”€â”€ */}
-      <div>
-        <div className="pt-4 pb-4">
-          <h2 className="text-xl font-bold tracking-tight text-primary">
-            Core CCTV Hardware
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Essential cameras, recorders, surveillance storage, and power components.
-          </p>
-        </div>
-        {Object.keys(MUST_HAVE_CATEGORIES).map((cat) => {
-          const items = visibleFiltered.filter((p) => {
-            const pCat = p.category || "accessories";
-            return pCat === cat;
-          });
-          
-          return (
-            <CategorySection
-              key={cat}
-              categoryKey={cat}
-              products={items}
-              onEdit={onEdit}
-              onDuplicate={onDuplicate}
-              onToggle={onToggle}
-              onDelete={onDelete}
-              selectedIds={selectedIds}
-              onToggleSelect={onToggleSelect}
-              onSelectAllGroup={onSelectAllGroup}
-              onDeselectAllGroup={onDeselectAllGroup}
-              onAddProduct={onAddProduct}
-              filterTech={filterTech}
-            />
-          );
-        })}
+      {/* ── Category groups ── */}
+      {filtered.length > 0 && (
+        <div>
+          {hasCoreItems && (
+            <>
+              <div className="pt-4 pb-4">
+                <h2 className="text-xl font-bold tracking-tight text-primary">
+                  Core CCTV Hardware
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Essential cameras, recorders, surveillance storage, and power components.
+                </p>
+              </div>
+              {Object.keys(MUST_HAVE_CATEGORIES).map((cat) => {
+                const items = visibleFiltered.filter((p) => {
+                  const pCat = p.category || "accessories";
+                  return pCat === cat;
+                });
+                
+                return (
+                  <CategorySection
+                    key={cat}
+                    categoryKey={cat}
+                    products={items}
+                    onEdit={onEdit}
+                    onDuplicate={onDuplicate}
+                    onToggle={onToggle}
+                    onDelete={onDelete}
+                    selectedIds={selectedIds}
+                    onToggleSelect={onToggleSelect}
+                    onSelectAllGroup={onSelectAllGroup}
+                    onDeselectAllGroup={onDeselectAllGroup}
+                    onAddProduct={onAddProduct}
+                    filterTech={filterTech}
+                  />
+                );
+              })}
+            </>
+          )}
 
-        <div className="pt-8 pb-4">
-          <h2 className="text-xl font-bold tracking-tight text-primary">Optional Upgrades</h2>
-          <p className="text-sm text-muted-foreground">Add-ons, maintenance, and secondary hardware.</p>
+          {hasOptionalItems && (
+            <>
+              <div className="pt-8 pb-4">
+                <h2 className="text-xl font-bold tracking-tight text-primary">Optional Upgrades</h2>
+                <p className="text-sm text-muted-foreground">Add-ons, maintenance, and secondary hardware.</p>
+              </div>
+              {Object.keys(OPTIONAL_CATEGORIES).map((cat) => {
+                const items = visibleFiltered.filter((p) => {
+                  const pCat = p.category || "accessories";
+                  return pCat === cat;
+                });
+                
+                return (
+                  <CategorySection
+                    key={cat}
+                    categoryKey={cat}
+                    products={items}
+                    onEdit={onEdit}
+                    onDuplicate={onDuplicate}
+                    onToggle={onToggle}
+                    onDelete={onDelete}
+                    selectedIds={selectedIds}
+                    onToggleSelect={onToggleSelect}
+                    onSelectAllGroup={onSelectAllGroup}
+                    onDeselectAllGroup={onDeselectAllGroup}
+                    onAddProduct={onAddProduct}
+                  />
+                );
+              })}
+            </>
+          )}
         </div>
-        {Object.keys(OPTIONAL_CATEGORIES).map((cat) => {
-          const items = visibleFiltered.filter((p) => {
-            const pCat = p.category || "accessories";
-            return pCat === cat;
-          });
-          
-          return (
-            <CategorySection
-              key={cat}
-              categoryKey={cat}
-              products={items}
-              onEdit={onEdit}
-              onDuplicate={onDuplicate}
-              onToggle={onToggle}
-              onDelete={onDelete}
-              selectedIds={selectedIds}
-              onToggleSelect={onToggleSelect}
-              onSelectAllGroup={onSelectAllGroup}
-              onDeselectAllGroup={onDeselectAllGroup}
-              onAddProduct={onAddProduct}
-            />
-          );
-        })}
-      </div>
+      )}
 
       {visibleCount < filtered.length && (
         <div className="flex justify-center mt-6">
@@ -668,8 +968,7 @@ export function ProductInventory({
         </div>
       )}
 
-      {/* â”€â”€ Empty state â”€â”€ */}
-      {filtered.length === 0 && (
+{filtered.length === 0 && (
         <Card className="flex flex-col items-center justify-center p-16 text-center border-dashed">
           <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-6">
             <Package className="w-8 h-8 text-muted-foreground" />

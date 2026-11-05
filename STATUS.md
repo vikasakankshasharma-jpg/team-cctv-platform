@@ -529,6 +529,24 @@
 
 ---
 
+
+### Milestone 43: Bidirectional Dynamic Faceted Filtering & Inventory Search UX (`ProductInventory.tsx`)
+- **Bidirectional Dynamic Cascading Dropdowns**:
+  - When a Category is selected (e.g., `Storage (HDD & MicroSD)`), the Manufacturer dropdown dynamically filters to ONLY show brands that exist in that segment (`Budget Brand`, `EVM`, `SanDisk`, `Seagate`, `Toshiba`, `WD`), preventing empty dead ends.
+  - Vice versa: When a Manufacturer is selected (e.g., `WD`), the Category dropdown dynamically filters to ONLY show segments where that brand has active products (`Storage`). Selecting `Comrack` displays only `Racks`. Selecting `CP Plus` displays `Cameras (11)`, `Recorders (6)`, and `Power Device (3)`.
+- **Bidirectional Auto-Reset Safeguard**:
+  - Automatically resets incompatible filters to `"all"` without trapping the user in empty "0 products found" views. E.g., switching from `Cameras` (with `Hikvision` selected) to `Storage` immediately resets Manufacturer to `All Manufacturers` since Hikvision does not produce storage.
+- **Live Dynamic SKU Count Badges**:
+  - Every option displays real-time matching product counts reflecting active cross-filters (e.g. `WD (5)`, `Seagate (6)`, `Storage (20)`).
+- **Active Filter Chips Bar & 1-Click Clear**:
+  - Visual dismissible chips for active filters (`Search`, `Segment`, `Manufacturer`, `Technology`, `Status`) with direct `✕` dismissal and a `Clear All Filters` button.
+- **Smart Section Visibility**:
+  - Core CCTV Hardware and Optional Upgrades headers only appear when their respective categories contain matching products, cleanly falling back to a centered empty-state card with a `Reset Filters` action when 0 products match.
+- **100% Verification Suite (`scripts/test-dynamic-filter-cascade.ts`)**:
+  - Automated tests verify category-to-brand isolation, brand-to-category isolation, technology cross-matching, and auto-reset triggers across all 126 products.
+
+---
+
 ## 4. Operational Maintenance & Ongoing Runbooks
 
 1. **Disaster Recovery & Backup:** [`docs/devops/disaster-recovery.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/devops/disaster-recovery.md) and [`runbooks/BACKUP_RESTORE.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/runbooks/BACKUP_RESTORE.md).
