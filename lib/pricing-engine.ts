@@ -974,8 +974,26 @@ function calculateCabling(
         ((p.display_name || "").toLowerCase().includes("per mtr") || (p.unit_price || 0) < 50)
       );
 
-    const baseRatePerMeter = elecProduct?.unit_price || 10;
-    const baseCostPerMeter = elecProduct?.base_cost || 6;
+    let baseRatePerMeter = 10;
+    let baseCostPerMeter = 6;
+
+    if (elecProduct) {
+      if (elecProduct.cable_length_m && elecProduct.cable_length_m > 1) {
+        // Roll or coil (e.g. 90m roll) - derive true per-meter rate
+        baseRatePerMeter = Math.round((elecProduct.unit_price || 750) / elecProduct.cable_length_m);
+        baseCostPerMeter = Math.round((elecProduct.base_cost || 600) / elecProduct.cable_length_m);
+      } else if (elecProduct.unit_price && elecProduct.unit_price <= 50) {
+        // Dedicated per-meter product rate
+        baseRatePerMeter = elecProduct.unit_price;
+        baseCostPerMeter = elecProduct.base_cost || Math.round(baseRatePerMeter / 1.25);
+      } else if (elecProduct.per_meter_cost && elecProduct.per_meter_cost <= 50) {
+        baseCostPerMeter = elecProduct.per_meter_cost;
+        baseRatePerMeter = Math.round(baseCostPerMeter * (1 + (elecProduct.margin_percentage || 25) / 100));
+      } else {
+        baseRatePerMeter = 10;
+        baseCostPerMeter = 6;
+      }
+    }
 
     const isConduit = selection.wiring_type === "conduit";
     const conduitRate = isConduit ? (settings.conduit_cost_per_meter || 12) : 0;
@@ -1073,9 +1091,12 @@ function calculateCabling(
     effectiveCableTech = "IP";
   }
 
-  // 1. Gather all cables for this technology
+  // 1. Gather all cables for this technology (exclude power-only electrical wire)
   const allCables = products.filter(p => 
     p.category === "cable" && 
+    p.subcategory !== "electrical_wire" &&
+    !p.display_name?.toLowerCase().includes("electrical") &&
+    !p.display_name?.toLowerCase().includes("2-core") &&
     (p.technologies || []).includes(effectiveCableTech as any) &&
     p.is_active !== false && p.stock_status !== "out_of_stock"
   );
