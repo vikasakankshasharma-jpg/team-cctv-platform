@@ -110,16 +110,16 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
        storageGb = 0;
     } else {
        const days = req.recording_days !== undefined ? Number(req.recording_days) : 15;
-       // Resolution-aware base GB/day per camera
+       // Resolution & Technology aware base GB/day per camera (Surveillance Standard)
        const resMP = req.resolution_mp || 2;
-       let baseGbPerDay = 18; // 2MP H.264 baseline
-       if (resMP >= 8) baseGbPerDay = 68;
-       else if (resMP >= 5) baseGbPerDay = 36;
-       else if (resMP >= 4) baseGbPerDay = 28;
-       else if (resMP >= 2) baseGbPerDay = 18;
-       // Motion recording uses ~55% of continuous recording storage
-       const modeMultiplier = req.recording_mode === "motion" ? 0.55 : 1.0;
-       const gbPerDay = Math.max(10, Math.round(baseGbPerDay * modeMultiplier));
+       const isIP = String(req.technology || "").toUpperCase().includes("IP");
+       let baseGbPerDay = isIP ? 14.0 : 17.5;
+       if (resMP >= 8) baseGbPerDay = isIP ? 35.0 : 45.0;
+       else if (resMP >= 4) baseGbPerDay = isIP ? 20.0 : 26.0;
+       else baseGbPerDay = isIP ? 14.0 : 17.5;
+       
+       const modeMultiplier = req.recording_mode === "motion" ? 0.85 : 1.0;
+       const gbPerDay = Math.max(8, Math.round(baseGbPerDay * modeMultiplier * 10) / 10);
        
        // Note: If they want new storage for an addon system, we must calculate the storage
        // based on the TOTAL active cameras, because all cameras will record to the HDD.

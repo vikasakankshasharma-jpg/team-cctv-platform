@@ -1989,18 +1989,18 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
     });
     if (sdCards.length > 0) {
       // 1. Bitrate determination based on camera resolution (H.265 baseline)
-      let baseGbPerDay = 14; // Default 3MP/4MP baseline (e.g. Tapo C210 / C320WS)
-      const res = String(selection.resolution_preference || "").toUpperCase();
-      if (res.includes("2MP")) baseGbPerDay = settings?.bitrate_daily_gb_2mp ?? 8;
-      else if (res.includes("4MP") || res.includes("3MP") || res.includes("5MP")) baseGbPerDay = settings?.bitrate_daily_gb_4mp ?? 14;
-      else if (res.includes("8MP") || res.includes("4K") || res.includes("6MP")) baseGbPerDay = settings?.bitrate_daily_gb_8mp ?? 22;
+      const res = String(selection.resolution_preference || cameraProduct?.resolution || "").toUpperCase();
+      let baseGbPerDay = 10.5; // Default 2MP continuous baseline
+      if (res.includes("8MP") || res.includes("4K") || res.includes("6MP")) baseGbPerDay = 25.0;
+      else if (res.includes("4MP") || res.includes("3MP") || res.includes("5MP")) baseGbPerDay = 16.0;
+      else baseGbPerDay = 10.5;
 
-      // 2. Recording Mode: Continuous (1.0) vs Smart Motion (0.40)
+      // 2. Recording Mode: Continuous (1.0) vs Smart Motion (0.43 -> ~4.5GB for 2MP)
       const recordingMode = (selection as any).recording_mode || "motion";
-      const modeMultiplier = recordingMode === "motion" ? 0.40 : 1.0;
+      const modeMultiplier = recordingMode === "motion" ? 0.43 : 1.0;
 
       // 3. TARGET FOR SINGLE CAMERA (each camera has independent MicroSD slot)
-      const singleCameraDailyGb = Math.max(2.5, Math.round(baseGbPerDay * modeMultiplier));
+      const singleCameraDailyGb = Math.max(3.0, Math.round(baseGbPerDay * modeMultiplier * 10) / 10);
       const requiredCardGb = singleCameraDailyGb * recordingDays;
 
       const getCardGb = (c: any): number => {
@@ -2035,7 +2035,7 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
 
       return {
         ...chosenCard,
-        display_name: `${chosenCard.display_name} (Approx. ${approxDays} Days Backup per Camera · ${modeLabel})`,
+        display_name: `${chosenCard.display_name} (~${approxDays} Days Backup per Camera · ${modeLabel})`,
         approx_days: approxDays,
         storage_overflow: storageOverflow,
         storage_type: "Micro SD",
@@ -2045,31 +2045,36 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
     return undefined;
   }
 
-  // 1. Compression technology: Default to H.264 for safer storage estimation if not specified
-  const compression = (recorder?.compression as string) || "H.264";
-  let compressionMultiplier = 1.0; // H.264 baseline safe side
-  if (compression === "H.265") compressionMultiplier = 0.55;
-  else if (compression === "H.265+" || compression === "H.265 Pro+") compressionMultiplier = 0.35;
+  // 1. Bitrate & Daily GB determination based on technology & resolution (Surveillance Industry Standard)
+  const isIP = upperTech.includes("IP");
+  const res = String(selection.resolution_preference || cameraProduct?.resolution || "").toUpperCase();
 
-  // 2. Base Daily GB per camera: Prefer catalog daily_gb_per_camera, fallback to resolution bitrate
-  let baseGbPerDay = 18; // Default 2MP baseline at H.264
-  if (selection.resolution_preference && selection.resolution_preference !== "all") {
-    const res = String(selection.resolution_preference).toUpperCase();
-    if (res.includes("8MP") || res.includes("4K")) baseGbPerDay = 68;
-    else if (res.includes("6MP")) baseGbPerDay = 48;
-    else if (res.includes("5MP") || res.includes("4MP")) baseGbPerDay = 36;
-    else if (res.includes("2MP")) baseGbPerDay = 18;
+  let baseDailyGb = 17.5; // Default for 2MP / 2.4MP HD Analog
+  if (isIP) {
+    // IP Network with modern H.265 / H.265+ encoding
+    if (res.includes("8MP") || res.includes("4K")) baseDailyGb = 35.0;
+    else if (res.includes("6MP") || res.includes("5MP") || res.includes("4MP")) baseDailyGb = 20.0;
+    else baseDailyGb = 14.0; // 2MP / 3MP IP
+  } else {
+    // HD Analog (DVR)
+    if (res.includes("8MP") || res.includes("4K")) baseDailyGb = 45.0;
+    else if (res.includes("6MP") || res.includes("5MP") || res.includes("4MP")) baseDailyGb = 26.0;
+    else baseDailyGb = 17.5; // 2MP / 2.4MP HD Analog
   }
 
-  // 3. Recording mode: Continuous (1.0) vs Smart Motion (0.55)
+  // 2. Recording mode: Continuous (1.0) vs Smart Motion (0.85 sustained daytime activity)
   const recordingMode = (selection as any).recording_mode || "continuous";
-  const modeMultiplier = recordingMode === "motion" ? 0.55 : 1.0;
+  const modeMultiplier = recordingMode === "motion" ? 0.85 : 1.0;
 
-  // 4. Effective daily GB per camera and total required GB
-  const effectiveDailyGb = Math.max(5, Math.round(baseGbPerDay * compressionMultiplier * modeMultiplier));
-  const totalDailyGb = selection.camera_count * effectiveDailyGb;
+  // 3. Effective daily GB per camera and total required GB across all wired cameras
+  const effectiveDailyGb = Math.round(baseDailyGb * modeMultiplier * 10) / 10;
+  const cameraCount = Math.max(1, selection.camera_count || 1);
+  const totalDailyGb = cameraCount * effectiveDailyGb;
   const requiredGB = totalDailyGb * recordingDays;
   const requiredTB = requiredGB / 1000;
+
+  // 4. Compression indicator for display note
+  const compression = isIP ? "H.265" : ((recorder?.compression as string) || "H.265");
 
   // 5. In-stock hard disks only
   const isAvailable = (p: any) => 
@@ -2089,22 +2094,37 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
   const inStockDisks = hardDisks.filter(isAvailable);
   const candidateDisks = inStockDisks.length > 0 ? inStockDisks : hardDisks;
 
-  // 6. Transparent Storage Selection (Sorted by Capacity, then Price)
-  candidateDisks.sort((a, b) => {
+  // 6. Quality-Tier Storage Selection:
+  // - Budget/Economy quotes prefer Budget Brand / Refurbished HDDs.
+  // - Standard/Premium branded quotes prefer 100% Genuine Surveillance HDDs (Seagate SkyHawk / WD Purple).
+  const isBudgetRequested = 
+    selection.plan_type === "budget" || 
+    selection.brand_preference === "budget" || 
+    (selection as any).is_economy_storage === true ||
+    (selection.brand_preference || "").toLowerCase().includes("budget") ||
+    (selection.brand_preference || "").toLowerCase().includes("a+");
+
+  const eligibleDisks = candidateDisks.filter(d => {
+    const isBud = (d.brand || "").toLowerCase().includes("budget") || (d.id || "").startsWith("HDD-BUD");
+    if (isBudgetRequested) return true; // Budget packages can use budget/refurbished drives
+    return !isBud; // Branded quotes (CP Plus, Hikvision, etc.) must use Genuine Surveillance HDDs
+  });
+  const disksToUse = eligibleDisks.length > 0 ? eligibleDisks : candidateDisks;
+
+  // Sort by capacity, then price
+  disksToUse.sort((a, b) => {
     const capDiff = resolveHDDCapacity(a) - resolveHDDCapacity(b);
     if (capDiff !== 0) return capDiff;
     return (a.unit_price || 0) - (b.unit_price || 0);
   });
 
   // Find best fit HDD that satisfies required storage
-  let chosenHdd = candidateDisks.find(h => resolveHDDCapacity(h) >= requiredTB);
+  let chosenHdd = disksToUse.find(h => resolveHDDCapacity(h) >= requiredTB);
   let storageOverflow = false;
   let storageOverflowInfo: any = undefined;
   if (!chosenHdd) {
-    // Storage requirement exceeds the largest available single drive.
-    // Pick the largest drive as a "downgraded" best-effort quote,
-    // and flag it so the UI can show a warning + auto-capture lead.
-    chosenHdd = candidateDisks[candidateDisks.length - 1];
+    // Storage requirement exceeds largest available drive. Pick largest drive as best-effort.
+    chosenHdd = disksToUse[disksToUse.length - 1];
     storageOverflow = true;
     const largestCapacityTB = resolveHDDCapacity(chosenHdd);
     storageOverflowInfo = {
@@ -2112,7 +2132,7 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
       available_tb: largestCapacityTB,
       shortfall_tb: Number((requiredTB - largestCapacityTB).toFixed(2)),
       required_gb: requiredGB,
-      camera_count: selection.camera_count,
+      camera_count: cameraCount,
       recording_days: recordingDays,
       recording_mode: recordingMode,
       daily_gb_per_camera: effectiveDailyGb,
@@ -2120,7 +2140,7 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
     };
   }
 
-  // 7. Calculate realistic actual backup days based on chosen drive
+  // 7. Calculate realistic actual backup days based on chosen drive (strictly inversely proportional to camera count)
   const capacityTB = resolveHDDCapacity(chosenHdd);
   const capacityGB = capacityTB * 1000;
   const approxDays = Math.max(1, Math.floor(capacityGB / (totalDailyGb || 1)));
