@@ -49,18 +49,18 @@ export default async function CustomerLayout({
     <div className="flex flex-col min-h-screen bg-white dark:bg-zinc-950 font-sans transition-colors duration-500 selection:bg-blue-600 selection:text-white">
       <OfflineBanner />
       {/* Premium Public Header - hidden on mobile wizard to maximize viewport */}
-      <header className={`sticky top-0 z-50 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50 shadow-sm transition-all ${isWizard ? 'hidden md:block' : ''}`}>
-        <div className="max-w-7xl mx-auto px-2 sm:px-6 py-2 md:py-0 md:h-[80px] flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-0">
+      <header className={`sticky top-0 z-50 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-100 dark:border-zinc-800/60 shadow-xs transition-all ${isWizard ? 'hidden md:block' : ''}`}>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 md:h-[80px] flex items-center justify-between gap-2 md:gap-4">
 
-          {/* Left / Top Row (Mobile) - Logo & Service Areas */}
-          <div className="flex items-center justify-center md:justify-start gap-2 sm:gap-4 shrink-0 w-full md:w-auto border-b border-zinc-100 dark:border-zinc-800/50 md:border-none pb-2 md:pb-0">
+          {/* Left - Logo & Service Areas */}
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <Link href="/" className="flex items-center group shrink-0">
               <Image 
                 src="/logo-horizontal.jpg"
                 alt="CCTVQuotation by TEAM"
-                width={250}
-                height={60}
-                className="h-10 sm:h-12 md:h-[52px] w-auto object-contain mix-blend-multiply dark:mix-blend-normal dark:bg-white dark:p-1 dark:rounded-lg transition-transform hover:scale-105 origin-center md:origin-left"
+                width={220}
+                height={52}
+                className="h-8 sm:h-10 md:h-[52px] w-auto object-contain mix-blend-multiply dark:mix-blend-normal dark:bg-white dark:p-1 dark:rounded-lg transition-transform hover:scale-105 origin-left"
                 priority
               />
             </Link>
@@ -75,14 +75,14 @@ export default async function CustomerLayout({
             <GetQuotationButton />
           </div>
 
-          {/* Right / Bottom Row (Mobile) - Navigation & Support */}
-          <div className="flex items-center justify-between md:justify-end gap-1.5 sm:gap-3 shrink-0 w-full md:w-auto overflow-x-auto scrollbar-none pb-1 md:pb-0">
+          {/* Right - Navigation & Support */}
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Nav Links */}
             <TrackBookingButton />
 
             <Link
               href="/login"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 transition-all whitespace-nowrap"
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 transition-all whitespace-nowrap"
               title="Portal"
             >
               <User className="w-3.5 h-3.5" />
@@ -92,16 +92,16 @@ export default async function CustomerLayout({
             </Link>
 
             {/* Divider */}
-            <div className="hidden sm:block w-px h-5 bg-zinc-200 dark:bg-zinc-700"></div>
+            <div className="hidden md:block w-px h-5 bg-zinc-200 dark:bg-zinc-700"></div>
 
-            {/* Support - Icon+Text on mobile, full on desktop */}
+            {/* Quick Call Button - Circular touch-friendly pill on mobile, full on desktop */}
             <a
               href="tel:+917357612865"
               aria-label="Call support"
-              className="flex md:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 transition-all whitespace-nowrap"
+              className="flex md:hidden items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 hover:bg-blue-100 transition-all shadow-xs"
+              title="Call support"
             >
               <PhoneCall className="w-3.5 h-3.5" />
-              <span className="inline"><TranslatedText tKey="call" defaultText="Call" /></span>
             </a>
             <a
               href="tel:+917357612865"

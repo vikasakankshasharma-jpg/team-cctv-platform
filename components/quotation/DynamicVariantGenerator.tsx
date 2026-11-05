@@ -3,7 +3,7 @@ import { Product, Addon, AppSettings, ConfiguratorSelection, PricingResult } fro
 import { calculatePricing } from "@/lib/pricing-engine";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Check, Filter, Tag, ChevronDown, Plus, Trash2, Info, HelpCircle, ShieldCheck } from "lucide-react";
+import { Sparkles, Check, Filter, Tag, ChevronDown, ChevronRight, Plus, Trash2, Info, HelpCircle, ShieldCheck } from "lucide-react";
 import { TagGuideModal } from "./TagGuideModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { BookSurveyClient } from "@/components/public/BookSurveyClient";
@@ -646,54 +646,85 @@ export function DynamicVariantGenerator({
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col gap-4 items-center">
-        <div className="bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-300 px-4 py-3 rounded-xl w-full max-w-2xl text-sm flex items-start gap-3 shadow-sm border border-blue-100 dark:border-blue-900/50">
-          <Info className="w-5 h-5 shrink-0 mt-0.5" />
-          <p className="leading-relaxed">
-            <strong>Configure your setup:</strong> Choose your preferred technology and brand, then adjust camera quantities and resolutions. Use <strong>+ Variant</strong> if you need multiple resolutions (e.g., two 2MP cameras and two 5MP cameras) in the same package.
-          </p>
-        </div>
+        <details className="w-full max-w-2xl group bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl overflow-hidden text-xs sm:text-sm">
+          <summary className="px-3 py-2 sm:px-4 sm:py-2.5 flex items-center justify-between cursor-pointer font-medium text-blue-900 dark:text-blue-200 select-none">
+            <span className="flex items-center gap-2">
+              <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+              <span className="font-semibold text-xs sm:text-sm">How to customize this quote</span>
+            </span>
+            <span className="flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+              <span className="group-open:hidden">Quick guide</span>
+              <span className="hidden group-open:inline">Hide</span>
+              <ChevronDown className="w-3.5 h-3.5 transition-transform group-open:rotate-180" />
+            </span>
+          </summary>
+          <div className="px-3 pb-3 pt-1 sm:px-4 text-blue-800/90 dark:text-blue-300/90 text-xs leading-relaxed border-t border-blue-100/60 dark:border-blue-900/40">
+            Choose your preferred technology and brand, then adjust camera quantities and resolutions. Use <strong>+ Variant</strong> if you need multiple resolutions (e.g., two 2MP cameras and two 5MP cameras) in the same package.
+          </div>
+        </details>
 
-        {/* Technology Selector */}
-        <div className="bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1.5 rounded-full inline-flex relative shadow-inner">
+        {/* Technology Selector - Segmented Switcher */}
+        <div className="w-full max-w-2xl bg-zinc-100 dark:bg-zinc-800/70 p-1 rounded-2xl sm:rounded-full grid grid-cols-3 gap-1 shadow-inner border border-zinc-200/50 dark:border-zinc-700/50">
           <button
+            type="button"
             onClick={() => { setActiveTech("hd"); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: "wired" }))); }}
-            className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 ${activeTech === "hd" ? "text-white shadow-md" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"}`}
+            className={`relative z-10 px-1 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${activeTech === "hd" ? "bg-blue-600 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}
           >
-            {activeTech === "hd" && <span className="absolute inset-0 bg-blue-600 rounded-full shadow-sm -z-10" />}
-            <span>{t("wz_standard_hd_analog")}</span>
-            <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider ${activeTech === 'hd' ? 'bg-white/20 text-white backdrop-blur-xs border border-white/25' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-200/50'}`}>{t("wz_lowest_price")}</span>
+            <span className="truncate">
+              <span className="sm:hidden">HD Analog</span>
+              <span className="hidden sm:inline">{t("wz_standard_hd_analog")}</span>
+            </span>
+            <span className={`text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-extrabold uppercase tracking-tight sm:tracking-wider ${activeTech === 'hd' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'}`}>
+              {t("wz_lowest_price")}
+            </span>
           </button>
+
           <button
+            type="button"
             onClick={() => { setActiveTech("ip"); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: "wired" }))); }}
-            className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 ${activeTech === "ip" ? "text-white shadow-md" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"}`}
+            className={`relative z-10 px-1 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${activeTech === "ip" ? "bg-blue-600 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}
           >
-            {activeTech === "ip" && <span className="absolute inset-0 bg-blue-600 rounded-full shadow-sm -z-10" />}
-            <span>{t("wz_premium_ip_network")}</span>
+            <span className="truncate">
+              <span className="sm:hidden">IP Network</span>
+              <span className="hidden sm:inline">{t("wz_premium_ip_network")}</span>
+            </span>
+            <span className={`text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-tight sm:tracking-wider ${activeTech === 'ip' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'}`}>
+              Popular
+            </span>
           </button>
+
           <button
+            type="button"
             onClick={() => { setActiveTech("wireless"); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: b.connection === "4g" ? "4g" : "wifi" }))); }}
-            className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 ${activeTech === "wireless" ? "text-white shadow-md" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"}`}
+            className={`relative z-10 px-1 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${activeTech === "wireless" ? "bg-blue-600 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}
           >
-            {activeTech === "wireless" && <span className="absolute inset-0 bg-blue-600 rounded-full shadow-sm -z-10" />}
-            <span>Smart Wireless (Wi-Fi / 4G)</span>
-            <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider ${activeTech === 'wireless' ? 'bg-white/20 text-white backdrop-blur-xs border border-white/25' : 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300 border border-teal-200/50'}`}>
-              {selection.power_wiring_option === "wire_needed" ? "Zero Video Wire" : "Zero Wiring"}
+            <span className="truncate">
+              <span className="sm:hidden">Wireless</span>
+              <span className="hidden sm:inline">Smart Wireless</span>
+            </span>
+            <span className={`text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-extrabold uppercase tracking-tight sm:tracking-wider ${activeTech === 'wireless' ? 'bg-white/20 text-white' : 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300'}`}>
+              {selection.power_wiring_option === "wire_needed" ? "No Wire" : "0 Wiring"}
             </span>
           </button>
         </div>
 
         {/* Brand Selector */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
-          <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 mr-2 shrink-0">{t("wz_brand")}</span>
-          {availableBrands.map(b => (
-            <button
-              key={b}
-              onClick={() => setActiveBrand(b)}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all ${activeBrand === b ? "bg-blue-600 text-white border-blue-600 shadow-xs dark:bg-blue-600 dark:text-white" : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-blue-400 hover:text-blue-600"}`}
-            >
-              {BRAND_DISPLAY[b] || getCanonicalBrandName(b) || b}
-            </button>
-          ))}
+        <div className="w-full max-w-2xl relative">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 max-w-full scrollbar-none px-0.5">
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mr-1 shrink-0">
+              {t("wz_brand")}:
+            </span>
+            {availableBrands.map(b => (
+              <button
+                key={b}
+                type="button"
+                onClick={() => setActiveBrand(b)}
+                className={`px-3 py-1 sm:px-3.5 sm:py-1.5 text-xs font-semibold rounded-full border transition-all shrink-0 ${activeBrand === b ? "bg-blue-600 text-white border-blue-600 shadow-xs dark:bg-blue-600 dark:text-white" : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-blue-400 hover:text-blue-600"}`}
+              >
+                {BRAND_DISPLAY[b] || getCanonicalBrandName(b) || b}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Real-time System Composition & Specification Breakdown */}
@@ -824,7 +855,7 @@ export function DynamicVariantGenerator({
               </div>
 
               {/* Controls row: Quantity Dropdown, Resolution Dropdown & Connection Dropdown */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
                 {/* Quantity Dropdown */}
                 <div className="relative">
                   <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
@@ -870,7 +901,7 @@ export function DynamicVariantGenerator({
                 </div>
 
                 {/* Connection Dropdown */}
-                <div className="relative">
+                <div className="relative col-span-2 sm:col-span-1">
                   <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
                     Connection
                   </label>
@@ -1115,12 +1146,18 @@ export function DynamicVariantGenerator({
                     </p>
                   )}
                   <div className="flex items-start justify-center">
-                    <span className="text-[40px] leading-none font-extrabold text-[#1d1d1f] dark:text-white tracking-tight">
+                    <span className="text-[32px] sm:text-[40px] leading-none font-extrabold text-[#1d1d1f] dark:text-white tracking-tight">
                       ₹{variant.total_payable.toLocaleString('en-IN')}
                     </span>
                   </div>
                   <div className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium mt-1">
                     or from <span className="text-blue-600 dark:text-blue-400 font-bold">₹{Math.round((variant.total_payable * 1.06) / 12).toLocaleString('en-IN')}/mo</span> (EMI)
+                  </div>
+                  <div className="mt-3 w-full">
+                    <div className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm transition-all group-hover:bg-blue-700">
+                      <span>Select & Proceed</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </div>
                   </div>
                   <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80 w-full flex flex-col items-center gap-2">
                     <button

@@ -606,7 +606,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     if (!pricing_results.recommended) return <div className="animate-pulse flex space-y-4 flex-col h-96 bg-zinc-200 rounded-xl" />;
 
   return (
-    <div className={`flex flex-col relative pb-28 ${viewMode === 'addons' ? 'gap-2 sm:gap-4' : 'gap-12 sm:gap-20'}`}>
+    <div className={`flex flex-col relative pb-28 ${viewMode === 'addons' ? 'gap-2 sm:gap-4' : 'gap-5 sm:gap-14'}`}>
       
       {/* DYNAMIC CATALOG VARIATIONS & SPEC TABLE - APPLE AESTHETIC */}
       {viewMode !== 'addons' && (
@@ -614,10 +614,10 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         
         {/* Dynamic Generator vs Compare Mode */}
         {viewMode === 'catalog' && (
-          <div className="mb-16">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">{t("wz_build_your_quotation")}</h2>
-              <p className="text-[15px] text-[#86868b] mt-2">{t("wz_select_your_preferred_technolo")}</p>
+          <div className="mb-8 sm:mb-16">
+            <div className="text-center mb-4 sm:mb-8">
+              <h2 className="text-xl sm:text-3xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">{t("wz_build_your_quotation")}</h2>
+              <p className="text-xs sm:text-[15px] text-[#86868b] mt-1 sm:mt-2">{t("wz_select_your_preferred_technolo")}</p>
             </div>
             <DynamicVariantGenerator
               products={currentProducts}
