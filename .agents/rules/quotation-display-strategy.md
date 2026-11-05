@@ -57,3 +57,9 @@ Never confuse or revert the quotation presentation strategy for this project. Th
 - **Separation of Resolution and Features:** 5MP / clarity belongs exclusively to the `RESOLUTION` selector. It must never appear as an add-on feature tag.
 - **Zero Blocking Popups on Page Load:** Let the customer view their quote immediately upon landing. Checklist and Feature Guide modals are accessible on-demand.
 - **Centered Responsive Dialogs:** All modal dialogs must use centered layouts (`items-center justify-center max-h-[85vh] rounded-2xl sm:rounded-3xl`) with dedicated internal scroll containers to prevent action button clipping on mobile and tablet screens.
+
+## 8. Storage Transparency & Multi-Tier Presentation Rules
+- **Physical Inverse Scaling Law:** For wired systems (HD/IP), storage days must scale inversely with camera count ($Days \propto \frac{Capacity}{Cameras}$). An 8-camera setup on a 500GB HDD yields **~3 Days Backup**, strictly half of a 4-camera setup (~7 Days).
+- **Dedicated Wireless Storage:** Wireless cameras receive 1 MicroSD card per camera (`qty = camera_count`). The UI must display `(~X Days Backup per Camera · Dedicated MicroSD)` and never divide card capacity across multiple wireless cameras.
+- **Red Alert Transparency Box:** When an Economy Storage Match or Budget drive is quoted, the package card MUST display the prominent Red Alert Box detailing reduced backup days and high 24×7 failure risk of refurbished drives.
+- **Green Trust Badge for Genuine Surveillance Drives:** Standard branded quotes pairing Seagate SkyHawk or WD Purple must display the Green Trust Badge: `100% Genuine 24×7 Surveillance HDD · ~X Days Backup · 3-Yr Warranty`.

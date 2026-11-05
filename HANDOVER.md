@@ -1,7 +1,7 @@
 # TEAM CCTV Platform - Master Operational Handover Guide
 
 > **Author:** Antigravity Engineering Pair  
-> **Date:** October 12, 2026  
+> **Date:** November 5, 2026  
 > **Target Environment:** Production (`https://cctvquotation.com`)  
 > **Repository:** `team-cctv-platform` (`master` branch)  
 
@@ -90,6 +90,18 @@ This document serves as the master engineering and operational handover for the 
 - **Edit Modal Direct Delete:** The Edit Product modal footer includes an immediate "Delete Product" button.
 - **Distributor Inventory Integration:** Tools (`scripts/sync-all-megacompu-catalog.js`) map 66 verified SKUs across CP Plus, Hikvision, Prama, A+ Products, Secureye, Trueview, and matching DVRs with genuine dealer wholesale pricing and exact distributor Item IDs.
 
+### 2.9 Multi-Tier Storage Architecture, Physical Law Inverse Scaling & Market Transparency Rules
+- **Physical Law Inverse Scaling Parity ($Days \propto \frac{Capacity}{Cameras \times DailyGB}$):** Centralized DVR/NVR hard drives are shared across all active wired cameras. Sizing correctly yields strictly inverse retention: 4 cameras on 500GB HDD = **~7 Days Backup**, while 8 cameras on 500GB HDD = **~3 Days Backup** (strictly halved, eliminating the ~6 days artifact caused by compound codec discounting). 8 cameras on 1TB HDD yields **~7 Days Backup**.
+- **Surveillance Industry Bitrate & Codec Standardization:**
+  - HD Analog (DVR): 17.5 GB/day (2MP), 26.0 GB/day (5MP), 45.0 GB/day (8MP).
+  - IP Network (NVR): 14.0 GB/day (2MP H.265), 20.0 GB/day (5MP H.265), 35.0 GB/day (8MP H.265+).
+  - Smart Wireless IP: 4.5 GB/day (2MP Smart Motion), 10.5 GB/day (2MP Continuous).
+- **Smart Wireless Edge Storage Scaling:** Wireless cameras are edge recording devices with dedicated MicroSD card slots. Configurator BOM adds exactly 1 card per camera (`qty = camera_count`). Adding more wireless cameras does not reduce individual retention; UI displays `~X Days Backup per Camera · Dedicated MicroSD`.
+- **Quality Tier Separation & Catalog Integrity:**
+  - Standard branded packages (CP Plus, Hikvision, Dahua, Trueview) strictly pair **100% Genuine 24×7 Surveillance HDDs (Seagate SkyHawk / WD Purple)** with **3-Year Replacement Warranty** and Green Verification Badges.
+  - Economy Match / Budget quotes pair Budget Brand HDDs (`HDD-BUD-500GB`, `HDD-BUD-1TB`, etc.) with transparent pricing.
+- **Mandatory Red Warning Box for Refurbished Storage:** Highlights competitor tactics of covertly bundling refurbished desktop HDDs with branded cameras to display deceptively low prices. Discloses reduced backup duration for the configured camera count and 1-year local warranty risks, warning customers before booking.
+
 ---
 
 ## 3. Operational & Deployment Guide
@@ -120,6 +132,9 @@ npx tsx scripts/test-hdmi-addons.ts
 
 # Multi-Camera Count Matrix (1-32 cameras across HD, IP, Wireless - 432 permutations)
 npx tsx scripts/test-all-counts-matrix.ts
+
+# Storage Physics Parity & Multi-Tier Verification Suite
+npx tsx scripts/test-storage-physics-parity.ts
 
 # 238-Test Matrix Runner
 npx tsx scripts/execute-all-238-tests.ts

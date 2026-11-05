@@ -181,6 +181,40 @@
 
 ---
 
+### 3.11 Multi-Tier Storage Architecture, Physical Law Inverse Scaling & Market Transparency Rules
+- **Physical Law of Inverse Scaling Invariant ($Days \propto \frac{Capacity}{Cameras \times DailyGB}$):**
+  - Centralized DVR and NVR hard drives are shared across all active wired cameras. As camera count increases on the same hard drive capacity, backup duration MUST strictly decrease proportionally:
+    $$\text{Backup Days} = \max\left(1, \left\lfloor \frac{\text{HDD Capacity in GB}}{\text{Camera Count} \times \text{Daily GB per Camera}} \right\rfloor\right)$$
+  - *Hard Invariant Examples (HD Analog 2MP @ 17.5 GB/day):*
+    - 4 Cameras on 500GB HDD = **~7 Days Backup**
+    - 8 Cameras on 500GB HDD = **~3 Days Backup** (strictly halved, NEVER ~6 days)
+    - 16 Cameras on 500GB HDD = **~1–2 Days Backup**
+    - 8 Cameras on 1TB HDD = **~7 Days Backup**
+    - 8 Cameras on 2TB HDD = **~14 Days Backup**
+    - 8 Cameras on 4TB HDD = **~28 Days Backup**
+    - 8 Cameras on 6TB HDD = **~42 Days Backup**
+- **Surveillance Industry Bitrate & Daily GB Standards:**
+  - **HD Analog (DVR):** 2MP = $17.5 \text{ GB/day}$; 4MP/5MP = $26.0 \text{ GB/day}$; 8MP = $45.0 \text{ GB/day}$ (continuous recording @ 1.0; motion mode sustained daytime @ 0.85).
+  - **IP Network (NVR):** Native H.265 / H.265+ hardware compression: 2MP/3MP = $14.0 \text{ GB/day}$; 4MP/5MP = $20.0 \text{ GB/day}$; 8MP = $35.0 \text{ GB/day}$.
+  - Compound multipliers (e.g., $0.55 \times 0.55 = 0.30$) that artificially compress daily rates to $\le 10 \text{ GB/day}$ are strictly prohibited.
+- **Smart Wireless IP Dedicated MicroSD Card Scaling:**
+  - Wireless cameras are independent edge devices. Each camera contains its own dedicated MicroSD slot and records independently.
+  - When a customer configures $N$ wireless cameras, the BOM adds exactly $N$ MicroSD cards (`qty = camera_count`).
+  - Adding more wireless cameras does NOT reduce the backup days of individual cameras. Backup days are calculated per single camera:
+    $$\text{MicroSD Backup Days} = \max\left(1, \left\lfloor \frac{\text{Card Capacity in GB}}{\text{Daily GB per Camera}} \right\rfloor\right)$$
+  - 64GB MicroSD in Smart Motion (4.5 GB/day) yields **~14 Days per camera**; 128GB yields **~28 Days per camera**.
+  - Customer copy must explicitly specify: `~X Days Backup per Camera · Dedicated MicroSD`.
+- **Quality Tiering & Market Transparency Rules:**
+  - **Standard Branded Packages (CP Plus, Hikvision, Dahua, Trueview):** Must strictly select **100% Genuine 24×7 Surveillance HDDs (Seagate SkyHawk / WD Purple)** with **3-Year Replacement Warranty** and the Green Verification Badge. Branded packages must never secretly bundle refurbished drives in standard quotes.
+  - **Economy Match Packages & Budget Brand (A+ Products):** Utilize active Budget Brand HDDs (`HDD-BUD-500GB`, `HDD-BUD-1TB`, etc.) to show lower initial costs.
+  - **Mandatory Red Transparency Alert Box:** Whenever a refurbished/budget hard drive is quoted, the UI must prominently render the Red Warning Box disclosing:
+    1. Competitor transparency alert regarding covert bundling of refurbished desktop drives.
+    2. Accurate reduced backup days for the total camera count (e.g. `• Backup: Only ~3 Days for 8 cameras`).
+    3. 1-Year Local warranty and high 24×7 failure risk warning.
+    4. TEAM CCTV recommendation to upgrade to genuine 3-Year warranty surveillance drives.
+
+---
+
 ## 4. Installation, Labor & Site Survey Rules
 
 ### 4.1 Strict Zero Margin on Labor

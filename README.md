@@ -81,6 +81,16 @@
 - **In-Modal Direct Delete:** The Edit Product modal footer includes an immediate "Delete Product" button for quick removal during specification inspection.
 - **Distributor Inventory Integration (Mega Compu World Jaipur):** Ingestion tooling and verification scripts (`scripts/sync-all-megacompu-catalog.js`) map 66 verified SKUs across CP Plus, Hikvision, Prama, A+ Products (Budget), Secureye, Trueview, and matching DVRs with genuine dealer wholesale pricing and exact distributor Item IDs.
 
+### 10. Multi-Tier Storage Architecture, Physical Law Inverse Scaling & Market Transparency Rules
+- **Physical Law of Inverse Scaling ($Days \propto \frac{Capacity}{Cameras \times DailyGB}$):** Centralized DVR/NVR hard drives are shared across all wired cameras. As camera count increases on the same hard drive, backup duration strictly decreases proportionally (e.g., 500GB HDD yields ~7 Days for 4 cameras, but strictly ~3 Days for 8 cameras).
+- **Technology-Aware Daily Bitrates:** Uses realistic surveillance industry continuous and daytime bitrates:
+  - HD Analog (DVR): 17.5 GB/day (2MP), 26.0 GB/day (5MP), 45.0 GB/day (8MP).
+  - IP Network (NVR): 14.0 GB/day (2MP H.265), 20.0 GB/day (5MP H.265), 35.0 GB/day (8MP H.265+).
+  - Smart Wireless IP: 4.5 GB/day (2MP Smart Motion), 10.5 GB/day (2MP Continuous).
+- **Dedicated Wireless Edge Storage:** Smart Wireless IP cameras use independent MicroSD memory cards per camera (`qty = camera_count`). Adding more wireless cameras does not reduce individual backup days (`~14 Days Backup per Camera · Dedicated MicroSD`).
+- **Prominent Red Warning for Refurbished Storage:** Transparently unmasks competitor tactics of covertly bundling refurbished desktop HDDs with branded cameras. If an Economy Storage Match is configured, an unmissable Red Alert Box warns customers of the high 24×7 failure risk and reduced retention before purchase.
+- **Green Trust Verification Badge:** Standard quotes pairing 100% genuine Seagate SkyHawk or WD Purple HDDs highlight their 3-Year Replacement Warranty and 24×7 surveillance endurance.
+
 ---
 
 ## 🛠 Tech Stack

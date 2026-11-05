@@ -1,6 +1,6 @@
 # TEAM CCTV Platform - Master Project Status & Verification Log
 
-> **Last Updated:** November 4, 2026  
+> **Last Updated:** November 5, 2026  
 > **Production URL:** `https://cctvquotation.com`  
 > **Repository:** `team-cctv-platform` (`master` branch)  
 > **Canonical Plan & Architecture:** [`docs/HARDENING_SPRINT_PLAN.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/HARDENING_SPRINT_PLAN.md) | [`BUSINESS_RULES.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/BUSINESS_RULES.md)
@@ -11,7 +11,7 @@
 
 | Domain | Status | Latest Evidence / Milestone |
 |---|---|---|
-| **Commercial Core & Pricing Engine** | `VERIFIED` | 100% parity between Guided Setup & Pro Builder; Recorder (DVR/NVR) resolution compatibility ($\text{recMaxMP} \ge \text{targetMaxMP}$) & best-price tie-break; SMPS best-price rule; Gigabit switch multi-PoE uplink; bundle/per-meter cable logic; ₹0 markup labor rules; 5 site prep flags. |
+| **Commercial Core & Pricing Engine** | `VERIFIED` | 100% parity between Guided Setup & Pro Builder; Recorder (DVR/NVR) resolution compatibility ($\text{recMaxMP} \ge \text{targetMaxMP}$) & best-price tie-break; SMPS best-price rule; Gigabit switch multi-PoE uplink; bundle/per-meter cable logic; ₹0 markup labor rules; 5 site prep flags; **Multi-tier storage architecture & physical law inverse scaling ($Days \propto \frac{Capacity}{Cameras \times DailyGB}$) across HD, IP & Wireless; Prominent Red Warning for refurbished/budget storage.** |
 | **Mapping & Geographical Coverage** | `VERIFIED` | 100% Google Maps parity via Mappls GeoAnalytics API + 34-vertex fallback `JAIPUR_METRO_BOUNDARY`; CartoDB Voyager CDN tile engine with sub-50ms latency; automated Leaflet modal resize engine (`ResizeObserver` + staggered `invalidateSize`); 1-click delivery halo toggle (`Halos: ON/OFF`); 1-click `⚡ Auto-Trace Territory` convex hull enclosure; 0 legacy compass labels in Firestore. |
 | **Referral & Partner Ecosystem** | `VERIFIED` | B2B Partner Portal with QR codes (2% comm / 3% disc); B2C Refer & Earn (₹500 / ₹500) with festive WhatsApp status EDMs; Financial Dashboard payout tracking. |
 | **Customer Journey & Pro Builder** | `VERIFIED` | WhatsApp OTP lead capture before custom build; Mobile slide-over cart drawer; single-filter auto-collapse; Dynamic inventory-driven feature tags; Resolution vs feature boundary enforcement; Centered non-intrusive modal dialogs; Per-bucket feature independence with zero feature leakage. |
@@ -501,6 +501,21 @@
 - **Row-Level Direct Delete UX (`ProductInventory.tsx`)**: Added a direct Trash icon (`Trash2`) with confirmation dialog in the `ACTIONS` column for every inventory row, eliminating the need to search for the checkbox and bulk header button for single items.
 - **Modal-Level Delete UX (`AdminProductsPage`)**: Added a `Delete Product` button directly within the Edit Product modal footer for quick removal during inspection.
 - **Orphan Cleaned**: Deleted `ACC-WIFI-EXTENDER` from the live database.
+
+---
+
+### Milestone 41: Multi-Tier Storage Architecture, Physical Law Inverse Scaling & Market Transparency Rules
+- **Physical Law Inverse Scaling Parity ($Days \propto \frac{Capacity}{Cameras \times DailyGB}$)**: Centralized DVR/NVR hard drives are shared across all active wired cameras. Sizing correctly yields strictly inverse retention: 4 cameras on 500GB HDD = **~7 Days Backup**, while 8 cameras on 500GB HDD = **~3 Days Backup** (strictly halved, eliminating the ~6 days artifact caused by compound codec discounting). 8 cameras on 1TB HDD yields **~7 Days Backup**.
+- **Surveillance Industry Bitrate & Codec Standardization**:
+  - HD Analog (DVR): 17.5 GB/day (2MP), 26.0 GB/day (5MP), 45.0 GB/day (8MP).
+  - IP Network (NVR): 14.0 GB/day (2MP H.265), 20.0 GB/day (5MP H.265), 35.0 GB/day (8MP H.265+).
+  - Smart Wireless IP: 4.5 GB/day (2MP Smart Motion), 10.5 GB/day (2MP Continuous).
+- **Smart Wireless Edge Storage Scaling**: Wireless cameras are edge recording devices with dedicated MicroSD card slots. Configurator BOM adds exactly 1 card per camera (`qty = camera_count`). Adding more wireless cameras does not reduce individual retention; UI displays `~X Days Backup per Camera · Dedicated MicroSD`.
+- **Quality Tier Separation & Catalog Integrity**:
+  - Standard branded packages (CP Plus, Hikvision, Dahua, Trueview) strictly pair **100% Genuine 24×7 Surveillance HDDs (Seagate SkyHawk / WD Purple)** with **3-Year Replacement Warranty** and Green Verification Badges.
+  - Economy Match / Budget quotes pair Budget Brand HDDs (`HDD-BUD-500GB`, `HDD-BUD-1TB`, etc.) with transparent pricing.
+- **Mandatory Red Warning Box for Refurbished Storage**: Highlights competitor tactics of covertly bundling refurbished desktop HDDs with branded cameras to display deceptively low prices. Discloses reduced backup duration for the configured camera count and 1-year local warranty risks, warning customers before booking.
+- **100% Automated Test Suite (`scripts/test-storage-physics-parity.ts`)**: Validates inverse camera scaling, quality tiering, and dedicated MicroSD cards across HD, IP, and Wireless setups.
 
 ---
 
