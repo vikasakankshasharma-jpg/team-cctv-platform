@@ -630,14 +630,19 @@ export default function AdminProductsPage() {
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Technology</label>
                         <select 
-                          value={editingProduct.technologies?.[0] || editingProduct.technology || "Common"}
+                          value={
+                            (editingProduct.technologies?.includes("Common" as any) || editingProduct.technologies?.includes("both" as any) || editingProduct.technology === "Common" || editingProduct.technology === "both")
+                              ? "Common"
+                              : (editingProduct.technologies?.[0] || editingProduct.technology || "Common")
+                          }
                           onChange={e => {
                             const val = e.target.value;
                             const isW = val === "Wireless";
+                            const isCommon = val === "Common" || val === "both";
                             setEditingProduct({
                               ...editingProduct,
                               technology: val as any,
-                              technologies: [val as any],
+                              technologies: isCommon ? ["Common", "Wireless", "HD", "IP"] as any : [val as any],
                               has_wifi: isW ? true : editingProduct.has_wifi,
                               form_factor: (isW && (!editingProduct.form_factor || editingProduct.form_factor === "dome")) ? "ptz" : editingProduct.form_factor
                             });
@@ -647,7 +652,7 @@ export default function AdminProductsPage() {
                           <option value="HD">Analog HD</option>
                           <option value="IP">Digital IP</option>
                           <option value="Wireless">Smart Wireless (Wi-Fi)</option>
-                          <option value="both">Hybrid / Common</option>
+                          <option value="Common">Hybrid / Common</option>
                         </select>
                       </div>
                       {/* Tally-Style Group Selector */}
