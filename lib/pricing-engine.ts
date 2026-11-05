@@ -203,7 +203,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
       // If customer has already done video cabling (cablingDone === true), do not charge for video cables, ONLY electrical wire!
       if (cablingDone && needsElectricalWire) {
         itemsToAdd = cabling.items.filter(i => 
-          i.product_id === "CAB-ELEC-2CORE-PU" || 
+          i.product_id === "CAB-ELEC-2CORE-90M" || i.product_id === "CAB-ELEC-2CORE-PU" || 
           i.display_name?.toLowerCase().includes("2-core") || 
           i.display_name?.toLowerCase().includes("electrical")
         );
@@ -966,32 +966,31 @@ function calculateCabling(
     const defaultPowerMetersPerCam = 10;
     const totalPowerMeters = totalPowerMetersRequested || (wirelessCount * defaultPowerMetersPerCam);
 
-    // Look for exact per-meter 2-core wire product (unit_price < 50), never a 90m roll!
-    const elecProduct = products.find(p => p.id === "CAB-ELEC-2CORE-PU" || p.sku === "CAB-ELEC-2CORE-PU") ||
+    // Look for electrical power wire product (single canonical physical roll with per_meter_cost provision)
+    const elecProduct = products.find(p => p.id === "CAB-ELEC-2CORE-90M" || p.id === "CAB-ELEC-2CORE-PU" || p.sku === "CAB-ELEC-2CORE-90M" || p.sku === "CAB-ELEC-2CORE-PU") ||
       products.find(p => 
         p.category === "cable" && 
-        (p.subcategory === "electrical_wire" || (p.display_name || "").toLowerCase().includes("2-core") || (p.display_name || "").toLowerCase().includes("electrical")) &&
-        ((p.display_name || "").toLowerCase().includes("per mtr") || (p.unit_price || 0) < 50)
+        (p.subcategory === "electrical_wire" || (p.display_name || "").toLowerCase().includes("2-core") || (p.display_name || "").toLowerCase().includes("electrical"))
       );
 
     let baseRatePerMeter = 10;
     let baseCostPerMeter = 6;
 
     if (elecProduct) {
-      if (elecProduct.cable_length_m && elecProduct.cable_length_m > 1) {
-        // Roll or coil (e.g. 90m roll) - derive true per-meter rate
-        baseRatePerMeter = Math.round((elecProduct.unit_price || 750) / elecProduct.cable_length_m);
-        baseCostPerMeter = Math.round((elecProduct.base_cost || 600) / elecProduct.cable_length_m);
-      } else if (elecProduct.unit_price && elecProduct.unit_price <= 50) {
-        // Dedicated per-meter product rate
-        baseRatePerMeter = elecProduct.unit_price;
-        baseCostPerMeter = elecProduct.base_cost || Math.round(baseRatePerMeter / 1.25);
-      } else if (elecProduct.per_meter_cost && elecProduct.per_meter_cost <= 50) {
+      if (elecProduct.per_meter_cost && elecProduct.per_meter_cost > 0 && elecProduct.per_meter_cost <= 50) {
+        // Explicitly configured loose per-meter cost (from Product Pricing Tab option)
         baseCostPerMeter = elecProduct.per_meter_cost;
         baseRatePerMeter = Math.round(baseCostPerMeter * (1 + (elecProduct.margin_percentage || 25) / 100));
+      } else if (elecProduct.cable_length_m && elecProduct.cable_length_m > 1) {
+        // Auto-derived per-meter rate from roll
+        baseCostPerMeter = Math.round((elecProduct.base_cost || 600) / elecProduct.cable_length_m);
+        baseRatePerMeter = Math.round((elecProduct.unit_price || 750) / elecProduct.cable_length_m);
+      } else if (elecProduct.unit_price && elecProduct.unit_price <= 50) {
+        baseRatePerMeter = elecProduct.unit_price;
+        baseCostPerMeter = elecProduct.base_cost || Math.round(baseRatePerMeter / 1.25);
       } else {
-        baseRatePerMeter = 10;
-        baseCostPerMeter = 6;
+        baseRatePerMeter = settings.wire_cost_per_meter || 10;
+        baseCostPerMeter = settings.wire_cost_per_meter ? Math.round(settings.wire_cost_per_meter * 0.7) : 6;
       }
     }
 
@@ -1005,7 +1004,7 @@ function calculateCabling(
     const lineCost = finalCost * totalPowerMeters;
 
     const elecItem: QuoteLineItem = {
-      product_id: elecProduct?.id || "CAB-ELEC-2CORE-PU",
+      product_id: elecProduct?.id || "CAB-ELEC-2CORE-90M",
       display_name: isConduit
         ? `2-Core Copper Electrical Power Wire (with PVC Conduit) (~${totalPowerMeters}m) @ ₹${finalRate}/m`
         : `2-Core Copper Electrical Power Wire (Open) (~${totalPowerMeters}m) @ ₹${finalRate}/m`,
@@ -1148,7 +1147,7 @@ function calculateCabling(
     const bLen = (b as any).parsed_length || 1;
     baseCostPerMeter = b.per_meter_cost !== undefined ? b.per_meter_cost : ((b.base_cost || 0) / bLen);
     // Extract base name without length suffix for the per-meter label
-    cableTypeLabel = b.display_name?.replace(/\s*\d+\s*(?:m|mtr|mtrs|meter|meters|roll|rolls).*$/i, "").trim() || cableTypeLabel;
+    cableTypeLabel = (b.display_name?.replace(/\s*[\(\[]?\s*\d+\s*(?:m|mtr|mtrs|meter|meters|roll|rolls|coil|coils)[\s\S]*$/i, "") || "").replace(/[\(\[]\s*$/, "").trim() || cableTypeLabel;
     perMeterProductId = b.id!;
   } else {
     baseCostPerMeter = effectiveCableTech === "IP" ? (settings.cable_copper_coated_ip || 12) : (settings.cable_copper_coated_hd || 8);
