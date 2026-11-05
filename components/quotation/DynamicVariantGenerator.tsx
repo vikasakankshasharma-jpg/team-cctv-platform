@@ -655,9 +655,10 @@ export function DynamicVariantGenerator({
   }, [activeTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, cablingMeters, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions]);
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col gap-4 items-center">
-        <details className="w-full max-w-2xl group bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl overflow-hidden text-xs sm:text-sm">
+    <div className="w-full max-w-6xl mx-auto space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Quick guide details */}
+      <div className="w-full max-w-2xl mx-auto">
+        <details className="w-full group bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl overflow-hidden text-xs sm:text-sm">
           <summary className="px-3 py-2 sm:px-4 sm:py-2.5 flex items-center justify-between cursor-pointer font-medium text-blue-900 dark:text-blue-200 select-none">
             <span className="flex items-center gap-2">
               <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
@@ -673,9 +674,12 @@ export function DynamicVariantGenerator({
             Choose your preferred technology and brand, then adjust camera quantities and resolutions. Use <strong>+ Variant</strong> if you need multiple resolutions (e.g., two 2MP cameras and two 5MP cameras) in the same package.
           </div>
         </details>
+      </div>
 
+      {/* Sticky Filter Bar: Technology & Brand Selectors */}
+      <div className="sticky top-14 md:top-20 z-30 w-full bg-[#f5f5f7]/95 dark:bg-black/95 backdrop-blur-md pt-1.5 pb-2 px-1 -mx-1 sm:px-3 sm:mx-auto max-w-2xl border-b border-zinc-200/80 dark:border-zinc-800/80 shadow-xs sm:rounded-2xl transition-all space-y-2">
         {/* Technology Selector - Segmented Switcher */}
-        <div className="w-full max-w-2xl bg-zinc-100 dark:bg-zinc-800/70 p-1 rounded-2xl sm:rounded-full grid grid-cols-3 gap-1 shadow-inner border border-zinc-200/50 dark:border-zinc-700/50">
+        <div className="w-full bg-zinc-100 dark:bg-zinc-800/70 p-1 rounded-2xl sm:rounded-full grid grid-cols-3 gap-1 shadow-inner border border-zinc-200/50 dark:border-zinc-700/50">
           <button
             type="button"
             onClick={() => { setActiveTech("hd"); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: "wired" }))); }}
@@ -720,8 +724,8 @@ export function DynamicVariantGenerator({
         </div>
 
         {/* Brand Selector */}
-        <div className="w-full max-w-2xl relative">
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 max-w-full scrollbar-none px-0.5">
+        <div className="w-full relative">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-0.5 max-w-full scrollbar-none px-0.5">
             <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mr-1 shrink-0">
               {t("wz_brand")}:
             </span>
@@ -737,7 +741,9 @@ export function DynamicVariantGenerator({
             ))}
           </div>
         </div>
+      </div>
 
+      <div className="flex flex-col gap-4 items-center">
         {/* Real-time System Composition & Specification Breakdown */}
         <div className="w-full max-w-2xl mx-auto bg-white dark:bg-[#1d1d1f] p-3 sm:p-3.5 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm space-y-2.5">
           <div className="flex items-center justify-between flex-wrap gap-2">
