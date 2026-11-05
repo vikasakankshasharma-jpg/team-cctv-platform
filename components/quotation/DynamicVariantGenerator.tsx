@@ -3,7 +3,7 @@ import { Product, Addon, AppSettings, ConfiguratorSelection, PricingResult } fro
 import { calculatePricing } from "@/lib/pricing-engine";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Check, Filter, Tag, ChevronDown, ChevronRight, Plus, Trash2, Info, HelpCircle, ShieldCheck } from "lucide-react";
+import { Sparkles, Check, Filter, Tag, ChevronDown, ChevronRight, Plus, Trash2, Info, HelpCircle, ShieldCheck, AlertTriangle } from "lucide-react";
 import { TagGuideModal } from "./TagGuideModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { BookSurveyClient } from "@/components/public/BookSurveyClient";
@@ -475,6 +475,14 @@ export function DynamicVariantGenerator({
         }
         const isSd = (storage_device as any).subcategory === "sd_card" || ((storage_device as any).display_name || "").toLowerCase().includes("sd") || ((storage_device as any).display_name || "").toLowerCase().includes("microsd");
         (storage_device as any).derivedCapacity = cap ? (isSd ? `${cap} MicroSD` : cap) : (isSd ? "MicroSD" : "HDD");
+        
+        const isRefurb = 
+          (storage_device as any).is_refurbished === true ||
+          (storage_device as any).brand === "Budget Brand" ||
+          ((storage_device as any).brand || "").toLowerCase().includes("budget") ||
+          ((storage_device as any).id || "").startsWith("HDD-BUD-") ||
+          (typeof cap === "string" && cap.includes("500GB"));
+        (storage_device as any).is_refurbished = isRefurb;
       }
 
       // Extract actual resolutions delivered in the quote (to handle fallbacks, e.g. when a brand lacks 2MP IP)
@@ -1111,9 +1119,36 @@ export function DynamicVariantGenerator({
                     </div>
                   )}
                   {!variant.is_economy_storage && variant.is_economy_storage !== undefined && (
-                    <p className="text-xs text-emerald-600 font-medium mb-3">
-                      {t("wz_requested_storage_")}{variant.storage_device?.derivedCapacity || (variant.technology === "Wireless" ? "128GB MicroSD" : "2TB")}) - {variant.storage_days}  {t("wz_days")}
+                    <p className="text-xs text-zinc-700 dark:text-zinc-300 font-medium mb-2">
+                      {t("wz_requested_storage_")}<span className="font-bold text-zinc-900 dark:text-white">{variant.storage_device?.derivedCapacity || (variant.technology === "Wireless" ? "128GB MicroSD" : "1TB")}</span>) · {variant.storage_days} {t("wz_days")}
                     </p>
+                  )}
+
+                  {/* Refurbished / Economy Storage Transparency Alert */}
+                  {variant.storage_device?.is_refurbished && (
+                    <div className="w-full my-2.5 p-3 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-left">
+                      <div className="flex items-center gap-1.5 text-red-700 dark:text-red-400 font-extrabold text-[11px] uppercase tracking-wide">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-red-600 dark:text-red-400" />
+                        <span>⚠️ Refurbished / Economy Storage Alert</span>
+                      </div>
+                      <p className="text-[11px] text-red-700/90 dark:text-red-300/90 mt-1 leading-snug">
+                        <strong>Market Transparency:</strong> Many competitors secretly bundle refurbished desktop HDDs with branded cameras to display artificially low quotes.
+                      </p>
+                      <div className="mt-1.5 text-[10.5px] text-red-600 dark:text-red-300 font-semibold space-y-0.5">
+                        <div>• <strong>Backup:</strong> Only ~5–7 Days (overwritten quickly)</div>
+                        <div>• <strong>Warranty:</strong> 1-Year Local (high 24×7 failure risk)</div>
+                      </div>
+                      <div className="mt-2 pt-1.5 border-t border-red-200/70 dark:border-red-900/50 text-[10.5px] font-bold text-red-800 dark:text-red-200 leading-tight">
+                        🛡️ <strong>TEAM Advice:</strong> We disclose every component honestly. We strongly recommend upgrading to genuine Seagate SkyHawk / WD Purple for 3-Year Replacement Warranty & 24×7 peace of mind.
+                      </div>
+                    </div>
+                  )}
+
+                  {!variant.storage_device?.is_refurbished && variant.storage_device && (
+                    <div className="w-full my-2 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold flex items-center justify-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>100% Genuine 24×7 Surveillance HDD · 3-Yr Replacement Warranty</span>
+                    </div>
                   )}
                   <div className="flex items-start justify-center">
                     <span className="text-[32px] sm:text-[40px] leading-none font-extrabold text-[#1d1d1f] dark:text-white tracking-tight">

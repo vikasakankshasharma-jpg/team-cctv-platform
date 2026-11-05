@@ -2086,56 +2086,17 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
   const inStockDisks = hardDisks.filter(isAvailable);
   const candidateDisks = inStockDisks.length > 0 ? inStockDisks : hardDisks;
 
-  // 6. Intelligent Brand-Aware Storage Selection
-  const brandPref = String(selection.brand_preference || "").toLowerCase();
-  const isBudgetBrand = brandPref.includes("budget") || brandPref.includes("a+");
-  const isEconomyStorage = (selection as any).is_economy_storage === true;
-
-  // For Budget brands or economy match, prioritize Budget Brand HDDs (lowest initial cost)
-  // For Tier-1 brands (Hikvision, CP Plus, Dahua, Prama), prioritize Tier-1 Surveillance HDDs (Seagate, WD Purple, min 1TB)
-  let prioritizedDisks = candidateDisks;
-  if (isBudgetBrand || isEconomyStorage) {
-    const budgetDisks = candidateDisks.filter(d => {
-      const b = (d.brand || "").toLowerCase();
-      const n = (d.display_name || "").toLowerCase();
-      return b.includes("budget") || n.includes("budget");
-    });
-    if (budgetDisks.length > 0) {
-      prioritizedDisks = budgetDisks;
-    }
-  } else {
-    // Branded Tier-1 packages: Prefer genuine Surveillance HDDs (min 1TB), avoiding budget white-label drives
-    const brandedSurveillanceDisks = candidateDisks.filter(d => {
-      const b = (d.brand || "").toLowerCase();
-      const n = (d.display_name || "").toLowerCase();
-      const capTB = resolveHDDCapacity(d);
-      const isBud = b.includes("budget") || n.includes("budget");
-      return !isBud && capTB >= 1.0;
-    });
-    if (brandedSurveillanceDisks.length > 0) {
-      prioritizedDisks = brandedSurveillanceDisks;
-    }
-  }
-
-  prioritizedDisks.sort((a, b) => {
-    const capDiff = resolveHDDCapacity(a) - resolveHDDCapacity(b);
-    if (capDiff !== 0) return capDiff;
-    return (a.unit_price || 0) - (b.unit_price || 0);
-  });
-
+  // 6. Transparent Storage Selection (Sorted by Capacity, then Price)
   candidateDisks.sort((a, b) => {
     const capDiff = resolveHDDCapacity(a) - resolveHDDCapacity(b);
     if (capDiff !== 0) return capDiff;
     return (a.unit_price || 0) - (b.unit_price || 0);
   });
 
-  // Find best fit HDD from prioritized options (fallback to any candidate if not found)
-  let chosenHdd = prioritizedDisks.find(h => resolveHDDCapacity(h) >= requiredTB);
+  // Find best fit HDD that satisfies required storage
+  let chosenHdd = candidateDisks.find(h => resolveHDDCapacity(h) >= requiredTB);
   let storageOverflow = false;
   let storageOverflowInfo: any = undefined;
-  if (!chosenHdd) {
-    chosenHdd = candidateDisks.find(h => resolveHDDCapacity(h) >= requiredTB);
-  }
   if (!chosenHdd) {
     // Storage requirement exceeds the largest available single drive.
     // Pick the largest drive as a "downgraded" best-effort quote,
@@ -2167,13 +2128,21 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
     ? `(Approx. ${approxDays} Days Backup · ${modeLabel} @ ${compression} · ⚠️ ${recordingDays} Days requires ${requiredTB.toFixed(1)}TB)`
     : `(Approx. ${approxDays} Days Backup · ${modeLabel} @ ${compression})`;
 
+  const isRefurbished = 
+    (chosenHdd.brand || "").toLowerCase().includes("budget") ||
+    (chosenHdd.display_name || "").toLowerCase().includes("budget") ||
+    (chosenHdd.id || "").startsWith("HDD-BUD") ||
+    capacityTB <= 0.5;
+
   return {
     ...chosenHdd,
     display_name: `${chosenHdd.display_name} ${backupNote}`,
     approx_days: approxDays,
     compression_used: compression,
     storage_overflow: storageOverflow,
-    storage_overflow_info: storageOverflowInfo
+    storage_overflow_info: storageOverflowInfo,
+    is_refurbished: isRefurbished,
+    warranty_months: isRefurbished ? 12 : 36
   };
 }
 
