@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Check, ShieldCheck, Sparkles, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -85,10 +87,28 @@ interface TagGuideModalProps {
 }
 
 export function TagGuideModal({ isOpen, onClose }: TagGuideModalProps) {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  if (!isOpen || !mounted) return null;
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
       <div 
         className="w-full max-w-2xl sm:max-w-3xl max-h-[85vh] bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-zinc-200 dark:border-zinc-800 animate-in zoom-in-95 duration-200"
         role="dialog"
@@ -240,4 +260,6 @@ export function TagGuideModal({ isOpen, onClose }: TagGuideModalProps) {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
