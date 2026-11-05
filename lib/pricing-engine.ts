@@ -657,8 +657,11 @@ function calculateHardware(
       brand: hdd.brand,
       qty: qty,
       unit_price: unitPrice,
-      line_total: unitPrice * qty
-    });
+      line_total: unitPrice * qty,
+      approx_days: (hdd as any).approx_days,
+      is_refurbished: (hdd as any).is_refurbished,
+      warranty_months: (hdd as any).warranty_months
+    } as any);
     totalRetail += unitPrice * qty;
     totalCost += (hdd.base_cost || 0) * qty;
   }

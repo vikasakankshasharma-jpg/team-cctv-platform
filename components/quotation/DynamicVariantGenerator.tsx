@@ -454,8 +454,10 @@ export function DynamicVariantGenerator({
       const camItems = pricing.items?.filter((i: any) => effectiveProducts.find(p => p.id === i.product_id)?.category === "cctv_camera");
       const firstCamId = camItems?.[0]?.product_id;
       const camera_device = effectiveProducts.find(p => p.id === firstCamId) ? { ...effectiveProducts.find(p => p.id === firstCamId) } : undefined;
-      const strId = pricing.items?.find((i: any) => effectiveProducts.find(p => p.id === i.product_id)?.category === "storage")?.product_id;
+      const strItem = pricing.items?.find((i: any) => effectiveProducts.find(p => p.id === i.product_id)?.category === "storage");
+      const strId = strItem?.product_id;
       const storage_device = effectiveProducts.find(p => p.id === strId) ? { ...effectiveProducts.find(p => p.id === strId) } : undefined;
+      let actualCalculatedDays = 7;
       
       if (camera_device) {
         (camera_device as any).brand = brandName;
@@ -483,6 +485,19 @@ export function DynamicVariantGenerator({
           ((storage_device as any).id || "").startsWith("HDD-BUD-") ||
           (typeof cap === "string" && cap.includes("500GB"));
         (storage_device as any).is_refurbished = isRefurb;
+
+        // Physically accurate dynamic backup days for total camera count
+        const capacityGb = (storage_device as any).storage_capacity_tb 
+          ? (storage_device as any).storage_capacity_tb * 1000 
+          : (typeof cap === "string" && cap.includes("500GB")) ? 500
+          : (typeof cap === "string" && cap.includes("1TB")) ? 1000
+          : (typeof cap === "string" && cap.includes("2TB")) ? 2000
+          : (typeof cap === "string" && cap.includes("4TB")) ? 4000
+          : (typeof cap === "string" && cap.includes("6TB")) ? 6000 : 1000;
+
+        const effectiveCamCount = Math.max(1, totalHardwareCount);
+        const dailyGbPerCam = 18 * 0.70; // ~12.6 GB per camera daily with H.265/motion
+        actualCalculatedDays = (strItem as any)?.approx_days || Math.max(1, Math.round(capacityGb / (effectiveCamCount * dailyGbPerCam)));
       }
 
       // Extract actual resolutions delivered in the quote (to handle fallbacks, e.g. when a brand lacks 2MP IP)
@@ -546,7 +561,7 @@ export function DynamicVariantGenerator({
         camera_device: camera_device ? { ...camera_device, derivedResolution: displayResolution } : { derivedResolution: displayResolution, brand: brandName }, 
         storage_device, 
         camera_count: totalHardwareCount, 
-        storage_days: (pricing as any)._calculated_days || selection.recording_days || 7,
+        storage_days: actualCalculatedDays,
         plan_type: brandKey === "budget" ? "budget" : (Array.from(new Set(mixedReqs.map(r => r.resolution))).includes("8MP") ? "premium" : "recommended"),
         is_hybrid: isHybrid,
         mixed_camera_requirements: mixedReqs,
@@ -604,7 +619,6 @@ export function DynamicVariantGenerator({
           referralDiscountFlat: promoterDiscount?.flat || 0,
           evaluatedAddonRules, activeOffer,
         });
-        (rawEconomyPricing as any)._calculated_days = 3;
         const enrichedEconomy = enrich(rawEconomyPricing, b.brandKey, b.brand);
         if (enrichedEconomy && enriched && enrichedEconomy.total_payable < enriched.total_payable) {
           enrichedEconomy.is_economy_storage = true;
@@ -1114,7 +1128,7 @@ export function DynamicVariantGenerator({
                         {t("wz_basic_storage_")}{variant.storage_device?.derivedCapacity || (variant.technology === "Wireless" ? "64GB MicroSD" : "500GB HDD")})
                       </p>
                       <p className="text-[11px] bg-green-50 text-green-700 px-2.5 py-1 rounded-md border border-green-200 font-bold inline-block">
-                        {t("wz_save_")}{((variant as any).original_payable - variant.total_payable).toLocaleString('en-IN')}  {t("wz_3_days_vs")} {(variant as any).requested_days}  {t("wz_days")}
+                        Save ₹{((variant as any).original_payable - variant.total_payable).toLocaleString('en-IN')} (~{variant.storage_days} Days Backup vs {(variant as any).requested_days} Days Requested)
                       </p>
                     </div>
                   )}
@@ -1135,7 +1149,7 @@ export function DynamicVariantGenerator({
                         <strong>Market Transparency:</strong> Many competitors secretly bundle refurbished desktop HDDs with branded cameras to display artificially low quotes.
                       </p>
                       <div className="mt-1.5 text-[10.5px] text-red-600 dark:text-red-300 font-semibold space-y-0.5">
-                        <div>• <strong>Backup:</strong> Only ~5–7 Days (overwritten quickly)</div>
+                        <div>• <strong>Backup:</strong> Only ~{variant.storage_days} Days for {variant.camera_count} cameras (footage overwrites quickly!)</div>
                         <div>• <strong>Warranty:</strong> 1-Year Local (high 24×7 failure risk)</div>
                       </div>
                       <div className="mt-2 pt-1.5 border-t border-red-200/70 dark:border-red-900/50 text-[10.5px] font-bold text-red-800 dark:text-red-200 leading-tight">
@@ -1147,7 +1161,7 @@ export function DynamicVariantGenerator({
                   {!variant.storage_device?.is_refurbished && variant.storage_device && (
                     <div className="w-full my-2 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold flex items-center justify-center gap-1.5">
                       <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>100% Genuine 24×7 Surveillance HDD · 3-Yr Replacement Warranty</span>
+                      <span>100% Genuine 24×7 Surveillance HDD · ~{variant.storage_days} Days Backup · 3-Yr Warranty</span>
                     </div>
                   )}
                   <div className="flex items-start justify-center">
