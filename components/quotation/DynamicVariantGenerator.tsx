@@ -118,6 +118,10 @@ export function DynamicVariantGenerator({
     return initialBrand;
   });
 
+  const [selectedStorageDays, setSelectedStorageDays] = useState<number>(() => {
+    return Number(selection.recording_days) || 15;
+  });
+
   // Sync activeTech when selection.technology changes externally
   useEffect(() => {
     const selTech = String(selection.technology || "").toLowerCase();
@@ -199,7 +203,18 @@ export function DynamicVariantGenerator({
     }
     // If hybrid setup has wifi cameras and we are in wired tab:
     if (!isWirelessMode && wifiCount > 0) {
-      buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: wifiCount, resolution: "3MP", connection: "wifi", features: [...initFeats] });
+      const wifiIn = Number((selection as any).wifi_indoor_count);
+      const wifiOut = Number((selection as any).wifi_outdoor_count);
+      if (!isNaN(wifiIn) && !isNaN(wifiOut) && (wifiIn > 0 || wifiOut > 0)) {
+        if (wifiIn > 0) {
+          buckets.push({ id: Math.random().toString(36).substring(7), type: "indoor", count: wifiIn, resolution: "3MP", connection: "wifi", features: [...initFeats, "ptz", "2-way"] });
+        }
+        if (wifiOut > 0) {
+          buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: wifiOut, resolution: "3MP", connection: "wifi", features: [...initFeats, "color"] });
+        }
+      } else {
+        buckets.push({ id: Math.random().toString(36).substring(7), type: "indoor", count: wifiCount, resolution: "3MP", connection: "wifi", features: [...initFeats, "ptz", "2-way"] });
+      }
     }
     if (buckets.length === 0 && selection.camera_count) {
       buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: selection.camera_count, resolution: "2MP", connection: defaultConn, features: [...initFeats] });
@@ -614,6 +629,7 @@ export function DynamicVariantGenerator({
         camera_count: totalHardwareCount,
         resolution_preference: uniqueRes.length === 1 ? uniqueRes[0] : "5MP",
         plan_type: planType as any,
+        recording_days: selectedStorageDays,
       };
       
       // Standard Quote (Requested Storage)
@@ -788,9 +804,49 @@ export function DynamicVariantGenerator({
             ))}
           </div>
         </div>
+        {/* Live Storage Retention Days Selector */}
+        <div className="w-full pt-1.5 border-t border-zinc-200/70 dark:border-zinc-800/70 flex flex-wrap items-center justify-between gap-1.5 text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              💾 Recording Retention:
+            </span>
+          </div>
+          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-0.5 rounded-xl text-xs font-semibold overflow-x-auto">
+            {[
+              { days: 7, label: "7 Days (500GB)" },
+              { days: 15, label: "15 Days (1TB) Rec." },
+              { days: 30, label: "30 Days (2TB)" },
+              { days: 60, label: "60 Days (4TB)" }
+            ].map(opt => (
+              <button
+                key={opt.days}
+                type="button"
+                onClick={() => setSelectedStorageDays(opt.days)}
+                className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg transition-all text-[10px] sm:text-[11px] whitespace-nowrap cursor-pointer ${
+                  selectedStorageDays === opt.days 
+                    ? "bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 font-extrabold shadow-2xs border border-zinc-200 dark:border-zinc-700" 
+                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-col gap-4 items-center">
+        {/* Unified Mobile App Guarantee Banner for Hybrid Setup */}
+        {(activeTech === "hybrid" || isHybridInitial) && (
+          <div className="w-full max-w-2xl mx-auto p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 border border-indigo-200/80 dark:border-indigo-800/80 shadow-xs flex items-center gap-2.5 animate-in fade-in">
+            <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-base shrink-0 shadow-xs">
+              📱
+            </div>
+            <div className="text-[11px] sm:text-xs text-indigo-950 dark:text-indigo-200 leading-snug">
+              <span className="font-bold text-indigo-700 dark:text-indigo-300">Unified Mobile App Guarantee:</span> All your Wired DVR cameras and Smart Wi-Fi cameras will stream together inside a <strong>single mobile app (Hik-Connect / CP PLUS gCMOB)</strong>. Zero multiple apps!
+            </div>
+          </div>
+        )}
         {/* Real-time System Composition & Specification Breakdown */}
         <div className="w-full max-w-2xl mx-auto bg-white dark:bg-[#1d1d1f] p-3 sm:p-3.5 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm space-y-2.5">
           <div className="flex items-center justify-between flex-wrap gap-2">
@@ -1158,6 +1214,14 @@ export function DynamicVariantGenerator({
                 <div className="text-center w-full">
                   <div className="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-1.5 flex items-center justify-center gap-1.5 flex-wrap">
                     <span>{variant.camera_device?.brand || "Budget"}</span>
+                    {(() => {
+                      const b = (variant.camera_device?.brand || "").toLowerCase();
+                      if (b.includes("hikvision")) return <span className="text-[9px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 px-2 py-0.5 rounded-full">Global Leader • ColorVu Sensor</span>;
+                      if (b.includes("cp") || b.includes("plus")) return <span className="text-[9px] font-bold bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-200 px-2 py-0.5 rounded-full">India's #1 • 1500+ Service Centers</span>;
+                      if (b.includes("trueview")) return <span className="text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200 px-2 py-0.5 rounded-full">Specialist in 4G & Smart PTZ</span>;
+                      if (b.includes("prama")) return <span className="text-[9px] font-bold bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-200 px-2 py-0.5 rounded-full">Make-in-India Enterprise Grade</span>;
+                      return null;
+                    })()}
                   </div>
                   <h3 className="text-2xl font-bold text-[#1d1d1f] dark:text-white mb-2 group-hover:text-blue-600 transition-colors">
                     {variant.camera_device.derivedResolution || "2MP Resolution"}
