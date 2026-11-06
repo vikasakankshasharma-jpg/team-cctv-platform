@@ -1453,17 +1453,17 @@ function calculateAddons(params: {
     let addon = addons.find(a => a.id === id) || products.find(p => p.id === id || p.sku === id);
     if (!addon) {
       const FALLBACK_CATALOG: Record<string, { display_name: string; unit_price: number; base_cost: number; category: string }> = {
-        "HDMI-1.5M": { display_name: "High-Speed HDMI Cable (1.5 MTR)", unit_price: 84, base_cost: 60, category: "hdmi_cable" },
-        "HDMI-3M": { display_name: "High-Speed HDMI Cable (3 MTR)", unit_price: 168, base_cost: 120, category: "hdmi_cable" },
-        "HDMI-5M": { display_name: "High-Speed HDMI Cable (5 MTR)", unit_price: 252, base_cost: 180, category: "hdmi_cable" },
+        "HDMI-1.5M": { display_name: "High-Speed HDMI Cable (1.5 MTR)", unit_price: 220, base_cost: 120, category: "hdmi_cable" },
+        "HDMI-3M": { display_name: "High-Speed HDMI Cable (3 MTR)", unit_price: 350, base_cost: 210, category: "hdmi_cable" },
+        "HDMI-5M": { display_name: "High-Speed HDMI Cable (5 MTR)", unit_price: 550, base_cost: 360, category: "hdmi_cable" },
         "HDMI-10M": { display_name: "High-Speed HDMI Cable (10 MTR)", unit_price: 420, base_cost: 300, category: "hdmi_cable" },
         "HDMI-15M": { display_name: "High-Speed HDMI Cable (15 MTR)", unit_price: 630, base_cost: 450, category: "hdmi_cable" },
         "HDMI-20M": { display_name: "High-Speed HDMI Cable (20 MTR)", unit_price: 910, base_cost: 650, category: "hdmi_cable" },
-        "ACC-2U-RACK-RECORDER": { display_name: "2U Metal DVR/NVR Rack", unit_price: 490, base_cost: 350, category: "rack" },
-        "ACC-4U-RACK-RECORDER": { display_name: "4U Metal DVR/NVR Rack", unit_price: 630, base_cost: 450, category: "rack" },
+        "ACC-2U-RACK-RECORDER": { display_name: "2U Metal DVR/NVR Rack", unit_price: 1150, base_cost: 880, category: "rack" },
+        "ACC-4U-RACK-RECORDER": { display_name: "4U Metal DVR/NVR Rack", unit_price: 1850, base_cost: 1450, category: "rack" },
         "ACC-PVC-RACK-POE": { display_name: "PVC Weatherproof Rack", unit_price: 630, base_cost: 450, category: "rack" },
-        "DISP-19-INCH": { display_name: "19\" Security LED Display", unit_price: 2415, base_cost: 2100, category: "display" },
-        "ACC-4G-ROUTER": { display_name: "4G SIM WiFi Router (Dual Antenna)", unit_price: 1885, base_cost: 1450, category: "network" },
+        "DISP-19-INCH": { display_name: "19\" Security LED Display", unit_price: 5200, base_cost: 4522, category: "display" },
+        "ACC-4G-ROUTER": { display_name: "4G SIM WiFi Router (Dual Antenna)", unit_price: 1280, base_cost: 1110, category: "network" },
         "ACC-WIFI-EXTENDER": { display_name: "High-Speed Wi-Fi Range Extender (Dual Antenna)", unit_price: 1299, base_cost: 900, category: "network" },
       };
       if (FALLBACK_CATALOG[id]) {

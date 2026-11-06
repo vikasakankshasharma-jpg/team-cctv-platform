@@ -2591,6 +2591,7 @@ const CLEAN_CATALOG = {
   "rack_2u_wall_cctv": {
     display_name: "2U Wall-Mount CCTV Server Rack with Lock & Key",
     technical_name: "RACK-2U-CCTV-WALL",
+    sku: "ACC-2U-RACK-RECORDER",
     brand: "Comrack",
     category: "rack",
     technology: "Common",
@@ -2607,6 +2608,7 @@ const CLEAN_CATALOG = {
   "rack_4u_wall_cctv": {
     display_name: "4U Wall-Mount CCTV Server Rack with Lock & Key (Glass Door)",
     technical_name: "RACK-4U-CCTV-WALL-GLASS",
+    sku: "ACC-4U-RACK-RECORDER",
     brand: "Comrack",
     category: "rack",
     technology: "Common",
@@ -2697,6 +2699,7 @@ const CLEAN_CATALOG = {
   "NET-COFE-4G-ROUTER-CF707": {
     display_name: "Cofe Sim Router CF-707 WiFi6 4G/5G 300Mbps (Dual Antenna)",
     technical_name: "CF-707",
+    sku: "ACC-4G-ROUTER",
     internal_sku: "CF-707",
     vendor_pid: "P1435",
     source_vendor: "Mega Compu World",
@@ -2716,6 +2719,7 @@ const CLEAN_CATALOG = {
   "cable_hdmi_1_5m": {
     display_name: "High-Speed 4K HDMI Cable 1.5 Meter (Gold Plated)",
     technical_name: "HDMI-4K-1.5M-BRAIDED",
+    sku: "HDMI-1.5M",
     brand: "Bungees",
     category: "hdmi_cable",
     technology: "Common",
@@ -2732,6 +2736,7 @@ const CLEAN_CATALOG = {
   "cable_hdmi_3m": {
     display_name: "High-Speed 4K HDMI Cable 3 Meter (Gold Plated)",
     technical_name: "HDMI-4K-3M-BRAIDED",
+    sku: "HDMI-3M",
     brand: "Bungees",
     category: "hdmi_cable",
     technology: "Common",
@@ -2748,6 +2753,7 @@ const CLEAN_CATALOG = {
   "cable_hdmi_5m": {
     display_name: "High-Speed 4K HDMI Cable 5 Meter (Gold Plated)",
     technical_name: "HDMI-4K-5M-BRAIDED",
+    sku: "HDMI-5M",
     brand: "Bungees",
     category: "hdmi_cable",
     technology: "Common",

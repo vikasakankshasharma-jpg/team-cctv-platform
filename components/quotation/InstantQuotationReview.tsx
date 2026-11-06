@@ -125,7 +125,7 @@ export function InstantQuotationReview({
       id: "ACC-2U-RACK-RECORDER",
       title: t("addon_2u_rack_title", "2U Metal DVR/NVR Rack"),
       description: t("addon_2u_rack_desc", "Wall-mount lockable steel cabinet to protect your recorder and power supply from theft and dust."),
-      price: products.find(p => p.id === "ACC-2U-RACK-RECORDER" || p.sku === "ACC-2U-RACK-RECORDER")?.unit_price || 490,
+      price: products.find(p => p.id === "ACC-2U-RACK-RECORDER" || p.sku === "ACC-2U-RACK-RECORDER")?.unit_price || 1150,
       icon: Box,
       category: t("addon_cat_enclosure", "Safety Racks & Boxes"),
       tag: t("addon_tag_recommended", "Recommended")
@@ -134,7 +134,7 @@ export function InstantQuotationReview({
       id: "ACC-4U-RACK-RECORDER",
       title: t("addon_4u_rack_title", "4U Metal DVR/NVR Rack"),
       description: t("addon_4u_rack_desc", "Heavy-duty 4U rack with ventilation, fits recorder, PoE switch, router, and power backups."),
-      price: products.find(p => p.id === "ACC-4U-RACK-RECORDER" || p.sku === "ACC-4U-RACK-RECORDER")?.unit_price || 630,
+      price: products.find(p => p.id === "ACC-4U-RACK-RECORDER" || p.sku === "ACC-4U-RACK-RECORDER")?.unit_price || 1850,
       icon: Box,
       category: t("addon_cat_enclosure", "Safety Racks & Boxes"),
       tag: t("addon_tag_spacious", "Spacious")
@@ -152,7 +152,7 @@ export function InstantQuotationReview({
       id: "DISP-19-INCH",
       title: t("addon_disp_19_title", "19\" Security LED Display"),
       description: t("addon_disp_19_desc", "Continuous 24/7 commercial LED monitor with HDMI/VGA support for live multi-camera monitoring."),
-      price: products.find(p => p.id === "DISP-19-INCH" || p.sku === "DISP-19-INCH")?.unit_price || 2415,
+      price: products.find(p => p.id === "DISP-19-INCH" || p.sku === "DISP-19-INCH")?.unit_price || 5200,
       icon: Monitor,
       category: t("addon_cat_display", "TV & Display Screens"),
       tag: t("addon_tag_popular", "Popular")
@@ -161,7 +161,7 @@ export function InstantQuotationReview({
       id: "ACC-4G-ROUTER",
       title: t("addon_4g_router_title", "4G SIM WiFi Router (Dual Antenna)"),
       description: t("addon_4g_router_desc", "High-speed 4G router for remote mobile phone viewing without any broadband or landline connection."),
-      price: products.find(p => p.id === "ACC-4G-ROUTER" || p.sku === "ACC-4G-ROUTER")?.unit_price || 1885,
+      price: products.find(p => p.id === "ACC-4G-ROUTER" || p.sku === "ACC-4G-ROUTER")?.unit_price || 1280,
       icon: Wifi,
       category: t("addon_cat_internet", "Internet (For Mobile View)"),
       tag: t("addon_tag_zero_broadband", "Zero-Broadband")
@@ -188,7 +188,7 @@ export function InstantQuotationReview({
       id: "HDMI-1.5M",
       title: t("addon_hdmi_1_5m_title", "High-Speed HDMI Cable (1.5 MTR)"),
       description: t("addon_hdmi_1_5m_desc", "Ultra-compact 4K HDMI cable for TV or monitor placed right next to DVR/NVR."),
-      price: products.find(p => p.id === "HDMI-1.5M" || p.sku === "HDMI-1.5M")?.unit_price || 84,
+      price: products.find(p => p.id === "HDMI-1.5M" || p.sku === "HDMI-1.5M")?.unit_price || 220,
       icon: Cable,
       category: t("addon_cat_cables", "Wires & Cables"),
       tag: t("addon_tag_compact", "Compact")
@@ -197,7 +197,7 @@ export function InstantQuotationReview({
       id: "HDMI-3M",
       title: t("addon_hdmi_title", "High-Speed HDMI Cable (3 MTR)"),
       description: t("addon_hdmi_desc", "Gold-plated 4K-ready HDMI cable to connect your DVR/NVR directly to TV or monitor."),
-      price: products.find(p => p.id === "HDMI-3M" || p.sku === "HDMI-3M")?.unit_price || 168,
+      price: products.find(p => p.id === "HDMI-3M" || p.sku === "HDMI-3M")?.unit_price || 350,
       icon: Cable,
       category: t("addon_cat_cables", "Wires & Cables"),
       tag: t("addon_tag_essential", "Essential")
@@ -206,7 +206,7 @@ export function InstantQuotationReview({
       id: "HDMI-5M",
       title: t("addon_hdmi_5m_title", "High-Speed HDMI Cable (5 MTR)"),
       description: t("addon_hdmi_5m_desc", "Extended 5-meter run for wall-mounted TV or desk-to-rack connection."),
-      price: products.find(p => p.id === "HDMI-5M" || p.sku === "HDMI-5M")?.unit_price || 252,
+      price: products.find(p => p.id === "HDMI-5M" || p.sku === "HDMI-5M")?.unit_price || 550,
       icon: Cable,
       category: t("addon_cat_cables", "Wires & Cables"),
       tag: t("addon_tag_extended", "Extended")
