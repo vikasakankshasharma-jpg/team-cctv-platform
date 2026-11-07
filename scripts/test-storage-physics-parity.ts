@@ -53,6 +53,7 @@ const hd4Econ = calculatePricing({
   products: [...mockCams, ...mockRecorders] as any,
   addons: mockHdds as any,
   settings,
+  cablingDone: false,
 });
 const hd4Storage = hd4Econ.items.find(i => i.product_id === "HDD-BUD-500GB");
 const hd4Days = (hd4Storage as any)?.approx_days;
@@ -63,6 +64,7 @@ const hd8Econ = calculatePricing({
   products: [...mockCams, ...mockRecorders] as any,
   addons: mockHdds as any,
   settings,
+  cablingDone: false,
 });
 const hd8Storage = hd8Econ.items.find(i => i.product_id === "HDD-BUD-500GB");
 const hd8Days = (hd8Storage as any)?.approx_days;
@@ -76,6 +78,7 @@ const hd8Std = calculatePricing({
   products: [...mockCams, ...mockRecorders] as any,
   addons: mockHdds as any,
   settings,
+  cablingDone: false,
 });
 const hd8StdStorage = hd8Std.items.find(i => i.product_id === "HDD-SEA-1TB");
 assert(!!hd8StdStorage, `Hikvision standard quote must select 100% Genuine Seagate SkyHawk 1TB (Got: ${hd8Std.items.find(i => i.display_name.includes("HDD"))?.display_name})`);
@@ -88,6 +91,7 @@ const ip4Std = calculatePricing({
   products: [...mockCams, ...mockRecorders] as any,
   addons: mockHdds as any,
   settings,
+  cablingDone: false,
 });
 const ip4Storage = ip4Std.items.find(i => i.product_id === "HDD-SEA-1TB");
 assert((ip4Storage as any)?.approx_days === 17, `4 IP cameras on 1TB must yield 17 days (Got: ${(ip4Storage as any)?.approx_days})`);
@@ -97,6 +101,7 @@ const ip8Std = calculatePricing({
   products: [...mockCams, ...mockRecorders] as any,
   addons: mockHdds as any,
   settings,
+  cablingDone: false,
 });
 const ip8Storage = ip8Std.items.find(i => i.product_id === "HDD-SEA-1TB");
 assert((ip8Storage as any)?.approx_days === 8, `8 IP cameras on 1TB must yield 8 days (Got: ${(ip8Storage as any)?.approx_days})`);
@@ -110,6 +115,7 @@ for (const count of [1, 4, 8]) {
     products: [...mockCams, ...mockRecorders] as any,
     addons: mockHdds as any,
     settings,
+  cablingDone: false,
   });
   const sdCard = wifiRes.items.find(i => i.product_id === "SD-64GB");
   assert(!!sdCard, `Wireless must select MicroSD card`);

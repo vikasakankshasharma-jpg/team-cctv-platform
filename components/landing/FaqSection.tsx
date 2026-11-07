@@ -1,7 +1,7 @@
 export const faqs = [
   {
     q: "Is GST included in the quote price?",
-    a: "Yes. All TEAM CCTV quotations include 18% GST with no hidden charges. The price covers cameras, DVR/NVR, HDD, cabling, and professional installation — everything.",
+    a: "Yes. All TEAM CCTV quotations include 18% GST with no hidden charges. The price covers cameras, DVR/NVR, cabling, and professional installation — completely transparent.",
   },
   {
     q: "Does the price include installation?",
@@ -9,7 +9,7 @@ export const faqs = [
   },
   {
     q: "How much does a 4-camera CCTV system cost?",
-    a: "A CP Plus HD 4-camera system starts at ₹18,000–₹28,000. An IP (NVR) system starts at ₹35,000–₹55,000. A 4K system starts at ₹55,000–₹85,000. All prices include GST and installation.",
+    a: "A complete 4-camera setup starts from ~₹14,200 to ₹18,000 depending on brand and configuration. All prices include 18% GST, cabling, and professional installation.",
   },
   {
     q: "Are your cameras BIS-ER compliant?",

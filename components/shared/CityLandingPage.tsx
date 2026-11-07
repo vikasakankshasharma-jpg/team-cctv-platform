@@ -17,6 +17,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useI18nStore } from "@/lib/i18n/store";
 
 interface CityLandingPageProps {
+  residentialStartingPrice?: number;
+  commercialStartingPrice?: number;
   cityName: string;
   citySlug?: string;
   tagline?: string;
@@ -39,7 +41,9 @@ export default function CityLandingPage({
   commercialAreas = "local businesses",
   ctaText,
   brand = "",
-  intent = "installation"
+  intent = "installation",
+  residentialStartingPrice = 17999,
+  commercialStartingPrice = 32999
 }: CityLandingPageProps) {
   const currentMonthYear = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
   const searchParams = useSearchParams();
@@ -196,16 +200,16 @@ export default function CityLandingPage({
                     {t('landing_residential_tag', 'Residential')}
                   </div>
                   <h3 className="text-2xl font-black mb-2">{t('landing_residential_title', 'Standard 4-Camera Setup')}</h3>
-                  <div className="text-4xl font-black text-zinc-900 dark:text-white mb-6">₹18,000 <span className="text-xl text-zinc-400 font-medium">- ₹28,000</span></div>
+                  <div className="text-4xl font-black text-zinc-900 dark:text-white mb-6">₹{residentialStartingPrice.toLocaleString("en-IN")} <span className="text-xl text-zinc-400 font-medium">onwards</span></div>
                   <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8 leading-relaxed">
-                    {t('landing_residential_desc', 'Perfect for independent houses and small shops. Includes {brand} cameras, DVR, wiring, and professional installation.').replace('{brand}', brand || "CP Plus")}
+                    {t('landing_residential_desc', 'Perfect for independent houses and retail stores. Includes {brand} cameras, 4-channel DVR, wiring with 15m free labor per camera, and doorstep fitting.').replace('{brand}', brand || "CP Plus")}
                   </p>
                   <ul className="space-y-4 mb-8">
                      {[
-                       t('feat_res_1', '4x 2MP/5MP HD {brand} Cameras').replace('{brand}', brand || "CP Plus"),
-                       t('feat_res_2', '4-Channel DVR + HDD'),
-                       t('feat_res_3', 'Power Supply & Connectors'),
-                       t('feat_res_4', 'Complete Installation Labor')
+                       t('feat_res_1', '4x HD Weatherproof {brand} Cameras').replace('{brand}', brand || "CP Plus"),
+                       t('feat_res_2', '4-Channel Smart DVR Unit'),
+                       t('feat_res_3', 'CCTV Cabling (15m Free Labor/Cam)'),
+                       t('feat_res_4', 'Doorstep Fitting & Mobile Live App')
                      ].map((item, i) => (
                         <li key={i} className="flex items-center gap-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">
                            <CheckCircle2 className="w-5 h-5 text-emerald-500" /> {item}
@@ -226,16 +230,16 @@ export default function CityLandingPage({
                     {t('landing_commercial_tag', 'Commercial')}
                   </div>
                   <h3 className="text-2xl font-black mb-2">{t('landing_commercial_title', '8 to 16-Camera Networks')}</h3>
-                  <div className="text-4xl font-black text-white mb-6">₹30k <span className="text-xl text-zinc-400 font-medium">- ₹80k+</span></div>
+                  <div className="text-4xl font-black text-white mb-6">₹{commercialStartingPrice.toLocaleString("en-IN")} <span className="text-xl text-zinc-400 font-medium">onwards</span></div>
                   <p className="text-zinc-300 text-sm mb-8 leading-relaxed">
-                    {t('landing_commercial_desc', 'Ideal for offices, warehouses, and factories in {commercialAreas}. High-definition IP cameras with extended storage.').replace('{commercialAreas}', commercialAreas)}
+                    {t('landing_commercial_desc', 'Ideal for offices, showrooms, and warehouses in {commercialAreas}. Multi-camera surveillance network with mobile live viewing and professional setup.').replace('{commercialAreas}', commercialAreas)}
                   </p>
                   <ul className="space-y-4 mb-8">
                      {[
-                       t('feat_com_1', 'Network/IP {brand} Cameras').replace('{brand}', brand || "Hikvision"),
-                       t('feat_com_2', 'High-Capacity NVR System'),
-                       t('feat_com_3', 'Structured Cabling'),
-                       t('feat_com_4', 'Advanced Remote Viewing Setup')
+                       t('feat_com_1', '8x Commercial-Grade {brand} Cameras').replace('{brand}', brand || "Hikvision"),
+                       t('feat_com_2', '8-Channel Smart DVR Unit'),
+                       t('feat_com_3', 'CCTV Cabling (15m Free Labor/Cam)'),
+                       t('feat_com_4', 'Doorstep Fitting & Mobile Live App')
                      ].map((item, i) => (
                         <li key={i} className="flex items-center gap-3 text-sm font-medium text-white">
                            <CheckCircle2 className="w-5 h-5 text-blue-300 dark:text-blue-200" /> {item}

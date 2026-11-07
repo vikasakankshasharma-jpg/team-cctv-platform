@@ -13,6 +13,7 @@ import {
   ShieldCheck
 } from "lucide-react";
 import { motion } from "framer-motion";
+import type { DynamicPackageMap } from "@/lib/dynamic-package-pricing";
 
 interface BrandReference {
   name: string;
@@ -27,6 +28,7 @@ interface BrandReference {
 }
 
 // Derived strictly from TEAM CCTV Price Engine & Master Catalog Lowest Variations
+// Clean baseline setup without storage jargon - focusing on Camera Qty, Recorder Channels, Cabling & Fitting
 const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Record<"cpplus" | "hik" | "prama", BrandReference>>> = {
   home: {
     2: {
@@ -38,7 +40,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹649 / mo*",
         startingRef: "From ~₹11,499*",
         desc: "Essential security for entry gates, porch, or living room with night vision.",
-        features: ["2x Weatherproof Night-Vision Cameras", "Smart DVR with Storage", "Free Cable Pulling Labor (15m/cam)", "Complete Fitting & Mobile Live App"]
+        features: ["2x Weatherproof Night-Vision Cameras", "4-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Complete Fitting & Mobile Live App"]
       },
       hik: {
         name: "HIKVISION Ultra HD",
@@ -48,7 +50,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹799 / mo*",
         startingRef: "From ~₹13,999*",
         desc: "High clarity coverage for vehicle number plates and visitor face capture.",
-        features: ["2x Ultra-Clarity Smart IR Cameras", "Turbo DVR with WD Purple Storage", "Free Cable Pulling Labor (15m/cam)", "Complete Fitting & Mobile Live App"],
+        features: ["2x Ultra-Clarity Smart IR Cameras", "4-Channel Turbo HD DVR", "CCTV Cabling (15m Free Labor/Cam)", "Complete Fitting & Mobile Live App"],
         recommended: true
       },
       prama: {
@@ -59,7 +61,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹849 / mo*",
         startingRef: "From ~₹14,999*",
         desc: "Vivid color imaging even in pitch-black night conditions. BIS-certified.",
-        features: ["2x Full-Color Night Vision Cameras", "Smart DVR with Storage", "Free Cable Pulling Labor (15m/cam)", "Complete Fitting & Mobile Live App"]
+        features: ["2x Full-Color Night Vision Cameras", "4-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Complete Fitting & Mobile Live App"]
       }
     },
     4: {
@@ -71,7 +73,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹999 / mo*",
         startingRef: "From ~₹17,999*",
         desc: "360° coverage for front gate, backyard, staircase, and driveway.",
-        features: ["4x Weatherproof Night-Vision Cameras", "4-Channel Smart DVR + Storage", "Free Cable Pulling Labor (15m/cam)", "Complete Fitting & Mobile Live App"]
+        features: ["4x Weatherproof Night-Vision Cameras", "4-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Complete Fitting & Mobile Live App"]
       },
       hik: {
         name: "HIKVISION Ultra HD",
@@ -81,7 +83,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹1,199 / mo*",
         startingRef: "From ~₹20,999*",
         desc: "Crystal-clear recognition with smart motion alerts direct to your smartphone.",
-        features: ["4x Ultra-Clarity Smart IR / Audio Cams", "Turbo DVR with WD Purple Storage", "Free Cable Pulling Labor (15m/cam)", "Complete Fitting & Mobile Live App"],
+        features: ["4x Ultra-Clarity Smart IR / Audio Cams", "4-Channel Turbo HD DVR", "CCTV Cabling (15m Free Labor/Cam)", "Complete Fitting & Mobile Live App"],
         recommended: true
       },
       prama: {
@@ -92,7 +94,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹1,299 / mo*",
         startingRef: "From ~₹22,999*",
         desc: "Full vivid color recording 24/7 with domestic BIS compliance.",
-        features: ["4x True-Color Night Vision Cameras", "Smart DVR with Storage", "Free Cable Pulling Labor (15m/cam)", "Complete Fitting & Mobile Live App"]
+        features: ["4x True-Color Night Vision Cameras", "4-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Complete Fitting & Mobile Live App"]
       }
     },
     8: {
@@ -104,7 +106,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹1,799 / mo*",
         startingRef: "From ~₹31,999*",
         desc: "Complete boundary surveillance for large independent villas and duplexes.",
-        features: ["8x Weatherproof Night-Vision Cameras", "8-Channel DVR with Surveillance HDD", "Free Cable Pulling Labor (15m/cam)", "Complete Fitting & Mobile Live App"]
+        features: ["8x Weatherproof Night-Vision Cameras", "8-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Complete Fitting & Mobile Live App"]
       },
       hik: {
         name: "HIKVISION Pro Perimeter",
@@ -114,7 +116,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹2,099 / mo*",
         startingRef: "From ~₹36,999*",
         desc: "Comprehensive 8-point smart surveillance with audio & night clarity.",
-        features: ["8x High Clarity Smart IR Cameras", "Turbo DVR with 2TB HDD", "Free Cable Pulling Labor (15m/cam)", "Complete Fitting & Mobile Live App"],
+        features: ["8x High Clarity Smart IR Cameras", "8-Channel Turbo HD DVR", "CCTV Cabling (15m Free Labor/Cam)", "Complete Fitting & Mobile Live App"],
         recommended: true
       },
       prama: {
@@ -125,7 +127,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹2,299 / mo*",
         startingRef: "From ~₹39,999*",
         desc: "Zero dark spots. Daytime color clarity preserved even under pitch black.",
-        features: ["8x True-Color 24/7 Night Cameras", "8Ch Smart DVR with Storage", "Free Cable Pulling Labor (15m/cam)", "Complete Fitting & Mobile Live App"]
+        features: ["8x True-Color 24/7 Night Cameras", "8-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Complete Fitting & Mobile Live App"]
       }
     },
     16: {
@@ -137,7 +139,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹3,499 / mo*",
         startingRef: "From ~₹62,999*",
         desc: "Multi-story building coverage with centralized multi-channel DVR monitoring.",
-        features: ["16x Night-Vision Weatherproof Cams", "16-Channel DVR + High Capacity HDD", "Free Cable Pulling Labor (15m/cam)", "Complete Fitting & Mobile Live App"]
+        features: ["16x Night-Vision Weatherproof Cams", "16-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Complete Fitting & Mobile Live App"]
       },
       hik: {
         name: "HIKVISION Enterprise",
@@ -147,7 +149,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹3,999 / mo*",
         startingRef: "From ~₹71,999*",
         desc: "Industrial-grade security network with remote multi-device streaming.",
-        features: ["16x High Clarity Smart IR Cameras", "16-Channel DVR + Enterprise HDD", "Free Cable Pulling Labor (15m/cam)", "Complete Fitting & Mobile Live App"],
+        features: ["16x High Clarity Smart IR Cameras", "16-Channel Turbo HD DVR", "CCTV Cabling (15m Free Labor/Cam)", "Complete Fitting & Mobile Live App"],
         recommended: true
       },
       prama: {
@@ -158,7 +160,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹4,499 / mo*",
         startingRef: "From ~₹79,999*",
         desc: "Full complex color surveillance designed for commercial residential campus.",
-        features: ["16x Full-Color Night Cameras", "16-Channel DVR + Enterprise Storage", "Free Cable Pulling Labor (15m/cam)", "Complete Fitting & Mobile Live App"]
+        features: ["16x Full-Color Night Cameras", "16-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Complete Fitting & Mobile Live App"]
       }
     }
   },
@@ -172,7 +174,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹699 / mo*",
         startingRef: "From ~₹11,999*",
         desc: "Billing counter and entrance monitoring with audio support.",
-        features: ["2x Compact High-Resolution Cameras", "Smart DVR + Continuous Recording", "Free Cable Pulling Labor (15m/cam)", "Mobile Live View on Store Phone"]
+        features: ["2x Compact High-Resolution Cameras", "4-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile Live View on Store Phone"]
       },
       hik: {
         name: "HIKVISION Cash Counter Pro",
@@ -182,7 +184,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹849 / mo*",
         startingRef: "From ~₹14,499*",
         desc: "Sharp currency denomination and customer transaction verification.",
-        features: ["2x High Clarity Cameras with Built-in Mic", "Turbo DVR with Surveillance HDD", "Free Cable Pulling Labor (15m/cam)", "Mobile Live View on Store Phone"],
+        features: ["2x High Clarity Cameras with Built-in Mic", "4-Channel Turbo HD DVR", "CCTV Cabling (15m Free Labor/Cam)", "Mobile Live View on Store Phone"],
         recommended: true
       },
       prama: {
@@ -193,7 +195,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹899 / mo*",
         startingRef: "From ~₹15,499*",
         desc: "Color recording even with store shutter pulled down at night.",
-        features: ["2x True-Color 24/7 Night Cameras", "Smart DVR with Storage", "Free Cable Pulling Labor (15m/cam)", "Mobile Live View on Store Phone"]
+        features: ["2x True-Color 24/7 Night Cameras", "4-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile Live View on Store Phone"]
       }
     },
     4: {
@@ -205,7 +207,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹1,049 / mo*",
         startingRef: "From ~₹18,499*",
         desc: "Billing desk, product aisles, stockroom, and store front.",
-        features: ["4x Store Surveillance Cameras", "4-Channel Smart DVR + HDD", "Free Cable Pulling Labor (15m/cam)", "Mobile Live View on Store Phone"]
+        features: ["4x Store Surveillance Cameras", "4-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile Live View on Store Phone"]
       },
       hik: {
         name: "HIKVISION Retail Quad Pro",
@@ -215,7 +217,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹1,249 / mo*",
         startingRef: "From ~₹21,999*",
         desc: "Complete shop coverage with sharp cash tracking and audio recording.",
-        features: ["4x Ultra-Clarity Audio Cameras", "Turbo DVR with WD Purple HDD", "Free Cable Pulling Labor (15m/cam)", "Mobile Live View on Store Phone"],
+        features: ["4x Ultra-Clarity Audio Cameras", "4-Channel Turbo HD DVR", "CCTV Cabling (15m Free Labor/Cam)", "Mobile Live View on Store Phone"],
         recommended: true
       },
       prama: {
@@ -226,7 +228,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹1,349 / mo*",
         startingRef: "From ~₹23,999*",
         desc: "24/7 Color footage ensuring store safety after closing hours.",
-        features: ["4x True-Color Night Cameras", "Smart DVR with Storage", "Free Cable Pulling Labor (15m/cam)", "Mobile Live View on Store Phone"]
+        features: ["4x True-Color Night Cameras", "4-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile Live View on Store Phone"]
       }
     },
     8: {
@@ -238,7 +240,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹1,849 / mo*",
         startingRef: "From ~₹32,999*",
         desc: "Extensive multi-aisle and warehouse retail establishment coverage.",
-        features: ["8x Showroom Grade Cameras", "8-Channel DVR with HDD", "Free Cable Pulling Labor (15m/cam)", "Mobile Live View on Store Phone"]
+        features: ["8x Showroom Grade Cameras", "8-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile Live View on Store Phone"]
       },
       hik: {
         name: "HIKVISION Showroom Ultra",
@@ -248,7 +250,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹2,149 / mo*",
         startingRef: "From ~₹37,999*",
         desc: "High clarity coverage across showroom floor, cash counters, and stock gates.",
-        features: ["8x Ultra Clarity Audio Cameras", "Turbo DVR with Surveillance HDD", "Free Cable Pulling Labor (15m/cam)", "Mobile Live View on Store Phone"],
+        features: ["8x Ultra Clarity Audio Cameras", "8-Channel Turbo HD DVR", "CCTV Cabling (15m Free Labor/Cam)", "Mobile Live View on Store Phone"],
         recommended: true
       },
       prama: {
@@ -259,7 +261,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹2,399 / mo*",
         startingRef: "From ~₹41,999*",
         desc: "Night-time color surveillance with high deterrence against break-ins.",
-        features: ["8x Full-Color Night Cameras", "8Ch Smart DVR with Storage", "Free Cable Pulling Labor (15m/cam)", "Mobile Live View on Store Phone"]
+        features: ["8x Full-Color Night Cameras", "8-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile Live View on Store Phone"]
       }
     },
     16: {
@@ -271,7 +273,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹3,599 / mo*",
         startingRef: "From ~₹64,999*",
         desc: "Comprehensive supermarket coverage with central monitoring station view.",
-        features: ["16x Dome & Bullet Cameras", "16-Channel DVR + Surveillance Drive", "Free Cable Pulling Labor (15m/cam)", "Mobile Live View on Store Phone"]
+        features: ["16x Dome & Bullet Cameras", "16-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile Live View on Store Phone"]
       },
       hik: {
         name: "HIKVISION Mall / Supermarket",
@@ -281,7 +283,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹4,099 / mo*",
         startingRef: "From ~₹73,999*",
         desc: "High-density retail surveillance with facial clarity across checkouts.",
-        features: ["16x High Clarity Audio Cameras", "16-Channel DVR + Enterprise HDD", "Free Cable Pulling Labor (15m/cam)", "Mobile Live View on Store Phone"],
+        features: ["16x High Clarity Audio Cameras", "16-Channel Turbo HD DVR", "CCTV Cabling (15m Free Labor/Cam)", "Mobile Live View on Store Phone"],
         recommended: true
       },
       prama: {
@@ -292,7 +294,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹4,599 / mo*",
         startingRef: "From ~₹81,999*",
         desc: "Vivid color night recording across extensive retail premises.",
-        features: ["16x True Color Night Cameras", "16-Channel DVR + Enterprise HDD", "Free Cable Pulling Labor (15m/cam)", "Mobile Live View on Store Phone"]
+        features: ["16x True Color Night Cameras", "16-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile Live View on Store Phone"]
       }
     }
   },
@@ -306,7 +308,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹699 / mo*",
         startingRef: "From ~₹12,499*",
         desc: "Reception lobby and server room surveillance with mobile live access.",
-        features: ["2x Indoor Ceiling Dome Cameras", "Smart DVR with Storage", "Free Cable Pulling Labor (15m/cam)", "Mobile & Desktop Live View"]
+        features: ["2x Indoor Ceiling Dome Cameras", "4-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile & Desktop Live View"]
       },
       hik: {
         name: "HIKVISION Office Clarity",
@@ -316,7 +318,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹849 / mo*",
         startingRef: "From ~₹14,999*",
         desc: "Staff desk & reception monitoring with integrated audio capture.",
-        features: ["2x High Clarity Audio Cameras", "Turbo DVR with WD Purple HDD", "Free Cable Pulling Labor (15m/cam)", "Mobile & Desktop Live View"],
+        features: ["2x High Clarity Audio Cameras", "4-Channel Turbo HD DVR", "CCTV Cabling (15m Free Labor/Cam)", "Mobile & Desktop Live View"],
         recommended: true
       },
       prama: {
@@ -327,7 +329,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹899 / mo*",
         startingRef: "From ~₹15,999*",
         desc: "Continuous color night visibility for office premises after hours.",
-        features: ["2x True Color Cameras", "Smart DVR with Storage", "Free Cable Pulling Labor (15m/cam)", "Mobile & Desktop Live View"]
+        features: ["2x True Color Cameras", "4-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile & Desktop Live View"]
       }
     },
     4: {
@@ -339,7 +341,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹1,099 / mo*",
         startingRef: "From ~₹18,999*",
         desc: "Covers reception, workstation bay, accounts cabin, and entry door.",
-        features: ["4x Office Grade Cameras", "4-Channel Smart DVR + HDD", "Free Cable Pulling Labor (15m/cam)", "Mobile & Desktop Live View"]
+        features: ["4x Office Grade Cameras", "4-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile & Desktop Live View"]
       },
       hik: {
         name: "HIKVISION Office Quad Pro",
@@ -349,7 +351,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹1,299 / mo*",
         startingRef: "From ~₹22,499*",
         desc: "Executive-grade surveillance with sharp text/screen capture and audio.",
-        features: ["4x Ultra-Clarity Audio Domes/Bullets", "Turbo DVR with Surveillance HDD", "Free Cable Pulling Labor (15m/cam)", "Mobile & Desktop Live View"],
+        features: ["4x Ultra-Clarity Audio Domes/Bullets", "4-Channel Turbo HD DVR", "CCTV Cabling (15m Free Labor/Cam)", "Mobile & Desktop Live View"],
         recommended: true
       },
       prama: {
@@ -360,7 +362,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹1,399 / mo*",
         startingRef: "From ~₹24,499*",
         desc: "24/7 color vigilance for office security & employee safety.",
-        features: ["4x True-Color Night Cameras", "Smart DVR with Storage", "Free Cable Pulling Labor (15m/cam)", "Mobile & Desktop Live View"]
+        features: ["4x True-Color Night Cameras", "4-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile & Desktop Live View"]
       }
     },
     8: {
@@ -372,7 +374,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹1,899 / mo*",
         startingRef: "From ~₹33,999*",
         desc: "Entire floor coverage: corridors, meeting rooms, pantry, and cabins.",
-        features: ["8x Business Surveillance Cameras", "8-Channel DVR with HDD", "Free Cable Pulling Labor (15m/cam)", "Mobile & Desktop Live View"]
+        features: ["8x Business Surveillance Cameras", "8-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile & Desktop Live View"]
       },
       hik: {
         name: "HIKVISION Corporate 8",
@@ -382,7 +384,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹2,199 / mo*",
         startingRef: "From ~₹38,999*",
         desc: "Corporate security network with dual audio-visual evidence capture.",
-        features: ["8x Ultra Clarity Cameras", "Turbo DVR with 2TB Storage", "Free Cable Pulling Labor (15m/cam)", "Mobile & Desktop Live View"],
+        features: ["8x Ultra Clarity Cameras", "8-Channel Turbo HD DVR", "CCTV Cabling (15m Free Labor/Cam)", "Mobile & Desktop Live View"],
         recommended: true
       },
       prama: {
@@ -393,7 +395,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹2,449 / mo*",
         startingRef: "From ~₹42,999*",
         desc: "Unmatched night-time color clarity across all commercial zones.",
-        features: ["8x Full-Color Night Cameras", "8Ch Smart DVR with Storage", "Free Cable Pulling Labor (15m/cam)", "Mobile & Desktop Live View"]
+        features: ["8x Full-Color Night Cameras", "8-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile & Desktop Live View"]
       }
     },
     16: {
@@ -405,7 +407,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹3,699 / mo*",
         startingRef: "From ~₹65,999*",
         desc: "Complete industrial warehouse, gate, loading bay, and factory coverage.",
-        features: ["16x Weatherproof Heavy-Duty Cameras", "16-Channel DVR + Enterprise HDD", "Free Cable Pulling Labor (15m/cam)", "Mobile & Desktop Live View"]
+        features: ["16x Weatherproof Heavy-Duty Cameras", "16-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile & Desktop Live View"]
       },
       hik: {
         name: "HIKVISION Factory / Facility",
@@ -415,7 +417,7 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹4,199 / mo*",
         startingRef: "From ~₹74,999*",
         desc: "Industrial network with perimeter vehicle detection & gate logging.",
-        features: ["16x High Clarity Smart IR Cameras", "16-Channel DVR + Enterprise HDD", "Free Cable Pulling Labor (15m/cam)", "Mobile & Desktop Live View"],
+        features: ["16x High Clarity Smart IR Cameras", "16-Channel Turbo HD DVR", "CCTV Cabling (15m Free Labor/Cam)", "Mobile & Desktop Live View"],
         recommended: true
       },
       prama: {
@@ -426,18 +428,42 @@ const VARIATION_REFERENCES: Record<"home" | "shop" | "office", Record<number, Re
         emiRef: "Starting ₹4,699 / mo*",
         startingRef: "From ~₹83,999*",
         desc: "Color night surveillance for industrial yards and perimeter fences.",
-        features: ["16x True-Color 24/7 Night Cameras", "16-Channel DVR + Enterprise HDD", "Free Cable Pulling Labor (15m/cam)", "Mobile & Desktop Live View"]
+        features: ["16x True-Color 24/7 Night Cameras", "16-Channel Smart DVR Unit", "CCTV Cabling (15m Free Labor/Cam)", "Mobile & Desktop Live View"]
       }
     }
   }
 };
 
-export function HomeVariationEstimator() {
+interface HomeVariationEstimatorProps {
+  initialPackages?: DynamicPackageMap;
+}
+
+export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimatorProps = {}) {
   const router = useRouter();
   const [propertyType, setPropertyType] = useState<"home" | "shop" | "office">("home");
   const [cameraCount, setCameraCount] = useState<number>(4);
 
-  const currentGroup = VARIATION_REFERENCES[propertyType][cameraCount] || VARIATION_REFERENCES.home[4];
+  const fallbackGroup = VARIATION_REFERENCES[propertyType][cameraCount] || VARIATION_REFERENCES.home[4];
+  const dynamicGroup = initialPackages?.[propertyType]?.[cameraCount];
+
+  const getBrandReference = (brandKey: "cpplus" | "hik" | "prama"): BrandReference => {
+    const base = fallbackGroup[brandKey];
+    const live = dynamicGroup?.[brandKey];
+    if (!live) return base;
+
+    return {
+      ...base,
+      startingRef: `From ~₹${live.price.toLocaleString("en-IN")}*`,
+      emiRef: `Starting ₹${live.emi.toLocaleString("en-IN")} / mo*`,
+      features: live.features && live.features.length > 0 ? live.features : base.features,
+    };
+  };
+
+  const currentGroup = {
+    cpplus: getBrandReference("cpplus"),
+    hik: getBrandReference("hik"),
+    prama: getBrandReference("prama"),
+  };
 
   const handleStartExactQuote = (brandKey?: string) => {
     const brandParam = brandKey ? `&brand=${brandKey}` : "";

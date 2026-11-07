@@ -19,7 +19,9 @@ import { FaqAccordion } from "@/components/landing/FaqAccordion";
 import { HomeVariationEstimator } from "@/components/landing/HomeVariationEstimator";
 import { DealerComparisonTable } from "@/components/landing/DealerComparisonTable";
 import { TrustAssuranceGrid } from "@/components/landing/TrustAssuranceGrid";
+import { LocalServiceHubs } from "@/components/landing/LocalServiceHubs";
 import { TranslatedText } from "@/components/shared/TranslatedText";
+import { getDynamicPackageCatalog } from "@/lib/dynamic-package-pricing";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -53,7 +55,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const dynamicPackages = await getDynamicPackageCatalog();
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
@@ -149,7 +153,7 @@ export default function LandingPage() {
 
           {/* Interactive Live Variation Estimator Widget */}
           <div className="w-full mb-8">
-            <HomeVariationEstimator />
+            <HomeVariationEstimator initialPackages={dynamicPackages} />
           </div>
 
           <div className="flex items-center justify-center gap-4 text-[10px] sm:text-xs font-black text-slate-400 dark:text-blue-300/50 uppercase tracking-widest">
@@ -166,7 +170,10 @@ export default function LandingPage() {
       {/* 2. Four Core Customer Assurances (Trust Strip) */}
       <TrustAssuranceGrid />
 
-      {/* 3. "CCTVQuotation vs Local CCTV Dealer" Table */}
+      {/* 3. Doorstep CCTV Installation in Your City (Local Service Hubs) */}
+      <LocalServiceHubs />
+
+      {/* 4. "CCTVQuotation vs Local CCTV Dealer" Table */}
       <DealerComparisonTable />
 
       {/* 4. Architecture Philosophy & 3-Step Journey */}

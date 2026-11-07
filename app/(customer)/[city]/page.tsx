@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CityLandingPage from "@/components/shared/CityLandingPage";
 import { getCityData, cityDatabase } from "@/lib/city-data";
+import { getDynamicPackageCatalog } from "@/lib/dynamic-package-pricing";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -83,6 +84,9 @@ export default async function DynamicCityLandingPage({ params }: PageProps) {
   }
 
   const data = getCityData(citySlug);
+  const dynamicPackages = await getDynamicPackageCatalog();
+  const residentialPrice = dynamicPackages?.home?.[4]?.cpplus?.price ?? 17999;
+  const commercialPrice = dynamicPackages?.shop?.[8]?.cpplus?.price ?? 32999;
 
   return (
     <CityLandingPage 
@@ -93,6 +97,8 @@ export default async function DynamicCityLandingPage({ params }: PageProps) {
       commercialAreas={data.commercialAreas}
       brand={brand}
       intent={intent}
+      residentialStartingPrice={residentialPrice}
+      commercialStartingPrice={commercialPrice}
     />
   );
 }
