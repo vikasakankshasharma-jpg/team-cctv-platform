@@ -493,6 +493,13 @@ export interface ConfiguratorSelection {
   indoor_camera_count?: number;
   outdoor_camera_count?: number;
   wifi_camera_count?: number;
+  wifi_indoor_count?: number;
+  wifi_outdoor_count?: number;
+  wifi_indoor_ptz_count?: number;
+  wifi_indoor_fixed_count?: number;
+  wifi_outdoor_bullet_count?: number;
+  wifi_outdoor_ptz_count?: number;
+  wifi_4g_count?: number;
   power_socket_near_dvr?: boolean;
   router_near_dvr?: boolean;
   include_junction_boxes?: boolean;

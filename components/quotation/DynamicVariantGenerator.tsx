@@ -781,7 +781,7 @@ export function DynamicVariantGenerator({
               <span className="hidden sm:inline">⚡ Hybrid Setup</span>
             </span>
             <span className={`text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-extrabold uppercase tracking-tight sm:tracking-wider ${activeTech === 'hybrid' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-300'}`}>
-              Wired + Wi-Fi
+              Wired + Smart Wireless
             </span>
           </button>
         </div>
@@ -843,7 +843,7 @@ export function DynamicVariantGenerator({
               📱
             </div>
             <div className="text-[11px] sm:text-xs text-indigo-950 dark:text-indigo-200 leading-snug">
-              <span className="font-bold text-indigo-700 dark:text-indigo-300">Unified Mobile App Guarantee:</span> All your Wired DVR cameras and Smart Wi-Fi cameras will stream together inside a <strong>single mobile app (Hik-Connect / CP PLUS gCMOB)</strong>. Zero multiple apps!
+              <span className="font-bold text-indigo-700 dark:text-indigo-300">Unified Mobile App Guarantee:</span> All your Wired DVR cameras and Smart Wireless cameras will stream together inside a <strong>single mobile app (Hik-Connect / CP PLUS gCMOB)</strong>. Zero multiple apps!
             </div>
           </div>
         )}
@@ -920,7 +920,7 @@ export function DynamicVariantGenerator({
             )}
             {wifiCount > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 font-bold shrink-0 flex items-center gap-1">
-                <span>📶</span> {wifiCount} Wi-Fi
+                <span>📶</span> {wifiCount} Smart Wireless
               </span>
             )}
             {colorCount === 0 && micCount === 0 && twoWayCount === 0 && ptzCount === 0 && (
@@ -1047,8 +1047,8 @@ export function DynamicVariantGenerator({
                       className="w-full py-2 px-3 text-xs sm:text-sm font-bold bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none pr-8 transition-all"
                     >
                       <option value="wired">🔌 Wired (Coaxial/CAT6)</option>
-                      <option value="wifi">📶 Smart Wi-Fi</option>
-                      <option value="4g">🛰️ 4G Cellular SIM</option>
+                      <option value="wifi">📶 Smart Wireless (Wi-Fi)</option>
+                      <option value="4g">🛰️ 4G SIM / Solar Standalone</option>
                     </select>
                     <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 bottom-2.5 pointer-events-none" />
                   </div>
@@ -1231,7 +1231,7 @@ export function DynamicVariantGenerator({
                   {(totalWiredCount > 0 && totalWifiCount > 0) && (
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 mb-2 rounded-full bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800/60 text-purple-800 dark:text-purple-300 text-[10px] font-extrabold uppercase tracking-wide">
                       <span>⚡ Hybrid:</span>
-                      <span>{totalWiredCount} Wired (DVR) + {totalWifiCount} Smart Wi-Fi</span>
+                      <span>{totalWiredCount} Wired (DVR) + {totalWifiCount} Smart Wireless</span>
                     </div>
                   )}
                   

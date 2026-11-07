@@ -420,11 +420,31 @@ function calculateHardware(
   // 1. Camera Selection
   // Synthesize mixed_camera_requirements from indoor/outdoor counts if present and no explicit camera chosen
   let mixedReqs = selection.mixed_camera_requirements;
-  if (!mixedReqs && !selection.selected_camera_id && (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined || selection.wifi_camera_count !== undefined)) {
+  if (!mixedReqs && !selection.selected_camera_id && (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined || selection.wifi_camera_count !== undefined || selection.wifi_indoor_ptz_count !== undefined)) {
     const indoor = Number(selection.indoor_camera_count) || 0;
     const outdoor = Number(selection.outdoor_camera_count) || 0;
-    const wifi = Number(selection.wifi_camera_count) || 0;
+    const inPtz = Number(selection.wifi_indoor_ptz_count) || 0;
+    const inFixed = Number(selection.wifi_indoor_fixed_count) || 0;
+    const outBullet = Number(selection.wifi_outdoor_bullet_count) || 0;
+    const outPtz = Number(selection.wifi_outdoor_ptz_count) || 0;
+    const sim4g = Number(selection.wifi_4g_count) || 0;
+    const hasDistinctVariants = (inPtz + inFixed + outBullet + outPtz + sim4g) > 0;
+    const wifi = hasDistinctVariants ? (inPtz + inFixed + outBullet + outPtz + sim4g) : (Number(selection.wifi_camera_count) || 0);
     const isWirelessMode = tech === "Wireless" || tech === "WiFi";
+
+    if (hasDistinctVariants) {
+      mixedReqs = [];
+      if (!isWirelessMode) {
+        if (outdoor > 0) mixedReqs.push({ type: "Outdoor Bullet Camera", count: outdoor, features: ["bullet"] });
+        if (indoor > 0) mixedReqs.push({ type: "Indoor Dome Camera", count: indoor, features: ["dome"] });
+      }
+      if (inPtz > 0) mixedReqs.push({ type: "Indoor 360° Pan-Tilt Camera (Wi-Fi)", count: inPtz, features: ["indoor", "dome", "ptz", "wifi", "2-way"], technology: "Wireless" as any });
+      if (inFixed > 0) mixedReqs.push({ type: "Indoor Fixed Dome Camera (Wi-Fi)", count: inFixed, features: ["indoor", "dome", "wifi", "2-way"], technology: "Wireless" as any });
+      if (outBullet > 0) mixedReqs.push({ type: "Outdoor Weatherproof Bullet Camera (Wi-Fi)", count: outBullet, features: ["outdoor", "bullet", "wifi"], technology: "Wireless" as any });
+      if (outPtz > 0) mixedReqs.push({ type: "Outdoor 360° Pan-Tilt PTZ Camera (Wi-Fi)", count: outPtz, features: ["outdoor", "ptz", "wifi"], technology: "Wireless" as any });
+      if (sim4g > 0) mixedReqs.push({ type: "4G SIM / Solar Standalone Camera", count: sim4g, features: ["outdoor", "4g", "sim", "ptz"], technology: "Wireless" as any });
+      if (mixedReqs.length === 0) mixedReqs = undefined;
+    } else
 
     if (isWirelessMode) {
       const isIndependent4G = selection.broadband_status === "independent_4g";

@@ -16,10 +16,13 @@ import { ShieldCheck, Loader2, Sparkles, Wrench, MapPin, CheckCircle2, HelpCircl
 import { useTranslation } from "@/hooks/useTranslation";
 import { PlacesAutocomplete } from "@/components/shared/PlacesAutocomplete";
 import { useJsApiLoader, GoogleMap, Marker } from "@react-google-maps/api";
+import { buildMixedCameraRequirements } from "@/lib/camera-requirements";
 import { SmartAddressInput } from "@/components/shared/SmartAddressInput";
 import { WhatsAppOtpNotice } from "@/components/shared/WhatsAppOtpNotice";
 
 const GOOGLE_MAPS_LIBRARIES: any = ["places"];
+
+
 
 export function WizardClientV2() {
   const { t } = useTranslation();
@@ -245,6 +248,11 @@ export function WizardClientV2() {
     indoor_camera_count: 2,
     outdoor_camera_count: 2,
     wifi_camera_count: 0,
+    wifi_indoor_ptz_count: 0,
+    wifi_indoor_fixed_count: 0,
+    wifi_outdoor_bullet_count: 0,
+    wifi_outdoor_ptz_count: 0,
+    wifi_4g_count: 0,
     recording_days: 7,
     recording_mode: "motion",
     technology_preference: "HD",

@@ -14,6 +14,19 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
   let outdoorCameras = Number(req.outdoor_camera_count) || 0;
   let wifiCameras = Number(req.wifi_camera_count) || 0;
   
+  // Sum up from distinct wireless variant fields if provided
+  const wifiInVariants = (Number(req.wifi_indoor_ptz_count) || 0) + (Number(req.wifi_indoor_fixed_count) || 0);
+  const wifiOutVariants = (Number(req.wifi_outdoor_bullet_count) || 0) + (Number(req.wifi_outdoor_ptz_count) || 0) + (Number(req.wifi_4g_count) || 0);
+  const variantWifiTotal = wifiInVariants + wifiOutVariants;
+  if (variantWifiTotal > 0) {
+    wifiCameras = variantWifiTotal;
+    if (isWireless) {
+      indoorCameras = wifiInVariants;
+      outdoorCameras = wifiOutVariants;
+      totalCameras = variantWifiTotal;
+    }
+  }
+
   // If explicitly provided via indoor/outdoor/wifi split
   if (indoorCameras > 0 || outdoorCameras > 0 || wifiCameras > 0) {
     totalCameras = indoorCameras + outdoorCameras + (!isWireless ? wifiCameras : 0);
@@ -26,10 +39,20 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
   // If specific mixed requirements are provided, sum them up
   if (req.mixed_camera_requirements && req.mixed_camera_requirements.length > 0) {
     totalCameras = req.mixed_camera_requirements.reduce((sum: number, r: any) => sum + (Number(r.count) || 0), 0);
-    // Rough heuristic to split if we only have mixed specs
+    let mixedIn = 0;
+    let mixedOut = 0;
+    req.mixed_camera_requirements.forEach((r: any) => {
+      const t = (r.type || "").toLowerCase();
+      const f = (r.features || []).map((x: string) => x.toLowerCase());
+      if (t.includes("outdoor") || t.includes("bullet") || f.includes("outdoor") || f.includes("bullet")) {
+        mixedOut += Number(r.count) || 0;
+      } else {
+        mixedIn += Number(r.count) || 0;
+      }
+    });
     if (indoorCameras === 0 && outdoorCameras === 0) {
-       indoorCameras = totalCameras;
-       outdoorCameras = 0;
+       indoorCameras = mixedIn;
+       outdoorCameras = mixedOut;
     }
   }
 
