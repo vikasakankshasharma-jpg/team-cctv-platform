@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { RecaptchaVerifier, signInWithCustomToken, ConfirmationResult } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { createLeadAction } from "@/app/actions/lead";
-import { ShieldCheck, Loader2, Sparkles, Wrench, MapPin, CheckCircle2, HelpCircle } from "lucide-react";
+import { ShieldCheck, Loader2, Sparkles, Wrench, MapPin, CheckCircle2, HelpCircle, ChevronDown, ChevronUp, Plus, Minus } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { PlacesAutocomplete } from "@/components/shared/PlacesAutocomplete";
 import { useJsApiLoader, GoogleMap, Marker } from "@react-google-maps/api";
@@ -312,6 +312,7 @@ export function WizardClientV2() {
   const totalSteps = 6;
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [customizerPlanId, setCustomizerPlanId] = useState<string | null>(null);
+  const [isWirelessExpanded, setIsWirelessExpanded] = useState(false);
 
   const handleNext = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1453,67 +1454,162 @@ export function WizardClientV2() {
                       </div>
                     </div>
 
-                    {/* Smart Wireless Cameras Expansion in Hybrid mode */}
-                    <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-dashed border-blue-200 dark:border-blue-900/60 bg-blue-50/20 dark:bg-zinc-900/50 shadow-sm space-y-3">
-                      <div>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">
-                            Smart Wireless Cameras (Wi-Fi & 4G SIM)
-                          </h3>
-                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">
-                            Optional • Hybrid
-                          </span>
+                    {/* Smart Wireless Cameras Collapsible Section in Hybrid mode */}
+                    {!isWirelessExpanded && totalWireless === 0 ? (
+                      /* Collapsed State: Zero wireless cameras selected */
+                      <div 
+                        onClick={() => setIsWirelessExpanded(true)}
+                        className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-dashed border-blue-200 dark:border-blue-900/60 bg-blue-50/20 dark:bg-zinc-900/40 hover:bg-blue-50/50 dark:hover:bg-zinc-900/70 transition-all cursor-pointer flex items-center justify-between group shadow-sm"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-base sm:text-lg shrink-0 group-hover:scale-105 transition-transform">
+                            📡
+                          </div>
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                Add Smart Wireless Cameras (Wi-Fi / 4G SIM)
+                              </h4>
+                              <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">
+                                Optional • Hybrid
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                              For remote gate, terrace, baby room, or farm corners without video cables.
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                          For remote gate, terrace, baby room, or farm corners where running video cables is difficult.
-                        </p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-3 rounded-lg border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 font-bold text-xs shrink-0 flex items-center gap-1 group-hover:bg-blue-600 group-hover:text-white transition-all pointer-events-none"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add</span>
+                        </Button>
                       </div>
-
-                      <div className="space-y-2">
-                        {wirelessVariants.map((v) => (
-                          <div 
-                            key={v.key} 
-                            className={`p-2.5 sm:p-3 rounded-xl border flex items-center justify-between transition-all ${
-                              v.count > 0 
-                                ? "border-blue-500 bg-white dark:bg-zinc-900 shadow-sm" 
-                                : "border-gray-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/50"
-                            }`}
+                    ) : !isWirelessExpanded && totalWireless > 0 ? (
+                      /* Collapsed State: Customer has added wireless cameras */
+                      <div 
+                        onClick={() => setIsWirelessExpanded(true)}
+                        className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-blue-500/70 bg-blue-50/40 dark:bg-blue-950/20 hover:bg-blue-50/60 transition-all cursor-pointer flex items-center justify-between group shadow-sm"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-base sm:text-lg shrink-0">
+                            📡
+                          </div>
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-bold text-xs sm:text-sm text-blue-950 dark:text-blue-100">
+                                Smart Wireless Cameras
+                              </h4>
+                              <span className="text-[10px] bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full">
+                                {totalWireless} Added
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-blue-700/80 dark:text-blue-300/80">
+                              {[
+                                inPtzCount > 0 ? `${inPtzCount}x 360° PTZ` : null,
+                                inFixedCount > 0 ? `${inFixedCount}x Indoor Fixed` : null,
+                                outBulletCount > 0 ? `${outBulletCount}x Outdoor Bullet` : null,
+                                outPtzCount > 0 ? `${outPtzCount}x Outdoor PTZ` : null,
+                                sim4gCount > 0 ? `${sim4gCount}x 4G SIM` : null,
+                              ].filter(Boolean).join(" • ") || "Click to edit selection"}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 px-2.5 rounded-lg text-blue-700 dark:text-blue-300 font-bold text-xs shrink-0 flex items-center gap-1 hover:bg-blue-100 dark:hover:bg-blue-900/50 pointer-events-none"
+                        >
+                          <span>Edit</span>
+                          <ChevronDown className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      /* Expanded State: 5 Variants open with counters & Collapse button */
+                      <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-blue-200 dark:border-blue-900/60 bg-blue-50/20 dark:bg-zinc-900/50 shadow-sm space-y-3 transition-all animate-in fade-in duration-200">
+                        <div 
+                          className="flex items-center justify-between cursor-pointer select-none pb-2 border-b border-blue-100 dark:border-zinc-800"
+                          onClick={() => setIsWirelessExpanded(false)}
+                        >
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-base">📡</span>
+                              <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">
+                                Smart Wireless Cameras (Wi-Fi & 4G SIM)
+                              </h3>
+                              <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">
+                                {totalWireless > 0 ? `${totalWireless} Selected` : "Optional • Hybrid"}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                              For remote gate, terrace, baby room, or farm corners without video cables.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            className="p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 transition-colors shrink-0 flex items-center gap-1 text-xs font-semibold"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsWirelessExpanded(false);
+                            }}
+                            title="Collapse wireless cameras"
                           >
-                            <div className="space-y-0.5 max-w-[65%] sm:max-w-[70%]">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-sm">{v.icon}</span>
-                                <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
-                                  {v.name}
+                            <span className="hidden sm:inline">Done</span>
+                            <ChevronUp className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="space-y-2">
+                          {wirelessVariants.map((v) => (
+                            <div 
+                              key={v.key} 
+                              className={`p-2.5 sm:p-3 rounded-xl border flex items-center justify-between transition-all ${
+                                v.count > 0 
+                                  ? "border-blue-500 bg-white dark:bg-zinc-900 shadow-sm" 
+                                  : "border-gray-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/50"
+                              }`}
+                            >
+                              <div className="space-y-0.5 max-w-[65%] sm:max-w-[70%]">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-sm">{v.icon}</span>
+                                  <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                                    {v.name}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] text-gray-500 dark:text-zinc-400 block">
+                                  {v.desc}
                                 </span>
                               </div>
-                              <span className="text-[10px] text-gray-500 dark:text-zinc-400 block">
-                                {v.desc}
-                              </span>
+                              <div className="flex items-center gap-1 bg-gray-50 dark:bg-zinc-800 p-0.5 rounded-lg border border-gray-200 dark:border-zinc-700 shrink-0">
+                                <button
+                                  type="button"
+                                  className="w-7 h-7 rounded-md bg-white dark:bg-zinc-900 hover:bg-gray-100 font-black text-xs border"
+                                  onClick={() => updateWirelessCount(v.key, v.count - 1)}
+                                  disabled={v.count === 0}
+                                >
+                                  -
+                                </button>
+                                <span className="w-6 text-center text-xs font-black text-blue-700 dark:text-blue-300">
+                                  {v.count}
+                                </span>
+                                <button
+                                  type="button"
+                                  className="w-7 h-7 rounded-md bg-white dark:bg-zinc-900 hover:bg-gray-100 font-black text-xs border"
+                                  onClick={() => updateWirelessCount(v.key, v.count + 1)}
+                                >
+                                  +
+                                </button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1 bg-gray-50 dark:bg-zinc-800 p-0.5 rounded-lg border border-gray-200 dark:border-zinc-700 shrink-0">
-                              <button
-                                type="button"
-                                className="w-7 h-7 rounded-md bg-white dark:bg-zinc-900 hover:bg-gray-100 font-black text-xs border"
-                                onClick={() => updateWirelessCount(v.key, v.count - 1)}
-                                disabled={v.count === 0}
-                              >
-                                -
-                              </button>
-                              <span className="w-6 text-center text-xs font-black text-blue-700 dark:text-blue-300">
-                                {v.count}
-                              </span>
-                              <button
-                                type="button"
-                                className="w-7 h-7 rounded-md bg-white dark:bg-zinc-900 hover:bg-gray-100 font-black text-xs border"
-                                onClick={() => updateWirelessCount(v.key, v.count + 1)}
-                              >
-                                +
-                              </button>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </>
                 )}
               </div>

@@ -40,9 +40,27 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      // ── Explicit Cache Bypass for Root & City Routes ─────────────────────
+      // ── Explicit Cache Bypass for Root, Wizard, Quote & City Routes ─────────────────────
       {
         source: '/:slug(jaipur|jodhpur|kota|ajmer)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      },
+      {
+        source: '/wizard',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      },
+      {
+        source: '/quote/:path*',
         headers: [
           {
             key: 'Cache-Control',
