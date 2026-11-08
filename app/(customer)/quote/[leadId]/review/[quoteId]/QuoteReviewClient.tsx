@@ -906,7 +906,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                   <Clock className="w-4 h-4" />
                 </div>
                 <div>
-                  <h5 className="text-xs font-bold text-zinc-900">14-Day Price Lock</h5>
+                  <h5 className="text-xs font-bold text-zinc-900">{t("qrc_price_lock", "7-Day Price Lock")}</h5>
                   <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">This quote is locked. No hidden charges on site visit.</p>
                 </div>
               </div>

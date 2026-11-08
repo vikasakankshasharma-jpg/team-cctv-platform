@@ -293,7 +293,7 @@ export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumbe
               2. 80% at the time of material received at Site and before starting Installation work.{"\n"}
               3. Remaining 10% after completion of work and handover the Site.{"\n"}
               4. 1-Year Comprehensive On-Site Warranty.{"\n"}
-              5. Validity: {settings.quote_validity_days || 8} Days from {dateStr}.
+              5. Validity: {settings.quote_validity_days || 7} Days from {dateStr}.
             </Text>
           </View>
           <View style={[styles.infoCol, { backgroundColor: '#fff' }]}>

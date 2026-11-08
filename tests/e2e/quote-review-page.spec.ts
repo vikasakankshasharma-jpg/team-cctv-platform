@@ -35,7 +35,7 @@ test.describe("Quote Review Page Optimization E2E", () => {
     await expect(page.locator("text=Zero Advance Risk")).toBeVisible();
     await expect(page.locator("text=100% Original Brand")).toBeVisible();
     await expect(page.locator("text=Certified Engineers")).toBeVisible();
-    await expect(page.locator("h5:has-text('14-Day Price Lock')")).toBeVisible();
+    await expect(page.locator("h5:has-text('7-Day Price Lock')")).toBeVisible();
 
     // 6. Click EMI button and verify modal opens
     await heroEmiBtn.click();

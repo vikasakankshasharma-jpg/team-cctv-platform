@@ -246,7 +246,7 @@ export const QuotePDFDocument = ({ quote, settings }: { quote: QuoteSnapshot; se
 
   const validUntil = quote.validUntil || quote.valid_until || quote.expires_at;
   const createdAt = quote.createdAt || quote.created_at || (quote._serverCreatedAt?.toDate ? quote._serverCreatedAt.toDate() : null) || new Date();
-  const effectiveValidUntil = validUntil || new Date(new Date(createdAt).getTime() + 14 * 24 * 60 * 60 * 1000);
+  const effectiveValidUntil = validUntil || new Date(new Date(createdAt).getTime() + (settings?.quote_validity_days || 7) * 24 * 60 * 60 * 1000);
 
   let rawItems: any[] = [];
   if (Array.isArray(quote?.items) && quote.items.length > 0) {

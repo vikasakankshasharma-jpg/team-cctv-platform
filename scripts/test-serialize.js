@@ -42,7 +42,7 @@ const mockData = {
     quoteNumber: "MOCK-1234",
     status: "pending",
     issuedAt: new Date().toISOString(),
-    validUntil: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     customer: {
         name: "Test User",
         phone: "9999999999",

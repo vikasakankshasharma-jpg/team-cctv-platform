@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       status: "draft",
       created_by: decodedToken.uid,
       created_at: new Date().toISOString(),
-      expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       is_custom_quote: true,
     });
 

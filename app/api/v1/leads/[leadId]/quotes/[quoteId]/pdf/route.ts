@@ -148,7 +148,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     quoteNumber: String(quote?.quote_number || quote?.quote_id || quoteSnap.id),
     status: String(quote?.status || "pending"),
     issuedAt: quote?.createdAt || (quote?.created_at as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
-    validUntil: quote?.validUntil || quote?.valid_until || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    validUntil: quote?.validUntil || quote?.valid_until || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     customer: {
       name: String(
         (quote?.billing_details as any)?.customer_name ||
@@ -207,7 +207,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     version: Number(quote?.version || 1),
     isRevision: !!quote?.is_revision,
     revisionNotes: quote?.revision_notes ? String(quote.revision_notes) : undefined,
-    notes: "This quotation is valid for 14 days from the date of issue. Prices are subject to change after expiry.",
+    notes: "This quotation is valid for 7 days from the date of issue. Prices are subject to change after expiry.",
   };
 
   // â”€â”€ 2. Auth (Optional for magic links, strict for others) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

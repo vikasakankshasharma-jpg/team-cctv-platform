@@ -89,7 +89,7 @@ export default async function SettingsAdminPage() {
     amc_1yr_pct: 5,
     amc_2yr_pct: 8,
     amc_3yr_pct: 10,
-    quote_validity_days: 8,
+    quote_validity_days: 7,
     // Hardware Component Margins (%)
     margin_hdd: 5,
     margin_hdd_budget: 10,

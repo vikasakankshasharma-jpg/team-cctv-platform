@@ -55,7 +55,7 @@ export default async function QuoteReviewPage({
         quoteNumber: "MOCK-1234",
         status: "pending",
         issuedAt: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         customer: {
           name: "Test User",
           phone: "9999999999",
@@ -196,7 +196,7 @@ export default async function QuoteReviewPage({
         quoteNumber: quote?.quote_number || quote?.quote_id || quoteSnap.id.slice(0, 10).toUpperCase(),
         status: quote?.status || "pending",
         issuedAt: quote?.createdAt || quote?.created_at?.toDate?.().toISOString() || new Date().toISOString(),
-        validUntil: quote?.validUntil || quote?.valid_until || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        validUntil: quote?.validUntil || quote?.valid_until || new Date(Date.now() + (settings.quote_validity_days || 7) * 24 * 60 * 60 * 1000).toISOString(),
         customer: {
           name: quote?.billing_details?.customer_name || quote?.customer_name || lead?.customer_name || "Valued Customer",
           phone: quote?.billing_details?.phone || quote?.customer_mobile || lead?.mobile_number || "N/A",
@@ -229,7 +229,7 @@ export default async function QuoteReviewPage({
         version: quote?.version || 1,
         isRevision: !!quote?.is_revision,
         revisionNotes: quote?.revision_notes,
-        notes: "This quotation is valid for 14 days from the date of issue. Prices are subject to change after expiry.",
+        notes: `This quotation is valid for ${settings.quote_validity_days || 7} days from the date of issue. Prices are subject to change after expiry.`,
       };
     }
 
