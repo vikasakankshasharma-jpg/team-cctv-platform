@@ -92,11 +92,14 @@ export default function InventoryDashboard() {
 
         <Card className="bg-green-50 border-green-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-green-800">Stock Valuation</CardTitle>
+            <CardTitle className="text-sm font-medium text-green-800 flex items-center justify-between">
+              <span>Stock Valuation</span>
+              <span className="text-[10px] font-bold bg-green-200 text-green-900 px-1.5 py-0.5 rounded">GST Paid</span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-900">₹{totalValue.toLocaleString("en-IN")}</div>
-            <p className="text-xs text-green-700 mt-1">Based on base cost</p>
+            <p className="text-xs text-green-700 mt-1">Based on GST-paid base cost</p>
           </CardContent>
         </Card>
       </div>
@@ -120,6 +123,7 @@ export default function InventoryDashboard() {
                    <th className="px-4 py-3">Brand</th>
                    <th className="px-4 py-3">Category</th>
                    <th className="px-4 py-3 text-right">Available Qty</th>
+                    <th className="px-4 py-3 text-right">Unit Cost (GST Paid)</th>
                    <th className="px-4 py-3 text-right">Reserved (In Jobs)</th>
                    <th className="px-4 py-3 text-right">Status</th>
                  </tr>
@@ -131,6 +135,9 @@ export default function InventoryDashboard() {
                      <td className="px-4 py-3">{item.brand}</td>
                      <td className="px-4 py-3">{item.category}</td>
                      <td className="px-4 py-3 text-right font-bold">{item.availableQty}</td>
+                      <td className="px-4 py-3 text-right text-muted-foreground font-mono font-medium">
+                        ₹{(item.costPrice || 0).toLocaleString("en-IN")}
+                      </td>
                      <td className="px-4 py-3 text-right text-orange-600">{item.reservedQty}</td>
                      <td className="px-4 py-3 text-right">
                         {item.availableQty === 0 ? (

@@ -1,0 +1,2572 @@
+{
+  "generated_at": "2026-11-08T05:52:19.047Z",
+  "total_skus": 148,
+  "sku_passed": 148,
+  "sku_failed": 0,
+  "total_services": 12,
+  "service_passed": 12,
+  "sku_details": [
+    {
+      "id": "ACC-PVC-RACK-POE",
+      "display_name": "PVC Weatherproof Enclosure Box for PoE Switch",
+      "category": "rack",
+      "brand": "Generic",
+      "base_cost": 504,
+      "unit_price": 630,
+      "margin_pct": 25,
+      "technologies": [
+        "Common",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 533.9,
+      "gst_18": 96.1
+    },
+    {
+      "id": "ACC-WIFI-EXTENDER",
+      "display_name": "TP-Link 300Mbps Wi-Fi Range Extender (TL-WA850RE)",
+      "category": "network",
+      "brand": "TP-Link",
+      "base_cost": 1355,
+      "unit_price": 1558,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless",
+        "Common"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1320.34,
+      "gst_18": 237.66
+    },
+    {
+      "id": "CAB-ELEC-2CORE-90M",
+      "display_name": "2-Core Pure Copper Electrical Power Wire (90 Meter Coil)",
+      "category": "cable",
+      "brand": "Standard Electrical",
+      "base_cost": 600,
+      "unit_price": 750,
+      "margin_pct": 25,
+      "technologies": [
+        "both"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 635.59,
+      "gst_18": 114.41
+    },
+    {
+      "id": "CABLE-DLINK-CAT6-305M",
+      "display_name": "D-Link CAT6 Lan Cable 305m (Grey) 23AWG Pure Copper",
+      "category": "cable",
+      "brand": "D-Link",
+      "base_cost": 10163,
+      "unit_price": 12196,
+      "margin_pct": 20,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 10335.59,
+      "gst_18": 1860.41
+    },
+    {
+      "id": "CABLE-PRA-CAT6-100M",
+      "display_name": "Prama CAT6 Lan Cable Copper Indoor 100m Grey (23AWG)",
+      "category": "cable",
+      "brand": "PRAMA",
+      "base_cost": 3225,
+      "unit_price": 3870,
+      "margin_pct": 20,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3279.66,
+      "gst_18": 590.34
+    },
+    {
+      "id": "CABLE-SEC-31-90Y",
+      "display_name": "Securelink 3+1 CCTV Cable Copper 90y",
+      "category": "cable",
+      "brand": "Securelink",
+      "base_cost": 1044,
+      "unit_price": 1253,
+      "margin_pct": 20,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1061.86,
+      "gst_18": 191.14
+    },
+    {
+      "id": "CAM-APL-HD-5MP-STAR-B01",
+      "display_name": "A+ Products HD Bullet Camera 5MP 3.6mm Star Light With Audio (5MP-STAR-B01)",
+      "category": "cctv_camera",
+      "brand": "A+ Products",
+      "base_cost": 1046,
+      "unit_price": 1255,
+      "margin_pct": 20,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1063.56,
+      "gst_18": 191.44
+    },
+    {
+      "id": "CAM-APL-HD-AD-B01",
+      "display_name": "A+ Products 2.4MP HD ColorVu Bullet Camera 3.6mm With Audio (AD-B01)",
+      "category": "cctv_camera",
+      "brand": "A+ Products",
+      "base_cost": 799,
+      "unit_price": 959,
+      "margin_pct": 20,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 812.71,
+      "gst_18": 146.29
+    },
+    {
+      "id": "CAM-APL-HD-AD-D03",
+      "display_name": "A+ Products 2.4MP HD ColorVu Dome Camera 3.6mm With Audio (AD-D03)",
+      "category": "cctv_camera",
+      "brand": "A+ Products",
+      "base_cost": 743,
+      "unit_price": 892,
+      "margin_pct": 20,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 755.93,
+      "gst_18": 136.07
+    },
+    {
+      "id": "CAM-APL-HD-FM-5MP-D02",
+      "display_name": "A+ Products HD Dome Camera 5MP 3.6mm Star Light With Audio (FM-5MP-D02)",
+      "category": "cctv_camera",
+      "brand": "A+ Products",
+      "base_cost": 1018,
+      "unit_price": 1222,
+      "margin_pct": 20,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1035.59,
+      "gst_18": 186.41
+    },
+    {
+      "id": "CAM-CP-4G-BULLET-EZR33T",
+      "display_name": "CP-Plus 3MP 4G SIM Weatherproof Full Color Bullet Camera (EZ-R33T)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 2255,
+      "unit_price": 2593,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2197.46,
+      "gst_18": 395.54
+    },
+    {
+      "id": "CAM-CP-4G-DOME-EZM32T",
+      "display_name": "CP-Plus 3MP 4G SIM Smart Full Color Dome Camera (EZ-M32T)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 2415,
+      "unit_price": 2777,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2353.39,
+      "gst_18": 423.61
+    },
+    {
+      "id": "CAM-CP-4G-PT-CAM",
+      "display_name": "CP-Plus 3MP 4G SIM Pan-Tilt Outdoor Camera Full Color (CP-Z32G)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 2826,
+      "unit_price": 3250,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2754.24,
+      "gst_18": 495.76
+    },
+    {
+      "id": "CAM-CP-4G-PT-EZS35T",
+      "display_name": "CP-Plus 3MP 4G SIM Weatherproof Pan-Tilt Outdoor Camera Night Color (EZ-S35T)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 3286,
+      "unit_price": 3779,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3202.54,
+      "gst_18": 576.46
+    },
+    {
+      "id": "CAM-CP-HD-CP-GPC-DA50PL2C",
+      "display_name": "CP-Plus 5MP ColorVu HD Dome Camera 3.6mm With Audio (CP-GPC-DA50PL2C-SE)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 1932,
+      "unit_price": 2222,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1883.05,
+      "gst_18": 338.95
+    },
+    {
+      "id": "CAM-CP-HD-DA24PL2C-SE",
+      "display_name": "CP-Plus 2.4MP ColorVu HD Dome Camera 3.6mm With Audio (DA24PL2C-SE)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 1576,
+      "unit_price": 1812,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1535.59,
+      "gst_18": 276.41
+    },
+    {
+      "id": "CAM-CP-HD-DC24PL3C-L-V2",
+      "display_name": "CP-Plus 2.4MP Regular Hybrid HD Dome 3.6mm With Audio (DC24PL3C-L-V2)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 1304,
+      "unit_price": 1500,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1271.19,
+      "gst_18": 228.81
+    },
+    {
+      "id": "CAM-CP-HD-TA24PL2C-SE",
+      "display_name": "CP-Plus 2.4MP ColorVu HD Bullet Camera 3.6mm With Audio (TA24PL2C-SE)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 1640,
+      "unit_price": 1886,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1598.31,
+      "gst_18": 287.69
+    },
+    {
+      "id": "CAM-CP-HD-TC24PL3C",
+      "display_name": "CP-Plus 2.4MP ECO HD Bullet Camera 3.6mm With Audio (TC24PL3C)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 1075,
+      "unit_price": 1236,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1047.46,
+      "gst_18": 188.54
+    },
+    {
+      "id": "CAM-CP-HD-TC24PL3C-L-V2",
+      "display_name": "CP-Plus 2.4MP Regular Hybrid HD Bullet 3.6mm With Audio (TC24PL3C-L-V2)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 1409,
+      "unit_price": 1620,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1372.88,
+      "gst_18": 247.12
+    },
+    {
+      "id": "CAM-CP-IP-4MP-BULLET",
+      "display_name": "CP-Plus 4MP IP Bullet Camera 3.6mm With Audio (TA41L3C-D-Q)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 3692,
+      "unit_price": 4246,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3598.31,
+      "gst_18": 647.69
+    },
+    {
+      "id": "CAM-CP-IP-4MP-DOME",
+      "display_name": "CP-Plus 4MP IP illumax Hybrid Dome Camera 3.6mm With Audio (DA41L3C-D-LQ)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 3778,
+      "unit_price": 4345,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3682.2,
+      "gst_18": 662.8
+    },
+    {
+      "id": "CAM-CP-IP-PTZ-D2521L10",
+      "display_name": "CP-Plus 2MP 25x Commercial IP PTZ Speed Dome Camera (CP-UNP-D2521L10-DAQ)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 29970,
+      "unit_price": 34466,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 29208.47,
+      "gst_18": 5257.53
+    },
+    {
+      "id": "CAM-CP-IP-PTZ-F4521L30",
+      "display_name": "CP-Plus 2MP 45x Commercial IP PTZ Speed Dome Camera (CP-UNP-F4521L30-DPQ)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 66198,
+      "unit_price": 76128,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 64515.25,
+      "gst_18": 11612.75
+    },
+    {
+      "id": "CAM-CP-IP-PTZ-F4541L30",
+      "display_name": "CP-Plus 4MP 45x Commercial IP PTZ Speed Dome Camera (CP-UNP-F4541L30-DPQ)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 78516,
+      "unit_price": 90293,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 76519.49,
+      "gst_18": 13773.51
+    },
+    {
+      "id": "CAM-CP-WIFI-E25A",
+      "display_name": "CP-Plus 2MP Wi-Fi PT Camera 360 Degree Pan-Tilt (CP-E25A)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 1209,
+      "unit_price": 1390,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1177.97,
+      "gst_18": 212.03
+    },
+    {
+      "id": "CAM-CP-WIFI-E28Q",
+      "display_name": "CP-Plus 2MP Smart Wi-Fi PT Camera with Two-Way Talk (CP-E28Q)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 2112,
+      "unit_price": 2429,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2058.47,
+      "gst_18": 370.53
+    },
+    {
+      "id": "CAM-CP-WIFI-E31Q",
+      "display_name": "CP-Plus 3MP Smart Wi-Fi PT Camera with Two-Way Talk (CP-E31Q)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 2599,
+      "unit_price": 2989,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2533.05,
+      "gst_18": 455.95
+    },
+    {
+      "id": "CAM-CP-WIFI-E35A",
+      "display_name": "CP-Plus 3MP Wi-Fi PT Camera 360 Degree Pan-Tilt (CP-E35A)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 1339,
+      "unit_price": 1540,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1305.08,
+      "gst_18": 234.92
+    },
+    {
+      "id": "CAM-CP-WIFI-E38Q",
+      "display_name": "CP-Plus 3MP Wi-Fi PT Camera EzyKam+ with Two-Way Audio (CP-E38Q)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 2699,
+      "unit_price": 3104,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2630.51,
+      "gst_18": 473.49
+    },
+    {
+      "id": "CAM-CP-WIFI-E48Q",
+      "display_name": "CP-Plus 4MP Smart Wi-Fi PT Camera with Two-Way Talk (CP-E48Q)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 2780,
+      "unit_price": 3197,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2709.32,
+      "gst_18": 487.68
+    },
+    {
+      "id": "CAM-CP-WIFI-PT-CPZ43Q",
+      "display_name": "CP-Plus 4MP Wi-Fi Weatherproof Pan-Tilt Outdoor Camera Night Color (CP-Z43Q)",
+      "category": "cctv_camera",
+      "brand": "CP PLUS",
+      "base_cost": 3581,
+      "unit_price": 4118,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3489.83,
+      "gst_18": 628.17
+    },
+    {
+      "id": "CAM-HF-IP-4MP-BULLET",
+      "display_name": "Hi-Focus 4MP IP Hybrid Bullet Camera 4mm With Mic Metal Body (T4504-ADL-R1)",
+      "category": "cctv_camera",
+      "brand": "Hi-Focus",
+      "base_cost": 3450,
+      "unit_price": 3968,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3362.71,
+      "gst_18": 605.29
+    },
+    {
+      "id": "CAM-HF-IP-4MP-DOME",
+      "display_name": "Hi-Focus 4MP IP Hybrid Dome Camera 2.8mm with Two Way Audio (D3304-DLS-R1)",
+      "category": "cctv_camera",
+      "brand": "Hi-Focus",
+      "base_cost": 3088,
+      "unit_price": 3551,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3009.32,
+      "gst_18": 541.68
+    },
+    {
+      "id": "CAM-HF-WIFI-PT-HIFY",
+      "display_name": "Hi-Focus 3MP Smart Wi-Fi PT Camera Hi-Fy with Two-Way Audio",
+      "category": "cctv_camera",
+      "brand": "HI-FOCUS",
+      "base_cost": 3162,
+      "unit_price": 3636,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3081.36,
+      "gst_18": 554.64
+    },
+    {
+      "id": "CAM-HIK-HD-2CE10DF0T-PFS",
+      "display_name": "Hikvision 2MP ColorVu HD Bullet Camera 3.6mm With Audio (2CE10DF0T-PFS)",
+      "category": "cctv_camera",
+      "brand": "HIKVISION",
+      "base_cost": 2100,
+      "unit_price": 2415,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2046.61,
+      "gst_18": 368.39
+    },
+    {
+      "id": "CAM-HIK-HD-2CE10KF0T-PFS",
+      "display_name": "Hikvision 5MP ColorVu HD 3K Bullet Camera 3.6mm With Audio (2CE10KF0T-PFS)",
+      "category": "cctv_camera",
+      "brand": "HIKVISION",
+      "base_cost": 2717,
+      "unit_price": 3125,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2648.31,
+      "gst_18": 476.69
+    },
+    {
+      "id": "CAM-HIK-HD-2CE16D0T-ITPFS",
+      "display_name": "Hikvision 2MP Regular HD Bullet Camera 3.6mm With Audio (2CE16D0T-ITPFS)",
+      "category": "cctv_camera",
+      "brand": "HIKVISION",
+      "base_cost": 1141,
+      "unit_price": 1312,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1111.86,
+      "gst_18": 200.14
+    },
+    {
+      "id": "CAM-HIK-HD-2CE70DF0T-PFS-2.8",
+      "display_name": "Hikvision 2MP ColorVu HD Dome Camera 2.8mm With Audio (2CE70DF0T-PFS)",
+      "category": "cctv_camera",
+      "brand": "HIKVISION",
+      "base_cost": 1988,
+      "unit_price": 2286,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1937.29,
+      "gst_18": 348.71
+    },
+    {
+      "id": "CAM-HIK-HD-2CE70KF0T-PFS",
+      "display_name": "Hikvision 5MP ColorVu HD 3K Dome Camera 2.8mm With Audio (2CE70KF0T-PFS)",
+      "category": "cctv_camera",
+      "brand": "HIKVISION",
+      "base_cost": 2650,
+      "unit_price": 3048,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2583.05,
+      "gst_18": 464.95
+    },
+    {
+      "id": "CAM-HIK-HD-2CE76D0T-ITPFS",
+      "display_name": "Hikvision 2MP Regular HD Dome Camera 2.8mm With Audio (2CE76D0T-ITPFS)",
+      "category": "cctv_camera",
+      "brand": "HIKVISION",
+      "base_cost": 1037,
+      "unit_price": 1193,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1011.02,
+      "gst_18": 181.98
+    },
+    {
+      "id": "CAM-PR-WIFI-PT-IDADA",
+      "display_name": "Prama iDADA 3MP Smart Wi-Fi PT Camera with Two-Way Audio",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 2490,
+      "unit_price": 2864,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2427.12,
+      "gst_18": 436.88
+    },
+    {
+      "id": "CAM-PRA-HD-HTD112E",
+      "display_name": "Prama 2MP HD Bullet Camera 3.6mm With Audio (HTD112E-NTPF(M))",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 1043,
+      "unit_price": 1200,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1016.95,
+      "gst_18": 183.05
+    },
+    {
+      "id": "CAM-PRA-HD-HTD702E",
+      "display_name": "Prama 2MP HD Dome Camera 3.6mm (HTD702E-NTPF(M))",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 991,
+      "unit_price": 1140,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 966.1,
+      "gst_18": 173.9
+    },
+    {
+      "id": "CAM-PRA-HD-HTD70F0E",
+      "display_name": "Prama 2MP HD Dome Night Color Camera with Mic 2.8mm (HTD70F0E-WPF)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 1238,
+      "unit_price": 1424,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1206.78,
+      "gst_18": 217.22
+    },
+    {
+      "id": "CAM-PRA-IP-2MP-120D3-N",
+      "display_name": "PRAMA IP BULLET CAMERA 2MP (120D3-N)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 2950,
+      "unit_price": 3393,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2875.42,
+      "gst_18": 517.58
+    },
+    {
+      "id": "CAM-PRA-IP-2MP-120D3-WNM",
+      "display_name": "PRAMA IP BULLET CAMERA 2MP HYBRID WITH MIC 4MM (120D3-WNM)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 3110,
+      "unit_price": 3577,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3031.36,
+      "gst_18": 545.64
+    },
+    {
+      "id": "CAM-PRA-IP-2MP-120D7-WNMS",
+      "display_name": "PRAMA IP BULLET CAMERA 2MP HYBRID | SD Card Slot | Two Way Audio | 4mm (120D7-WNMS)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 4132,
+      "unit_price": 4752,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 4027.12,
+      "gst_18": 724.88
+    },
+    {
+      "id": "CAM-PRA-IP-2MP-123D3-N",
+      "display_name": "PRAMA IP DOME CAMERA 2MP 2.8MM (123D3-N)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 2900,
+      "unit_price": 3335,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2826.27,
+      "gst_18": 508.73
+    },
+    {
+      "id": "CAM-PRA-IP-2MP-123D3-WNM",
+      "display_name": "PRAMA IP DOME CAMERA 2MP HYBRID WITH MIC 2.8MM (123D3-WNM)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 3050,
+      "unit_price": 3508,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2972.88,
+      "gst_18": 535.12
+    },
+    {
+      "id": "CAM-PRA-IP-2MP-123D7-WNMS",
+      "display_name": "PRAMA IP DOME CAMERA 2MP HYBRID | SD Card Slot | Two Way Audio | 2.8mm (123D7-WNMS)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 4000,
+      "unit_price": 4600,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3898.31,
+      "gst_18": 701.69
+    },
+    {
+      "id": "CAM-PRA-IP-2MP-NC126D3",
+      "display_name": "PRAMA IP BULLET CAMERA 2MP HYBRID WITH MIC Varifocal (NC126D3-WNRAM(D2))",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 6800,
+      "unit_price": 7820,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 6627.12,
+      "gst_18": 1192.88
+    },
+    {
+      "id": "CAM-PRA-IP-4MP-140D3-N",
+      "display_name": "PRAMA IP BULLET CAMERA 4MP 4MM (140D3-N)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 3750,
+      "unit_price": 4313,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3655.08,
+      "gst_18": 657.92
+    },
+    {
+      "id": "CAM-PRA-IP-4MP-140D3-WNM",
+      "display_name": "PRAMA IP BULLET CAMERA 4MP HYBRID WITH MIC 4MM (140D3-WNM)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 4200,
+      "unit_price": 4830,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 4093.22,
+      "gst_18": 736.78
+    },
+    {
+      "id": "CAM-PRA-IP-4MP-140D7-WNMS",
+      "display_name": "PRAMA IP BULLET CAMERA 4MP HYBRID | SD Card Slot | Two Way Audio | 4mm (140D7-WNMS)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 5350,
+      "unit_price": 6153,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 5214.41,
+      "gst_18": 938.59
+    },
+    {
+      "id": "CAM-PRA-IP-4MP-143D3-N",
+      "display_name": "PRAMA IP DOME CAMERA 4MP 2.8MM (143D3-N)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 3700,
+      "unit_price": 4255,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3605.93,
+      "gst_18": 649.07
+    },
+    {
+      "id": "CAM-PRA-IP-4MP-143D3-WNM-2.8",
+      "display_name": "PRAMA IP DOME CAMERA 4MP HYBRID WITH MIC 2.8MM (143D3-WNM)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 4050,
+      "unit_price": 4658,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3947.46,
+      "gst_18": 710.54
+    },
+    {
+      "id": "CAM-PRA-IP-4MP-143D3-WNM-4.0",
+      "display_name": "PRAMA IP DOME CAMERA 4MP HYBRID WITH MIC 4MM (143D3-WNM)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 4050,
+      "unit_price": 4658,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3947.46,
+      "gst_18": 710.54
+    },
+    {
+      "id": "CAM-PRA-IP-4MP-143D7-WNMS",
+      "display_name": "PRAMA IP DOME CAMERA 4MP HYBRID | SD Card Slot | Two Way Audio | 2.8mm (143D7-WNMS)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 5303,
+      "unit_price": 6099,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 5168.64,
+      "gst_18": 930.36
+    },
+    {
+      "id": "CAM-PRA-IP-4MP-NC146D3",
+      "display_name": "PRAMA IP BULLET CAMERA 4MP HYBRID WITH MIC Varifocal (NC146D3-WNRAM(D2))",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 8600,
+      "unit_price": 9890,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 8381.36,
+      "gst_18": 1508.64
+    },
+    {
+      "id": "CAM-PRA-IP-6MP-160D3-WNM",
+      "display_name": "PRAMA IP BULLET CAMERA 6MP HYBRID WITH MIC 4MM (160D3-WNM)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 5703,
+      "unit_price": 6559,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 5558.47,
+      "gst_18": 1000.53
+    },
+    {
+      "id": "CAM-PRA-IP-6MP-160D3-WNMS",
+      "display_name": "PRAMA IP BULLET CAMERA 6MP HYBRID | SD Card Slot | Two Way Audio | 4mm (160D3-WNMS)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 6500,
+      "unit_price": 7475,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 6334.75,
+      "gst_18": 1140.25
+    },
+    {
+      "id": "CAM-PRA-IP-6MP-163D3-WNM",
+      "display_name": "PRAMA IP DOME CAMERA 6MP HYBRID WITH MIC 2.8MM (163D3-WNM)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 5650,
+      "unit_price": 6498,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 5506.78,
+      "gst_18": 991.22
+    },
+    {
+      "id": "CAM-PRA-IP-6MP-163D3-WNMS",
+      "display_name": "PRAMA IP DOME CAMERA 6MP HYBRID | SD Card Slot | Two Way Audio | 2.8mm (163D3-WNMS)",
+      "category": "cctv_camera",
+      "brand": "PRAMA",
+      "base_cost": 6000,
+      "unit_price": 6900,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 5847.46,
+      "gst_18": 1052.54
+    },
+    {
+      "id": "CAM-SEC-HD-A2809",
+      "display_name": "Secureye HD Dome Camera 2MP Phoenix 2.8mm Hybrid with Mic",
+      "category": "cctv_camera",
+      "brand": "Secureye",
+      "base_cost": 969,
+      "unit_price": 1114,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 944.07,
+      "gst_18": 169.93
+    },
+    {
+      "id": "CAM-SEC-HD-A2810",
+      "display_name": "Secureye HD Bullet Camera 2MP Phoenix 2.8mm Hybrid with Mic",
+      "category": "cctv_camera",
+      "brand": "Secureye",
+      "base_cost": 1016,
+      "unit_price": 1168,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 989.83,
+      "gst_18": 178.17
+    },
+    {
+      "id": "CAM-SEC-HD-A2811",
+      "display_name": "Secureye HD Bullet Camera 5MP Phoenix 2.8mm Hybrid with Mic",
+      "category": "cctv_camera",
+      "brand": "Secureye",
+      "base_cost": 1231,
+      "unit_price": 1416,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1200,
+      "gst_18": 216
+    },
+    {
+      "id": "CAM-SEC-HD-A2812",
+      "display_name": "Secureye HD Dome Camera 5MP Phoenix 2.8mm Hybrid with Mic",
+      "category": "cctv_camera",
+      "brand": "Secureye",
+      "base_cost": 1122,
+      "unit_price": 1290,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1093.22,
+      "gst_18": 196.78
+    },
+    {
+      "id": "CAM-SEC-HD-S-A-D5-L",
+      "display_name": "Secureye 5MP Falcon HD Regular Dome Camera 3.6mm (S-A-D5-L)",
+      "category": "cctv_camera",
+      "brand": "Secureye",
+      "base_cost": 887,
+      "unit_price": 1020,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 864.41,
+      "gst_18": 155.59
+    },
+    {
+      "id": "CAM-TRU-HD-T18300",
+      "display_name": "Trueview 2MP HD Mini Pan-Tilt Camera Night Color With Two Way Audio (T18300)",
+      "category": "cctv_camera",
+      "brand": "TRUEVIEW",
+      "base_cost": 1334,
+      "unit_price": 1534,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1300,
+      "gst_18": 234
+    },
+    {
+      "id": "CAM-TV-4G-BULLET-T18175SF",
+      "display_name": "Trueview 3MP 4G SIM Weatherproof Color Bullet Camera 10X Zoom (T18175SF)",
+      "category": "cctv_camera",
+      "brand": "TRUEVIEW",
+      "base_cost": 3105,
+      "unit_price": 3571,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3026.27,
+      "gst_18": 544.73
+    },
+    {
+      "id": "CAM-TV-4G-DOME-T18185SF",
+      "display_name": "Trueview 3MP 4G SIM Dome Color Camera with 10X Zoom (T18185SF)",
+      "category": "cctv_camera",
+      "brand": "TRUEVIEW",
+      "base_cost": 2943,
+      "unit_price": 3384,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2867.8,
+      "gst_18": 516.2
+    },
+    {
+      "id": "CAM-TV-4G-DOME-T18293SF",
+      "display_name": "Trueview 3MP 4G SIM Dome Color Camera with Two-Way Audio (T18293SF)",
+      "category": "cctv_camera",
+      "brand": "TRUEVIEW",
+      "base_cost": 2750,
+      "unit_price": 3162,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2679.66,
+      "gst_18": 482.34
+    },
+    {
+      "id": "CAM-TV-4G-PT-T18120SF",
+      "display_name": "Trueview 3MP 4G SIM Weatherproof Mini Pan-Tilt Camera 10X Zoom (T18120SF)",
+      "category": "cctv_camera",
+      "brand": "TRUEVIEW",
+      "base_cost": 3798,
+      "unit_price": 4368,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3701.69,
+      "gst_18": 666.31
+    },
+    {
+      "id": "CAM-TV-4G-PT-T18291SF",
+      "display_name": "Trueview 3MP 4G SIM Weatherproof Mini PT Camera 10X Zoom (T18291SF)",
+      "category": "cctv_camera",
+      "brand": "TRUEVIEW",
+      "base_cost": 3633,
+      "unit_price": 4178,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3540.68,
+      "gst_18": 637.32
+    },
+    {
+      "id": "CAM-TV-WIFI-BULLET-T18295S",
+      "display_name": "Trueview 3MP Smart Wi-Fi Weatherproof Full Color Bullet Camera (T18295S)",
+      "category": "cctv_camera",
+      "brand": "TRUEVIEW",
+      "base_cost": 2650,
+      "unit_price": 3047,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2582.2,
+      "gst_18": 464.8
+    },
+    {
+      "id": "CAM-TV-WIFI-DOME-T18294S",
+      "display_name": "Trueview 3MP Smart Wi-Fi Dome Camera with Two-Way Audio (T18294S)",
+      "category": "cctv_camera",
+      "brand": "TRUEVIEW",
+      "base_cost": 2422,
+      "unit_price": 2785,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2360.17,
+      "gst_18": 424.83
+    },
+    {
+      "id": "CAM-TV-WIFI-PT-T18290S",
+      "display_name": "Trueview 3MP Smart Wi-Fi Weatherproof Mini PT Camera 10X Zoom (T18290S)",
+      "category": "cctv_camera",
+      "brand": "TRUEVIEW",
+      "base_cost": 3415,
+      "unit_price": 3927,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3327.97,
+      "gst_18": 599.03
+    },
+    {
+      "id": "CAM-TV-WIFI-PT-T18296S",
+      "display_name": "Trueview 3MP Smart Wi-Fi Robot PT Camera with Two-Way Audio (T18296S)",
+      "category": "cctv_camera",
+      "brand": "TRUEVIEW",
+      "base_cost": 2019,
+      "unit_price": 2322,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1967.8,
+      "gst_18": 354.2
+    },
+    {
+      "id": "HDD-BUD-1TB",
+      "display_name": "Budget Brand 1TB Surveillance Hard Disk",
+      "category": "storage",
+      "brand": "Budget Brand",
+      "base_cost": 4600,
+      "unit_price": 5520,
+      "margin_pct": 20,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 4677.97,
+      "gst_18": 842.03
+    },
+    {
+      "id": "HDD-BUD-2TB",
+      "display_name": "Budget Brand 2TB Surveillance Hard Disk",
+      "category": "storage",
+      "brand": "Budget Brand",
+      "base_cost": 7680,
+      "unit_price": 9216,
+      "margin_pct": 20,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 7810.17,
+      "gst_18": 1405.83
+    },
+    {
+      "id": "HDD-BUD-4TB",
+      "display_name": "Budget Brand 4TB Surveillance Hard Disk",
+      "category": "storage",
+      "brand": "Budget Brand",
+      "base_cost": 13800,
+      "unit_price": 16560,
+      "margin_pct": 20,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 14033.9,
+      "gst_18": 2526.1
+    },
+    {
+      "id": "HDD-BUD-500GB",
+      "display_name": "Budget Brand 500GB Surveillance Hard Disk",
+      "category": "storage",
+      "brand": "Budget Brand",
+      "base_cost": 1400,
+      "unit_price": 1800,
+      "margin_pct": 20,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1525.42,
+      "gst_18": 274.58
+    },
+    {
+      "id": "HDMI-10M",
+      "display_name": "High-Speed 4K HDMI Cable 10 Meter",
+      "category": "hdmi_cable",
+      "brand": "Ranz",
+      "base_cost": 213,
+      "unit_price": 266,
+      "margin_pct": 25,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 225.42,
+      "gst_18": 40.58
+    },
+    {
+      "id": "HDMI-15M",
+      "display_name": "High-Speed 4K HDMI Cable 15 Meter",
+      "category": "hdmi_cable",
+      "brand": "Ranz",
+      "base_cost": 312,
+      "unit_price": 390,
+      "margin_pct": 25,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 330.51,
+      "gst_18": 59.49
+    },
+    {
+      "id": "HDMI-20M",
+      "display_name": "High-Speed 4K HDMI Cable 20 Meter",
+      "category": "hdmi_cable",
+      "brand": "Securelink",
+      "base_cost": 379,
+      "unit_price": 474,
+      "margin_pct": 25,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 401.69,
+      "gst_18": 72.31
+    },
+    {
+      "id": "NET-COFE-4G-ROUTER-CF707",
+      "display_name": "Cofe Sim Router CF-707 WiFi6 4G/5G 300Mbps (Dual Antenna)",
+      "category": "network",
+      "brand": "Cofe",
+      "base_cost": 1113,
+      "unit_price": 1280,
+      "margin_pct": 15,
+      "technologies": [
+        "Common",
+        "Wireless",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1084.75,
+      "gst_18": 195.25
+    },
+    {
+      "id": "NET-HF-P2P-500M",
+      "display_name": "Hi-Focus Outdoor Access Point to Point P2P 500M Wireless Bridge (HF-CPE01)",
+      "category": "network",
+      "brand": "Hi-Focus",
+      "base_cost": 1773,
+      "unit_price": 2039,
+      "margin_pct": 15,
+      "technologies": [
+        "IP",
+        "Common"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1727.97,
+      "gst_18": 311.03
+    },
+    {
+      "id": "POE-SEC-16PORT",
+      "display_name": "Securelink 16 Port PoE Switch (16 FE + 2 Gigabit Uplink + 1 SFP) 250W",
+      "category": "power_device",
+      "brand": "Securelink",
+      "base_cost": 5055,
+      "unit_price": 5813,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 4926.27,
+      "gst_18": 886.73
+    },
+    {
+      "id": "POE-SEC-24PORT-GIGA",
+      "display_name": "Securelink 24 Port Gigabit PoE Switch (24 GE + 4 GE Uplink + 2 SFP) 380W",
+      "category": "power_device",
+      "brand": "Securelink",
+      "base_cost": 9170,
+      "unit_price": 10545,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 8936.44,
+      "gst_18": 1608.56
+    },
+    {
+      "id": "PSU-ERD-12V-1A",
+      "display_name": "ERD Power Supply 12v/1a DC Output 1ch Adapter (PS10T)",
+      "category": "power_device",
+      "brand": "ERD",
+      "base_cost": 163,
+      "unit_price": 195,
+      "margin_pct": 20,
+      "technologies": [
+        "Wireless",
+        "Common"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 165.25,
+      "gst_18": 29.75
+    },
+    {
+      "id": "PSU-ERD-12V-2A",
+      "display_name": "ERD Power Supply 12v/2a DC Output 1ch Adapter (PS20T)",
+      "category": "power_device",
+      "brand": "ERD",
+      "base_cost": 234,
+      "unit_price": 281,
+      "margin_pct": 20,
+      "technologies": [
+        "Wireless",
+        "Common"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 238.14,
+      "gst_18": 42.86
+    },
+    {
+      "id": "RACK-MB-6U-FOLD",
+      "display_name": "Multybyte 6U Foldable Networking Rack",
+      "category": "rack",
+      "brand": "Multybyte",
+      "base_cost": 630,
+      "unit_price": 787,
+      "margin_pct": 25,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 666.95,
+      "gst_18": 120.05
+    },
+    {
+      "id": "RACK-SEC-6U-WALL",
+      "display_name": "Securelink Networking Rack 6U 550×420×350mm (Lockable Metal)",
+      "category": "rack",
+      "brand": "Securelink",
+      "base_cost": 1488,
+      "unit_price": 1860,
+      "margin_pct": 25,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1576.27,
+      "gst_18": 283.73
+    },
+    {
+      "id": "RACK-SEC-9U-WALL",
+      "display_name": "Securelink Networking Rack 9U 550×600×450mm (Deep Server Enclosure)",
+      "category": "rack",
+      "brand": "Securelink",
+      "base_cost": 2162,
+      "unit_price": 2703,
+      "margin_pct": 25,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2290.68,
+      "gst_18": 412.32
+    },
+    {
+      "id": "REC-CP-DVR-0401E2",
+      "display_name": "CP-Plus 4ch 1 SATA H.265 HD DVR (CP-UVR-0401E1-V2)",
+      "category": "recorder",
+      "brand": "CP PLUS",
+      "base_cost": 3710,
+      "unit_price": 4267,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3616.1,
+      "gst_18": 650.9
+    },
+    {
+      "id": "REC-CP-DVR-0801E2",
+      "display_name": "CP-Plus 8ch 1 SATA H.265 HD DVR (CP-UVR-0801E1-V2)",
+      "category": "recorder",
+      "brand": "CP PLUS",
+      "base_cost": 3757,
+      "unit_price": 4320,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3661.02,
+      "gst_18": 658.98
+    },
+    {
+      "id": "REC-CP-DVR-1601E2",
+      "display_name": "CP-Plus 16ch 1 SATA H.265 HD DVR (CP-UVR-1601E1-V2)",
+      "category": "recorder",
+      "brand": "CP PLUS",
+      "base_cost": 7849,
+      "unit_price": 9026,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 7649.15,
+      "gst_18": 1376.85
+    },
+    {
+      "id": "REC-CP-NVR-104F1",
+      "display_name": "CP-Plus 4ch 1 SATA H.265 4K NVR (CP-UNR-104F1)",
+      "category": "recorder",
+      "brand": "CP PLUS",
+      "base_cost": 4616,
+      "unit_price": 5308,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 4498.31,
+      "gst_18": 809.69
+    },
+    {
+      "id": "REC-CP-NVR-108F1",
+      "display_name": "CP-Plus 8ch 1 SATA H.265 4K NVR (CP-UNR-108F1)",
+      "category": "recorder",
+      "brand": "CP PLUS",
+      "base_cost": 5368,
+      "unit_price": 6173,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 5231.36,
+      "gst_18": 941.64
+    },
+    {
+      "id": "REC-CP-NVR-32CH-4K",
+      "display_name": "CP-Plus 32ch 2 SATA H.265 4K NVR (4K4322-V4)",
+      "category": "recorder",
+      "brand": "CP PLUS",
+      "base_cost": 14589,
+      "unit_price": 16777,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 14217.8,
+      "gst_18": 2559.2
+    },
+    {
+      "id": "REC-HF-NVR-2105I",
+      "display_name": "Hi-Focus 5ch 1 SATA H.265 4K NVR (2105I)",
+      "category": "recorder",
+      "brand": "Hi-Focus",
+      "base_cost": 3564,
+      "unit_price": 4099,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3473.73,
+      "gst_18": 625.27
+    },
+    {
+      "id": "REC-HF-NVR-2110I",
+      "display_name": "Hi-Focus 10ch 1 SATA H.265 4K NVR (2110I)",
+      "category": "recorder",
+      "brand": "Hi-Focus",
+      "base_cost": 4450,
+      "unit_price": 5118,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 4337.29,
+      "gst_18": 780.71
+    },
+    {
+      "id": "REC-HIK-DVR-7104HGHI",
+      "display_name": "Hikvision Eco 4ch 1 SATA H.265+ HD DVR (7104HGHI-M1/T)",
+      "category": "recorder",
+      "brand": "HIKVISION",
+      "base_cost": 2900,
+      "unit_price": 3335,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2826.27,
+      "gst_18": 508.73
+    },
+    {
+      "id": "REC-HIK-DVR-7108HGHI",
+      "display_name": "Hikvision Eco 8ch 1 SATA H.265+ HD DVR (7108HGHI-M1/T)",
+      "category": "recorder",
+      "brand": "HIKVISION",
+      "base_cost": 4052,
+      "unit_price": 4660,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3949.15,
+      "gst_18": 710.85
+    },
+    {
+      "id": "REC-HIK-DVR-7116HGHI",
+      "display_name": "Hikvision Eco 16ch 1 SATA H.265+ HD DVR (7116HGHI-M1/T)",
+      "category": "recorder",
+      "brand": "HIKVISION",
+      "base_cost": 7123,
+      "unit_price": 8191,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 6941.53,
+      "gst_18": 1249.47
+    },
+    {
+      "id": "REC-HIK-NVR-7104NI",
+      "display_name": "Hikvision 4ch 1 SATA H.265+ 4K NVR (7104NI-Q1/M)",
+      "category": "recorder",
+      "brand": "HIKVISION",
+      "base_cost": 4480,
+      "unit_price": 5152,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 4366.1,
+      "gst_18": 785.9
+    },
+    {
+      "id": "REC-HIK-NVR-7116NI",
+      "display_name": "Hikvision 16ch 1 SATA H.265+ 4K NVR (7116NI-Q1/M)",
+      "category": "recorder",
+      "brand": "HIKVISION",
+      "base_cost": 6197,
+      "unit_price": 7127,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 6039.83,
+      "gst_18": 1087.17
+    },
+    {
+      "id": "REC-HIK-NVR-7608NI",
+      "display_name": "Hikvision 8ch 1 SATA H.265+ 4K NVR (7608NI-Q1)",
+      "category": "recorder",
+      "brand": "HIKVISION",
+      "base_cost": 6796,
+      "unit_price": 7815,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 6622.88,
+      "gst_18": 1192.12
+    },
+    {
+      "id": "REC-HIK-NVR-7616NI-Q2",
+      "display_name": "Hikvision 16ch 2 SATA H.265+ 4K NVR (7616NI-Q2)",
+      "category": "recorder",
+      "brand": "HIKVISION",
+      "base_cost": 9875,
+      "unit_price": 11356,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 9623.73,
+      "gst_18": 1732.27
+    },
+    {
+      "id": "REC-PRA-DVR-DR1A04Q",
+      "display_name": "PRAMA MINI DVR 4CH 5MP (DR1A04Q M1)",
+      "category": "recorder",
+      "brand": "PRAMA",
+      "base_cost": 2919,
+      "unit_price": 3357,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2844.92,
+      "gst_18": 512.08
+    },
+    {
+      "id": "REC-PRA-DVR-DR1A08Q",
+      "display_name": "PRAMA MINI DVR 8CH 5MP (DR1A08Q M1)",
+      "category": "recorder",
+      "brand": "PRAMA",
+      "base_cost": 3870,
+      "unit_price": 4450,
+      "margin_pct": 15,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3771.19,
+      "gst_18": 678.81
+    },
+    {
+      "id": "REC-PRA-NVR-NR1A04",
+      "display_name": "Prama 04CH 1 SATA H.265+ NVR (NR1A04-Q1)",
+      "category": "recorder",
+      "brand": "PRAMA",
+      "base_cost": 3528,
+      "unit_price": 4057,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3438.14,
+      "gst_18": 618.86
+    },
+    {
+      "id": "REC-PRA-NVR-NR1A08",
+      "display_name": "Prama 08CH 1 SATA H.265+ NVR (NR1A08-Q1)",
+      "category": "recorder",
+      "brand": "PRAMA",
+      "base_cost": 4032,
+      "unit_price": 4637,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3929.66,
+      "gst_18": 707.34
+    },
+    {
+      "id": "SD-EVM-256GB",
+      "display_name": "EVM 256GB Elite MicroSD Card For CCTV Camera",
+      "category": "storage",
+      "brand": "EVM",
+      "base_cost": 3117,
+      "unit_price": 3584,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless",
+        "Common"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3037.29,
+      "gst_18": 546.71
+    },
+    {
+      "id": "SD-SANDISK-128GB-HE",
+      "display_name": "SanDisk High Endurance 128GB MicroSD Card",
+      "category": "storage",
+      "brand": "SanDisk",
+      "base_cost": 1607,
+      "unit_price": 1848,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless",
+        "Common"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1566.1,
+      "gst_18": 281.9
+    },
+    {
+      "id": "SD-SANDISK-64GB-HE",
+      "display_name": "SanDisk High Endurance 64GB MicroSD Card",
+      "category": "storage",
+      "brand": "SanDisk",
+      "base_cost": 786,
+      "unit_price": 904,
+      "margin_pct": 15,
+      "technologies": [
+        "Wireless",
+        "Common"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 766.1,
+      "gst_18": 137.9
+    },
+    {
+      "id": "cable_3plus1_multybyte_90m",
+      "display_name": "Multybyte 3+1 Pure Copper CCTV Camera Cable (90 Meter Bundle)",
+      "category": "cable",
+      "brand": "Multybyte",
+      "base_cost": 1208,
+      "unit_price": 1450,
+      "margin_pct": 20,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1228.81,
+      "gst_18": 221.19
+    },
+    {
+      "id": "cable_cat6_securelink_100m",
+      "display_name": "Securelink CAT6 Pure Copper UTP LAN Cable (100 Meter Drum)",
+      "category": "cable",
+      "brand": "Securelink",
+      "base_cost": 2438,
+      "unit_price": 2925,
+      "margin_pct": 20,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2478.81,
+      "gst_18": 446.19
+    },
+    {
+      "id": "cable_hdmi_1_5m",
+      "display_name": "High-Speed 4K HDMI Cable 1.5 Meter (Gold Plated)",
+      "category": "hdmi_cable",
+      "brand": "Bungees",
+      "base_cost": 107,
+      "unit_price": 134,
+      "margin_pct": 25,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 113.56,
+      "gst_18": 20.44
+    },
+    {
+      "id": "cable_hdmi_3m",
+      "display_name": "High-Speed 4K HDMI Cable 3 Meter (Gold Plated)",
+      "category": "hdmi_cable",
+      "brand": "Bungees",
+      "base_cost": 122,
+      "unit_price": 152,
+      "margin_pct": 25,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 128.81,
+      "gst_18": 23.19
+    },
+    {
+      "id": "cable_hdmi_5m",
+      "display_name": "High-Speed 4K HDMI Cable 5 Meter (Gold Plated)",
+      "category": "hdmi_cable",
+      "brand": "Bungees",
+      "base_cost": 127,
+      "unit_price": 159,
+      "margin_pct": 25,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 134.75,
+      "gst_18": 24.25
+    },
+    {
+      "id": "connector_bnc_copper",
+      "display_name": "Copper BNC Video Connector with Spring Strain Relief",
+      "category": "connector",
+      "brand": "Generic",
+      "base_cost": 19,
+      "unit_price": 25,
+      "margin_pct": 30,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 21.19,
+      "gst_18": 3.81
+    },
+    {
+      "id": "connector_dc_pin",
+      "display_name": "Heavy Duty Male DC Power Pin (12V Camera Power Jack)",
+      "category": "connector",
+      "brand": "Generic",
+      "base_cost": 12,
+      "unit_price": 15,
+      "margin_pct": 30,
+      "technologies": [
+        "HD",
+        "Common"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 12.71,
+      "gst_18": 2.29
+    },
+    {
+      "id": "connector_rj45_cat6",
+      "display_name": "CAT6 RJ45 Gold-Plated Modular Connectors (Pack of 100)",
+      "category": "connector",
+      "brand": "A+ Products",
+      "base_cost": 258,
+      "unit_price": 336,
+      "margin_pct": 30,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 284.75,
+      "gst_18": 51.25
+    },
+    {
+      "id": "display_21_5_led_monitor",
+      "display_name": "Surveillance LED Monitor 21.5\" Full HD (HDMI + VGA)",
+      "category": "display",
+      "brand": "Generic",
+      "base_cost": 4522,
+      "unit_price": 5200,
+      "margin_pct": 15,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 4406.78,
+      "gst_18": 793.22
+    },
+    {
+      "id": "hdd_10tb_seagate_skyhawk",
+      "display_name": "Seagate SkyHawk 10TB Surveillance HDD (3.5\" SATA)",
+      "category": "storage",
+      "brand": "Seagate",
+      "base_cost": 47610,
+      "unit_price": 51419,
+      "margin_pct": 8,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 43575.42,
+      "gst_18": 7843.58
+    },
+    {
+      "id": "hdd_10tb_toshiba",
+      "display_name": "Toshiba S300 10TB Surveillance HDD (3.5\" SATA)",
+      "category": "storage",
+      "brand": "Toshiba",
+      "base_cost": 45316,
+      "unit_price": 48941,
+      "margin_pct": 8,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 41475.42,
+      "gst_18": 7465.58
+    },
+    {
+      "id": "hdd_10tb_wd_purple_pro",
+      "display_name": "WD Purple Pro 10TB Surveillance Hard Disk (3.5\" SATA)",
+      "category": "storage",
+      "brand": "WD",
+      "base_cost": 47176,
+      "unit_price": 50950,
+      "margin_pct": 8,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 43177.97,
+      "gst_18": 7772.03
+    },
+    {
+      "id": "hdd_1tb_seagate_skyhawk",
+      "display_name": "Seagate SkyHawk 1TB Surveillance HDD",
+      "category": "storage",
+      "brand": "Seagate",
+      "base_cost": 3519,
+      "unit_price": 3800,
+      "margin_pct": 8,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 3220.34,
+      "gst_18": 579.66
+    },
+    {
+      "id": "hdd_2tb_seagate_skyhawk",
+      "display_name": "Seagate SkyHawk 2TB Surveillance HDD (3.5\" SATA)",
+      "category": "storage",
+      "brand": "Seagate",
+      "base_cost": 11532,
+      "unit_price": 12455,
+      "margin_pct": 8,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 10555.08,
+      "gst_18": 1899.92
+    },
+    {
+      "id": "hdd_2tb_toshiba",
+      "display_name": "Toshiba S300 2TB Surveillance HDD (3.5\" SATA)",
+      "category": "storage",
+      "brand": "Toshiba",
+      "base_cost": 11171,
+      "unit_price": 12065,
+      "margin_pct": 8,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 10224.58,
+      "gst_18": 1840.42
+    },
+    {
+      "id": "hdd_2tb_wd_purple",
+      "display_name": "WD Purple 2TB Surveillance Hard Disk (3.5\" SATA)",
+      "category": "storage",
+      "brand": "WD",
+      "base_cost": 11581,
+      "unit_price": 12508,
+      "margin_pct": 8,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 10600,
+      "gst_18": 1908
+    },
+    {
+      "id": "hdd_4tb_seagate_skyhawk",
+      "display_name": "Seagate SkyHawk 4TB Surveillance HDD (3.5\" SATA)",
+      "category": "storage",
+      "brand": "Seagate",
+      "base_cost": 16019,
+      "unit_price": 17300,
+      "margin_pct": 8,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 14661.02,
+      "gst_18": 2638.98
+    },
+    {
+      "id": "hdd_4tb_wd_purple",
+      "display_name": "WD Purple 4TB Surveillance Hard Disk (3.5\" SATA)",
+      "category": "storage",
+      "brand": "WD",
+      "base_cost": 16580,
+      "unit_price": 17906,
+      "margin_pct": 8,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 15174.58,
+      "gst_18": 2731.42
+    },
+    {
+      "id": "hdd_6tb_seagate_skyhawk",
+      "display_name": "Seagate SkyHawk 6TB Surveillance HDD (3.5\" SATA)",
+      "category": "storage",
+      "brand": "Seagate",
+      "base_cost": 24321,
+      "unit_price": 26267,
+      "margin_pct": 8,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 22260.17,
+      "gst_18": 4006.83
+    },
+    {
+      "id": "hdd_6tb_wd_purple",
+      "display_name": "WD Purple 6TB Surveillance Hard Disk (3.5\" SATA)",
+      "category": "storage",
+      "brand": "WD",
+      "base_cost": 24321,
+      "unit_price": 26267,
+      "margin_pct": 8,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 22260.17,
+      "gst_18": 4006.83
+    },
+    {
+      "id": "hdd_8tb_seagate_skyhawk",
+      "display_name": "Seagate SkyHawk 8TB Surveillance HDD (3.5\" SATA)",
+      "category": "storage",
+      "brand": "Seagate",
+      "base_cost": 35564,
+      "unit_price": 38409,
+      "margin_pct": 8,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 32550,
+      "gst_18": 5859
+    },
+    {
+      "id": "hdd_8tb_wd_purple_pro",
+      "display_name": "WD Purple Pro 8TB Surveillance Hard Disk (3.5\" SATA)",
+      "category": "storage",
+      "brand": "WD",
+      "base_cost": 35715,
+      "unit_price": 38572,
+      "margin_pct": 8,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 32688.14,
+      "gst_18": 5883.86
+    },
+    {
+      "id": "mount_pvc_junction_box_4x4",
+      "display_name": "Waterproof PVC Junction Box 4x4x2 for HD CCTV Camera",
+      "category": "camera_mount",
+      "brand": "Generic",
+      "base_cost": 22,
+      "unit_price": 27,
+      "margin_pct": 25,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 22.88,
+      "gst_18": 4.12
+    },
+    {
+      "id": "mount_pvc_junction_box_ip_475",
+      "display_name": "Waterproof PVC Junction Box 4.75x4.75x2 for IP Dome/Bullet Camera",
+      "category": "camera_mount",
+      "brand": "Generic",
+      "base_cost": 29,
+      "unit_price": 36,
+      "margin_pct": 25,
+      "technologies": [
+        "IP",
+        "Common"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 30.51,
+      "gst_18": 5.49
+    },
+    {
+      "id": "poe_switch_4port_securelink",
+      "display_name": "Securelink 4-Port 100M PoE Switch + 2 Uplink (65W)",
+      "category": "power_device",
+      "brand": "Securelink",
+      "base_cost": 1788,
+      "unit_price": 2056,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1742.37,
+      "gst_18": 313.63
+    },
+    {
+      "id": "poe_switch_8port_securelink",
+      "display_name": "Securelink 8-Port 100M PoE Switch + 2 Gigabit Uplink (120W)",
+      "category": "power_device",
+      "brand": "Securelink",
+      "base_cost": 1887,
+      "unit_price": 2170,
+      "margin_pct": 15,
+      "technologies": [
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 1838.98,
+      "gst_18": 331.02
+    },
+    {
+      "id": "psu_16ch_cpplus",
+      "display_name": "CP Plus 16-Channel 12V 20A Metal SMPS Power Supply",
+      "category": "power_device",
+      "brand": "CP PLUS",
+      "base_cost": 937,
+      "unit_price": 1124,
+      "margin_pct": 20,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 952.54,
+      "gst_18": 171.46
+    },
+    {
+      "id": "psu_4ch_cpplus",
+      "display_name": "CP Plus 4-Channel 12V 5A Metal SMPS Power Supply",
+      "category": "power_device",
+      "brand": "CP PLUS",
+      "base_cost": 435,
+      "unit_price": 522,
+      "margin_pct": 20,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 442.37,
+      "gst_18": 79.63
+    },
+    {
+      "id": "psu_8ch_cpplus",
+      "display_name": "CP Plus 8-Channel 12V 10A Metal SMPS Power Supply",
+      "category": "power_device",
+      "brand": "CP PLUS",
+      "base_cost": 609,
+      "unit_price": 731,
+      "margin_pct": 20,
+      "technologies": [
+        "HD"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 619.49,
+      "gst_18": 111.51
+    },
+    {
+      "id": "rack_2u_wall_cctv",
+      "display_name": "2U Wall-Mount CCTV Server Rack with Lock & Key",
+      "category": "rack",
+      "brand": "Comrack",
+      "base_cost": 920,
+      "unit_price": 1150,
+      "margin_pct": 25,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 974.58,
+      "gst_18": 175.42
+    },
+    {
+      "id": "rack_4u_wall_cctv",
+      "display_name": "4U Wall-Mount CCTV Server Rack with Lock & Key (Glass Door)",
+      "category": "rack",
+      "brand": "Comrack",
+      "base_cost": 1954,
+      "unit_price": 2443,
+      "margin_pct": 25,
+      "technologies": [
+        "Common",
+        "HD",
+        "IP"
+      ],
+      "quotable": true,
+      "invoicing_ready": true,
+      "taxable_base": 2070.34,
+      "gst_18": 372.66
+    }
+  ],
+  "service_details": [
+    {
+      "service_id": "labor_install_hd",
+      "display_name": "Standard HD Analog Camera Installation & Termination",
+      "category": "labor",
+      "unit_rate": 400,
+      "gst_mode": "18% GST Paid Standard",
+      "trigger_rule": "{\"technology\":\"HD\",\"camera_count\":4,\"cabling_done\":false}",
+      "quotable": true,
+      "sample_line_total": 1600
+    },
+    {
+      "service_id": "labor_install_ip",
+      "display_name": "Standard IP PoE Camera Installation & RJ45 Termination",
+      "category": "labor",
+      "unit_rate": 500,
+      "gst_mode": "18% GST Paid Standard",
+      "trigger_rule": "{\"technology\":\"IP\",\"camera_count\":4,\"cabling_done\":false}",
+      "quotable": true,
+      "sample_line_total": 2000
+    },
+    {
+      "service_id": "labor_wireless_pro_fitting",
+      "display_name": "Smart Wi-Fi / 4G Camera Wall Mounting & App Pairing",
+      "category": "labor",
+      "unit_rate": 349,
+      "gst_mode": "18% GST Paid Standard",
+      "trigger_rule": "{\"technology\":\"Wireless\",\"camera_count\":2,\"cabling_done\":true}",
+      "quotable": true,
+      "sample_line_total": 698
+    },
+    {
+      "service_id": "labor_small_job_minimum",
+      "display_name": "Small Job Flat Rate Installation (1-2 Cameras, Existing Cabling)",
+      "category": "labor",
+      "unit_rate": 500,
+      "gst_mode": "18% GST Paid Standard",
+      "trigger_rule": "{\"technology\":\"HD\",\"camera_count\":1,\"cabling_done\":true}",
+      "quotable": true,
+      "sample_line_total": 500
+    },
+    {
+      "service_id": "labor_fitting_only",
+      "display_name": "Camera Mounting & Setup (Existing Cabling, >2 Cameras)",
+      "category": "labor",
+      "unit_rate": 200,
+      "gst_mode": "18% GST Paid Standard",
+      "trigger_rule": "{\"technology\":\"HD\",\"camera_count\":4,\"cabling_done\":true}",
+      "quotable": true,
+      "sample_line_total": 800
+    },
+    {
+      "service_id": "labor_visit_charge",
+      "display_name": "Technician Site Visit & Mobilization Fee",
+      "category": "labor",
+      "unit_rate": 500,
+      "gst_mode": "18% GST Paid Standard",
+      "trigger_rule": "{\"technology\":\"HD\",\"camera_count\":4,\"cabling_done\":true}",
+      "quotable": true,
+      "sample_line_total": 500
+    },
+    {
+      "service_id": "labor_cabling_excess",
+      "display_name": "Excess Cabling Installation Labor (>15m per camera)",
+      "category": "labor",
+      "unit_rate": 15,
+      "gst_mode": "18% GST Paid Standard",
+      "trigger_rule": "{\"technology\":\"HD\",\"camera_count\":4,\"cabling_done\":false,\"total_cable_length_meters\":100}",
+      "quotable": true,
+      "sample_line_total": 600
+    },
+    {
+      "service_id": "conduit_piping_service",
+      "display_name": "PVC Conduit Pipe Material & Channeling Labor",
+      "category": "cabling_service",
+      "unit_rate": 20,
+      "gst_mode": "18% GST Paid Standard",
+      "trigger_rule": "{\"technology\":\"HD\",\"camera_count\":4,\"cabling_done\":false,\"wiring_type\":\"conduit\"}",
+      "quotable": true,
+      "sample_line_total": 2400
+    },
+    {
+      "service_id": "amc_1yr_service",
+      "display_name": "Annual Maintenance Contract (1-Year AMC Service)",
+      "category": "amc_service",
+      "unit_rate": 15,
+      "gst_mode": "18% GST Paid Standard",
+      "trigger_rule": "{\"technology\":\"HD\",\"camera_count\":4,\"selected_addons\":[\"amc_1yr\"]}",
+      "quotable": true,
+      "sample_line_total": 3659
+    },
+    {
+      "service_id": "surcharge_ladder",
+      "display_name": "Ladder / Scaffolding Arrangement Fee",
+      "category": "site_surcharge",
+      "unit_rate": 500,
+      "gst_mode": "18% GST Paid Standard",
+      "trigger_rule": "{\"technology\":\"HD\",\"camera_count\":4,\"site_surcharge_flags\":{\"requiresLadderFee\":true}}",
+      "quotable": true,
+      "sample_line_total": 500
+    },
+    {
+      "service_id": "surcharge_marble",
+      "display_name": "Specialized Drilling (Marble / Stone Surcharge)",
+      "category": "site_surcharge",
+      "unit_rate": 400,
+      "gst_mode": "18% GST Paid Standard",
+      "trigger_rule": "{\"technology\":\"HD\",\"camera_count\":4,\"site_surcharge_flags\":{\"requiresMarbleSurcharge\":true}}",
+      "quotable": true,
+      "sample_line_total": 400
+    },
+    {
+      "service_id": "surcharge_heavy_drilling",
+      "display_name": "Heavy Wall / Floor Penetration Surcharge",
+      "category": "site_surcharge",
+      "unit_rate": 600,
+      "gst_mode": "18% GST Paid Standard",
+      "trigger_rule": "{\"technology\":\"HD\",\"camera_count\":4,\"site_surcharge_flags\":{\"requiresHeavyDrillingSurcharge\":true}}",
+      "quotable": true,
+      "sample_line_total": 600
+    }
+  ]
+}

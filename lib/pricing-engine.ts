@@ -2399,7 +2399,9 @@ export function generatePricingSnapshot(
       line_total: calc.sellingPriceExTax * qty,
       base_cost_at_quote: baseCost,
       stock_status_at_quote: cam.product.stock_status,
-      brand: cam.product.brand
+      brand: cam.product.brand,
+      hsn_code: cam.product.hsn_code || "8525",
+      gst_rate: cam.product.gst_rate ?? 18
     });
     baseHardwareCost += calc.sellingPriceExTax * qty;
     totalPurchaseCost += calc.workingCost * qty;
@@ -2417,7 +2419,9 @@ export function generatePricingSnapshot(
       line_total: calc.sellingPriceExTax,
       base_cost_at_quote: baseCost,
       stock_status_at_quote: resolvedSystem.recorder.stock_status,
-      brand: resolvedSystem.recorder.brand
+      brand: resolvedSystem.recorder.brand,
+      hsn_code: resolvedSystem.recorder.hsn_code || "8521",
+      gst_rate: resolvedSystem.recorder.gst_rate ?? 18
     });
     baseHardwareCost += calc.sellingPriceExTax;
     totalPurchaseCost += calc.workingCost;
@@ -2440,7 +2444,9 @@ export function generatePricingSnapshot(
         line_total: calc.sellingPriceExTax * storageQty,
         base_cost_at_quote: baseCost,
         stock_status_at_quote: resolvedSystem.storage.stock_status,
-        brand: resolvedSystem.storage.brand
+        brand: resolvedSystem.storage.brand,
+        hsn_code: resolvedSystem.storage.hsn_code || "8471",
+        gst_rate: resolvedSystem.storage.gst_rate ?? 18
       });
       baseHardwareCost += (calc.sellingPriceExTax * storageQty);
       totalPurchaseCost += (calc.workingCost * storageQty);
@@ -2465,7 +2471,9 @@ export function generatePricingSnapshot(
         line_total: calc.sellingPriceExTax * pwrQty,
         base_cost_at_quote: baseCost,
         stock_status_at_quote: resolvedSystem.power.stock_status,
-        brand: resolvedSystem.power.brand
+        brand: resolvedSystem.power.brand,
+        hsn_code: resolvedSystem.power.hsn_code || "8504",
+        gst_rate: resolvedSystem.power.gst_rate ?? 18
       });
       baseHardwareCost += (calc.sellingPriceExTax * pwrQty);
       totalPurchaseCost += (calc.workingCost * pwrQty);
@@ -2678,6 +2686,8 @@ export function generatePricingSnapshot(
           unit_price: calc.sellingPriceExTax,
           line_total: lineTotal,
           base_cost_at_quote: baseCost,
+          hsn_code: addonObj.hsn_code || (addonObj.category === "service" ? "9987" : "8525"),
+          gst_rate: addonObj.gst_rate ?? 18
         });
 
         addonsTotal += lineTotal;

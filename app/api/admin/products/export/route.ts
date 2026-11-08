@@ -11,6 +11,8 @@ const CSV_COLUMNS: (keyof Product)[] = [
   "display_name",
   "category",
   "internal_sku",
+  "hsn_code",
+  "gst_rate",
   "technologies",
   "brand",
   "base_cost",

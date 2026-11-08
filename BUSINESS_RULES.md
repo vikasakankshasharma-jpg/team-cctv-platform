@@ -46,6 +46,14 @@
 
 ## 3. Pricing Engine & Margin Architecture
 
+### 3.0 GST-Inclusive Pricing Standard (GST Paid Master Invariant)
+- **Wholesale Acquisition Costs (`base_cost`):** All submitted vendor catalog costs (`base_cost`) are GST-paid (18% GST inclusive).
+- **Customer Unit Prices (`unit_price`):** All submitted customer selling prices and retail figures displayed in the Admin Panel product and inventory lists are GST-paid (18% GST inclusive).
+- **Tax Breakdown in Bills/Quotes:** In all customer quotations, booking bills, and tax invoices, the final price is the GST-inclusive payable amount, with the taxable base and 18% GST portion derived from ERP standard reverse-calculation:
+  - $\text{Taxable Subtotal} = \frac{\text{Gross Total}}{1 + \text{gst\_rate}}$
+  - $\text{GST Amount} = \text{Gross Total} - \text{Taxable Subtotal}$
+  This ensures 100% statutory tax compliance, prevents double-taxation confusion, and guarantees complete price transparency.
+
 ### 3.1 Margin Waterfall
 - **Dynamic Category Margins:** Hardware components (Cameras, Recorders, Storage, Power Supplies, Cables, Connectors, Accessories) strictly follow the dynamic margins configured in the Admin Panel (`margin_cctv_camera`, `margin_hdd`, `margin_connectors`, etc.) via `lib/margin-engine.ts`.
 - **Tie-Breaking Rule:** When multiple compatible products meet configuration criteria, the engine selects the one with the lowest calculated retail price to maintain competitive advantage.

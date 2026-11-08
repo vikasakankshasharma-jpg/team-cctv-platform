@@ -1,6 +1,6 @@
 # TEAM CCTV Platform - Master Project Status & Verification Log
 
-> **Last Updated:** November 5, 2026  
+> **Last Updated:** November 8, 2026  
 > **Production URL:** `https://cctvquotation.com`  
 > **Repository:** `team-cctv-platform` (`master` branch)  
 > **Canonical Plan & Architecture:** [`docs/HARDENING_SPRINT_PLAN.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/HARDENING_SPRINT_PLAN.md) | [`BUSINESS_RULES.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/BUSINESS_RULES.md)
@@ -11,12 +11,12 @@
 
 | Domain | Status | Latest Evidence / Milestone |
 |---|---|---|
-| **Commercial Core & Pricing Engine** | `VERIFIED` | 100% parity between Guided Setup & Pro Builder; Recorder (DVR/NVR) resolution compatibility ($\text{recMaxMP} \ge \text{targetMaxMP}$) & best-price tie-break; SMPS best-price rule; Gigabit switch multi-PoE uplink; bundle/per-meter cable logic; ₹0 markup labor rules; 5 site prep flags; **Multi-tier storage architecture & physical law inverse scaling ($Days \propto \frac{Capacity}{Cameras \times DailyGB}$) across HD, IP & Wireless; Prominent Red Warning for refurbished/budget storage.** |
+| **Commercial Core & Pricing Engine** | `VERIFIED` | 100% parity between Guided Setup & Pro Builder; 100% test pass rate across 238 permutation tests; Full Quotation Engine QA & Price Reconciliation Workbook; **Statutory GST-Paid Master Invariant (18% inclusive wholesale costs & retail prices with reverse-calculated taxable subtotal and GST breakdown; HSN/SAC code mapping across all line items)**; Recorder (DVR/NVR) resolution compatibility ($\text{recMaxMP} \ge \text{targetMaxMP}$) & best-price tie-break; SMPS best-price rule; Gigabit switch multi-PoE uplink; bundle/per-meter cable logic; ₹0 markup labor rules; 5 site prep flags; Multi-tier storage architecture & physical law inverse scaling ($Days \propto \frac{Capacity}{Cameras \times DailyGB}$) across HD, IP & Wireless; Storage Advisory Modal & Prominent Red Warning for refurbished/budget storage. |
 | **Mapping & Geographical Coverage** | `VERIFIED` | 100% Google Maps parity via Mappls GeoAnalytics API + 34-vertex fallback `JAIPUR_METRO_BOUNDARY`; CartoDB Voyager CDN tile engine with sub-50ms latency; automated Leaflet modal resize engine (`ResizeObserver` + staggered `invalidateSize`); 1-click delivery halo toggle (`Halos: ON/OFF`); 1-click `⚡ Auto-Trace Territory` convex hull enclosure; 0 legacy compass labels in Firestore. |
 | **Referral & Partner Ecosystem** | `VERIFIED` | B2B Partner Portal with QR codes (2% comm / 3% disc); B2C Refer & Earn (₹500 / ₹500) with festive WhatsApp status EDMs; Financial Dashboard payout tracking. |
-| **Customer Journey & Pro Builder** | `VERIFIED` | WhatsApp OTP lead capture before custom build; Mobile slide-over cart drawer; single-filter auto-collapse; Dynamic inventory-driven feature tags; Resolution vs feature boundary enforcement; Centered non-intrusive modal dialogs; Per-bucket feature independence with zero feature leakage. |
+| **Customer Journey & Pro Builder** | `VERIFIED` | WhatsApp OTP lead capture before custom build; Mobile slide-over cart drawer; single-filter auto-collapse; Dynamic inventory-driven feature tags; Resolution vs feature boundary enforcement; Centered non-intrusive modal dialogs; Per-bucket feature independence with zero feature leakage; Intrinsic bullet camera weatherproofing standard; Purpose-driven smart wireless variants with edge storage advisory. |
 | **Checkout & Payment Pathways** | `VERIFIED` | 4 pathways: Pay Full (2% discount), ₹500 3-step token, EMI option, Free Site Visit calendar (future dates only); Webhook + Fallback Verification API. |
-| **Catalog & Inventory Integrity** | `VERIFIED` | Active-only inventory enforcement; zero fake fallback products; Dual-collection (`products` + `addons`) cascade delete and update; Direct row-level trash button in `ProductInventory.tsx`; Edit Modal delete action; 0-orphan clean state; Mega Compu World distributor integration with 66 verified SKUs and wholesale dealer pricing. |
+| **Catalog & Inventory Integrity** | `VERIFIED` | Active-only inventory enforcement; zero fake fallback products; Dual-collection (`products` + `addons`) cascade delete and update; Direct row-level trash button in `ProductInventory.tsx`; Edit Modal delete action; 0-orphan clean state; Mega Compu World distributor integration with 99 verified SKUs, wholesale dealer pricing, and statutory HSN/GST rate tags. |
 | **Security & Credential Management** | `VERIFIED` | Hardcoded OTPs removed; exposed test scripts scrubbed; Vercel CLI env var management; Firestore role-based collection rules; HSTS enforced. |
 | **Localization & Language** | `VERIFIED` | Colloquial everyday terminology (replaced "अनुशंसित" with natural options, "कम"/"ज्यादा"); Language selector modal without underscores. |
 
@@ -563,6 +563,49 @@
   - Two-way sync: Selecting from the toolbar immediately updates table sorting and header arrows; clicking table headers immediately reflects in the toolbar dropdown.
 - **Active Filter Sort Chip**:
   - Active sort states render as a dismissible badge in the Active Filters bar with 1-click removal (`✕`) and `Clear All` reset.
+
+---
+
+### Milestone 45: Full Quotation Engine QA & Price Reconciliation Workbook
+- **Comprehensive 238-Permutation Test Matrix (100% Pass Rate)**:
+  - Validated pricing and bill-of-materials generation across 238 combinations in `scripts/Quotation_Test_Matrix_Executed.csv` and `Quotation_Test_Matrix_Executed.xlsx`.
+  - Rigorously tested across HD Analog, IP Network, Smart Wireless, and 4G Cellular setups from 1 to 16 cameras across CP Plus, Hikvision, Dahua, Prama, A+ Products, Trueview, and Budget tiers.
+  - Automated verification of recorder channel sizing (4Ch, 8Ch, 16Ch), resolution ceilings ($\text{recMaxMP} \ge \text{targetMaxMP}$), multi-PoE switches with Gigabit uplinks, power supply tie-breaking, and dedicated MicroSD vs centralized HDD allocation.
+- **Master Pricing Reconciliation & Audit Workbook**:
+  - Generated `Quotation_Engine_QA_and_Price_Reconciliation_Workbook.xlsx` (and CSV companion) compiling full end-to-end pricing and margin analysis.
+  - Reconciled wholesale dealer purchase rates from Mega Compu World against active platform seed costs across all 61 standard hardware items.
+  - Verified 100% margin alignment for cameras (15-30%), recorders (15%), storage (15%), power supplies (25%), cables (40%), connectors/junction boxes (40%), and racks/accessories.
+  - Validated installation and service rates: ₹0 markup labor rules, fitting-only rates, site preparation flags, and AMC maintenance plans.
+
+---
+
+### Milestone 46: Statutory GST-Inclusive Pricing Standard ("GST Paid Master Invariant") & Intrinsic Bullet Weatherproofing
+- **GST Paid Master Invariant**:
+  - Catalog acquisition costs (`base_cost`) and customer retail unit prices (`unit_price`) are strictly GST-paid (18% GST inclusive) as defined in `BUSINESS_RULES.md` § 3.0.
+  - Eliminates tax confusion, prevents double-taxation artifacts, and guarantees 100% statutory transparency across web, PDF quotes, and booking receipts.
+  - Standardized reverse-calculation for all quotation line items, tokens, and tax invoices:
+    $$\text{Taxable Subtotal} = \frac{\text{Gross Total}}{1 + \text{gst\_rate}}$$
+    $$\text{GST Amount} = \text{Gross Total} - \text{Taxable Subtotal}$$
+- **HSN & SAC Code Architecture**:
+  - Formalized mandatory HSN (Goods) and SAC (Services) codes across all products, addons, quote snapshots, and PDF invoices:
+    - CCTV Cameras & Webcams: `8525` (18% GST)
+    - DVR & NVR Recorders: `8521` (18% GST)
+    - Storage (Surveillance HDDs & MicroSD Cards): `8471` (18% GST)
+    - Power Supplies, Adapters & PoE Switches: `8504` (18% GST)
+    - 3+1 Coaxial & CAT6 Network Cables: `8544` (18% GST)
+    - Connectors, Junction Boxes & Racks: `8536` / `8538` (18% GST)
+    - Professional Installation, Fitting & AMC Services: `9987` (18% GST)
+- **Admin UI & Bulk Import/Export Tax Integration**:
+  - Added editable `HSN Code` and `GST Rate (%)` fields in Admin Product Add/Edit modals (`app/(admin)/admin/products/page.tsx`).
+  - Added HSN/SAC and GST Rate fields to Addon Modal (`components/admin/AddonModal.tsx`) and Addons list (`components/admin/AddonsClient.tsx`).
+  - Integrated `hsn_code` and `gst_rate` into CSV export, export template, and bulk import parser (`BulkOperationsClient.tsx`, `ReviewImportModal.tsx`, `export/route.ts`).
+  - Inventory Dashboard (`app/(admin)/admin/inventory/page.tsx`) displays explicit `[GST Paid]` indicator on stock valuation and unit cost column.
+- **Tax Invoice PDF Parity (`lib/pdf/invoice-pdf.tsx`)**:
+  - Rendered official GST Tax Invoice with dedicated `HSN/SAC` column, itemized `Taxable Value`, `GST Rate`, and statutory `CGST (9%) + SGST (9%)` / `IGST (18%)` tax schedule.
+- **Intrinsic Bullet Weatherproofing Invariant (`lib/product-resolver.ts`)**:
+  - Standardized that all bullet form factor cameras (`form === 'bullet'`) are intrinsically outdoor and weatherproofed unless specifically marked indoor, preventing outdoor camera allocation failures.
+- **Storage Advisory Modal & Smart Wireless Storage UX (`components/quotation/StorageAdvisoryModal.tsx`)**:
+  - Introduced interactive storage advisory dialog clarifying physical law retention duration, continuous vs smart motion recording, and dedicated edge MicroSD cards.
 
 ---
 

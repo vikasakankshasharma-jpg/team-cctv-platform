@@ -195,7 +195,7 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
     }
   }
 
-  const requiresSimRouter = req.broadband_status === "sim_router";
+  const requiresSimRouter = req.wants_remote_viewing !== false && req.broadband_status === "sim_router";
   
   // Industrial Check (e.g. > 16 cameras)
   // isIndustrial is already defined at the top of the file

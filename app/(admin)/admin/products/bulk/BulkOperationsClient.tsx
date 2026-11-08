@@ -38,6 +38,8 @@ export function BulkOperationsClient({ products }: BulkOperationsClientProps) {
         base_cost: p.base_cost,
         margin_percentage: p.margin_percentage,
         unit_price: p.unit_price,
+        hsn_code: p.hsn_code || "",
+        gst_rate: p.gst_rate ?? 18,
         is_active: p.is_active,
         compatible_paths: p.compatible_paths ? p.compatible_paths.join(" | ") : "",
         catalog_path: p.catalog_path || ""
@@ -83,6 +85,8 @@ export function BulkOperationsClient({ products }: BulkOperationsClientProps) {
             base_cost: parseFloat(row.base_cost) || 0,
             margin_percentage: parseFloat(row.margin_percentage) || 0,
             unit_price: parseFloat(row.unit_price) || 0,
+            hsn_code: row.hsn_code ? String(row.hsn_code).trim() : undefined,
+            gst_rate: parseFloat(row.gst_rate) || 18,
             is_active: row.is_active === "true" || row.is_active === "TRUE",
             catalog_path: row.catalog_path || undefined
           };
@@ -191,7 +195,7 @@ export function BulkOperationsClient({ products }: BulkOperationsClientProps) {
         </div>
         <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight mb-2 relative z-10">Export Catalog</h3>
         <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-8 max-w-[280px] relative z-10">
-          Download a complete CSV backup of all <strong className="text-zinc-900 dark:text-white">{products.length}</strong> products. You can edit this file in Excel to adjust prices or compatibility in bulk.
+          Download a complete CSV backup of all <strong className="text-zinc-900 dark:text-white">{products.length}</strong> products. All Cost and Retail prices are GST-Paid (18% GST inclusive).
         </p>
         <button
           onClick={handleExport}
@@ -215,7 +219,7 @@ export function BulkOperationsClient({ products }: BulkOperationsClientProps) {
             </div>
             <h3 className="text-xl font-black text-white uppercase tracking-tight mb-2 z-10">Import Modifications</h3>
             <p className="text-xs text-zinc-400 mb-8 max-w-[280px] z-10">
-              Upload your modified CSV. Ensure you do not alter the <strong className="text-white">id</strong> column if you are updating existing products.
+              Upload your modified CSV. Submitted Base Cost and Unit Price are GST-Paid (18% GST inclusive). Ensure you do not alter the <strong className="text-white">id</strong> column if you are updating existing products.
             </p>
             
             <input 

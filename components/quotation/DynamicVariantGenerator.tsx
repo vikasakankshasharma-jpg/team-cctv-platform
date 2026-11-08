@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Check, Filter, Tag, ChevronDown, ChevronRight, Plus, Trash2, Info, HelpCircle, ShieldCheck, AlertTriangle } from "lucide-react";
 import { TagGuideModal } from "./TagGuideModal";
+import { StorageAdvisoryModal } from "./StorageAdvisoryModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { BookSurveyClient } from "@/components/public/BookSurveyClient";
 import { getCanonicalBrandKey, getCanonicalBrandName } from "@/lib/brand-utils";
@@ -79,6 +80,7 @@ export function DynamicVariantGenerator({
 }: DynamicVariantGeneratorProps) {
   const { t } = useTranslation();
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showStorageModal, setShowStorageModal] = useState(false);
 
   const toggleBucketFeature = (bucketId: string, featureTag: string) => {
     setCameraBuckets(prev => prev.map(b => {
@@ -833,6 +835,47 @@ export function DynamicVariantGenerator({
             ))}
           </div>
         </div>
+
+        {/* Economy Storage Global Advisory Banner */}
+        {selectedStorageDays === 7 && (
+          <div className="w-full mt-2.5 p-2.5 sm:p-3 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-left animate-in fade-in">
+            <div className="flex items-start gap-2.5 min-w-0">
+              <div className="w-6 h-6 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5 text-xs">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="space-y-0.5 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                    Economy Storage (500GB · 1-Year Local Warranty)
+                  </span>
+                  <span className="text-[10px] bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full font-bold">
+                    ~8 Days Backup
+                  </span>
+                </div>
+                <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90 leading-snug">
+                  Many competitors secretly bundle refurbished desktop HDDs to quote artificially low prices. For continuous 24×7 reliability, we recommend upgrading to 1TB.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setShowStorageModal(true)}
+                className="text-[11px] font-bold text-amber-800 dark:text-amber-300 hover:underline px-1.5 py-1 cursor-pointer whitespace-nowrap"
+              >
+                Learn More
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedStorageDays(15)}
+                className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shadow-2xs transition-all cursor-pointer whitespace-nowrap flex items-center gap-1"
+              >
+                <span>Switch to 1TB Rec.</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-4 items-center">
@@ -1297,23 +1340,28 @@ export function DynamicVariantGenerator({
 
                   {/* Refurbished / Economy Storage Transparency Alert */}
                   {variant.storage_device?.is_refurbished && (
-                    <div className="w-full my-2.5 p-3 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-left">
-                      <div className="flex items-center gap-1.5 text-red-700 dark:text-red-400 font-extrabold text-[11px] uppercase tracking-wide">
-                        <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-red-600 dark:text-red-400" />
-                        <span>⚠️ Refurbished / Economy Storage Alert</span>
+                    <div className="w-full my-2 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 text-[11px] font-bold flex items-center justify-between gap-1.5">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                        <span className="truncate">
+                          {variant.technology === "Wireless"
+                            ? `Basic Storage · ~${variant.storage_days} Days Backup · 1-Yr Local`
+                            : `Basic 500GB HDD · ~${variant.storage_days} Days Backup · 1-Yr Local`
+                          }
+                        </span>
                       </div>
-                      <p className="text-[11px] text-red-700/90 dark:text-red-300/90 mt-1 leading-snug">
-                        <strong>Market Transparency:</strong> Many competitors secretly bundle refurbished desktop HDDs with branded cameras to display artificially low quotes.
-                      </p>
-                      <div className="mt-1.5 text-[10.5px] text-red-600 dark:text-red-300 font-semibold space-y-0.5">
-                        <div>
-                          • <strong>Backup:</strong> Only ~{variant.storage_days} Days {variant.technology === "Wireless" ? "per camera" : `for ${variant.camera_count} cameras`} (footage overwrites quickly!)
-                        </div>
-                        <div>• <strong>Warranty:</strong> 1-Year Local (high 24×7 failure risk)</div>
-                      </div>
-                      <div className="mt-2 pt-1.5 border-t border-red-200/70 dark:border-red-900/50 text-[10.5px] font-bold text-red-800 dark:text-red-200 leading-tight">
-                        🛡️ <strong>TEAM Advice:</strong> We disclose every component honestly. We strongly recommend upgrading to genuine Seagate SkyHawk / WD Purple for 3-Year Replacement Warranty & 24×7 peace of mind.
-                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowStorageModal(true);
+                        }}
+                        className="text-[10px] font-extrabold text-amber-800 dark:text-amber-200 hover:underline flex items-center gap-0.5 shrink-0 ml-1 cursor-pointer bg-amber-100/90 dark:bg-amber-900/60 px-1.5 py-0.5 rounded-md"
+                        title="Read about storage types & warranty transparency"
+                      >
+                        <span>Advisory</span>
+                        <Info className="w-3 h-3" />
+                      </button>
                     </div>
                   )}
 
@@ -1370,6 +1418,14 @@ export function DynamicVariantGenerator({
       <TagGuideModal 
         isOpen={showGuideModal} 
         onClose={() => setShowGuideModal(false)} 
+      />
+
+      {/* Storage Transparency & Advisory Modal */}
+      <StorageAdvisoryModal
+        isOpen={showStorageModal}
+        onClose={() => setShowStorageModal(false)}
+        onUpgradeTo1TB={() => setSelectedStorageDays(15)}
+        currentDays={selectedStorageDays}
       />
     </div>
   );

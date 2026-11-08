@@ -1,0 +1,56 @@
+[
+  {
+    "id": "PIPE-01",
+    "name": "Analog HD Residential (4-Ch Hikvision + 1TB HDD + Full Cabling)",
+    "status": "PASS",
+    "items_count": 9,
+    "gross_total": 33682,
+    "taxable_subtotal": 28544.07,
+    "gst_amount": 5137.93
+  },
+  {
+    "id": "PIPE-02",
+    "name": "IP PoE Commercial (8-Ch CP Plus NVR + PoE Switch + 2TB HDD)",
+    "status": "PASS",
+    "items_count": 10,
+    "gross_total": 81411,
+    "taxable_subtotal": 68992.37,
+    "gst_amount": 12418.63
+  },
+  {
+    "id": "PIPE-03",
+    "name": "Pure Wireless Smart Wi-Fi (2x 3MP EzyKam PT + 64GB MicroSD)",
+    "status": "PASS",
+    "items_count": 3,
+    "gross_total": 12239,
+    "taxable_subtotal": 10372.03,
+    "gst_amount": 1866.97
+  },
+  {
+    "id": "PIPE-04",
+    "name": "4G SIM Cellular Remote Farmhouse (1x 3MP 4G Outdoor PT + 128GB MicroSD)",
+    "status": "PASS",
+    "items_count": 3,
+    "gross_total": 7052,
+    "taxable_subtotal": 5976.27,
+    "gst_amount": 1075.73
+  },
+  {
+    "id": "PIPE-05",
+    "name": "Hybrid Architecture (4 Wired HD + 2 Smart Wi-Fi PT)",
+    "status": "PASS",
+    "items_count": 12,
+    "gross_total": 41708,
+    "taxable_subtotal": 35345.76,
+    "gst_amount": 6362.24
+  },
+  {
+    "id": "PIPE-06",
+    "name": "Full Service & Surcharge Enterprise (Conduit Piping + Ladder + AMC 1-Yr)",
+    "status": "PASS",
+    "items_count": 10,
+    "gross_total": 59045,
+    "taxable_subtotal": 50038.14,
+    "gst_amount": 9006.86
+  }
+]

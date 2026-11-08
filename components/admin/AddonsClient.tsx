@@ -107,6 +107,15 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
                             {item.storage_type}
                           </span>
                         )}
+                        {item.hsn_code ? (
+                          <span className="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-md text-[9px] font-black font-mono uppercase tracking-widest border border-emerald-100 dark:border-emerald-500/20">
+                            HSN: {item.hsn_code}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 bg-zinc-50 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-md text-[9px] font-mono">
+                            HSN/SAC: {item.category === "service" ? "9987" : "8525"}
+                          </span>
+                        )}
                         {item.technical_name && (
                           <div className="text-[10px] text-zinc-400 dark:text-zinc-600 font-bold uppercase tracking-widest flex items-center gap-2">
                              <span className="w-1 h-1 rounded-full bg-zinc-200 dark:bg-zinc-800" /> {item.technical_name}
@@ -116,8 +125,17 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
                     </td>
                     <td className="px-4 md:px-8 py-6 text-right">
                       <div className="flex flex-col items-end">
-                        <span className="font-black text-zinc-900 dark:text-white text-base">₹{(item.price || item.unit_price || 0).toLocaleString('en-IN')}</span>
-                        <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-1">Net Base</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-black text-zinc-900 dark:text-white text-base">
+                            ₹{Math.round(((item.price || item.unit_price || 0)) * (1 + (item.gst_rate ?? 18) / 100)).toLocaleString('en-IN')}
+                          </span>
+                          <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                            GST Paid
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 font-mono mt-0.5">
+                          Pre-GST: ₹{(item.price || item.unit_price || 0).toLocaleString('en-IN')} ({item.gst_rate ?? 18}%)
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 md:px-8 py-6 text-center">

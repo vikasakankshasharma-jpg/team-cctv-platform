@@ -151,10 +151,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#cbd5e1',
   },
-  colDesc: { width: '56%', fontWeight: 'bold' },
+  colDesc: { width: '46%', fontWeight: 'bold' },
+  colHsn: { width: '14%', textAlign: 'center', fontWeight: 'bold' },
   colQty: { width: '10%', textAlign: 'center', fontWeight: 'bold' },
-  colUnit: { width: '16%', textAlign: 'right', fontWeight: 'bold' },
-  colTotal: { width: '18%', textAlign: 'right', fontWeight: 'bold' },
+  colUnit: { width: '14%', textAlign: 'right', fontWeight: 'bold' },
+  colTotal: { width: '16%', textAlign: 'right', fontWeight: 'bold' },
   tableRow: {
     flexDirection: 'row',
     paddingVertical: 3.5,
@@ -285,6 +286,59 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
   },
 });
+
+/**
+ * Derives the statutory Indian GST HSN (Goods) or SAC (Services) code.
+ * Follows explicit product/addon configuration or category standard fallbacks.
+ */
+function getHsnSacCode(item: any): string {
+  if (item?.hsn_code && String(item.hsn_code).trim().length > 0) return String(item.hsn_code).trim();
+  if (item?.hsn && String(item.hsn).trim().length > 0) return String(item.hsn).trim();
+  if (item?.sac_code && String(item.sac_code).trim().length > 0) return String(item.sac_code).trim();
+
+  const name = String(item?.display_name || item?.name || item?.product_id || '').toLowerCase();
+  const cat = String(item?.category || '').toLowerCase();
+
+  // Services & Labor (SAC 9987 - Maintenance, repair and installation services)
+  if (
+    cat === 'service' || 
+    cat === 'labor' || 
+    name.includes('labor') || 
+    name.includes('installation') || 
+    name.includes('fitting') || 
+    name.includes('visit') || 
+    name.includes('fee') || 
+    name.includes('surcharge')
+  ) {
+    return '9987';
+  }
+  // Cables & Wires (HSN 8544 - Insulated wire, cable and optical fiber)
+  if (cat === 'cable' || name.includes('cable') || name.includes('wire') || name.includes('cat6') || name.includes('coaxial') || name.includes('patch cord')) {
+    return '8544';
+  }
+  // Recorders (HSN 8521 - Video recording apparatus: DVR / NVR / XVR)
+  if (cat === 'recorder' || name.includes('nvr') || name.includes('dvr') || name.includes('xvr')) {
+    return '8521';
+  }
+  // Storage Devices (HSN 8471 - Storage units: HDD, MicroSD, SSD)
+  if (cat === 'storage' || name.includes('hdd') || name.includes('hard disk') || name.includes('microsd') || name.includes('sd card') || name.includes('ssd')) {
+    return '8471';
+  }
+  // Power Supplies & Adapters (HSN 8504 - Static converters, power supply units)
+  if (cat === 'power_device' || cat === 'power' || name.includes('power') || name.includes('smps') || name.includes('adapter') || name.includes('poe')) {
+    return '8504';
+  }
+  // Connectors & Plugs (HSN 8536 - Electrical apparatus for making connections)
+  if (cat === 'connector' || name.includes('connector') || name.includes('bnc') || name.includes('dc pin') || name.includes('rj45')) {
+    return '8536';
+  }
+  // Racks & Enclosures (HSN 8529 - Apparatus housings & racks)
+  if (cat === 'rack' || name.includes('rack') || name.includes('enclosure')) {
+    return '8529';
+  }
+  // CCTV Cameras (HSN 8525 - CCTV & Surveillance cameras)
+  return '8525';
+}
 
 export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?: AppSettings }) => {
   const {
@@ -609,6 +663,7 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
         <View style={styles.table}>
           <View style={styles.tableHeader}>
             <Text style={styles.colDesc}>Description</Text>
+            <Text style={styles.colHsn}>HSN/SAC</Text>
             <Text style={styles.colQty}>Qty</Text>
             <Text style={styles.colUnit}>Unit Price</Text>
             <Text style={styles.colTotal}>Total</Text>
@@ -624,6 +679,7 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
                   <Text style={styles.itemTitle}>{item.display_name || item.name || 'Hardware Item'}</Text>
                   <Text style={styles.itemBrand}>{item.brand ? `Brand: ${item.brand}` : (item.description || 'TEAM CCTV Standard')}</Text>
                 </View>
+                <Text style={[styles.colHsn, styles.itemText]}>{getHsnSacCode(item)}</Text>
                 <Text style={[styles.colQty, styles.itemText]}>{qty}</Text>
                 <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(unitPrice)}</Text>
                 <Text style={[styles.colTotal, styles.itemText]}>{formatCurrency(lineTotal)}</Text>
@@ -641,6 +697,7 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
                   <Text style={styles.itemTitle}>{addon.display_name || addon.name || 'Addon Service'}</Text>
                   <Text style={styles.itemBrand}>Brand: Add-on</Text>
                 </View>
+                <Text style={[styles.colHsn, styles.itemText]}>{getHsnSacCode(addon)}</Text>
                 <Text style={[styles.colQty, styles.itemText]}>{qty}</Text>
                 <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(price)}</Text>
                 <Text style={[styles.colTotal, styles.itemText]}>{formatCurrency(lineTotal)}</Text>
@@ -654,6 +711,7 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
                 <Text style={styles.itemTitle}>Labor & Professional Installation</Text>
                 <Text style={styles.itemBrand}>Service</Text>
               </View>
+              <Text style={[styles.colHsn, styles.itemText]}>9987</Text>
               <Text style={[styles.colQty, styles.itemText]}>1</Text>
               <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(pricing.labor_cost)}</Text>
               <Text style={[styles.colTotal, styles.itemText]}>{formatCurrency(pricing.labor_cost)}</Text>

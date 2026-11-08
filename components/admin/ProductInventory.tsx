@@ -230,10 +230,13 @@ function SubCategoryGroup({
                 <th 
                   onClick={() => onToggleSort?.("price")} 
                   className="px-6 py-3 text-right font-medium cursor-pointer hover:text-foreground transition-colors group/header"
-                  title="Click to sort by Pricing"
+                  title="Click to sort by Pricing (GST Paid)"
                 >
                   <div className="flex items-center justify-end gap-1.5">
                     <span>Pricing</span>
+                    <Badge variant="outline" className="text-[9px] bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-bold px-1.5 py-0">
+                      GST Paid
+                    </Badge>
                     {sortField === "price" ? (
                       sortDirection === "asc" ? <ArrowUp className="w-3.5 h-3.5 text-primary shrink-0" /> : <ArrowDown className="w-3.5 h-3.5 text-primary shrink-0" />
                     ) : (
@@ -280,10 +283,19 @@ function SubCategoryGroup({
                           <span className="font-semibold text-sm text-foreground line-clamp-2 leading-snug" title={p.display_name}>
                             {p.display_name}
                           </span>
-                          <div className="flex items-center gap-2 mt-0.5">
+                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                             <code className="text-[10px] font-mono text-muted-foreground bg-secondary px-1.5 py-0.5 rounded border border-border">
                               {p.internal_sku ? `SKU: ${p.internal_sku}` : "NO SKU"}
                             </code>
+                            {p.hsn_code ? (
+                              <span className="inline-flex items-center text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800" title="Statutory GST HSN Code">
+                                HSN: {p.hsn_code}
+                              </span>
+                            ) : (
+                              <span className="text-[9px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800" title="HSN code pending - using category fallback">
+                                No HSN
+                              </span>
+                            )}
                             <code className="text-[10px] font-mono text-muted-foreground">{p.technical_name || "ID_MISSING"}</code>
                           </div>
                         </div>
@@ -348,12 +360,26 @@ function SubCategoryGroup({
 
                     <td className="px-6 py-4 text-right">
                       <div className="flex flex-col items-end">
-                        <span className="text-sm font-semibold text-foreground">
-                          ₹{sellingPrice(p).toLocaleString("en-IN")}
-                        </span>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-[10px] text-muted-foreground line-through">₹{Number(p.base_cost || 0).toLocaleString()}</span>
-                          <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">+{p.margin_percentage}%</span>
+                        {/* GST Paid (Inclusive) */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-bold text-foreground">
+                            ₹{Math.round(sellingPrice(p) * (1 + (p.gst_rate ?? 18) / 100)).toLocaleString("en-IN")}
+                          </span>
+                          <span className="text-[9px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100/90 dark:bg-blue-950/70 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                            GST Paid
+                          </span>
+                        </div>
+                        {/* Pre-GST (Taxable Base) */}
+                        <div className="flex items-center gap-1 mt-0.5 text-[11px] font-medium text-muted-foreground">
+                          <span>Pre-GST: ₹{sellingPrice(p).toLocaleString("en-IN")}</span>
+                          <span className="text-[9px] font-mono text-zinc-400">({p.gst_rate ?? 18}%)</span>
+                        </div>
+                        {/* Base Cost & Margin */}
+                        <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-muted-foreground">
+                          <span>Cost: ₹{Number(p.base_cost || 0).toLocaleString("en-IN")}</span>
+                          {p.margin_percentage !== undefined && (
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">+{p.margin_percentage}%</span>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -619,7 +645,8 @@ function matchesSearch(p: Product, query: string): boolean {
     p.display_name.toLowerCase().includes(q) ||
     Boolean(p.technical_name?.toLowerCase().includes(q)) ||
     Boolean(p.internal_sku?.toLowerCase().includes(q)) ||
-    Boolean((p.brand || '').toLowerCase().includes(q))
+    Boolean((p.brand || '').toLowerCase().includes(q)) ||
+    Boolean(p.hsn_code?.toLowerCase().includes(q))
   );
 }
 
@@ -919,6 +946,21 @@ export function ProductInventory({
         <Chip label="Processing Units"      value={counts.recorder}  dot="bg-amber-500" />
         <Chip label="Infrastructure"        value={counts.addons}    dot="bg-teal-500" />
         <Chip label="Active Deployment"     value={counts.active}    dot="bg-success" />
+      </div>
+
+      {/* ── GST Paid Master Accounting Callout ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/60 text-xs">
+        <div className="flex items-center gap-2">
+          <Badge className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-2 py-0.5 shadow-2xs">
+            GST PAID
+          </Badge>
+          <span className="font-semibold text-blue-950 dark:text-blue-200">
+            Catalog Pricing Accounting: All wholesale base costs and customer unit selling prices are GST-paid (18% GST inclusive).
+          </span>
+        </div>
+        <span className="text-[11px] text-blue-700 dark:text-blue-400 font-medium">
+          Tax-Inclusive Standard
+        </span>
       </div>
 
       {/* ── Filter bar ── */}

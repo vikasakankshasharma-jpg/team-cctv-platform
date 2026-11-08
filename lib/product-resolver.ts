@@ -80,6 +80,11 @@ export function isCameraWeatherproof(cam: Product): boolean {
     }
   }
 
+  // 4. Bullet cameras are intrinsically outdoor/weatherproof unless explicitly marked indoor
+  if (form === "bullet" && ip !== "INDOOR" && inOut !== "indoor") {
+    return true;
+  }
+
   return false;
 }
 
@@ -280,9 +285,21 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
 
     if (filtered.length === 0) return undefined;
 
+    // Must match Resolution with smart auto-upgrade fallback
+    const normalizeRes = (r: string) => String(r || "").toUpperCase().replace(/\s+/g, "").replace("MEGAPIXEL", "MP");
+    const normTarget = normalizeRes(targetResolution);
+    const targetMP = parseResolutionMP(normTarget);
+
     if (isBudget) {
       const budgetItems = filtered.filter(p => p.brand?.toLowerCase().includes("budget") || p.display_name?.toLowerCase().includes("budget"));
-      if (budgetItems.length > 0) filtered = budgetItems;
+      const budgetMatchingRes = budgetItems.filter(p => parseResolutionMP(p) === targetMP);
+      if (budgetMatchingRes.length > 0) {
+        filtered = budgetMatchingRes;
+      } else if (!brandFilter) {
+        // If brandFilter was not explicitly requested as "Budget", do not restrict to budget if budget lacks the requested resolution
+      } else if (budgetItems.length > 0) {
+        filtered = budgetItems;
+      }
     } else if (brandFilter && brandFilter !== "all") {
       const brandItems = filtered.filter(p => isBrandMatch(p, brandFilter));
       if (brandItems.length > 0) {
@@ -291,11 +308,6 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
         return undefined; // Strictly enforce camera brand
       }
     }
-
-    // Must match Resolution with smart auto-upgrade fallback
-    const normalizeRes = (r: string) => String(r || "").toUpperCase().replace(/\s+/g, "").replace("MEGAPIXEL", "MP");
-    const normTarget = normalizeRes(targetResolution);
-    const targetMP = parseResolutionMP(normTarget);
 
     const resFiltered = filtered.filter(p => {
       const pMP = parseResolutionMP(p);

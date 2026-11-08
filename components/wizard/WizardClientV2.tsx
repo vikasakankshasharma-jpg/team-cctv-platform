@@ -2954,37 +2954,42 @@ export function WizardClientV2() {
               
               <div className="space-y-2.5 sm:space-y-3.5">
                 
-                {/* Timeline / Urgency Selector for Pro Builder */}
-                {isProBuilderFlow && (
-                  <div className="p-3 bg-blue-50/70 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-800 mb-3">
-                    <label className="block text-xs font-bold text-blue-950 dark:text-blue-300 mb-1.5 flex items-center gap-1.5">
-                      <span>⏱️</span>
-                      <span>When do you plan to get work done on your site?</span>
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                      {[
-                        { id: "asap", label: "⚡ ASAP (1-2 Days)" },
-                        { id: "week", label: "📅 Within a Week" },
-                        { id: "month", label: "🗓️ This Month" },
-                        { id: "research", label: "🔍 Just Planning" }
-                      ].map(item => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => updateReq({ installation_timeline: item.id })}
-                          className={`py-2 px-2 text-xs font-bold rounded-lg border transition-all text-center ${
-                            (req.installation_timeline === item.id || (!req.installation_timeline && item.id === "asap"))
-                              ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                              : "border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300"
-                          }`}
-                        >
-                          {item.label}
-                        </button>
-                      ))}
+                {/* Blueprint Summary Card for Guided Setup (Relieves Step 6 OTP Friction) */}
+                {!isProBuilderFlow && (
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-blue-50/90 via-indigo-50/40 to-white dark:from-blue-950/40 dark:via-zinc-900/60 dark:to-zinc-900 border border-blue-200/80 dark:border-blue-900/60 shadow-sm space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>Security Blueprint Configured</span>
+                      </span>
+                      <span className="text-[10px] bg-blue-100 dark:bg-blue-900/70 text-blue-800 dark:text-blue-200 font-bold px-2 py-0.5 rounded-full">
+                        7-Day Price Lock
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                      <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-2xs">
+                        📹 {Number(req.camera_count) || 4} Cameras ({req.outdoor_camera_count ?? 2} Out + {req.indoor_camera_count ?? 2} In)
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-2xs">
+                        💾 {req.recording_days ?? 7} Days Backup
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-2xs">
+                        🔌 {req.cabling_done ? "Pre-Wired Site" : "15m Free Wire/Cam"}
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-2xs">
+                        📱 Mobile Live View
+                      </span>
+                    </div>
+
+                    <div className="pt-1.5 border-t border-blue-100 dark:border-zinc-800/80 flex items-center justify-between text-[11px] text-slate-600 dark:text-zinc-400">
+                      <span>Includes 18% GST bill & doorstep fitting.</span>
+                      <span className="font-bold text-blue-700 dark:text-blue-400">Compare All Brands Next →</span>
                     </div>
                   </div>
                 )}
-<div>
+
+                <div>
                   <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">{t("wz_your_name_")}</label>
                   <input 
                     type="text" 

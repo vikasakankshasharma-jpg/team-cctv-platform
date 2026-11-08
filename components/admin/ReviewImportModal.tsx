@@ -102,7 +102,7 @@ export function ReviewImportModal({ isOpen, onClose, onConfirm, isImporting, row
                       <th className="px-4 py-3">Action</th>
                       <th className="px-4 py-3 w-1/3">Display Name</th>
                       <th className="px-4 py-3">Category</th>
-                      <th className="px-4 py-3">Cost Change</th>
+                      <th className="px-4 py-3">Cost Change (GST Paid)</th>
                       <th className="px-4 py-3">Changes</th>
                     </tr>
                   </thead>

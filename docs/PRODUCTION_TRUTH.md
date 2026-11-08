@@ -1,6 +1,6 @@
 # Production Truth & Credential Tracking
 
-> **Last Updated:** November 4, 2026  
+> **Last Updated:** November 8, 2026  
 > **Production Domain:** `https://cctvquotation.com`  
 > **Vercel Project:** `secure-easy` / `team-cctv-platform`  
 > **Rule:** Never mark a credential as `ROTATED` or `VERIFIED` based solely on local files. Evidence from the actual deployment/environment is mandatory.
@@ -86,6 +86,23 @@
       - **Physics-Accurate Backup Scaling:** Inversely scales backup days strictly according to camera count, resolution, and H.265 compression (e.g., 500GB yields ~7 days for 4 cameras, ~3 days for 8 cameras).
       - **Warranty Notice:** Discloses 1-Year Local warranty and high 24x7 failure risk.
       - **TEAM Advice:** Recommends upgrading to genuine Seagate SkyHawk / WD Purple for official 3-Year Replacement Warranty and 24x7 peace of mind.
+
+18. **Statutory GST-Paid Master Invariant & Reverse-Tax Compliance:**
+    - All vendor acquisition costs (`base_cost`) and customer retail unit prices (`unit_price`) across products, addons, and inventories are strictly GST-paid (18% inclusive) as defined in `BUSINESS_RULES.md` § 3.0.
+    - Prevents double-taxation artifacts and guarantees 100% tax compliance across quotations, booking tokens, change orders, and official PDF Tax Invoices:
+      $$\text{Taxable Subtotal} = \frac{\text{Gross Total}}{1 + \text{gst\_rate}}$$
+      $$\text{GST Amount} = \text{Gross Total} - \text{Taxable Subtotal}$$
+    - Mandatory HSN and SAC codes across all hardware and labor line items:
+      - CCTV Cameras & Webcams: `8525` (18% GST)
+      - DVR & NVR Recorders: `8521` (18% GST)
+      - Storage (Surveillance HDDs & MicroSD Cards): `8471` (18% GST)
+      - Power Supplies, Adapters & PoE Switches: `8504` (18% GST)
+      - 3+1 Coaxial & CAT6 Network Cables: `8544` (18% GST)
+      - Connectors, Junction Boxes & Racks: `8536` / `8538` (18% GST)
+      - Professional Installation, Fitting & Maintenance Services: `9987` (18% GST)
+
+19. **Intrinsic Bullet Camera Weatherproofing Invariant:**
+    - All bullet form factor cameras (`form === 'bullet'`) are intrinsically outdoor and weatherproofed unless specifically marked indoor (`lib/product-resolver.ts`), eliminating false indoor assignments and preventing outdoor camera allocation failures.
 
 ---
 

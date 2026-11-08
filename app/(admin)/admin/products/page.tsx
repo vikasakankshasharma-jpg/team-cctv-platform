@@ -240,6 +240,8 @@ export default function AdminProductsPage() {
       ? (isWireless ? "cctv_camera/wifi/WiFi Camera" : (tech === "IP" ? "cctv_camera/ip/IP Camera" : "cctv_camera/hd/HD Camera"))
       : (category === "storage" ? (isWireless ? "storage/microsd/MicroSD Card" : "storage/HDD") : undefined);
 
+    const defaultHsn = category === "recorder" ? "8521" : category === "storage" ? "8471" : category === "cable" ? "8544" : category === "power_device" ? "8504" : category === "rack" ? "8529" : category === "connector" ? "8536" : "8525";
+
     setEditingProduct({
       display_name: "",
       technical_name: "",
@@ -252,6 +254,8 @@ export default function AdminProductsPage() {
       form_factor: isWireless ? "ptz" : "dome",
       has_wifi: isWireless,
       is_active: true,
+      hsn_code: defaultHsn,
+      gst_rate: 18,
       base_cost: 0,
       margin_percentage: 15,
       unit_price: 0,
@@ -292,10 +296,12 @@ export default function AdminProductsPage() {
       const isNew = !editingProduct.id;
       const method = isNew ? "POST" : "PATCH";
       
-      // Auto calc unit price based on cost + margin before sending
+      // Preserve entered unit_price, or auto calc based on cost + margin
       const payload = { ...editingProduct };
-      if (payload.base_cost !== undefined && payload.margin_percentage !== undefined) {
-        payload.unit_price = Math.round(Number(payload.base_cost) + (Number(payload.base_cost) * (Number(payload.margin_percentage) / 100)));
+      if (payload.unit_price === undefined || payload.unit_price <= 0) {
+        if (payload.base_cost !== undefined && payload.margin_percentage !== undefined) {
+          payload.unit_price = Math.round(Number(payload.base_cost) + (Number(payload.base_cost) * (Number(payload.margin_percentage) / 100)));
+        }
       }
 
       // Safe defaults for recorders
@@ -683,6 +689,60 @@ export default function AdminProductsPage() {
                           placeholder="Current stock level"
                         />
                       </div>
+                    </div>
+
+                    {/* HSN / SAC Code (Mandatory for Indian GST Invoices) */}
+                    <div className="p-4 bg-muted/40 rounded-xl border border-border space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+                          <span>HSN / SAC Code</span>
+                          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-100/90 dark:bg-amber-950/70 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800">
+                            Required for Invoicing
+                          </span>
+                        </label>
+                        {editingProduct.hsn_code && (
+                          <span className="text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                            Active HSN: {editingProduct.hsn_code}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                        <input 
+                          type="text" 
+                          value={editingProduct.hsn_code || ""}
+                          onChange={e => setEditingProduct({...editingProduct, hsn_code: e.target.value.trim()})}
+                          className="flex h-10 w-full sm:w-48 rounded-md border border-input bg-background px-3 py-2 text-sm font-mono font-bold tracking-wider ring-offset-background"
+                          placeholder="e.g. 8525"
+                        />
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">1-Click Presets:</span>
+                          {[
+                            { code: "8525", label: "8525 (Camera)" },
+                            { code: "8521", label: "8521 (Recorder)" },
+                            { code: "8471", label: "8471 (Storage)" },
+                            { code: "8544", label: "8544 (Cable)" },
+                            { code: "8504", label: "8504 (Power)" },
+                            { code: "8529", label: "8529 (Accessory)" },
+                            { code: "9987", label: "9987 (Service)" },
+                          ].map(preset => (
+                            <button
+                              key={preset.code}
+                              type="button"
+                              onClick={() => setEditingProduct({ ...editingProduct, hsn_code: preset.code })}
+                              className={`text-[10px] px-2 py-1 rounded font-mono transition-all border ${
+                                editingProduct.hsn_code === preset.code
+                                  ? "bg-primary text-primary-foreground border-primary font-bold shadow-sm"
+                                  : "bg-secondary text-secondary-foreground hover:bg-muted border-border"
+                              }`}
+                            >
+                              {preset.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        HSN is rendered on generated PDF tax invoices for B2B input tax credit (ITC) and statutory compliance.
+                      </p>
                     </div>
                   </div>
                 )}
@@ -1539,65 +1599,284 @@ export default function AdminProductsPage() {
                 )}
 
                 {/* â”€â”€ TAB 3: PRICING ENGINE â”€â”€ */}
-                {activeTab === "pricing" && (
-                  <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                    <div className="bg-secondary/50 rounded-2xl p-6 border border-border">
-                      <div className="flex items-center gap-2 mb-4">
-                        <BadgeDollarSign className="w-5 h-5 text-muted-foreground" />
-                        <h3 className="text-sm font-semibold text-foreground">Cost-Plus Engine</h3>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-end">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Base Cost (₹)</label>
-                          <input 
-                            required
-                            type="number" 
-                            value={editingProduct.base_cost !== undefined ? editingProduct.base_cost : ""}
-                            onChange={e => setEditingProduct({...editingProduct, base_cost: e.target.value ? Number(e.target.value) : undefined})}
-                            className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Margin (%)</label>
-                          <input 
-                            required
-                            type="number" 
-                            value={editingProduct.margin_percentage !== undefined ? editingProduct.margin_percentage : ""}
-                            onChange={e => setEditingProduct({...editingProduct, margin_percentage: e.target.value ? Number(e.target.value) : undefined})}
-                            className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
-                          />
-                        </div>
-                        <div className="bg-primary/10 border border-primary/20 rounded-xl p-3">
-                          <label className="text-xs font-semibold text-primary uppercase tracking-wider block mb-1">Final Retail</label>
-                          <div className="text-xl font-bold text-primary tabular-nums tracking-tight">
-                            ₹ {
-                              (editingProduct.base_cost !== undefined && editingProduct.margin_percentage !== undefined)
-                                ? Math.round(Number(editingProduct.base_cost) + (Number(editingProduct.base_cost) * (Number(editingProduct.margin_percentage) / 100))).toLocaleString('en-IN')
-                                : "0"
-                            }
+                {activeTab === "pricing" && (() => {
+                  const currentGstRate = editingProduct.gst_rate !== undefined ? Number(editingProduct.gst_rate) : 18;
+                  
+                  // Pre-GST Selling Price (Taxable Base)
+                  const derivedPreGstSelling = (editingProduct.unit_price !== undefined && editingProduct.unit_price > 0)
+                    ? Number(editingProduct.unit_price)
+                    : ((editingProduct.base_cost !== undefined && editingProduct.margin_percentage !== undefined)
+                        ? Math.round(Number(editingProduct.base_cost) + (Number(editingProduct.base_cost) * (Number(editingProduct.margin_percentage) / 100)))
+                        : 0);
+
+                  // GST Paid Selling Price (Gross Inclusive MRP)
+                  const derivedGstPaidSelling = Math.round(derivedPreGstSelling * (1 + currentGstRate / 100));
+                  const gstAmountSelling = Math.max(0, derivedGstPaidSelling - derivedPreGstSelling);
+
+                  // Base Purchase Cost (Pre-GST and GST Paid)
+                  const baseCostPreGst = Number(editingProduct.base_cost || 0);
+                  const baseCostGstPaid = Math.round(baseCostPreGst * (1 + currentGstRate / 100));
+
+                  // Profit Metrics
+                  const grossProfitVal = Math.round(derivedPreGstSelling - baseCostPreGst);
+                  const grossProfitPct = baseCostPreGst > 0 ? ((grossProfitVal / baseCostPreGst) * 100).toFixed(1) : "0";
+
+                  return (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                      {/* GST Slab Selector Banner */}
+                      <div className="bg-card border border-border rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                            <BadgeDollarSign className="w-5 h-5" />
                           </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-foreground">GST Statutory Tax Slab</h4>
+                            <p className="text-xs text-muted-foreground">Standard GST rate for CCTV hardware & installations in India is 18%.</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">GST Rate:</label>
+                          <select
+                            value={currentGstRate}
+                            onChange={e => {
+                              const newRate = Number(e.target.value);
+                              setEditingProduct({ ...editingProduct, gst_rate: newRate });
+                            }}
+                            className="h-10 px-3 rounded-lg border border-input bg-background text-sm font-bold font-mono text-primary appearance-none cursor-pointer"
+                          >
+                            <option value={18}>18% (Standard CCTV / Electronics)</option>
+                            <option value={28}>28% (Luxury / Specialized Displays)</option>
+                            <option value={12}>12% (Telecom / Network Gear)</option>
+                            <option value={5}>5% (Essential Parts)</option>
+                            <option value={0}>0% (Tax Exempt)</option>
+                          </select>
+                        </div>
                       </div>
-                    </div>
 
-                    {editingProduct.category === "cable" && (
-                      <div className="space-y-1.5 mt-5 pt-5 border-t border-border">
-                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">
-                          Loose Per-Meter Cost (₹) 
-                          <span className="text-[10px] ml-2 text-primary lowercase capitalize">Overrides auto-derive</span>
-                        </label>
-                        <input 
-                          type="number" 
-                          placeholder="e.g. 15 (Optional)"
-                          value={editingProduct.per_meter_cost !== undefined ? editingProduct.per_meter_cost : ""}
-                          onChange={e => setEditingProduct({...editingProduct, per_meter_cost: e.target.value ? Number(e.target.value) : undefined})}
-                          className="flex h-10 w-full md:w-1/3 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
-                        />
+                      {/* Customer Selling Price (Bidirectional) */}
+                      <div className="bg-secondary/40 rounded-2xl p-6 border border-border space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/60 pb-3">
+                          <div>
+                            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                              <span>Customer Selling Price</span>
+                              <span className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                Auto-Synchronized
+                              </span>
+                            </h3>
+                            <p className="text-xs text-muted-foreground">Submit either Pre-GST Price or GST Paid Price — the system calculates and submits the other automatically.</p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] font-bold uppercase text-muted-foreground">Quotation Slab</span>
+                            <div className="text-xs font-mono font-bold text-primary">+{currentGstRate}% GST on Invoices</div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          {/* Pre-GST Price Box */}
+                          <div className="space-y-1.5 p-4 rounded-xl bg-background border border-border shadow-sm">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-bold text-foreground uppercase tracking-wider">
+                                Pre-GST Price (Taxable Base ₹)
+                              </label>
+                              <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
+                                Ex-GST
+                              </span>
+                            </div>
+                            <input 
+                              type="number"
+                              step="any"
+                              value={derivedPreGstSelling || ""}
+                              onChange={e => {
+                                const preGst = e.target.value ? Number(e.target.value) : 0;
+                                const cost = Number(editingProduct.base_cost || 0);
+                                const newMargin = (cost > 0 && preGst > 0)
+                                  ? Math.round(((preGst - cost) / cost) * 100 * 10) / 10
+                                  : editingProduct.margin_percentage;
+                                setEditingProduct({
+                                  ...editingProduct,
+                                  unit_price: preGst,
+                                  margin_percentage: newMargin
+                                });
+                              }}
+                              placeholder="e.g. 1000"
+                              className="flex h-12 w-full rounded-md border border-input bg-card px-3 py-2 text-lg font-bold font-mono text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                            />
+                            <p className="text-[11px] text-muted-foreground">Stored in DB and billed as taxable line item.</p>
+                          </div>
+
+                          {/* GST Paid Price Box */}
+                          <div className="space-y-1.5 p-4 rounded-xl bg-primary/5 border border-primary/20 shadow-sm">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-bold text-primary uppercase tracking-wider">
+                                GST Paid Price (Inclusive MRP ₹)
+                              </label>
+                              <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100/90 dark:bg-blue-950/70 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                                Total Customer Price
+                              </span>
+                            </div>
+                            <input 
+                              type="number"
+                              step="any"
+                              value={derivedGstPaidSelling || ""}
+                              onChange={e => {
+                                const gstPaid = e.target.value ? Number(e.target.value) : 0;
+                                const preGst = gstPaid > 0 ? Math.round((gstPaid / (1 + currentGstRate / 100)) * 100) / 100 : 0;
+                                const cost = Number(editingProduct.base_cost || 0);
+                                const newMargin = (cost > 0 && preGst > 0)
+                                  ? Math.round(((preGst - cost) / cost) * 100 * 10) / 10
+                                  : editingProduct.margin_percentage;
+                                setEditingProduct({
+                                  ...editingProduct,
+                                  unit_price: preGst,
+                                  margin_percentage: newMargin
+                                });
+                              }}
+                              placeholder="e.g. 1180"
+                              className="flex h-12 w-full rounded-md border border-primary/30 bg-card px-3 py-2 text-lg font-bold font-mono text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                            />
+                            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                              <span>Includes ₹{gstAmountSelling.toLocaleString('en-IN')} GST ({currentGstRate}%)</span>
+                              <span className="font-semibold text-primary">₹{derivedGstPaidSelling.toLocaleString('en-IN')} total</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </div>
 
-                                          {/* Dynamic Margin Slabs (Cable Only) */}
+                      {/* Distributor Purchase Cost & Margin Engine */}
+                      <div className="bg-secondary/30 rounded-2xl p-6 border border-border space-y-4">
+                        <div className="border-b border-border/60 pb-3">
+                          <h3 className="text-sm font-bold text-foreground">Distributor Cost & Margin Analysis</h3>
+                          <p className="text-xs text-muted-foreground">Enter vendor purchase cost (Pre-GST or GST-Paid) and expected profit margin.</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-end">
+                          {/* Pre-GST Base Cost */}
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">
+                                Purchase Cost (Pre-GST ₹)
+                              </label>
+                              <span className="text-[10px] text-muted-foreground font-mono">Ex-GST</span>
+                            </div>
+                            <input 
+                              type="number" 
+                              step="any"
+                              value={editingProduct.base_cost !== undefined ? editingProduct.base_cost : ""}
+                              onChange={e => {
+                                const cost = e.target.value ? Number(e.target.value) : 0;
+                                const margin = Number(editingProduct.margin_percentage || 15);
+                                const newPreGst = Math.round(cost + (cost * (margin / 100)));
+                                setEditingProduct({
+                                  ...editingProduct,
+                                  base_cost: cost,
+                                  unit_price: newPreGst
+                                });
+                              }}
+                              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base font-mono font-bold"
+                              placeholder="0"
+                            />
+                          </div>
+
+                          {/* GST Paid Purchase Cost */}
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">
+                                Purchase Cost (GST Paid ₹)
+                              </label>
+                              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-mono font-semibold">Inc. GST</span>
+                            </div>
+                            <input 
+                              type="number" 
+                              step="any"
+                              value={baseCostGstPaid || ""}
+                              onChange={e => {
+                                const paidCost = e.target.value ? Number(e.target.value) : 0;
+                                const cost = paidCost > 0 ? Math.round((paidCost / (1 + currentGstRate / 100)) * 100) / 100 : 0;
+                                const margin = Number(editingProduct.margin_percentage || 15);
+                                const newPreGst = Math.round(cost + (cost * (margin / 100)));
+                                setEditingProduct({
+                                  ...editingProduct,
+                                  base_cost: cost,
+                                  unit_price: newPreGst
+                                });
+                              }}
+                              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base font-mono font-bold"
+                              placeholder="0"
+                            />
+                          </div>
+
+                          {/* Margin % */}
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Margin (%)</label>
+                              {baseCostPreGst > 0 && (
+                                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+                                  Profit: +₹{grossProfitVal.toLocaleString('en-IN')}
+                                </span>
+                              )}
+                            </div>
+                            <input 
+                              type="number" 
+                              step="any"
+                              value={editingProduct.margin_percentage !== undefined ? editingProduct.margin_percentage : ""}
+                              onChange={e => {
+                                const margin = e.target.value ? Number(e.target.value) : 0;
+                                const cost = Number(editingProduct.base_cost || 0);
+                                const newPreGst = cost > 0 ? Math.round(cost + (cost * (margin / 100))) : (editingProduct.unit_price || 0);
+                                setEditingProduct({
+                                  ...editingProduct,
+                                  margin_percentage: margin,
+                                  unit_price: newPreGst
+                                });
+                              }}
+                              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base font-mono font-bold"
+                              placeholder="15"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Financial Audit Summary Bar */}
+                        <div className="mt-3 p-3.5 bg-background rounded-xl border border-border flex flex-wrap items-center justify-between gap-3 text-xs">
+                          <div className="flex items-center gap-4">
+                            <div>
+                              <span className="text-muted-foreground">Pre-GST Selling: </span>
+                              <span className="font-bold font-mono text-foreground">₹{derivedPreGstSelling.toLocaleString('en-IN')}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">GST ({currentGstRate}%): </span>
+                              <span className="font-bold font-mono text-foreground">₹{gstAmountSelling.toLocaleString('en-IN')}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">GST Paid MRP: </span>
+                              <span className="font-bold font-mono text-emerald-600 dark:text-emerald-400">₹{derivedGstPaidSelling.toLocaleString('en-IN')}</span>
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Gross Profit: </span>
+                            <span className="font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                              ₹{grossProfitVal.toLocaleString('en-IN')} ({grossProfitPct}%)
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Cable Loose Per-Meter Cost */}
+                      {editingProduct.category === "cable" && (
+                        <div className="space-y-1.5 p-5 bg-background rounded-xl border border-border">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">
+                            Loose Per-Meter Cost (₹) 
+                            <span className="text-[10px] ml-2 text-primary lowercase capitalize">Overrides auto-derive</span>
+                          </label>
+                          <input 
+                            type="number" 
+                            placeholder="e.g. 15 (Optional)"
+                            value={editingProduct.per_meter_cost !== undefined ? editingProduct.per_meter_cost : ""}
+                            onChange={e => setEditingProduct({...editingProduct, per_meter_cost: e.target.value ? Number(e.target.value) : undefined})}
+                            className="flex h-10 w-full md:w-1/3 rounded-md border border-input bg-card px-3 py-2 text-sm font-mono"
+                          />
+                        </div>
+                      )}
+                    {/* Dynamic Margin Slabs (Cable Only) */}
                       {editingProduct.category === "cable" && (
                         <div className="p-6 bg-card border border-border rounded-2xl mb-6 mt-6">
                           <div className="flex items-center justify-between mb-4">
@@ -1691,7 +1970,12 @@ export default function AdminProductsPage() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Bulk Unit Price (₹)</label>
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Bulk Unit Price (₹)</label>
+                            <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100/80 dark:bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                              GST Paid
+                            </span>
+                          </div>
                           <input 
                             type="number" 
                             value={editingProduct.bulk_unit_price || ""}
@@ -1703,7 +1987,8 @@ export default function AdminProductsPage() {
                       </div>
                     </div>
                   </div>
-                )}
+                  );
+                })()}
 
                 {/* â”€â”€ TAB 4: MARKETING â”€â”€ */}
                 {activeTab === "marketing" && (

@@ -91,6 +91,26 @@
 - **Prominent Red Warning for Refurbished Storage:** Transparently unmasks competitor tactics of covertly bundling refurbished desktop HDDs with branded cameras. If an Economy Storage Match is configured, an unmissable Red Alert Box warns customers of the high 24×7 failure risk and reduced retention before purchase.
 - **Green Trust Verification Badge:** Standard quotes pairing 100% genuine Seagate SkyHawk or WD Purple HDDs highlight their 3-Year Replacement Warranty and 24×7 surveillance endurance.
 
+### 11. Statutory GST-Inclusive Pricing Standard ("GST Paid Master Invariant") & HSN/SAC Architecture
+- **GST Paid Master Invariant:** All supplier acquisition costs (`base_cost`) and customer retail unit prices (`unit_price`) displayed across admin catalogs, wizard cards, and quotations are strictly GST-paid (18% GST inclusive) as defined in `BUSINESS_RULES.md` § 3.0.
+- **Reverse Tax Accounting:** Prevents double-taxation artifacts and guarantees 100% tax compliance across quotations, booking tokens, change orders, and official PDF Tax Invoices:
+  $$\text{Taxable Subtotal} = \frac{\text{Gross Total}}{1 + \text{gst\_rate}}$$
+  $$\text{GST Amount} = \text{Gross Total} - \text{Taxable Subtotal}$$
+- **HSN & SAC Code Standardization:** Formalized mandatory codes across all hardware and labor line items:
+  - CCTV Cameras & Webcams: `8525` (18% GST)
+  - DVR & NVR Recorders: `8521` (18% GST)
+  - Storage (Surveillance HDDs & MicroSD Cards): `8471` (18% GST)
+  - Power Supplies, Adapters & PoE Switches: `8504` (18% GST)
+  - 3+1 Coaxial & CAT6 Network Cables: `8544` (18% GST)
+  - Connectors, Junction Boxes & Racks: `8536` / `8538` (18% GST)
+  - Professional Installation, Fitting & Maintenance Services: `9987` (18% GST)
+- **Comprehensive Admin Tax Control:** Product and Addon modals include direct HSN/SAC and GST Rate editing, bulk CSV import/export supports tax fields, and the Inventory Dashboard features live `[GST Paid]` badges on stock valuations.
+
+### 12. Full Quotation Engine QA & Price Reconciliation Workbook
+- **238-Permutation Executed Test Matrix (100% Pass Rate):** Automated validation across 238 combinations (`scripts/Quotation_Test_Matrix_Executed.csv` / `.xlsx`) covering HD Analog, IP Network, Smart Wireless, and 4G setups from 1 to 16 cameras across all brands and tiers.
+- **Master Pricing Reconciliation Workbook:** `Quotation_Engine_QA_and_Price_Reconciliation_Workbook.xlsx` delivers complete price and margin reconciliation against distributor wholesale rates from Mega Compu World across 61 items.
+- **Intrinsic Bullet Weatherproofing Invariant:** Bullet form factor cameras (`form === 'bullet'`) are intrinsically outdoor and weatherproofed unless explicitly marked indoor (`lib/product-resolver.ts`).
+
 ---
 
 ## 🛠 Tech Stack

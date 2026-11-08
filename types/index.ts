@@ -266,6 +266,8 @@ export interface Product {
   unit_price_budget?: number;    // Manual Budget price override
   unit_price_premium?: number;   // Manual Premium price override
   option_price_overrides?: Record<string, number>;
+  hsn_code?: string;             // Mandatory GST HSN (Goods) or SAC (Services) code
+  gst_rate?: number;             // Specific GST rate slab (e.g. 18, 12, 28, 5)
   is_active: boolean;
   vendor_id?: string;
   internal_sku?: string;
@@ -415,6 +417,8 @@ export interface Addon {
   technical_name?: string;
   max_cameras?: number;
   channels?: number;
+  hsn_code?: string;
+  gst_rate?: number;
   created_at?: unknown;
   updated_at?: unknown;
 }
@@ -528,6 +532,8 @@ export interface QuoteLineItem {
   unit_price: number;
   line_total: number;
   base_cost_at_quote?: number;
+  hsn_code?: string;
+  gst_rate?: number;
 }
 
 export interface QuoteAddon {
@@ -535,6 +541,8 @@ export interface QuoteAddon {
   display_name: string;
   price: number;
   qty?: number; // Added qty for multipliers
+  hsn_code?: string;
+  gst_rate?: number;
 }
 
 export interface PricingResult {

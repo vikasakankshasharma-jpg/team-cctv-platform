@@ -26,6 +26,8 @@ export async function GET(req: NextRequest) {
       { header: "display_name", key: "display_name", width: 40 },
       { header: "category", key: "category", width: 20 },
       { header: "internal_sku", key: "internal_sku", width: 20 },
+      { header: "hsn_code", key: "hsn_code", width: 15 },
+      { header: "gst_rate", key: "gst_rate", width: 12 },
       { header: "technology", key: "technology", width: 15 },
       { header: "brand", key: "brand", width: 15 },
       { header: "base_cost", key: "base_cost", width: 15 },

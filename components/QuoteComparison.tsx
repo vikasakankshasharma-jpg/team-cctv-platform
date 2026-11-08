@@ -140,6 +140,9 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
             {totalCams}x {tech} Cameras
           </CardTitle>
           <div className={`text-center font-black mt-3 ${isMain ? 'text-4xl text-primary' : 'text-3xl text-gray-900'}`}>{formatPrice(plan.total_payable)}</div>
+          <div className="text-center text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 mt-1">
+            Includes 18% GST & Fitting
+          </div>
         </CardHeader>
         <CardContent className="flex-grow pt-4">
           <ul className={`space-y-3 ${isMain ? 'text-base' : 'text-sm'}`}>
@@ -227,7 +230,8 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
                              <Badge variant="outline" className="bg-zinc-100 text-zinc-800 font-bold">{parts[2]}</Badge>
                           </div>
                           <div className="text-sm font-semibold text-zinc-500 mb-2">{totalCams}x {parts[1]} Cameras</div>
-                          <div className="text-3xl font-black text-zinc-900 mb-5">{formatPrice(plan.total_payable)}</div>
+                          <div className="text-3xl font-black text-zinc-900 mb-1">{formatPrice(plan.total_payable)}</div>
+                          <div className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 mb-4">Includes 18% GST & Fitting</div>
                           <Button className="w-full bg-blue-600 hover:bg-blue-700 shadow-sm" size="lg" onClick={() => onSelectPlan(key)}>Select This Plan</Button>
                         </th>
                      )

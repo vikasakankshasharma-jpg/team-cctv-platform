@@ -16,6 +16,8 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
   const [formData, setFormData] = useState({
     display_name: "",
     technical_name: "",
+    hsn_code: "8525",
+    gst_rate: 18,
     price: 0,
     stock_quantity: 1,
     is_active: true,
@@ -29,7 +31,9 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
       setFormData({
         display_name: addon.display_name || "",
         technical_name: addon.technical_name || "",
-        price: addon.price || 0,
+        hsn_code: addon.hsn_code || (addon.category === "service" ? "9987" : "8525"),
+        gst_rate: addon.gst_rate ?? 18,
+        price: addon.price || (addon as any).unit_price || 0,
         stock_quantity: addon.stock_quantity ?? 1,
         is_active: addon.is_active ?? true,
         unit_multiplier: addon.unit_multiplier || "none",
@@ -40,6 +44,8 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
       setFormData({
         display_name: "",
         technical_name: "",
+        hsn_code: "8525",
+        gst_rate: 18,
         price: 0,
         stock_quantity: 1,
         is_active: true,
@@ -114,9 +120,12 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
-                <BadgeIndianRupee className="w-3 h-3" /> Unit Price
-              </label>
+              <div className="flex items-center justify-between ml-2">
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <BadgeIndianRupee className="w-3 h-3" /> Pre-GST Price (Taxable Base)
+                </label>
+                <span className="text-[9px] font-bold text-zinc-500">Ex-GST</span>
+              </div>
               <div className="relative">
                 <span className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500 font-black">₹</span>
                 <input
@@ -125,9 +134,46 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
                   min="0"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl pl-10 pr-6 py-4 text-white font-black text-lg focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl pl-10 pr-6 py-4 text-white font-black text-lg focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner font-mono"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between ml-2">
+                <label className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <BadgeIndianRupee className="w-3 h-3" /> GST Paid Price (Inclusive MRP)
+                </label>
+                <span className="text-[9px] font-bold text-blue-400">+{formData.gst_rate ?? 18}% GST</span>
+              </div>
+              <div className="relative">
+                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-blue-400 font-black">₹</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={Math.round((formData.price || 0) * (1 + (formData.gst_rate ?? 18) / 100))}
+                  onChange={(e) => {
+                    const inc = Number(e.target.value);
+                    const rate = formData.gst_rate ?? 18;
+                    const pre = inc > 0 ? Math.round((inc / (1 + rate / 100)) * 100) / 100 : 0;
+                    setFormData({ ...formData, price: pre });
+                  }}
+                  className="w-full bg-zinc-900 border border-blue-500/30 rounded-2xl pl-10 pr-6 py-4 text-blue-400 font-black text-lg focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2">
+                HSN / SAC Code (Statutory GST)
+              </label>
+              <input
+                type="text"
+                value={formData.hsn_code}
+                onChange={(e) => setFormData({ ...formData, hsn_code: e.target.value.trim() })}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-mono font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner"
+                placeholder="e.g. 8525 or 9987"
+              />
             </div>
 
             <div className="space-y-2">
