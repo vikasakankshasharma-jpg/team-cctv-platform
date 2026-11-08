@@ -136,10 +136,10 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
        // Resolution & Technology aware base GB/day per camera (Surveillance Standard)
        const resMP = req.resolution_mp || 2;
        const isIP = String(req.technology || "").toUpperCase().includes("IP");
-       let baseGbPerDay = isIP ? 14.0 : 17.5;
-       if (resMP >= 8) baseGbPerDay = isIP ? 35.0 : 45.0;
-       else if (resMP >= 4) baseGbPerDay = isIP ? 20.0 : 26.0;
-       else baseGbPerDay = isIP ? 14.0 : 17.5;
+       let baseGbPerDay = 14.0;
+       if (resMP >= 8) baseGbPerDay = 35.0;
+       else if (resMP >= 4) baseGbPerDay = 20.0;
+       else baseGbPerDay = 14.0;
        
        const modeMultiplier = req.recording_mode === "motion" ? 0.85 : 1.0;
        const gbPerDay = Math.max(8, Math.round(baseGbPerDay * modeMultiplier * 10) / 10);

@@ -2089,17 +2089,17 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
   const isIP = upperTech.includes("IP");
   const res = String(selection.resolution_preference || cameraProduct?.resolution || "").toUpperCase();
 
-  let baseDailyGb = 17.5; // Default for 2MP / 2.4MP HD Analog
+  let baseDailyGb = 14.0; // Modern H.265 / H.265+ encoding (industry standard across HD & IP)
   if (isIP) {
     // IP Network with modern H.265 / H.265+ encoding
     if (res.includes("8MP") || res.includes("4K")) baseDailyGb = 35.0;
     else if (res.includes("6MP") || res.includes("5MP") || res.includes("4MP")) baseDailyGb = 20.0;
     else baseDailyGb = 14.0; // 2MP / 3MP IP
   } else {
-    // HD Analog (DVR)
-    if (res.includes("8MP") || res.includes("4K")) baseDailyGb = 45.0;
-    else if (res.includes("6MP") || res.includes("5MP") || res.includes("4MP")) baseDailyGb = 26.0;
-    else baseDailyGb = 17.5; // 2MP / 2.4MP HD Analog
+    // HD Analog (modern H.265 / H.265 Pro+ DVRs: Hikvision Turbo HD, CP Plus Cosmic, Dahua XVR)
+    if (res.includes("8MP") || res.includes("4K")) baseDailyGb = 35.0;
+    else if (res.includes("6MP") || res.includes("5MP") || res.includes("4MP")) baseDailyGb = 20.0;
+    else baseDailyGb = 14.0; // 2MP / 2.4MP HD Analog
   }
 
   // 2. Recording mode: Continuous (1.0) vs Smart Motion (0.85 sustained daytime activity)
@@ -2145,7 +2145,12 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
     (selection.brand_preference || "").toLowerCase().includes("a+");
 
   const eligibleDisks = candidateDisks.filter(d => {
-    const isBud = (d.brand || "").toLowerCase().includes("budget") || (d.id || "").startsWith("HDD-BUD");
+    const isBud = (d.brand || "").toLowerCase().includes("budget") || 
+                  (d.id || "").startsWith("HDD-BUD") ||
+                  (d.brand || "").toLowerCase().includes("pullout") || 
+                  (d.brand || "").toLowerCase().includes("pull out") || 
+                  (d.display_name || "").toLowerCase().includes("pull out") || 
+                  (d.display_name || "").toLowerCase().includes("pullout");
     if (isBudgetRequested) return true; // Budget packages can use budget/refurbished drives
     return !isBud; // Branded quotes (CP Plus, Hikvision, etc.) must use Genuine Surveillance HDDs
   });
@@ -2158,8 +2163,18 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
     return (a.unit_price || 0) - (b.unit_price || 0);
   });
 
-  // Find best fit HDD that satisfies required storage
-  let chosenHdd = disksToUse.find(h => resolveHDDCapacity(h) >= requiredTB);
+  // Support explicit target capacity if passed (e.g. from catalog retention pills: 500GB -> 0.5TB, 1TB -> 1.0TB, 2TB -> 2.0TB, 4TB -> 4.0TB)
+  const explicitTargetTB = (selection as any).target_storage_tb;
+  let chosenHdd: any = undefined;
+
+  if (explicitTargetTB) {
+    chosenHdd = disksToUse.find(h => Math.abs(resolveHDDCapacity(h) - explicitTargetTB) < 0.1);
+  }
+
+  // If no explicit target or not found, find best fit HDD that satisfies required storage with 15% engineering tolerance
+  if (!chosenHdd) {
+    chosenHdd = disksToUse.find(h => resolveHDDCapacity(h) >= (requiredTB * 0.85));
+  }
   let storageOverflow = false;
   let storageOverflowInfo: any = undefined;
   if (!chosenHdd) {

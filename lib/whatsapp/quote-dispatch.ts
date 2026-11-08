@@ -26,10 +26,37 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
     if (!settings) throw new Error("Settings not found");
 
     const selection = (session.wizard_answers || {}) as ConfiguratorSelection;
-    const cablingDone = session.wizard_answers?.cabling_status === "done";
+    const cablingDone = session.wizard_answers?.cabling_done === true || session.wizard_answers?.cabling_status === "done";
     const totalCams = selection.camera_count || 4;
     const tech = selection.technology || "IP";
-    const storageDays = selection.recording_days || 15;
+    const storageDays = selection.recording_days !== undefined ? selection.recording_days : 15;
+
+    // Evaluate site prep surcharge flags (ladder fee for high ceilings)
+    if (!selection.site_surcharge_flags && (selection.ceiling_height === "high" || selection.ceiling_height === "very_high")) {
+      selection.site_surcharge_flags = { requiresLadderFee: true };
+    }
+
+    // Check for partner referral discount
+    let promoterDiscount: { percent: number; flat: number } | undefined = undefined;
+    const partnerId = session.partner_id || session.wizard_answers?.partner_id;
+    if (partnerId) {
+      try {
+        const promoterSnap = await adminDb.collection(COLLECTIONS.PROMOTERS)
+          .where("referral_code", "==", String(partnerId).toUpperCase().trim())
+          .limit(1)
+          .get();
+        if (!promoterSnap.empty) {
+          const pData = promoterSnap.docs[0].data();
+          if (pData.is_active && pData.discount_value && pData.discount_value > 0) {
+            promoterDiscount = pData.discount_type === "percent"
+              ? { percent: pData.discount_value, flat: 0 }
+              : { percent: 0, flat: pData.discount_value };
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch promoter discount:", err);
+      }
+    }
 
     // Generate All Catalog Variations & Price Ranges
     const catalogResult = generateAllCatalogVariations({
@@ -38,6 +65,7 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
       addons,
       settings,
       cablingDone,
+      promoterDiscount,
     });
 
     const { brandSummaries, lowestOverallQuote, totalVariationsCount } = catalogResult;
@@ -63,7 +91,16 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
     // 1. Text Summary Card: All-Inclusive Brand Price Range
     let summaryText = `📷 *COMPLETE CCTV PRICE SUMMARY*\n`;
     summaryText += `━━━━━━━━━━━━━━━━━━━━━\n`;
-    summaryText += `📍 *Site Setup:* ${totalCams} Cameras | ${tech} Digital | ${storageDays} Days Backup\n`;
+    summaryText += `📍 *Site Setup:* ${totalCams} Cameras (${selection.outdoor_camera_count || 0} Out + ${selection.indoor_camera_count || 0} In)\n`;
+    summaryText += `⚡ *Technology:* ${tech === "IP" ? "Digital IP (Best Quality)" : tech === "HD" ? "HD Analog (Lowest Cost)" : "Smart Wireless"}\n`;
+    summaryText += `💾 *Storage:* ${storageDays === 0 ? "Live Viewing Only (No HDD)" : `${storageDays} Days Retention (${selection.recording_mode === "motion" ? "Motion" : "24x7"})`}\n`;
+    summaryText += `🔌 *Cabling:* ${cablingDone ? "Pre-Wired Site (Fitting only)" : "Need New Cabling (~15m wire/cam incl)"}\n`;
+    if (selection.broadband_status === "sim_router") {
+      summaryText += `🌐 *Connectivity:* 4G SIM Wi-Fi Router Included\n`;
+    }
+    if (promoterDiscount) {
+      summaryText += `🎁 *Partner Discount Applied:* Code ${partnerId} (${promoterDiscount.percent ? `${promoterDiscount.percent}% Off` : `₹${promoterDiscount.flat} Flat Off`})\n`;
+    }
     summaryText += `✅ *All prices include:* Cameras, DVR/NVR, Storage, Cables, Connectors, Installation Labor & 18% GST (Zero Hidden Costs!)\n\n`;
     summaryText += `🏆 *ALL-INCLUSIVE BRAND PRICE SPECTRUM:*\n\n`;
 
@@ -137,7 +174,33 @@ export async function sendBrandVariations(phone: string, session: WhatsAppSessio
     const settings = settingsSnap.data() as any;
 
     const selection = (session.wizard_answers || {}) as ConfiguratorSelection;
-    const cablingDone = session.wizard_answers?.cabling_status === "done";
+    const cablingDone = session.wizard_answers?.cabling_done === true || session.wizard_answers?.cabling_status === "done";
+    const reqDays = selection.recording_days !== undefined ? selection.recording_days : 15;
+
+    if (!selection.site_surcharge_flags && (selection.ceiling_height === "high" || selection.ceiling_height === "very_high")) {
+      selection.site_surcharge_flags = { requiresLadderFee: true };
+    }
+
+    let promoterDiscount: { percent: number; flat: number } | undefined = undefined;
+    const partnerId = session.partner_id || session.wizard_answers?.partner_id;
+    if (partnerId) {
+      try {
+        const promoterSnap = await adminDb.collection(COLLECTIONS.PROMOTERS)
+          .where("referral_code", "==", String(partnerId).toUpperCase().trim())
+          .limit(1)
+          .get();
+        if (!promoterSnap.empty) {
+          const pData = promoterSnap.docs[0].data();
+          if (pData.is_active && pData.discount_value && pData.discount_value > 0) {
+            promoterDiscount = pData.discount_type === "percent"
+              ? { percent: pData.discount_value, flat: 0 }
+              : { percent: 0, flat: pData.discount_value };
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch promoter discount in brand variations:", err);
+      }
+    }
 
     const catalogResult = generateAllCatalogVariations({
       selection,
@@ -145,6 +208,7 @@ export async function sendBrandVariations(phone: string, session: WhatsAppSessio
       addons,
       settings,
       cablingDone,
+      promoterDiscount,
     });
 
     const targetBrandSummary = catalogResult.brandSummaries.find(b => b.brandKey === brandKey);
@@ -154,11 +218,12 @@ export async function sendBrandVariations(phone: string, session: WhatsAppSessio
     }
 
     const { standardQuote, economyQuote, brandName } = targetBrandSummary;
+    const storageLabel = reqDays === 0 ? "Live Viewing Only (No HDD)" : `${reqDays} Days Storage`;
 
     let text = `📦 *${brandName.toUpperCase()} CCTV PACKAGES*\n\n`;
-    text += `1️⃣ *Standard Package (${selection.recording_days || 15} Days Storage)*\n`;
+    text += `1️⃣ *Standard Package (${storageLabel})*\n`;
     text += `• Total: ₹${standardQuote.total_payable.toLocaleString('en-IN')} (Incl. GST & Fitting)\n`;
-    text += `• Hardware: ${selection.camera_count || 4}x ${techResolution(standardQuote)} Cameras + DVR/NVR + 1TB+ HDD\n\n`;
+    text += `• Hardware: ${selection.camera_count || 4}x ${techResolution(standardQuote)} Cameras (${selection.outdoor_camera_count || 0} Out + ${selection.indoor_camera_count || 0} In) + DVR/NVR + ${reqDays === 0 ? "Zero Storage" : "Surveillance HDD"}\n\n`;
 
     if (economyQuote) {
       text += `2️⃣ *Economy Storage Match (500GB HDD)*\n`;

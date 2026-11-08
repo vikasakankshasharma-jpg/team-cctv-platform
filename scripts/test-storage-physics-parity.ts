@@ -57,7 +57,7 @@ const hd4Econ = calculatePricing({
 });
 const hd4Storage = hd4Econ.items.find(i => i.product_id === "HDD-BUD-500GB");
 const hd4Days = (hd4Storage as any)?.approx_days;
-assert(hd4Days === 7, `4 cameras on 500GB must yield 7 days (Got: ${hd4Days})`);
+assert(hd4Days === 8, `4 cameras on 500GB must yield 8 days (Got: ${hd4Days})`);
 
 const hd8Econ = calculatePricing({
   selection: { camera_count: 8, technology: "HD", plan_type: "budget", is_economy_storage: true, recording_days: 3, selected_addons: [] } as any,
@@ -68,7 +68,7 @@ const hd8Econ = calculatePricing({
 });
 const hd8Storage = hd8Econ.items.find(i => i.product_id === "HDD-BUD-500GB");
 const hd8Days = (hd8Storage as any)?.approx_days;
-assert(hd8Days === 3, `8 cameras on 500GB must yield 3 days (Got: ${hd8Days}, NOT 6 days)`);
+assert(hd8Days === 4, `8 cameras on 500GB must yield 4 days (Got: ${hd8Days}, NOT 8 days)`);
 assert(hd8Days < hd4Days, `Storage days must strictly decrease as camera count increases (${hd8Days} < ${hd4Days})`);
 
 // --- TEST 2: HD Analog Standard Quote picks Genuine Surveillance HDD ---
@@ -82,7 +82,7 @@ const hd8Std = calculatePricing({
 });
 const hd8StdStorage = hd8Std.items.find(i => i.product_id === "HDD-SEA-1TB");
 assert(!!hd8StdStorage, `Hikvision standard quote must select 100% Genuine Seagate SkyHawk 1TB (Got: ${hd8Std.items.find(i => i.display_name.includes("HDD"))?.display_name})`);
-assert((hd8StdStorage as any)?.approx_days === 7, `8 cameras on 1TB must yield 7 days (Got: ${(hd8StdStorage as any)?.approx_days})`);
+assert((hd8StdStorage as any)?.approx_days === 8, `8 cameras on 1TB must yield 8 days (Got: ${(hd8StdStorage as any)?.approx_days})`);
 
 // --- TEST 3: IP Network Parity ---
 console.log("\n--- 3. IP Network Native H.265 Parity ---");

@@ -170,28 +170,39 @@ export async function processIncomingMessage(
         nextState = "ASK_PROP";
         replies.push(MessageBuilder.buttons(
           from,
-          `Welcome to *TEAM CCTV*! 📷\n\nLet's build your exact, transparent CCTV quotation in under 60 seconds.\n\n*Question 1 of 9:* What type of property are you securing?`,
+          `Welcome to *TEAM CCTV*! 📷\n\nLet's build your exact, transparent CCTV quotation matching our website customer journey.\n\n*Step 1:* What type of property are you securing?`,
           [
             { id: "prop_home", title: "🏠 Home / Flat" },
             { id: "prop_office", title: "🏢 Office / Shop" },
-            { id: "prop_factory", title: "🏭 Factory / Yard" }
+            { id: "prop_factory", title: "🏭 Factory / Farm / Yard" }
           ]
         ));
         break;
 
       case "ASK_PROP":
         if (incomingType === "interactive") {
-          const propMap: Record<string, string> = { prop_home: "home", prop_office: "office", prop_factory: "factory" };
+          const propMap: Record<string, string> = { 
+            prop_home: "home", 
+            prop_office: "office", 
+            prop_factory: "factory" 
+          };
           session.wizard_answers.property_type = propMap[content] || "home";
           nextState = "ASK_INSTALL_TYPE";
 
-          replies.push(MessageBuilder.buttons(
+          replies.push(MessageBuilder.list(
             from,
-            `*Question 2 of 9:* Is this a brand new installation or an expansion?`,
+            `*Step 2:* What kind of installation do you require?`,
+            "Select Installation Type",
             [
-              { id: "ins_new_wired", title: "✨ New Wired Setup" },
-              { id: "ins_wireless", title: "📶 Smart Wireless" },
-              { id: "ins_upgrade", title: "⬆️ Add to Existing" }
+              {
+                title: "Choose Installation Type",
+                rows: [
+                  { id: "ins_new_wired", title: "✨ Completely New Wired Setup", description: "Central DVR/NVR with dedicated copper cabling. Zero signal drop." },
+                  { id: "ins_wireless", title: "📶 Smart Wireless CCTV", description: "Zero video cabling. 360° Pan-Tilt & live mobile phone viewing." },
+                  { id: "ins_4g_solar", title: "📡 4G SIM / Solar Standalone", description: "No Wi-Fi needed. Ideal for farmhouses, empty plots & remote gates." },
+                  { id: "ins_addon", title: "⬆️ Add to Existing System", description: "Expansion / upgrade with compatibility guarantee." }
+                ]
+              }
             ]
           ));
         } else {
@@ -201,37 +212,162 @@ export async function processIncomingMessage(
 
       case "ASK_INSTALL_TYPE":
         if (incomingType === "interactive") {
-          session.wizard_answers.installation_type = content.replace("ins_", "");
-          if (content === "ins_wireless") {
-            session.wizard_answers.technology = "Wireless";
-            session.wizard_answers.cabling_status = "done";
-          }
-          nextState = "ASK_CAMERA_COUNT";
+          const choice = content.replace("ins_", "");
+          session.wizard_answers.installation_type = choice === "addon" ? "addon" : "new";
 
+          if (choice === "addon") {
+            nextState = "ASK_ADDON_COMPATIBILITY";
+            replies.push(MessageBuilder.buttons(
+              from,
+              `*Add-on Compatibility Check:*\n\nDo you know the technical specifications of your existing DVR / NVR recorder?`,
+              [
+                { id: "addon_upload_photo", title: "📸 Send DVR Photo" },
+                { id: "addon_know_specs", title: "✅ I Know My Specs" },
+                { id: "addon_free_callback", title: "📞 Free Callback (15m)" }
+              ]
+            ));
+          } else if (choice === "4g_solar") {
+            session.wizard_answers.technology = "Wireless";
+            session.wizard_answers.technology_preference = "Wireless";
+            session.wizard_answers.is_4g = true;
+            session.wizard_answers.has_4g_sim = true;
+            session.wizard_answers.broadband_status = "independent_4g";
+            session.wizard_answers.cabling_done = true;
+            session.wizard_answers.installation_preference = "pro";
+            nextState = "ASK_CAMERA_COUNT";
+
+            replies.push(MessageBuilder.buttons(
+              from,
+              `*4G SIM & Solar Cameras Selected:* 📡\nHow many standalone 4G SIM / Solar cameras do you need?`,
+              [
+                { id: "cam_1", title: "1 Camera (Single Gate)" },
+                { id: "cam_2", title: "2 Cameras (Gate + Yard)" },
+                { id: "cam_4", title: "4 Cameras (Full Perimeter)" }
+              ]
+            ));
+          } else if (choice === "wireless") {
+            session.wizard_answers.technology = "Wireless";
+            session.wizard_answers.technology_preference = "Wireless";
+            session.wizard_answers.cabling_done = true;
+            nextState = "ASK_WIRELESS_VARIANT";
+
+            replies.push(MessageBuilder.list(
+              from,
+              `*Smart Wireless Purpose Variants:*\nChoose your primary camera configuration:`,
+              "Select Camera Type",
+              [
+                {
+                  title: "Smart Wireless Variants",
+                  rows: [
+                    { id: "wf_in_ptz", title: "🏠 Indoor 360° Pan-Tilt", description: "Living room, cashier, 2-way talk" },
+                    { id: "wf_out_bullet", title: "🌧️ Outdoor Fixed Weatherproof", description: "IP66 waterproof bullet for gates & porch" },
+                    { id: "wf_out_ptz", title: "🔄 Outdoor 360° Motorized PTZ", description: "360° remote sweep via phone app" },
+                    { id: "wf_combo_2x2", title: "✨ 4-Cam Combo (2 In + 2 Out)", description: "Complete home / office wireless coverage" },
+                    { id: "wf_custom", title: "📋 Custom Camera Quantities", description: "Choose custom number of wireless cameras" }
+                  ]
+                }
+              ]
+            ));
+          } else {
+            // New Wired: Exactly matches website WizardClientV2.tsx (Card 1: Outdoor Bullets, Card 2: Indoor Domes)
+            session.wizard_answers.technology_preference = "HD";
+            nextState = "ASK_CAMERA_OUTDOOR";
+
+            replies.push(MessageBuilder.list(
+              from,
+              `*Step 3 (Outdoor Cameras):* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need mounted outside for your main gate, driveway, parking, or boundary walls?`,
+              "Select Outdoor Cameras",
+              [
+                {
+                  title: "Outdoor Camera Quantity",
+                  rows: [
+                    { id: "out_0", title: "0 Cameras (None Outside)", description: "All cameras will be mounted indoors" },
+                    { id: "out_1", title: "1 Outdoor Bullet", description: "Main gate / single entrance coverage" },
+                    { id: "out_2", title: "2 Outdoor Bullets", description: "Front gate + driveway / parking" },
+                    { id: "out_3", title: "3 Outdoor Bullets", description: "Front gate, side lane & backyard" },
+                    { id: "out_4", title: "4 Outdoor Bullets", description: "4-corner full perimeter coverage" },
+                    { id: "out_custom", title: "5+ Outdoor Bullets", description: "Large perimeter / commercial yard" }
+                  ]
+                }
+              ]
+            ));
+          }
+        }
+        break;
+
+      case "ASK_ADDON_COMPATIBILITY":
+        if (incomingType === "interactive") {
+          if (content === "addon_upload_photo") {
+            replies.push(MessageBuilder.text(
+              from,
+              `📸 *Send DVR Photo:*\nPlease take a quick photo of your existing DVR/NVR's *back panel* (where camera cables connect) or the *model sticker* and send it right here.\n\nOur senior engineer will review it within 15 minutes and verify 100% compatibility!`
+            ));
+            nextState = "PAUSED_FOR_AGENT";
+          } else if (content === "addon_free_callback") {
+            replies.push(MessageBuilder.text(
+              from,
+              `📞 *Callback Requested:*\nOur senior CCTV engineer will call you shortly on this WhatsApp number to confirm your DVR model and recommended camera upgrade.`
+            ));
+            nextState = "PAUSED_FOR_AGENT";
+          } else {
+            // User knows specs
+            nextState = "ASK_CAMERA_COUNT";
+            replies.push(MessageBuilder.buttons(
+              from,
+              `*Existing System Tech:* What wire connects your current cameras to the recorder?`,
+              [
+                { id: "addon_tech_hd", title: "Analog HD (BNC Wire)" },
+                { id: "addon_tech_ip", title: "IP Network (CAT6 Wire)" }
+              ]
+            ));
+          }
+        }
+        break;
+
+      case "ASK_WIRELESS_VARIANT":
+        if (incomingType === "interactive") {
+          if (content === "wf_combo_2x2") {
+            session.wizard_answers.camera_count = 4;
+            session.wizard_answers.indoor_camera_count = 2;
+            session.wizard_answers.outdoor_camera_count = 2;
+            session.wizard_answers.wifi_indoor_ptz_count = 2;
+            session.wizard_answers.wifi_outdoor_bullet_count = 2;
+          } else if (content === "wf_in_ptz") {
+            session.wizard_answers.camera_count = 2;
+            session.wizard_answers.indoor_camera_count = 2;
+            session.wizard_answers.outdoor_camera_count = 0;
+            session.wizard_answers.wifi_indoor_ptz_count = 2;
+          } else if (content === "wf_out_bullet") {
+            session.wizard_answers.camera_count = 2;
+            session.wizard_answers.indoor_camera_count = 0;
+            session.wizard_answers.outdoor_camera_count = 2;
+            session.wizard_answers.wifi_outdoor_bullet_count = 2;
+          } else if (content === "wf_out_ptz") {
+            session.wizard_answers.camera_count = 2;
+            session.wizard_answers.indoor_camera_count = 0;
+            session.wizard_answers.outdoor_camera_count = 2;
+            session.wizard_answers.wifi_outdoor_ptz_count = 2;
+          } else {
+            session.wizard_answers.camera_count = 4;
+            session.wizard_answers.indoor_camera_count = 2;
+            session.wizard_answers.outdoor_camera_count = 2;
+          }
+
+          nextState = "ASK_STORAGE_DAYS";
           replies.push(MessageBuilder.list(
             from,
-            `*Question 3 of 9:* How many total cameras do you require?`,
-            "Select Cameras",
+            `*Step 4 (Storage):* How many days of recording retention do you require?`,
+            "Select Storage Days",
             [
               {
-                title: "Small Setup",
+                title: "Recording Retention",
                 rows: [
-                  { id: "cam_2", title: "2 Cameras", description: "Entry & main hall/gate" },
-                  { id: "cam_4", title: "4 Cameras", description: "Comprehensive coverage" }
-                ]
-              },
-              {
-                title: "Medium Setup",
-                rows: [
-                  { id: "cam_6", title: "6 Cameras", description: "Multi-point security" },
-                  { id: "cam_8", title: "8 Cameras", description: "Full perimeter & interior" }
-                ]
-              },
-              {
-                title: "Commercial & Large",
-                rows: [
-                  { id: "cam_16", title: "16 Cameras", description: "Complete commercial system" },
-                  { id: "cam_custom", title: "More than 16", description: "Industrial custom design" }
+                  { id: "storage_0", title: "0 Days (No Recording)", description: "Live mobile viewing only. Zero storage cost." },
+                  { id: "storage_7", title: "7 Days (Basic)", description: "Standard week buffer" },
+                  { id: "storage_15", title: "15 Days (Recommended)", description: "Optimal commercial/home standard" },
+                  { id: "storage_30", title: "30 Days (Extended)", description: "Full month peace-of-mind" },
+                  { id: "storage_45", title: "45 Days (High Security)", description: "Extended commercial compliance" },
+                  { id: "storage_60", title: "60 Days (Maximum)", description: "Highest statutory retention" }
                 ]
               }
             ]
@@ -239,8 +375,90 @@ export async function processIncomingMessage(
         }
         break;
 
+      case "ASK_CAMERA_OUTDOOR":
+        let outdoorCount = 0;
+        if (incomingType === "interactive") {
+          if (content === "out_custom") {
+            outdoorCount = 6;
+          } else if (content.startsWith("out_")) {
+            outdoorCount = parseInt(content.replace("out_", ""), 10);
+          } else {
+            outdoorCount = parseInt(content, 10) || 0;
+          }
+        } else if (incomingType === "text") {
+          const match = content.match(/\d+/);
+          outdoorCount = match ? parseInt(match[0], 10) : 2;
+        }
+        session.wizard_answers.outdoor_camera_count = outdoorCount;
+        nextState = "ASK_CAMERA_INDOOR";
+
+        replies.push(MessageBuilder.list(
+          from,
+          `*Step 4 (Indoor Cameras):* 🏠\n\nHow many *Compact Ceiling Dome Cameras* do you need mounted inside for your living room, corridors, office, or cashier counters?`,
+          "Select Indoor Cameras",
+          [
+            {
+              title: "Indoor Camera Quantity",
+              rows: [
+                { id: "in_0", title: "0 Cameras (None Inside)", description: "All cameras will be outdoor bullets" },
+                { id: "in_1", title: "1 Indoor Dome", description: "Living hall / main reception" },
+                { id: "in_2", title: "2 Indoor Domes", description: "Hall + cashier desk / master bedroom" },
+                { id: "in_3", title: "3 Indoor Domes", description: "Hall + 2 rooms / cabins" },
+                { id: "in_4", title: "4 Indoor Domes", description: "4 separate indoor zones" },
+                { id: "in_custom", title: "5+ Indoor Domes", description: "Large commercial / office floor" }
+              ]
+            }
+          ]
+        ));
+        break;
+
+      case "ASK_CAMERA_INDOOR":
+        let indoorCount = 0;
+        if (incomingType === "interactive") {
+          if (content === "in_custom") {
+            indoorCount = 4;
+          } else if (content.startsWith("in_")) {
+            indoorCount = parseInt(content.replace("in_", ""), 10);
+          } else {
+            indoorCount = parseInt(content, 10) || 0;
+          }
+        } else if (incomingType === "text") {
+          const match = content.match(/\d+/);
+          indoorCount = match ? parseInt(match[0], 10) : 2;
+        }
+        session.wizard_answers.indoor_camera_count = indoorCount;
+
+        const totalOutdoor = session.wizard_answers.outdoor_camera_count || 0;
+        const totalCameras = Math.max(1, totalOutdoor + indoorCount);
+        session.wizard_answers.camera_count = totalCameras;
+
+        nextState = "ASK_TECH";
+        replies.push(MessageBuilder.buttons(
+          from,
+          `✓ *Camera Setup Confirmed:* ${totalCameras} Total (${totalOutdoor} Outdoor Bullet${totalOutdoor === 1 ? '' : 's'} + ${indoorCount} Indoor Dome${indoorCount === 1 ? '' : 's'})\n\n*Step 5 (Technology):* Which camera technology level do you prefer?`,
+          [
+            { id: "tech_IP", title: "Digital IP (Best Quality)" },
+            { id: "tech_HD", title: "HD Analog (Lowest Cost)" }
+          ]
+        ));
+        break;
+
       case "ASK_CAMERA_COUNT":
         if (incomingType === "interactive") {
+          if (content.startsWith("addon_tech_")) {
+            session.wizard_answers.technology = content.replace("addon_tech_", "").toUpperCase();
+            replies.push(MessageBuilder.buttons(
+              from,
+              `How many *NEW* add-on cameras do you want to add?`,
+              [
+                { id: "cam_1", title: "1 Camera" },
+                { id: "cam_2", title: "2 Cameras" },
+                { id: "cam_4", title: "4 Cameras" }
+              ]
+            ));
+            return;
+          }
+
           if (content === "cam_custom") {
             replies.push(MessageBuilder.text(
               from,
@@ -254,7 +472,7 @@ export async function processIncomingMessage(
 
             replies.push(MessageBuilder.buttons(
               from,
-              `*Question 4 of 9:* How would you like your ${count} cameras distributed between Outdoor & Indoor?`,
+              `*Step 4:* How would you like your ${count} cameras distributed between Outdoor & Indoor?`,
               [
                 { id: "split_equal", title: "50/50 Equal Split" },
                 { id: "split_all_outdoor", title: "All Outdoor (Bullet)" },
@@ -280,25 +498,33 @@ export async function processIncomingMessage(
           }
 
           if (session.wizard_answers.technology === "Wireless") {
-            nextState = "ASK_STORAGE";
-            replies.push(MessageBuilder.buttons(
+            nextState = "ASK_STORAGE_DAYS";
+            replies.push(MessageBuilder.list(
               from,
-              `*Question 5 of 9:* How many days of recording retention do you require?`,
+              `*Step 5 (Storage):* How many days of recording retention do you require?`,
+              "Select Storage Days",
               [
-                { id: "storage_7", title: "7 Days (Basic)" },
-                { id: "storage_15", title: "15 Days (Standard)" },
-                { id: "storage_30", title: "30 Days (Extended)" }
+                {
+                  title: "Recording Retention",
+                  rows: [
+                    { id: "storage_0", title: "0 Days (No Recording)", description: "Live mobile viewing only. Zero storage cost." },
+                    { id: "storage_7", title: "7 Days (Basic)", description: "Standard week buffer" },
+                    { id: "storage_15", title: "15 Days (Recommended)", description: "Optimal commercial/home standard" },
+                    { id: "storage_30", title: "30 Days (Extended)", description: "Full month peace-of-mind" },
+                    { id: "storage_45", title: "45 Days (High Security)", description: "Extended commercial compliance" },
+                    { id: "storage_60", title: "60 Days (Maximum)", description: "Highest statutory retention" }
+                  ]
+                }
               ]
             ));
           } else {
             nextState = "ASK_TECH";
             replies.push(MessageBuilder.buttons(
               from,
-              `*Question 5 of 9:* Which camera technology level do you prefer?`,
+              `*Step 5:* Which camera technology level do you prefer?`,
               [
                 { id: "tech_IP", title: "Digital IP (Best Quality)" },
-                { id: "tech_HD", title: "HD Analog (Lowest Cost)" },
-                { id: "tech_Wireless", title: "Smart Wireless (Wi-Fi)" }
+                { id: "tech_HD", title: "HD Analog (Lowest Cost)" }
               ]
             ));
           }
@@ -308,60 +534,186 @@ export async function processIncomingMessage(
       case "ASK_TECH":
         if (incomingType === "interactive") {
           session.wizard_answers.technology = content.replace("tech_", "");
-          nextState = "ASK_STORAGE";
+          nextState = "ASK_STORAGE_DAYS";
 
-          replies.push(MessageBuilder.buttons(
+          replies.push(MessageBuilder.list(
             from,
-            `*Question 6 of 9:* How many days of recording storage do you need?`,
+            `*Step 6 (Storage):* How many days of recording retention do you require?`,
+            "Select Storage Days",
             [
-              { id: "storage_7", title: "7 Days (Basic)" },
-              { id: "storage_15", title: "15 Days (Standard)" },
-              { id: "storage_30", title: "30 Days (Commercial)" }
+              {
+                title: "Recording Retention",
+                rows: [
+                  { id: "storage_0", title: "0 Days (No Recording)", description: "Live mobile viewing only. Zero storage cost." },
+                  { id: "storage_7", title: "7 Days (Basic)", description: "Standard week buffer" },
+                  { id: "storage_15", title: "15 Days (Recommended)", description: "Optimal commercial/home standard" },
+                  { id: "storage_30", title: "30 Days (Extended)", description: "Full month peace-of-mind" },
+                  { id: "storage_45", title: "45 Days (High Security)", description: "Extended commercial compliance" },
+                  { id: "storage_60", title: "60 Days (Maximum)", description: "Highest statutory retention" }
+                ]
+              }
             ]
           ));
         }
         break;
 
-      case "ASK_STORAGE":
+      case "ASK_STORAGE_DAYS":
         if (incomingType === "interactive") {
-          session.wizard_answers.recording_days = parseInt(content.replace("storage_", ""), 10);
-          nextState = "ASK_CABLING";
+          const days = parseInt(content.replace("storage_", ""), 10);
+          session.wizard_answers.recording_days = days;
+
+          if (days === 0) {
+            session.wizard_answers.recording_mode = "none";
+            nextState = "ASK_MOUNTING_CONDITIONS";
+
+            replies.push(MessageBuilder.buttons(
+              from,
+              `*Mounting Height:* What is the approximate ceiling / mounting height at your site?`,
+              [
+                { id: "mount_standard", title: "Standard (< 10 ft)" },
+                { id: "mount_high", title: "High (10-15 ft)" },
+                { id: "mount_very_high", title: "Very High (15 ft+)" }
+              ]
+            ));
+          } else {
+            nextState = "ASK_RECORDING_MODE";
+
+            replies.push(MessageBuilder.buttons(
+              from,
+              `*Recording Mode:* How would you like your system to record?`,
+              [
+                { id: "mode_continuous", title: "⏺️ 24x7 Continuous" },
+                { id: "mode_motion", title: "🏃 Smart Motion (Save 50%)" }
+              ]
+            ));
+          }
+        }
+        break;
+
+      case "ASK_RECORDING_MODE":
+        if (incomingType === "interactive") {
+          session.wizard_answers.recording_mode = content === "mode_motion" ? "motion" : "continuous";
+          nextState = "ASK_MOUNTING_CONDITIONS";
 
           replies.push(MessageBuilder.buttons(
             from,
-            `*Question 7 of 9:* What is the current cabling status at your site?`,
+            `*Mounting Height:* What is the approximate ceiling / mounting height at your site?`,
             [
-              { id: "cabling_new", title: "New Wiring Needed" },
-              { id: "cabling_done", title: "Cabling Already Done" }
+              { id: "mount_standard", title: "Standard (< 10 ft)" },
+              { id: "mount_high", title: "High (10-15 ft)" },
+              { id: "mount_very_high", title: "Very High (15 ft+)" }
             ]
           ));
         }
         break;
 
-      case "ASK_CABLING":
+      case "ASK_MOUNTING_CONDITIONS":
         if (incomingType === "interactive") {
-          session.wizard_answers.cabling_status = content === "cabling_done" ? "done" : "needed";
-          nextState = "ASK_INTERNET";
+          const heightMap: Record<string, string> = {
+            mount_standard: "standard",
+            mount_high: "high",
+            mount_very_high: "very_high"
+          };
+          session.wizard_answers.ceiling_height = heightMap[content] || "standard";
+          nextState = "ASK_CABLING_OR_POWER";
 
-          replies.push(MessageBuilder.buttons(
-            from,
-            `*Question 8 of 9:* Is broadband/Wi-Fi available at the location for remote mobile viewing?`,
-            [
-              { id: "net_yes", title: "Yes, Wi-Fi Available" },
-              { id: "net_no", title: "No, Need 4G SIM Router" }
-            ]
-          ));
+          if (session.wizard_answers.technology === "Wireless") {
+            replies.push(MessageBuilder.buttons(
+              from,
+              `*Camera Power Point Availability:* Cameras communicate wirelessly, but need electrical power. Select site power condition:`,
+              [
+                { id: "pwr_socket", title: "🔌 Socket Nearby (<1.5m)" },
+                { id: "pwr_wire", title: "⚡ Need 2-Core Wire" },
+                { id: "pwr_survey", title: "📋 Decide on Site Visit" }
+              ]
+            ));
+          } else {
+            replies.push(MessageBuilder.buttons(
+              from,
+              `*Cabling Status:* Is your property already pre-wired with CCTV cables, or do we need to lay new cables?`,
+              [
+                { id: "cab_new", title: "🆕 Need New Cabling" },
+                { id: "cab_prewired", title: "🔌 Pre-Wired Site" }
+              ]
+            ));
+          }
+        }
+        break;
+
+      case "ASK_CABLING_OR_POWER":
+        if (incomingType === "interactive") {
+          if (content === "cab_prewired") {
+            session.wizard_answers.cabling_status = "done";
+            session.wizard_answers.cabling_done = true;
+          } else if (content === "cab_new") {
+            session.wizard_answers.cabling_status = "needed";
+            session.wizard_answers.cabling_done = false;
+          } else if (content === "pwr_socket") {
+            session.wizard_answers.power_wiring_option = "socket_available";
+          } else if (content === "pwr_wire") {
+            session.wizard_answers.power_wiring_option = "wire_needed";
+          } else if (content === "pwr_survey") {
+            session.wizard_answers.power_wiring_option = "site_survey";
+          }
+
+          // If 4G SIM camera already chosen, broadband is already solved!
+          if (session.wizard_answers.is_4g || session.wizard_answers.broadband_status === "independent_4g") {
+            nextState = "ASK_TIMELINE";
+            replies.push(MessageBuilder.buttons(
+              from,
+              `⏱️ *When do you plan to get work / installation done at your site?*`,
+              [
+                { id: "time_asap", title: "⚡ ASAP (1-2 Days)" },
+                { id: "time_week", title: "📅 Within a Week" },
+                { id: "time_month", title: "🗓️ This Month / Later" }
+              ]
+            ));
+          } else if (session.wizard_answers.technology === "Wireless") {
+            nextState = "ASK_INTERNET";
+            replies.push(MessageBuilder.buttons(
+              from,
+              `*Wi-Fi / Internet at Site:* Select Wi-Fi condition for live mobile app viewing:`,
+              [
+                { id: "net_wifi_full", title: "📶 Have Wi-Fi (Full Reach)" },
+                { id: "net_wifi_extender", title: "📡 Have Wi-Fi, Need Extender" },
+                { id: "net_4g_router", title: "🌐 Need 4G SIM Router" }
+              ]
+            ));
+          } else {
+            nextState = "ASK_INTERNET";
+            replies.push(MessageBuilder.buttons(
+              from,
+              `*Mobile Viewing & Internet:* Choose how you want to watch live camera video on your smartphone:`,
+              [
+                { id: "net_wifi", title: "📶 Have Wi-Fi Router" },
+                { id: "net_4g", title: "🌐 Add 4G SIM Router" },
+                { id: "net_offline", title: "📺 Offline / TV Only" }
+              ]
+            ));
+          }
         }
         break;
 
       case "ASK_INTERNET":
         if (incomingType === "interactive") {
-          session.wizard_answers.broadband_status = content === "net_yes" ? "broadband_available" : "need_4g_router";
-          nextState = "ASK_TIMELINE";
+          if (content === "net_offline") {
+            session.wizard_answers.broadband_status = "no";
+            session.wizard_answers.wants_remote_viewing = false;
+          } else if (content === "net_4g" || content === "net_4g_router") {
+            session.wizard_answers.broadband_status = "sim_router";
+            session.wizard_answers.wants_remote_viewing = true;
+          } else if (content === "net_wifi_extender") {
+            session.wizard_answers.broadband_status = "wifi_extender";
+            session.wizard_answers.wants_remote_viewing = true;
+          } else {
+            session.wizard_answers.broadband_status = "yes";
+            session.wizard_answers.wants_remote_viewing = true;
+          }
 
+          nextState = "ASK_TIMELINE";
           replies.push(MessageBuilder.buttons(
             from,
-            `*Question 9 of 9:* ⏱️ When do you plan to get work / installation done at your site?`,
+            `⏱️ *When do you plan to get work / installation done at your site?*`,
             [
               { id: "time_asap", title: "⚡ ASAP (1-2 Days)" },
               { id: "time_week", title: "📅 Within a Week" },

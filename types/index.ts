@@ -466,6 +466,7 @@ export interface ConfiguratorSelection {
   selected_addons: string[];
   plan_type: "budget" | "recommended" | "premium";
   is_economy_storage?: boolean;
+  target_storage_tb?: number;
   selected_camera_option?: number; // 1-5 for IP, 1-2 for HD
   selected_camera_id?: string;     // Specific camera ID override
   selected_recorder_id?: string;   // Specific recorder ID override

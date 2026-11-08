@@ -543,7 +543,7 @@ export function DynamicVariantGenerator({
 
           const effectiveCamCount = Math.max(1, totalWiredCount > 0 ? totalWiredCount : totalHardwareCount);
           const isIP = activeTech === "ip";
-          const dailyGbPerCam = isIP ? 14.0 : 17.5;
+          const dailyGbPerCam = 14.0;
           actualCalculatedDays = (strItem as any)?.approx_days || Math.max(1, Math.floor(capacityGb / (effectiveCamCount * dailyGbPerCam)));
         }
       }
@@ -627,6 +627,10 @@ export function DynamicVariantGenerator({
       const uniqueRes = Array.from(new Set(mixedReqs.map(r => r.resolution)));
       const planType = b.brandKey === "budget" ? "budget" : (uniqueRes.includes("8MP") ? "premium" : "recommended");
       const isEconomy = selectedStorageDays === 7;
+      const targetStorageTB = isEconomy ? 0.5
+        : selectedStorageDays === 15 ? 1.0
+        : selectedStorageDays === 30 ? 2.0
+        : selectedStorageDays === 60 ? 4.0 : 1.0;
       const sel: ConfiguratorSelection = {
         ...selection,
         technology: (activeTech === "wireless" ? "Wireless" : activeTech === "ip" ? "IP" : "HD") as any,
@@ -640,6 +644,7 @@ export function DynamicVariantGenerator({
         plan_type: isEconomy ? "budget" : (planType as any),
         recording_days: selectedStorageDays,
         is_economy_storage: isEconomy as any,
+        target_storage_tb: targetStorageTB,
       };
       
       // Standard Quote for currently selected storage retention

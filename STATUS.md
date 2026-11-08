@@ -609,6 +609,23 @@
 
 ---
 
+### Milestone 47: 15-Day Storage Retention Calibration & Branded Surveillance HDD Inventory Restoration
+- **Dual Root Cause Resolution**:
+  - **Inventory Restoration**: Reactivated `hdd_1tb_seagate_skyhawk` (which was set to `is_active: false` in Firestore) and verified `hdd_1tb_wd_purple` in active Firestore catalog. Restored 1TB genuine branded surveillance drives so branded packages (Hikvision, CP Plus, Dahua, Prama, Secureye) no longer fall back to 2TB Toshiba S300 drives.
+  - **Modern H.265 Bitrate Alignment**: Aligned HD Analog 2MP daily bitrate baseline from legacy 17.5 GB/day to 14.0 GB/day in `lib/pricing-engine.ts`, `lib/configuration-engine.ts`, and `DynamicVariantGenerator.tsx` to match modern DVR compression (Hikvision TurboHD H.265 Pro+, CP Plus Cosmic H.265+).
+  - **Target Capacity Mapping & Tolerance**: Implemented explicit `target_storage_tb: 1.0` passing on catalog retention pills (`15 Days (1TB) Rec.`) and a 15% engineering tolerance threshold in `pricing-engine.ts`.
+- **Cross-Brand Price Verification (4 Cameras, 15 Days)**:
+  - Hikvision 2MP HD Package: ₹23,625 (reduced from ₹34,203) with Seagate SkyHawk 1TB Surveillance HDD.
+  - CP Plus 2MP HD Package: ₹22,487 with Seagate SkyHawk 1TB.
+  - Dahua 2MP HD Package: ₹18,924 with Seagate SkyHawk 1TB.
+  - Prama 2MP HD Package: ₹19,582 with Seagate SkyHawk 1TB.
+  - Secureye 2MP HD Package: ₹18,093 with Seagate SkyHawk 1TB.
+  - A+ Products (Budget): ₹17,045 with 1TB HDD.
+- **Automated Storage Test Suite**:
+  - 100% pass rate in `test-storage-physics-parity.ts` across HD, IP, and Wireless configurations.
+
+---
+
 ## 4. Operational Maintenance & Ongoing Runbooks
 
 1. **Disaster Recovery & Backup:** [`docs/devops/disaster-recovery.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/devops/disaster-recovery.md) and [`runbooks/BACKUP_RESTORE.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/runbooks/BACKUP_RESTORE.md).

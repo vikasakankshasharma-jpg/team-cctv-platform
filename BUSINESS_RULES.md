@@ -202,9 +202,21 @@
     - 8 Cameras on 4TB HDD = **~28 Days Backup**
     - 8 Cameras on 6TB HDD = **~42 Days Backup**
 - **Surveillance Industry Bitrate & Daily GB Standards:**
-  - **HD Analog (DVR):** 2MP = $17.5 \text{ GB/day}$; 4MP/5MP = $26.0 \text{ GB/day}$; 8MP = $45.0 \text{ GB/day}$ (continuous recording @ 1.0; motion mode sustained daytime @ 0.85).
-  - **IP Network (NVR):** Native H.265 / H.265+ hardware compression: 2MP/3MP = $14.0 \text{ GB/day}$; 4MP/5MP = $20.0 \text{ GB/day}$; 8MP = $35.0 \text{ GB/day}$.
-  - Compound multipliers (e.g., $0.55 \times 0.55 = 0.30$) that artificially compress daily rates to $\le 10 \text{ GB/day}$ are strictly prohibited.
+  - **Modern H.265 / H.265+ Compression Standard (HD Analog & IP Network):** Modern surveillance recorders (Hikvision TurboHD H.265 Pro+, CP Plus Cosmic H.265+, Dahua XVR H.265) achieve parity with IP network encoding:
+    - 2MP / 2.4MP: $14.0 \text{ GB/day}$ (continuous recording @ 1.0; motion mode sustained daytime @ 0.85 -> $11.9 \text{ GB/day}$)
+    - 4MP / 5MP: $20.0 \text{ GB/day}$
+    - 8MP / 4K: $35.0 \text{ GB/day}$
+  - *Hard Invariant Examples (2MP @ 14.0 GB/day baseline):*
+    - 4 Cameras on 500GB HDD = **~8 Days Backup** (Motion)
+    - 8 Cameras on 500GB HDD = **~4 Days Backup** (strictly halved, NEVER ~8 days)
+    - 16 Cameras on 500GB HDD = **~2 Days Backup**
+    - 4 Cameras on 1TB HDD = **~17–18 Days Backup** (guarantees full 15-day retention without forcing 2TB)
+    - 8 Cameras on 1TB HDD = **~8 Days Backup**
+    - 8 Cameras on 2TB HDD = **~17 Days Backup**
+    - 8 Cameras on 4TB HDD = **~35 Days Backup**
+  - **Retention Tier Mapping & Engineering Margin:**
+    - Explicit target retention mapping ensures catalog pills (`7 Days (500GB)`, `15 Days (1TB) Rec.`, `30 Days (2TB)`, `60 Days (4TB)`) deterministically map to the corresponding physical HDD capacity tier.
+    - A 15% engineering tolerance margin prevents minor rounding thresholds from triggering disproportionate 2x capacity jumps.
 - **Smart Wireless IP Dedicated MicroSD Card Scaling:**
   - Wireless cameras are independent edge devices. Each camera contains its own dedicated MicroSD slot and records independently.
   - When a customer configures $N$ wireless cameras, the BOM adds exactly $N$ MicroSD cards (`qty = camera_count`).
