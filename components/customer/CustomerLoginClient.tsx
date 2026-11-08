@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { 
-  Smartphone, 
   ShieldCheck, 
   ArrowRight, 
   ArrowLeft,
@@ -13,10 +12,11 @@ import {
   CheckCircle2, 
   Lock,
   MessageCircle,
-  Clipboard
+  Clipboard,
+  RotateCw
 } from "lucide-react";
 import { auth } from "@/lib/firebase-client";
-import { signInWithCustomToken, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { signInWithCustomToken } from "firebase/auth";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 import { WhatsAppOtpNotice } from "@/components/shared/WhatsAppOtpNotice";
 import { toast } from "sonner";
@@ -27,148 +27,97 @@ export function CustomerLoginClient() {
   const redirectTo = searchParams.get("redirect") || "/customer/dashboard";
 
   const [mobile, setMobile] = useState("");
-  const [method, setMethod] = useState<"sms" | "whatsapp">("whatsapp");
   const [step, setStep] = useState<1 | 2>(1);
   const [otp, setOtp] = useState(["", "", "", ""]);
   const otpRef = useRef<string[]>(["", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [customerName, setCustomerName] = useState("");
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [targetEndTime, setTargetEndTime] = useState<number | null>(null);
   const [canResend, setCanResend] = useState(false);
 
   const otpInputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
+  // Clock-based countdown: immune to browser tab background throttling
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (step === 2 && timeLeft > 0) {
-      timer = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
-    } else if (step === 2 && timeLeft === 0) {
-      setCanResend(true);
-    }
-    return () => clearTimeout(timer);
-  }, [step, timeLeft]);
+    if (step !== 2 || !targetEndTime) return;
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const initRecaptcha = () => {
-      if ((window as any).recaptchaVerifier) {
-        try {
-          (window as any).recaptchaVerifier.clear();
-        } catch (e) {}
-        delete (window as any).recaptchaVerifier;
-      }
-      try {
-        (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-          size: "invisible",
-        });
-      } catch (err) {
-        console.error("Recaptcha init error:", err);
+    const updateTimer = () => {
+      const remaining = Math.max(0, Math.ceil((targetEndTime - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
+        setCanResend(true);
       }
     };
 
-    const timer = setTimeout(initRecaptcha, 100);
+    updateTimer();
+    const interval = setInterval(updateTimer, 500);
+    return () => clearInterval(interval);
+  }, [step, targetEndTime]);
 
-    return () => {
-      clearTimeout(timer);
-      if ((window as any).recaptchaVerifier) {
-        try {
-          (window as any).recaptchaVerifier.clear();
-        } catch (e) {}
-        delete (window as any).recaptchaVerifier;
-      }
-    };
-  }, []);
-
-  // Request OTP
+  // Request WhatsApp OTP
   const handleSendOtp = async (e?: React.FormEvent) => {
     e?.preventDefault();
     setError("");
 
-    const cleanMobile = mobile.replace(/\D/g, "");
-    if (cleanMobile.length !== 10) {
-      setError("Please enter a valid 10-digit mobile number.");
+    const cleanMobile = mobile.replace(/\D/g, "").slice(-10);
+    if (cleanMobile.length !== 10 || !/^[6-9]\d{9}$/.test(cleanMobile)) {
+      setError("Please enter a valid 10-digit Indian mobile number.");
       return;
     }
 
     setLoading(true);
     try {
-      if (method === "sms") {
-        // We use our mobile endpoint to lookup customer name first
-        const res = await fetch("/api/customer/auth/otp/mobile", {
+      // 1. Fetch customer name if previously registered
+      try {
+        const checkRes = await fetch("/api/customer/auth/otp/mobile", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ mobile: cleanMobile }),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to initiate SMS OTP.");
-        
-        setCustomerName(data.customerName || "");
-
-        // Trigger Firebase Phone Auth SMS
-        const appVerifier = (window as any).recaptchaVerifier;
-        const confirmationResult = await signInWithPhoneNumber(auth, `+91${cleanMobile}`, appVerifier);
-        (window as any).confirmationResult = confirmationResult;
-
-      } else {
-        // WhatsApp Meta API Flow
-        const res = await fetch("/api/auth/otp/whatsapp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: cleanMobile }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to send WhatsApp OTP.");
+        if (checkRes.ok) {
+          const checkData = await checkRes.json();
+          if (checkData?.customerName) {
+            setCustomerName(checkData.customerName);
+          }
+        }
+      } catch (e) {
+        // Non-blocking lookup
       }
 
-      setStep(2);
-      setTimeLeft(60);
-      setCanResend(false);
-      
-      // Auto focus first OTP input box after render
-      setTimeout(() => {
-        otpInputsRef.current[0]?.focus();
-      }, 100);
-    } catch (err: any) {
-      console.error(err);
-      if (err.code === "auth/invalid-app-credential" || err.message?.includes("invalid-app-credential")) {
-        setError("Mobile SMS OTP unavailable in this environment. Please try WhatsApp.");
-      } else {
-        setError(err.message || "An unexpected error occurred. Please try again later.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-    const handleSwitchToSms = async () => {
-    setMethod("sms");
-    setLoading(true);
-    setError("");
-    try {
-      const cleanPhone = mobile.replace(/\D/g, "").slice(-10);
-      const res = await fetch("/api/auth/otp/sms", {
+      // 2. Dispatch 4-digit OTP via official WhatsApp API
+      const res = await fetch("/api/auth/otp/whatsapp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: cleanPhone }),
+        body: JSON.stringify({ phone: cleanMobile }),
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to send SMS OTP.");
+        throw new Error(data.error || "Failed to send WhatsApp OTP. Please try again.");
       }
+
+      setStep(2);
+      setTargetEndTime(Date.now() + 30000); // 30s fast cooldown
       setTimeLeft(30);
       setCanResend(false);
       setOtp(["", "", "", ""]);
       otpRef.current = ["", "", "", ""];
-      toast.success("SMS OTP sent to your number.");
+      toast.success("OTP sent to your WhatsApp.");
+
+      // Auto-focus first input box
+      setTimeout(() => {
+        otpInputsRef.current[0]?.focus();
+      }, 100);
     } catch (err: any) {
-      setError(err.message || "Failed to send SMS OTP.");
+      console.error("WhatsApp OTP Send Error:", err);
+      setError(err.message || "Failed to send WhatsApp OTP. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Verify OTP
   const handleVerifyOtp = async (e?: React.FormEvent, explicitCode?: string) => {
     e?.preventDefault();
     const code = (typeof explicitCode === "string" && explicitCode.length === 4) ? explicitCode : otp.join("");
@@ -177,62 +126,48 @@ export function CustomerLoginClient() {
     setError("");
     setLoading(true);
     try {
-      let customToken = "";
-
-      if (method === "sms") {
-        // Firebase Phone Auth Verification
-        const confirmationResult = (window as any).confirmationResult;
-        if (!confirmationResult) throw new Error("Verification session expired. Please resend code.");
-        
-        const result = await confirmationResult.confirm(code);
-        const idToken = await result.user.getIdToken();
-
-        // Pass ID Token to our backend to upgrade claims
-        const res = await fetch("/api/customer/auth/otp/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identifier: mobile.replace(/\D/g, ""), otp: idToken, type: "mobile" }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to verify session.");
-        customToken = data.customToken;
-      } else {
-        // WhatsApp OTP Verification
-        const res = await fetch("/api/auth/otp/whatsapp/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: mobile.replace(/\D/g, ""), otp: code }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Invalid WhatsApp OTP.");
-        customToken = data.customToken;
+      const cleanMobile = mobile.replace(/\D/g, "").slice(-10);
+      const res = await fetch("/api/auth/otp/whatsapp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: cleanMobile, otp: code }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Invalid OTP code. Please check your WhatsApp and try again.");
       }
 
-      // Final Firebase Custom Token Sign In
+      const customToken = data.customToken;
+
+      // Final Firebase Custom Token Sign In & Session Cookie creation
       if (customToken && auth) {
         let idToken = "";
         if (customToken === "mock-custom-token") {
-            idToken = "mock-jwt-token"; // Bypass Firebase Client
+          idToken = "mock-jwt-token";
         } else {
-            const userCredential = await signInWithCustomToken(auth, customToken);
-            idToken = await userCredential.user.getIdToken(true);
+          const userCredential = await signInWithCustomToken(auth, customToken);
+          idToken = await userCredential.user.getIdToken(true);
         }
+
         const sessionRes = await fetch("/api/auth/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idToken, portal: "customer" }),
         });
+
         if (!sessionRes.ok) {
           const errData = await sessionRes.json().catch(() => ({}));
           throw new Error(errData.error || "Failed to establish secure session. Please try again.");
         }
+
+        toast.success("Welcome! Redirecting to your dashboard...");
         window.location.href = redirectTo;
       } else {
-        throw new Error("Missing authentication token");
+        throw new Error("Missing authentication token from server.");
       }
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Invalid OTP code.");
+      console.error("Verification error:", err);
+      setError(err.message || "Invalid OTP code. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -247,12 +182,7 @@ export function CustomerLoginClient() {
     if (value !== "" && index < 3) {
       otpInputsRef.current[index + 1]?.focus();
     }
-    if (value !== "" && index === 3 && newOtp.every((v) => v !== "")) {
-      const fullCode = newOtp.join("");
-      setTimeout(() => {
-        handleVerifyOtp(undefined, fullCode);
-      }, 50);
-    }
+
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -273,9 +203,6 @@ export function CustomerLoginClient() {
       otpRef.current = newOtp;
       if (pastedData.length === 4) {
         otpInputsRef.current[3]?.focus();
-        setTimeout(() => {
-          handleVerifyOtp(undefined, pastedData);
-        }, 50);
       } else {
         otpInputsRef.current[pastedData.length]?.focus();
       }
@@ -284,13 +211,11 @@ export function CustomerLoginClient() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col justify-center py-6 md:py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      <div id="recaptcha-container"></div>
-      
       {/* Background decoration */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/5 dark:bg-blue-600/10 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-600/5 dark:bg-indigo-600/10 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-600/5 dark:bg-emerald-600/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/5 dark:bg-blue-600/10 blur-[120px] pointer-events-none" />
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-[420px] relative z-10">
+      <div className="sm:mx-auto sm:w-full sm:max-w-[440px] relative z-10">
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-8">
           <Link href="/" className="inline-flex items-center gap-3 active:scale-95 transition-transform">
@@ -309,23 +234,90 @@ export function CustomerLoginClient() {
 
         {/* Step 1: Mobile Input */}
         {step === 1 && (
-          <div>
-            <div className="mb-6 space-y-3">
-              {customerName && customerName !== "Valued Customer" ? (
-                <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                  Welcome back, <strong className="text-zinc-900 dark:text-white">{customerName}</strong>!
-                </p>
-              ) : null}
-              <WhatsAppOtpNotice
-                phone={mobile}
-                method={method}
-                onSwitchToSms={method === "whatsapp" ? handleSwitchToSms : undefined}
-                countdown={timeLeft}
-                loading={loading}
-              />
-            </div>
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm animate-in fade-in">
+            <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white tracking-tight mb-2 text-center">
+              <TranslatedText tKey="customer_login_title" defaultText="Customer Login" />
+            </h1>
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mb-6 font-medium text-center">
+              Enter your mobile number to receive your secure 4-digit code on WhatsApp.
+            </p>
 
-            <form onSubmit={handleVerifyOtp} className="space-y-6">
+            <form onSubmit={handleSendOtp} className="space-y-4">
+              <div>
+                <label className="block text-xs font-black text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">
+                  <TranslatedText tKey="registered_mobile_number" defaultText="WhatsApp Mobile Number" />
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-3.5 text-zinc-400 font-black text-sm select-none">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    required
+                    maxLength={10}
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
+                    placeholder="98765 43210"
+                    autoFocus
+                    className="w-full pl-14 pr-4 py-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl font-black text-zinc-900 dark:text-white text-base focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 tracking-wider transition-all placeholder:text-zinc-400 placeholder:font-normal"
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 p-3.5 rounded-2xl text-xs font-semibold flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || mobile.replace(/\D/g, "").length !== 10}
+                className="w-full bg-[#25D366] hover:bg-[#20bd5a] disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 text-white font-black py-3.5 sm:py-4 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed text-sm"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Sending Code...</span>
+                  </>
+                ) : (
+                  <>
+                    <MessageCircle className="w-5 h-5" />
+                    <span>Get Code on WhatsApp</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Step 2: OTP Verification */}
+        {step === 2 && (
+          <div className="space-y-4">
+            <button
+              onClick={() => {
+                setStep(1);
+                setOtp(["", "", "", ""]);
+                otpRef.current = ["", "", "", ""];
+                setError("");
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>← Change phone number</span>
+            </button>
+
+            {customerName && customerName !== "Valued Customer" ? (
+              <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                Welcome back, <strong className="text-zinc-900 dark:text-white">{customerName}</strong>!
+              </p>
+            ) : null}
+
+            <WhatsAppOtpNotice phone={mobile} />
+
+            <form onSubmit={handleVerifyOtp} className="space-y-6 pt-2">
               {/* 4 Digit Input boxes */}
               <div className="flex justify-center gap-3 sm:gap-4">
                 {otp.map((digit, idx) => (
@@ -339,7 +331,7 @@ export function CustomerLoginClient() {
                     onChange={(e) => handleOtpChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
                     onPaste={handlePaste}
-                    className="w-14 sm:w-16 h-16 sm:h-18 text-center text-2xl sm:text-3xl font-black bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 rounded-2xl text-zinc-900 dark:text-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none transition-all shadow-sm"
+                    className="w-14 sm:w-16 h-16 sm:h-18 text-center text-2xl sm:text-3xl font-black bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 rounded-2xl text-zinc-900 dark:text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all shadow-sm"
                   />
                 ))}
               </div>
@@ -355,13 +347,13 @@ export function CustomerLoginClient() {
                         const arr = clean.split("");
                         setOtp(arr);
                         otpRef.current = arr;
-                        handleVerifyOtp(undefined, clean);
+// customer clicks verify button
                       }
                     } catch (e) {
                       console.warn("Clipboard read not supported:", e);
                     }
                   }}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-3.5 py-1.5 rounded-full transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 px-3.5 py-1.5 rounded-full transition-colors cursor-pointer"
                 >
                   <Clipboard className="w-3.5 h-3.5" />
                   Paste 4-Digit Code
@@ -379,35 +371,37 @@ export function CustomerLoginClient() {
                 type="submit"
                 id="verify-btn"
                 disabled={loading || otp.some((d) => d === "")}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 text-white font-black py-4 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 text-white font-black py-4 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <TranslatedText tKey="verifying" defaultText="Verifying..." />
+                    <span>Verifying Code...</span>
                   </>
                 ) : (
                   <>
-                    <TranslatedText tKey="access_dashboard" defaultText="Access Dashboard" />
+                    <span>Access Dashboard</span>
                     <CheckCircle2 className="w-5 h-5" />
                   </>
                 )}
               </button>
 
-              {/* Resend Link */}
+              {/* Resend Action */}
               <div className="text-center pt-2">
                 {canResend ? (
                   <button
                     type="button"
-                    onClick={handleSendOtp}
-                    className="text-xs font-black text-blue-600 hover:text-blue-700 dark:text-blue-400 underline cursor-pointer"
+                    onClick={() => handleSendOtp()}
+                    disabled={loading}
+                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 transition-all cursor-pointer shadow-xs active:scale-95"
                   >
-                    <TranslatedText tKey="resend_otp" defaultText="Resend verification code" />
+                    <RotateCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+                    <span>Resend WhatsApp Code</span>
                   </button>
                 ) : (
-                  <span className="text-xs font-bold text-zinc-400">
-                    Resend code in {timeLeft}s
-                  </span>
+                  <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800/60 select-none">
+                    <span>⏳ Resend code in {timeLeft}s</span>
+                  </div>
                 )}
               </div>
             </form>
@@ -427,4 +421,3 @@ export function CustomerLoginClient() {
     </div>
   );
 }
-

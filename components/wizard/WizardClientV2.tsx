@@ -167,9 +167,7 @@ export function WizardClientV2() {
       setOtp(newOtp);
       const nextIdx = Math.min(digits.length, 3);
       inputRefs.current[nextIdx]?.focus();
-      if (digits.length === 4) {
-        handleVerifyOtp(digits.join(""));
-      }
+
       return;
     }
 
@@ -182,9 +180,7 @@ export function WizardClientV2() {
       inputRefs.current[index + 1]?.focus();
     }
     
-    if (newOtp.join("").length === 4) {
-      handleVerifyOtp(newOtp.join(""));
-    }
+
   };
 
   const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
@@ -208,9 +204,7 @@ export function WizardClientV2() {
     setOtp(newOtp);
     const focusIdx = Math.min(digits.length, 3);
     inputRefs.current[focusIdx]?.focus();
-    if (digits.length === 4) {
-      handleVerifyOtp(digits.join(""));
-    }
+
   };
     
   useEffect(() => {
@@ -404,9 +398,7 @@ export function WizardClientV2() {
         return;
       }
       
-      const endpoint = otpMethod === "sms" ? "/api/auth/otp/sms" : "/api/auth/otp/whatsapp";
-      
-      const res = await fetch(endpoint, {
+      const res = await fetch("/api/auth/otp/whatsapp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: cleanMobile }),
@@ -414,48 +406,18 @@ export function WizardClientV2() {
       const data = await res.json();
       
       if (!res.ok) {
-        if (otpMethod === "sms") {
-          toast.error(data.error ? `SMS failed: ${data.error}` : "SMS failed to send. Please try WhatsApp OTP instead.", { duration: 8000 });
-        } else {
-          toast.error(data.error || "Failed to send WhatsApp OTP.");
-        }
+        toast.error(data.error || "Failed to send WhatsApp OTP.");
         return;
       }
       
       setOtpSent(true);
-      setCountdown(otpMethod === "sms" ? 30 : 60);
+      setCountdown(30);
       setOtp(["", "", "", ""]);
-      toast.success(t("toast_otp_sent_to_number", `${otpMethod === "sms" ? "SMS" : "WhatsApp"} OTP sent to your number.`));
+      toast.success(t("toast_otp_sent_to_number", "WhatsApp OTP sent to your number."));
       
     } catch (error: any) {
       console.error("OTP Send Error:", error);
       toast.error(t("toast_network_error", "Network error. Please try again."));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-    const handleSwitchToSms = async () => {
-    setOtpMethod("sms");
-    setLoading(true);
-    try {
-      const cleanMobile = (req.customer_mobile || "").replace(/\s/g, "");
-      const res = await fetch("/api/auth/otp/sms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: cleanMobile }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error || "Failed to send SMS OTP.");
-        return;
-      }
-      setOtpSent(true);
-      setCountdown(30);
-      setOtp(["", "", "", ""]);
-      toast.success(t("toast_otp_sent_to_number", "SMS OTP sent to your number."));
-    } catch (err: any) {
-      toast.error(err.message || "Failed to send SMS OTP.");
     } finally {
       setLoading(false);
     }
@@ -472,8 +434,7 @@ export function WizardClientV2() {
     try {
       const cleanMobile = (req.customer_mobile || "").replace(/\s/g, "");
       
-      const verifyEndpoint = otpMethod === "sms" ? "/api/auth/otp/sms/verify" : "/api/auth/otp/whatsapp/verify";
-      const res = await fetch(verifyEndpoint, {
+      const res = await fetch("/api/auth/otp/whatsapp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: cleanMobile, otp: code }),
@@ -1000,13 +961,7 @@ export function WizardClientV2() {
                return (
                  <div className="space-y-4 sm:space-y-6 animate-in fade-in">
                    <div className="space-y-3">
-                     <WhatsAppOtpNotice
-                       phone={req.customer_mobile || ""}
-                       method={otpMethod}
-                       onSwitchToSms={otpMethod === "whatsapp" ? handleSwitchToSms : undefined}
-                       countdown={countdown}
-                       loading={loading}
-                     />
+                     <WhatsAppOtpNotice phone={req.customer_mobile || ""} />
                    </div>
 
                    <div className="py-1 sm:py-2">
@@ -2872,13 +2827,7 @@ export function WizardClientV2() {
             return (
               <div className="space-y-4 sm:space-y-6 animate-in fade-in">
                 <div className="space-y-3">
-                  <WhatsAppOtpNotice
-                    phone={req.customer_mobile || ""}
-                    method={otpMethod}
-                    onSwitchToSms={otpMethod === "whatsapp" ? handleSwitchToSms : undefined}
-                    countdown={countdown}
-                    loading={loading}
-                  />
+                  <WhatsAppOtpNotice phone={req.customer_mobile || ""} />
                 </div>
 
                 <div className="py-1 sm:py-2">

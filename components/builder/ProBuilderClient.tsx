@@ -944,13 +944,7 @@ const isWirelessItem = (item: any) => {
             
             {otpSent ? (
               <div className="space-y-4 sm:space-y-6 animate-in slide-in-from-right-4">
-                <WhatsAppOtpNotice
-                  phone={checkoutPhone}
-                  method={otpMethod}
-                  onSwitchToSms={otpMethod === "whatsapp" ? handleSendSmsOtp : undefined}
-                  countdown={countdown}
-                  loading={otpLoading}
-                />
+                <WhatsAppOtpNotice phone={checkoutPhone} />
                 
                 <div className="flex justify-center gap-3 sm:gap-4 my-8">
                   {otp.map((digit, index) => (

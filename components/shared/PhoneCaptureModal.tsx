@@ -60,7 +60,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
                 const otpArray = code.split("");
                 setOtp(otpArray);
                 // Trigger auto-submit with a small dynamic micro-delay
-                setTimeout(() => handleAutoSubmit(otpArray), 400);
+
               }
             }
           })
@@ -156,9 +156,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
       setOtp(newOtp);
       const nextIdx = Math.min(digits.length, 5);
       inputRefs.current[nextIdx]?.focus();
-      if (digits.length === 6) {
-        handleVerifyAndSave(undefined, digits.join(""));
-      }
+
       return;
     }
 
@@ -171,9 +169,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
       inputRefs.current[index + 1]?.focus();
     }
     
-    if (newOtp.join("").length === 6) {
-      handleVerifyAndSave(undefined, newOtp.join(""));
-    }
+
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {

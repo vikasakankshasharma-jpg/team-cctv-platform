@@ -638,17 +638,17 @@ export function InstantQuotationReview({
       </div>
 
       {/* BRAND UNIFICATION BANNER */}
-      <div className="bg-slate-50 dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 rounded-2xl p-3.5 sm:p-4 mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-        <div>
-          <div className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            {t("iqr_match_my_brand")}
+      <div className="bg-slate-50 dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 rounded-2xl p-3.5 sm:p-4 mb-3 space-y-2.5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 sm:gap-4">
+          <div className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-1.5 shrink-0">
+            <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
+            <span>{t("iqr_match_my_brand")}</span>
           </div>
-          <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+          <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
             Mixed combines top-grade cameras with a CP Plus recorder for maximum savings. Or match 100% of items to one brand:
-          </div>
+          </p>
         </div>
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0 pb-1 sm:pb-0">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full scrollbar-none">
           <button 
             onClick={() => updateSelection({ brand_preference: 'all' })}
             className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${selection.brand_preference === 'all' || !selection.brand_preference || getCanonicalBrandKey(selection.brand_preference) === 'all' ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'}`}

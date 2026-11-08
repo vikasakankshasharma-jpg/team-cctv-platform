@@ -124,6 +124,12 @@ export function DynamicVariantGenerator({
     return Number(selection.recording_days) || 15;
   });
 
+  useEffect(() => {
+    if (selection.recording_days) {
+      setSelectedStorageDays(Number(selection.recording_days));
+    }
+  }, [selection.recording_days]);
+
   // Sync activeTech when selection.technology changes externally
   useEffect(() => {
     const selTech = String(selection.technology || "").toLowerCase();
@@ -620,6 +626,7 @@ export function DynamicVariantGenerator({
     brandsToGenerate.forEach(b => {
       const uniqueRes = Array.from(new Set(mixedReqs.map(r => r.resolution)));
       const planType = b.brandKey === "budget" ? "budget" : (uniqueRes.includes("8MP") ? "premium" : "recommended");
+      const isEconomy = selectedStorageDays === 7;
       const sel: ConfiguratorSelection = {
         ...selection,
         technology: (activeTech === "wireless" ? "Wireless" : activeTech === "ip" ? "IP" : "HD") as any,
@@ -630,11 +637,12 @@ export function DynamicVariantGenerator({
         wifi_camera_count: totalWifiCount,
         camera_count: totalHardwareCount,
         resolution_preference: uniqueRes.length === 1 ? uniqueRes[0] : "5MP",
-        plan_type: planType as any,
+        plan_type: isEconomy ? "budget" : (planType as any),
         recording_days: selectedStorageDays,
+        is_economy_storage: isEconomy as any,
       };
       
-      // Standard Quote (Requested Storage)
+      // Standard Quote for currently selected storage retention
       const rawPricing = calculatePricing({
         selection: sel, products: effectiveProducts, addons, settings, cablingDone, cablingMeters,
         referralDiscountPercent: promoterDiscount?.percent || 0,
@@ -644,33 +652,8 @@ export function DynamicVariantGenerator({
       
       const enriched = enrich(rawPricing, b.brandKey, b.brand);
       if (enriched) {
-        enriched.is_economy_storage = false;
+        enriched.is_economy_storage = isEconomy;
         results.push(enriched);
-      }
-
-      // Economy Storage Quote (If requested > 3 days, generate a low-storage variant)
-      const reqDays = selection.recording_days ?? 7;
-      if (reqDays > 3) {
-        const economySel: ConfiguratorSelection = {
-          ...sel,
-          technology: (activeTech === "wireless" ? "Wireless" : activeTech === "ip" ? "IP" : "HD") as any,
-          plan_type: "budget",
-          is_economy_storage: true as any,
-          recording_days: 3 // Pick the smallest budget storage
-        };
-        const rawEconomyPricing = calculatePricing({
-          selection: economySel, products: effectiveProducts, addons, settings, cablingDone, cablingMeters,
-          referralDiscountPercent: promoterDiscount?.percent || 0,
-          referralDiscountFlat: promoterDiscount?.flat || 0,
-          evaluatedAddonRules, activeOffer,
-        });
-        const enrichedEconomy = enrich(rawEconomyPricing, b.brandKey, b.brand);
-        if (enrichedEconomy && enriched && enrichedEconomy.total_payable < enriched.total_payable) {
-          enrichedEconomy.is_economy_storage = true;
-          (enrichedEconomy as any).original_payable = enriched.total_payable;
-          (enrichedEconomy as any).requested_days = reqDays;
-          results.push(enrichedEconomy);
-        }
       }
     });
 
@@ -684,7 +667,7 @@ export function DynamicVariantGenerator({
     });
 
     return results;
-  }, [activeTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, cablingMeters, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions]);
+  }, [activeTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, cablingMeters, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions, selectedStorageDays]);
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-4 sm:space-y-6">
@@ -814,12 +797,17 @@ export function DynamicVariantGenerator({
             </span>
           </div>
           <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-0.5 rounded-xl text-xs font-semibold overflow-x-auto">
-            {[
+            {(activeTech === "wireless" ? [
+              { days: 7, label: "7 Days (32GB)" },
+              { days: 15, label: "15 Days (64GB) Rec." },
+              { days: 30, label: "30 Days (128GB)" },
+              { days: 60, label: "60 Days (256GB)" }
+            ] : [
               { days: 7, label: "7 Days (500GB)" },
               { days: 15, label: "15 Days (1TB) Rec." },
               { days: 30, label: "30 Days (2TB)" },
               { days: 60, label: "60 Days (4TB)" }
-            ].map(opt => (
+            ]).map(opt => (
               <button
                 key={opt.days}
                 type="button"
@@ -1324,9 +1312,11 @@ export function DynamicVariantGenerator({
                           : `Basic Storage (${variant.storage_device?.derivedCapacity || "500GB HDD"})`
                         }
                       </p>
-                      <p className="text-[11px] bg-green-50 text-green-700 px-2.5 py-1 rounded-md border border-green-200 font-bold inline-block">
-                        Save ₹{((variant as any).original_payable - variant.total_payable).toLocaleString('en-IN')} (~{variant.storage_days} Days Backup vs {(variant as any).requested_days} Days Requested)
-                      </p>
+                      {(variant as any).original_payable && (variant as any).original_payable > variant.total_payable ? (
+                        <p className="text-[11px] bg-green-50 text-green-700 px-2.5 py-1 rounded-md border border-green-200 font-bold inline-block">
+                          Save ₹{((variant as any).original_payable - variant.total_payable).toLocaleString('en-IN')} (~{variant.storage_days} Days Backup vs {(variant as any).requested_days} Days Requested)
+                        </p>
+                      ) : null}
                     </div>
                   )}
                   {!variant.is_economy_storage && variant.is_economy_storage !== undefined && (

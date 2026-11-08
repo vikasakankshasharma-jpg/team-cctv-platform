@@ -94,7 +94,7 @@ export default function ReferAndEarnClient() {
       setOtp(newOtp);
       const nextIdx = Math.min(digits.length, 3);
       inputRefs.current[nextIdx]?.focus();
-      if (digits.length === 4) handleVerifyOtp(digits.join(""));
+
       return;
     }
 
@@ -107,9 +107,7 @@ export default function ReferAndEarnClient() {
       inputRefs.current[index + 1]?.focus();
     }
 
-    if (newOtp.every((d) => d !== "") && newOtp.join("").length === 4) {
-      handleVerifyOtp(newOtp.join(""));
-    }
+
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
