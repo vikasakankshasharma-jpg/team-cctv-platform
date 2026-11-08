@@ -626,6 +626,30 @@
 
 ---
 
+### Milestone 48: Multi-Variation Catalog Architecture & Compact Dropdown Filter Toolbar
+- **Lowest-Priced Entry Point & Multi-Variation Generation**:
+  - Resolved root cause of high initial branded quotes (Hikvision displaying ColorVu at ₹24,451 instead of entry price):
+  - Catalog now generates both **Standard IR Night Vision (Lowest Price)** and **24/7 ColorVu (Full Color)** side-by-side for brands that support both sensor types.
+  - Standard IR quotes select the cheapest active IR camera (e.g. Hikvision DS-2CE76D0T @ ₹1,193) via `sensor_preference: "standard_ir"`, resulting in a true entry price of **₹18,938** for a complete 4-camera setup with 1TB Seagate SkyHawk HDD.
+  - ColorVu quotes select the full-color sensor (e.g. Hikvision DS-2CE70DF0T @ ₹2,286) via `sensor_preference: "colorvu"`, providing clarity in pitch darkness at **₹24,097**.
+- **Prominent Key Difference Badging (`key_difference`)**:
+  - Every package card features a distinct badge highlighting the exact hardware differentiator that explains the price difference (e.g., `🌙 Standard IR Night Vision · Lowest Entry Price` vs `🌈 24/7 ColorVu Full Color · Daytime Clarity in Darkness`).
+- **Compact Dropdown Filter Toolbar**:
+  - Replaced legacy scrolling button strips with a clean, responsive 2x2 (mobile) / 4-column (desktop) toolbar:
+    1. **Camera Brand:** `All Brands`, `CP Plus`, `Hikvision`, `Dahua`, `Prama`, `Secureye`, `A+ Products (Budget)`.
+    2. **Recording Retention:** `15 Days (1TB) Rec.`, `7 Days (500GB Economy)`, `30 Days (2TB Extended)`, `60 Days (4TB Heavy)`.
+    3. **Storage Drive Brand:** `All Storage Brands`, `Seagate SkyHawk (3-Yr)`, `WD Purple (3-Yr)`, `Toshiba S300 (3-Yr)`, `Budget Brand (1-Yr Economy)`.
+    4. **Night Vision / Sensor:** `All Sensors (IR & Color)`, `🌙 Standard IR (Lowest Price)`, `🌈 24/7 ColorVu (Full Color)`.
+  - Added live package count display (`Showing N quotation variations available`) and an instant `[Reset Filters ✕]` button when any non-default filter is applied.
+- **Engine Hardening (`pricing-engine.ts`)**:
+  - Implemented `sensor_preference` filtering (`"standard_ir"` vs `"colorvu"`) in `resolveCamera`.
+  - Implemented `preferred_storage_brand` selection (`"seagate"`, `"wd"`, `"toshiba"`, `"budget"`) in `resolveHDD` with fallback logic and budget drive isolation.
+- **Verification**:
+  - 100% pass rate in `test-storage-physics-parity.ts`.
+  - 100% clean TypeScript build (`npx tsc --noEmit` exited 0).
+
+---
+
 ## 4. Operational Maintenance & Ongoing Runbooks
 
 1. **Disaster Recovery & Backup:** [`docs/devops/disaster-recovery.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/devops/disaster-recovery.md) and [`runbooks/BACKUP_RESTORE.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/runbooks/BACKUP_RESTORE.md).

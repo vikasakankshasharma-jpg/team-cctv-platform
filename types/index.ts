@@ -467,6 +467,8 @@ export interface ConfiguratorSelection {
   plan_type: "budget" | "recommended" | "premium";
   is_economy_storage?: boolean;
   target_storage_tb?: number;
+  preferred_storage_brand?: string;
+  sensor_preference?: string;
   selected_camera_option?: number; // 1-5 for IP, 1-2 for HD
   selected_camera_id?: string;     // Specific camera ID override
   selected_recorder_id?: string;   // Specific recorder ID override
@@ -547,6 +549,8 @@ export interface QuoteAddon {
 }
 
 export interface PricingResult {
+  key_difference?: string;
+  sensor_type?: string;
   [key: string]: any; // Allow dynamic fields
   plan_type: "budget" | "recommended" | "premium";
   technology: Technology | string;

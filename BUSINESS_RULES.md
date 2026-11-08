@@ -232,6 +232,20 @@
     2. **Compact Card Badge (Zero-Clutter Invariant):** Instead of bloated multi-line red boxes that overwhelm package cards, the card renders a sleek, balanced 1-line amber pill (`⚠️ Basic 500GB HDD · ~X Days Backup · 1-Yr Local [Advisory ⓘ]`) matching the exact height of genuine surveillance badges.
     3. **Interactive Storage Advisory Modal (`StorageAdvisoryModal.tsx`):** Clicking `[Advisory ⓘ]` or `[Learn More]` opens an educational modal providing deep market transparency, side-by-side comparison between 500GB desktop vs. 1TB+ genuine surveillance drives, and 1-click upgrade to 1TB.
 
+### 3.12 Multi-Variation Catalog & Compact Dropdown Filter Toolbar Architecture
+- **Multi-Variation Generation per Brand (Lowest Entry Price vs. Full Color / ColorVu):**
+  - For each eligible brand in the quotation catalog (`DynamicVariantGenerator.tsx`), the engine generates distinct quotation variations side-by-side:
+    1. **Standard IR Night Vision (Lowest Entry Price):** Uses the lowest-priced standard IR sensor (`sensor_preference: "standard_ir"`, `plan_type: "budget"`), e.g., Hikvision 2CE76D0T @ ₹1,193, delivering the true lowest entry package price (e.g. ₹18,938 for 4 cameras + 1TB HDD).
+    2. **24/7 Color / ColorVu (Full Color):** If the brand offers ColorVu / Full Color sensors in catalog inventory (`has_color` / `colorvu`), generates the premium ColorVu setup (`sensor_preference: "colorvu"`, `plan_type: "recommended"`).
+  - **Key Difference Badge (`key_difference`):** Every card is tagged with a prominent badge clearly stating the main technical differentiator explaining the price variance (e.g. `🌙 Standard IR Night Vision · Lowest Entry Price` vs. `🌈 24/7 ColorVu Full Color · Daytime Clarity in Darkness`).
+- **Compact Dropdown Filter Toolbar (Zero-Clutter Invariant):**
+  - Consolidates 4 critical filter controls into a unified, responsive 2x2 (mobile) / 4-column (desktop) toolbar:
+    1. **Camera Brand:** `All Brands`, `CP Plus`, `Hikvision`, `Dahua`, `Prama`, `Secureye`, etc.
+    2. **Recording Retention:** `15 Days (1TB) Rec.`, `7 Days (500GB Economy)`, `30 Days (2TB Extended)`, `60 Days (4TB Heavy)`.
+    3. **Storage Drive Brand:** `All Storage Brands`, `Seagate SkyHawk (3-Yr)`, `WD Purple (3-Yr)`, `Toshiba S300 (3-Yr)`, `Budget Brand (1-Yr Economy)`.
+    4. **Night Vision / Sensor:** `All Sensors (IR & Color)`, `🌙 Standard IR (Lowest Price)`, `🌈 24/7 ColorVu (Full Color)`.
+  - Includes a live match counter (`Showing N Packages`) and an instant `[Reset Filters ✕]` button when non-default filters are active.
+
 ---
 
 ## 4. Installation, Labor & Site Survey Rules

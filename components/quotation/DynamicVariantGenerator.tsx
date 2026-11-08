@@ -124,6 +124,22 @@ export function DynamicVariantGenerator({
     return Number(selection.recording_days) || 15;
   });
 
+  const [selectedStorageBrand, setSelectedStorageBrand] = useState<string>(() => {
+    return (selection as any).preferred_storage_brand || "all";
+  });
+
+  const [selectedSensorType, setSelectedSensorType] = useState<string>(() => {
+    return (selection as any).sensor_preference || "all";
+  });
+
+  const isFiltered = activeBrand !== "all" || selectedStorageDays !== 15 || selectedStorageBrand !== "all" || selectedSensorType !== "all";
+  const handleResetFilters = () => {
+    setActiveBrand("all");
+    setSelectedStorageDays(15);
+    setSelectedStorageBrand("all");
+    setSelectedSensorType("all");
+  };
+
   useEffect(() => {
     if (selection.recording_days) {
       setSelectedStorageDays(Number(selection.recording_days));
@@ -625,40 +641,117 @@ export function DynamicVariantGenerator({
 
     brandsToGenerate.forEach(b => {
       const uniqueRes = Array.from(new Set(mixedReqs.map(r => r.resolution)));
-      const planType = b.brandKey === "budget" ? "budget" : (uniqueRes.includes("8MP") ? "premium" : "recommended");
       const isEconomy = selectedStorageDays === 7;
       const targetStorageTB = isEconomy ? 0.5
         : selectedStorageDays === 15 ? 1.0
         : selectedStorageDays === 30 ? 2.0
         : selectedStorageDays === 60 ? 4.0 : 1.0;
-      const sel: ConfiguratorSelection = {
-        ...selection,
-        technology: (activeTech === "wireless" ? "Wireless" : activeTech === "ip" ? "IP" : "HD") as any,
-        brand_preference: b.brand,
-        mixed_camera_requirements: mixedReqs,
-        outdoor_camera_count: cameraBuckets.filter(b => b.type === "outdoor" && b.connection !== "wifi" && b.connection !== "4g").reduce((sum, b) => sum + b.count, 0),
-        indoor_camera_count: cameraBuckets.filter(b => b.type === "indoor" && b.connection !== "wifi" && b.connection !== "4g").reduce((sum, b) => sum + b.count, 0),
-        wifi_camera_count: totalWifiCount,
-        camera_count: totalHardwareCount,
-        resolution_preference: uniqueRes.length === 1 ? uniqueRes[0] : "5MP",
-        plan_type: isEconomy ? "budget" : (planType as any),
-        recording_days: selectedStorageDays,
-        is_economy_storage: isEconomy as any,
-        target_storage_tb: targetStorageTB,
-      };
-      
-      // Standard Quote for currently selected storage retention
-      const rawPricing = calculatePricing({
-        selection: sel, products: effectiveProducts, addons, settings, cablingDone, cablingMeters,
-        referralDiscountPercent: promoterDiscount?.percent || 0,
-        referralDiscountFlat: promoterDiscount?.flat || 0,
-        evaluatedAddonRules, activeOffer,
+
+      // Check if brand has ColorVu / Full Color cameras in catalog for this tech
+      const brandHasColor = effectiveProducts.some(p => {
+        if (p.category !== "cctv_camera") return false;
+        if (normalizeBrandKey(p.brand || "") !== b.brandKey) return false;
+        const pTech = (p.technology || "").toUpperCase();
+        const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
+        const isTechMatch = activeTech === "hd" 
+          ? (pTech === "HD" || pTechs.includes("HD"))
+          : activeTech === "ip"
+          ? (pTech === "IP" || pTechs.includes("IP"))
+          : activeTech === "hybrid"
+          ? (pTech === "HD" || pTechs.includes("HD") || pTech === "IP" || pTechs.includes("IP"))
+          : (pTech === "WIRELESS" || pTech === "WIFI" || pTechs.includes("WIRELESS") || pTechs.includes("WIFI") || !!p.has_wifi || !!p.has_4g_sim);
+        if (!isTechMatch) return false;
+        return p.has_color === true || p.has_colorvu === true || (p.features || []).includes("color") || (p.features || []).includes("colorvu") || (p.features || []).includes("dual_light") || p.night_vision_type === "color" || p.night_vision_type === "dual_light" || (p.display_name || "").toLowerCase().includes("colorvu") || (p.display_name || "").toLowerCase().includes("full color");
       });
-      
-      const enriched = enrich(rawPricing, b.brandKey, b.brand);
-      if (enriched) {
-        enriched.is_economy_storage = isEconomy;
-        results.push(enriched);
+
+      // 1. Standard IR Variation (Lowest Entry Price)
+      if (selectedSensorType === "all" || selectedSensorType === "standard_ir") {
+        const standardReqs = mixedReqs.map(r => ({
+          ...r,
+          features: (r.features || []).filter((f: string) => f !== "color" && f !== "colorvu" && f !== "dual_light")
+        }));
+        const selStandard: ConfiguratorSelection = {
+          ...selection,
+          technology: (activeTech === "wireless" ? "Wireless" : activeTech === "ip" ? "IP" : "HD") as any,
+          brand_preference: b.brand,
+          mixed_camera_requirements: standardReqs,
+          outdoor_camera_count: cameraBuckets.filter(b => b.type === "outdoor" && b.connection !== "wifi" && b.connection !== "4g").reduce((sum, b) => sum + b.count, 0),
+          indoor_camera_count: cameraBuckets.filter(b => b.type === "indoor" && b.connection !== "wifi" && b.connection !== "4g").reduce((sum, b) => sum + b.count, 0),
+          wifi_camera_count: totalWifiCount,
+          camera_count: totalHardwareCount,
+          resolution_preference: uniqueRes.length === 1 ? uniqueRes[0] : "5MP",
+          plan_type: "budget", // Pick lowest entry price camera!
+          sensor_preference: "standard_ir",
+          preferred_storage_brand: selectedStorageBrand !== "all" ? selectedStorageBrand : undefined,
+          recording_days: selectedStorageDays,
+          is_economy_storage: isEconomy as any,
+          target_storage_tb: targetStorageTB,
+        };
+
+        const rawStandard = calculatePricing({
+          selection: selStandard, products: effectiveProducts, addons, settings, cablingDone, cablingMeters,
+          referralDiscountPercent: promoterDiscount?.percent || 0,
+          referralDiscountFlat: promoterDiscount?.flat || 0,
+          evaluatedAddonRules, activeOffer,
+        });
+
+        const enrichedStandard = enrich(rawStandard, b.brandKey, b.brand);
+        if (enrichedStandard) {
+          enrichedStandard.is_economy_storage = isEconomy;
+          (enrichedStandard as any).sensor_type = "standard_ir";
+          (enrichedStandard as any).key_difference = "🌙 Standard IR Night Vision · Lowest Entry Price";
+          results.push(enrichedStandard);
+        }
+      }
+
+      // 2. 24/7 ColorVu / Full Color Variation
+      if (brandHasColor && (selectedSensorType === "all" || selectedSensorType === "colorvu")) {
+        const colorReqs = mixedReqs.map(r => ({
+          ...r,
+          features: Array.from(new Set([...(r.features || []), "color"]))
+        }));
+        const selColor: ConfiguratorSelection = {
+          ...selection,
+          technology: (activeTech === "wireless" ? "Wireless" : activeTech === "ip" ? "IP" : "HD") as any,
+          brand_preference: b.brand,
+          mixed_camera_requirements: colorReqs,
+          outdoor_camera_count: cameraBuckets.filter(b => b.type === "outdoor" && b.connection !== "wifi" && b.connection !== "4g").reduce((sum, b) => sum + b.count, 0),
+          indoor_camera_count: cameraBuckets.filter(b => b.type === "indoor" && b.connection !== "wifi" && b.connection !== "4g").reduce((sum, b) => sum + b.count, 0),
+          wifi_camera_count: totalWifiCount,
+          camera_count: totalHardwareCount,
+          resolution_preference: uniqueRes.length === 1 ? uniqueRes[0] : "5MP",
+          plan_type: "recommended",
+          sensor_preference: "colorvu",
+          requested_features: Array.from(new Set([...(selection.requested_features || []), "color"])),
+          preferred_storage_brand: selectedStorageBrand !== "all" ? selectedStorageBrand : undefined,
+          recording_days: selectedStorageDays,
+          is_economy_storage: isEconomy as any,
+          target_storage_tb: targetStorageTB,
+        };
+
+        const rawColor = calculatePricing({
+          selection: selColor, products: effectiveProducts, addons, settings, cablingDone, cablingMeters,
+          referralDiscountPercent: promoterDiscount?.percent || 0,
+          referralDiscountFlat: promoterDiscount?.flat || 0,
+          evaluatedAddonRules, activeOffer,
+        });
+
+        const enrichedColor = enrich(rawColor, b.brandKey, b.brand);
+        if (enrichedColor) {
+          enrichedColor.is_economy_storage = isEconomy;
+          (enrichedColor as any).sensor_type = "colorvu";
+          (enrichedColor as any).key_difference = "🌈 24/7 ColorVu Full Color · Daytime Clarity in Darkness";
+          
+          // Only add if it's different from standard or if standard wasn't added
+          const alreadyHasSamePrice = results.some(r => 
+            normalizeBrandKey(r.camera_device?.brand || "") === b.brandKey && 
+            r.total_payable === enrichedColor.total_payable && 
+            (r as any).sensor_type === "standard_ir"
+          );
+          if (!alreadyHasSamePrice) {
+            results.push(enrichedColor);
+          }
+        }
       }
     });
 
@@ -672,7 +765,7 @@ export function DynamicVariantGenerator({
     });
 
     return results;
-  }, [activeTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, cablingMeters, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions, selectedStorageDays]);
+  }, [activeTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, cablingMeters, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions, selectedStorageDays, selectedStorageBrand, selectedSensorType]);
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-4 sm:space-y-6">
@@ -776,56 +869,115 @@ export function DynamicVariantGenerator({
           </button>
         </div>
 
-        {/* Brand Selector */}
-        <div className="w-full relative">
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-0.5 max-w-full scrollbar-none px-0.5">
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mr-1 shrink-0">
-              {t("wz_brand")}:
-            </span>
-            {availableBrands.map(b => (
-              <button
-                key={b}
-                type="button"
-                onClick={() => setActiveBrand(b)}
-                className={`px-3 py-1 sm:px-3.5 sm:py-1.5 text-xs font-semibold rounded-full border transition-all shrink-0 ${activeBrand === b ? "bg-blue-600 text-white border-blue-600 shadow-xs dark:bg-blue-600 dark:text-white" : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-blue-400 hover:text-blue-600"}`}
+        {/* Compact Dropdown Filter Toolbar */}
+        <div className="w-full pt-1.5 pb-0.5 border-t border-zinc-200/70 dark:border-zinc-800/70 space-y-1.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs">
+            {/* 1. Camera Brand Dropdown */}
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+                <span>📹</span> {t("wz_brand") || "Brand"}
+              </label>
+              <select
+                value={activeBrand}
+                onChange={(e) => setActiveBrand(e.target.value)}
+                className="w-full px-2 py-1.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] sm:text-xs font-semibold text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
               >
-                {BRAND_DISPLAY[b] || getCanonicalBrandName(b) || b}
-              </button>
-            ))}
-          </div>
-        </div>
-        {/* Live Storage Retention Days Selector */}
-        <div className="w-full pt-1.5 border-t border-zinc-200/70 dark:border-zinc-800/70 flex flex-wrap items-center justify-between gap-1.5 text-xs">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              💾 Recording Retention:
-            </span>
-          </div>
-          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-0.5 rounded-xl text-xs font-semibold overflow-x-auto">
-            {(activeTech === "wireless" ? [
-              { days: 7, label: "7 Days (32GB)" },
-              { days: 15, label: "15 Days (64GB) Rec." },
-              { days: 30, label: "30 Days (128GB)" },
-              { days: 60, label: "60 Days (256GB)" }
-            ] : [
-              { days: 7, label: "7 Days (500GB)" },
-              { days: 15, label: "15 Days (1TB) Rec." },
-              { days: 30, label: "30 Days (2TB)" },
-              { days: 60, label: "60 Days (4TB)" }
-            ]).map(opt => (
-              <button
-                key={opt.days}
-                type="button"
-                onClick={() => setSelectedStorageDays(opt.days)}
-                className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg transition-all text-[10px] sm:text-[11px] whitespace-nowrap cursor-pointer ${
-                  selectedStorageDays === opt.days 
-                    ? "bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 font-extrabold shadow-2xs border border-zinc-200 dark:border-zinc-700" 
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
-                }`}
+                <option value="all">All Brands ({availableBrands.filter(b => b !== "all").length})</option>
+                {availableBrands.filter(b => b !== "all").map(b => (
+                  <option key={b} value={b}>
+                    {BRAND_DISPLAY[b] || getCanonicalBrandName(b) || b}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 2. Recording Retention Dropdown */}
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+                <span>💾</span> Retention Days
+              </label>
+              <select
+                value={selectedStorageDays}
+                onChange={(e) => setSelectedStorageDays(Number(e.target.value))}
+                className="w-full px-2 py-1.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] sm:text-xs font-semibold text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
               >
-                {opt.label}
+                {activeTech === "wireless" ? (
+                  <>
+                    <option value={15}>15 Days (64GB) • Rec.</option>
+                    <option value={7}>7 Days (32GB) • Economy</option>
+                    <option value={30}>30 Days (128GB) • Extended</option>
+                    <option value={60}>60 Days (256GB) • Heavy</option>
+                  </>
+                ) : (
+                  <>
+                    <option value={15}>15 Days (1TB) • Rec.</option>
+                    <option value={7}>7 Days (500GB) • Economy</option>
+                    <option value={30}>30 Days (2TB) • Extended</option>
+                    <option value={60}>60 Days (4TB) • Heavy</option>
+                  </>
+                )}
+              </select>
+            </div>
+
+            {/* 3. Storage Drive Brand Dropdown */}
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+                <span>💽</span> Storage Drive
+              </label>
+              {activeTech === "wireless" ? (
+                <div className="w-full px-2 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200/60 dark:border-zinc-700 text-[11px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 truncate">
+                  Dedicated MicroSD
+                </div>
+              ) : (
+                <select
+                  value={selectedStorageBrand}
+                  onChange={(e) => setSelectedStorageBrand(e.target.value)}
+                  className="w-full px-2 py-1.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] sm:text-xs font-semibold text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
+                >
+                  <option value="all">All Storage Brands</option>
+                  <option value="seagate">Seagate SkyHawk (3-Yr)</option>
+                  <option value="wd">WD Purple (3-Yr)</option>
+                  <option value="toshiba">Toshiba S300 (3-Yr)</option>
+                  <option value="budget">Budget Brand (1-Yr Economy)</option>
+                </select>
+              )}
+            </div>
+
+            {/* 4. Night Vision / Sensor Dropdown */}
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+                <span>👁️</span> Night Vision
+              </label>
+              <select
+                value={selectedSensorType}
+                onChange={(e) => setSelectedSensorType(e.target.value)}
+                className="w-full px-2 py-1.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] sm:text-xs font-semibold text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
+              >
+                <option value="all">All Sensors (IR & Color)</option>
+                <option value="standard_ir">🌙 Standard IR (Lowest Price)</option>
+                <option value="colorvu">🌈 24/7 ColorVu (Full Color)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Filter Status Strip & Quick Reset */}
+          <div className="flex items-center justify-between pt-1 px-0.5 text-[11px]">
+            <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400 font-medium">
+              <span className="font-bold text-zinc-900 dark:text-white">
+                {variants.length}
+              </span>
+              <span>{variants.length === 1 ? "quotation variation available" : "quotation variations available"}</span>
+            </div>
+            {isFiltered && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 cursor-pointer transition-all"
+              >
+                <span>Reset Filters</span>
+                <span>✕</span>
               </button>
-            ))}
+            )}
           </div>
         </div>
 
@@ -1252,7 +1404,7 @@ export function DynamicVariantGenerator({
                     <span>{variant.camera_device?.brand || "Budget"}</span>
                     {(() => {
                       const b = (variant.camera_device?.brand || "").toLowerCase();
-                      if (b.includes("hikvision")) return <span className="text-[9px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 px-2 py-0.5 rounded-full">Global Leader • ColorVu Sensor</span>;
+                      if (b.includes("hikvision")) return <span className="text-[9px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 px-2 py-0.5 rounded-full">Global Leader • World #1</span>;
                       if (b.includes("cp") || b.includes("plus")) return <span className="text-[9px] font-bold bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-200 px-2 py-0.5 rounded-full">India's #1 • 1500+ Service Centers</span>;
                       if (b.includes("trueview")) return <span className="text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200 px-2 py-0.5 rounded-full">Specialist in 4G & Smart PTZ</span>;
                       if (b.includes("prama")) return <span className="text-[9px] font-bold bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-200 px-2 py-0.5 rounded-full">Make-in-India Enterprise Grade</span>;
@@ -1262,6 +1414,19 @@ export function DynamicVariantGenerator({
                   <h3 className="text-2xl font-bold text-[#1d1d1f] dark:text-white mb-2 group-hover:text-blue-600 transition-colors">
                     {variant.camera_device.derivedResolution || "2MP Resolution"}
                   </h3>
+                  
+                  {/* Key Difference Badge */}
+                  {variant.key_difference && (
+                    <div className="mb-2 flex justify-center">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold shadow-2xs ${
+                        (variant as any).sensor_type === "colorvu"
+                          ? "bg-indigo-50 text-indigo-800 dark:bg-indigo-950/70 dark:text-indigo-200 border border-indigo-200/80 dark:border-indigo-800"
+                          : "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-800"
+                      }`}>
+                        <span>{variant.key_difference}</span>
+                      </span>
+                    </div>
+                  )}
                   
                   {/* Hybrid Architecture Breakdown Badge */}
                   {(totalWiredCount > 0 && totalWifiCount > 0) && (
@@ -1366,7 +1531,7 @@ export function DynamicVariantGenerator({
                       <span>
                         {variant.technology === "Wireless"
                           ? `100% High Endurance MicroSD · ~${variant.storage_days} Days Backup per Camera · Official Warranty`
-                          : `100% Genuine 24×7 Surveillance HDD · ~${variant.storage_days} Days Backup · 3-Yr Warranty`
+                          : `100% Genuine 24×7 ${variant.storage_device?.brand || "Surveillance"} HDD · ~${variant.storage_days} Days Backup · 3-Yr Warranty`
                         }
                       </span>
                     </div>

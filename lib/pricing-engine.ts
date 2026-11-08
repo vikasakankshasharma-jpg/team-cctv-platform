@@ -1784,6 +1784,42 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
     }
   }
 
+  // 6b. Filter by explicit sensor preference (standard IR vs ColorVu)
+  const sensorPref = String(selection.sensor_preference || "").toLowerCase().trim();
+  if (sensorPref === "standard_ir") {
+    const irFiltered = pool.filter(cam => {
+      const isColor = cam.night_vision_type === "color" || 
+        cam.night_vision_type === "dual_light" || 
+        cam.night_vision_type === "starlight" ||
+        (cam.features || []).some(f => {
+          const fl = f.toLowerCase();
+          return fl.includes("color") || fl.includes("colour") || fl.includes("dual_light");
+        }) ||
+        (cam.technical_name + " " + cam.display_name).toLowerCase().includes("colorvu") ||
+        (cam.technical_name + " " + cam.display_name).toLowerCase().includes("full color");
+      return !isColor;
+    });
+    if (irFiltered.length > 0) {
+      pool = irFiltered;
+    }
+  } else if (sensorPref === "colorvu" || sensorPref === "color") {
+    const colorFiltered = pool.filter(cam => {
+      const isColor = cam.night_vision_type === "color" || 
+        cam.night_vision_type === "dual_light" || 
+        cam.night_vision_type === "starlight" ||
+        (cam.features || []).some(f => {
+          const fl = f.toLowerCase();
+          return fl.includes("color") || fl.includes("colour") || fl.includes("dual_light");
+        }) ||
+        (cam.technical_name + " " + cam.display_name).toLowerCase().includes("colorvu") ||
+        (cam.technical_name + " " + cam.display_name).toLowerCase().includes("full color");
+      return isColor;
+    });
+    if (colorFiltered.length > 0) {
+      pool = colorFiltered;
+    }
+  }
+
   // Filter by Max Budget (Total Quote Value Forward-Estimation)
   if (selection.max_budget) {
     const budgetFiltered = pool.filter(cam => {
@@ -1863,7 +1899,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
   }
 
   // Fallback to plan_type if option number is not provided (should not happen with new logic, but safe)
-  if (selection.plan_type === "budget") {
+  if (selection.plan_type === "budget" || sensorPref === "standard_ir") {
      return pool[0];
   } else if (selection.plan_type === "premium") {
      return pool[pool.length - 1];
@@ -2137,12 +2173,14 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
   // 6. Quality-Tier Storage Selection:
   // - Budget/Economy quotes prefer Budget Brand / Refurbished HDDs.
   // - Standard/Premium branded quotes prefer 100% Genuine Surveillance HDDs (Seagate SkyHawk / WD Purple).
-  const isBudgetRequested = 
-    selection.plan_type === "budget" || 
+  const preferredStorageBrand = String((selection as any).preferred_storage_brand || (selection as any).target_storage_brand || "").toLowerCase().trim();
+  const isBudgetBrand = 
     selection.brand_preference === "budget" || 
-    (selection as any).is_economy_storage === true ||
     (selection.brand_preference || "").toLowerCase().includes("budget") ||
     (selection.brand_preference || "").toLowerCase().includes("a+");
+  const isEconomyStorage = (selection as any).is_economy_storage === true || (selection as any).target_storage_tb === 0.5;
+  const isBudgetDriveRequested = preferredStorageBrand === "budget" || preferredStorageBrand.includes("refurbished");
+  const isBudgetRequested = isBudgetBrand || isEconomyStorage || isBudgetDriveRequested;
 
   const eligibleDisks = candidateDisks.filter(d => {
     const isBud = (d.brand || "").toLowerCase().includes("budget") || 
@@ -2163,17 +2201,47 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
     return (a.unit_price || 0) - (b.unit_price || 0);
   });
 
-  // Support explicit target capacity if passed (e.g. from catalog retention pills: 500GB -> 0.5TB, 1TB -> 1.0TB, 2TB -> 2.0TB, 4TB -> 4.0TB)
+  // Support explicit target capacity & preferred storage brand
   const explicitTargetTB = (selection as any).target_storage_tb;
   let chosenHdd: any = undefined;
 
+  let brandDisks = disksToUse;
+  if (preferredStorageBrand && preferredStorageBrand !== "all") {
+    const matched = disksToUse.filter(h => {
+      const bName = String(h.brand || "").toLowerCase();
+      const dName = String(h.display_name || "").toLowerCase();
+      if (preferredStorageBrand === "wd" || preferredStorageBrand.includes("purple") || preferredStorageBrand.includes("western")) {
+        return bName === "wd" || bName.includes("western") || dName.includes("wd") || dName.includes("purple");
+      }
+      if (preferredStorageBrand === "seagate" || preferredStorageBrand.includes("skyhawk")) {
+        return bName.includes("seagate") || dName.includes("skyhawk");
+      }
+      if (preferredStorageBrand === "toshiba" || preferredStorageBrand.includes("s300")) {
+        return bName.includes("toshiba") || dName.includes("toshiba") || dName.includes("s300");
+      }
+      if (preferredStorageBrand === "budget" || preferredStorageBrand.includes("refurbished")) {
+        return bName.includes("budget") || (h.id || "").startsWith("HDD-BUD") || dName.includes("budget");
+      }
+      return bName.includes(preferredStorageBrand) || dName.includes(preferredStorageBrand);
+    });
+    if (matched.length > 0) {
+      brandDisks = matched;
+    }
+  }
+
   if (explicitTargetTB) {
-    chosenHdd = disksToUse.find(h => Math.abs(resolveHDDCapacity(h) - explicitTargetTB) < 0.1);
+    chosenHdd = brandDisks.find(h => Math.abs(resolveHDDCapacity(h) - explicitTargetTB) < 0.1);
+    if (!chosenHdd && brandDisks !== disksToUse) {
+      chosenHdd = disksToUse.find(h => Math.abs(resolveHDDCapacity(h) - explicitTargetTB) < 0.1);
+    }
   }
 
   // If no explicit target or not found, find best fit HDD that satisfies required storage with 15% engineering tolerance
   if (!chosenHdd) {
-    chosenHdd = disksToUse.find(h => resolveHDDCapacity(h) >= (requiredTB * 0.85));
+    chosenHdd = brandDisks.find(h => resolveHDDCapacity(h) >= (requiredTB * 0.85));
+    if (!chosenHdd && brandDisks !== disksToUse) {
+      chosenHdd = disksToUse.find(h => resolveHDDCapacity(h) >= (requiredTB * 0.85));
+    }
   }
   let storageOverflow = false;
   let storageOverflowInfo: any = undefined;
