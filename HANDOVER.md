@@ -102,6 +102,15 @@ This document serves as the master engineering and operational handover for the 
   - Economy Match / Budget quotes pair Budget Brand HDDs (`HDD-BUD-500GB`, `HDD-BUD-1TB`, etc.) with transparent pricing.
 - **Storage Transparency & Clean Advisory Architecture:** Highlights competitor tactics of covertly bundling refurbished desktop HDDs with branded cameras. Replaced cluttered 10-line red alert boxes on cards with a global retention banner under the storage selector (with 1-click 1TB upgrade), a compact 1-line amber pill on cards (`⚠️ Basic 500GB HDD · ~X Days Backup · 1-Yr Local [Advisory ⓘ]`), and an educational `StorageAdvisoryModal.tsx`.
 
+### 2.10 Multi-Variation Catalog Architecture & Compact Dropdown Filter Toolbar
+- **Lowest-Priced Entry Point & Side-by-Side Variations:**
+  - Standard IR variation: `sensor_preference: "standard_ir"` and `plan_type: "budget"` resolves to the absolute cheapest camera in that brand's pool (e.g. Hikvision `DS-2CE76D0T-ITPFS` @ ₹1,193), delivering true entry pricing (₹18,938 for 4 cameras + 1TB Seagate SkyHawk HDD).
+  - ColorVu variation: `sensor_preference: "colorvu"` and `plan_type: "recommended"` resolves to ColorVu / full-color night vision cameras (e.g. Hikvision `DS-2CE70DF0T-PF` @ ₹2,286), delivering ₹24,097.
+  - Key Difference Badges: Rendered directly beneath the camera resolution to explain price differences (`🌙 Standard IR Night Vision · Lowest Entry Price` vs `🌈 24/7 ColorVu Full Color · Daytime Clarity in Darkness`).
+- **Compact Dropdown Filter Toolbar:**
+  - 4 Dropdowns (Camera Brand, Recording Retention, Storage Drive Brand, Night Vision / Sensor) plus live match counter and instant `[Reset Filters ✕]` button.
+  - Dedicated storage drive manufacturer selection supports Seagate SkyHawk, WD Purple, Toshiba S300, and Budget Brand with fallback resilience.
+
 ---
 
 ## 3. Operational & Deployment Guide

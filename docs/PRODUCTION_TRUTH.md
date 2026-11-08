@@ -103,6 +103,12 @@
 19. **Intrinsic Bullet Camera Weatherproofing Invariant:**
     - All bullet form factor cameras (`form === 'bullet'`) are intrinsically outdoor and weatherproofed unless specifically marked indoor (`lib/product-resolver.ts`), eliminating false indoor assignments and preventing outdoor camera allocation failures.
 
+20. **Multi-Variation Catalog & Lowest Entry Price Invariant:**
+    - For each brand in the quotation catalog (`DynamicVariantGenerator.tsx`), the engine must generate both the lowest entry price Standard IR night vision variation (`plan_type: "budget"`, `sensor_preference: "standard_ir"`, e.g. Hikvision @ ₹18,938) and the 24/7 ColorVu full-color variation (`plan_type: "recommended"`, `sensor_preference: "colorvu"`, e.g. Hikvision @ ₹24,097) when both camera types exist in active catalog inventory.
+    - Standard IR requests must resolve strictly to `pool[0]` (the cheapest camera in the brand's pool) in `resolveCamera`, preventing high-priced ColorVu cameras from inflating entry quotes.
+    - Each package card must carry an explicit differentiator badge (`key_difference`) directly below the resolution title explaining the technical difference driving the price variance.
+    - The top-level toolbar provides 4 compact `<select>` dropdowns (Camera Brand, Retention Days, Storage Brand, Sensor Type) + live match count and one-click reset, keeping the sticky header clean and ultra-fast.
+
 ---
 
 ## 4. Catalog Integrity & Test Hygiene Guardrails

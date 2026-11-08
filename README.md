@@ -111,6 +111,12 @@
 - **Master Pricing Reconciliation Workbook:** `Quotation_Engine_QA_and_Price_Reconciliation_Workbook.xlsx` delivers complete price and margin reconciliation against distributor wholesale rates from Mega Compu World across 61 items.
 - **Intrinsic Bullet Weatherproofing Invariant:** Bullet form factor cameras (`form === 'bullet'`) are intrinsically outdoor and weatherproofed unless explicitly marked indoor (`lib/product-resolver.ts`).
 
+### 13. Multi-Variation Catalog Architecture & Compact Dropdown Filter Toolbar
+- **Lowest-Priced Entry Point & Side-by-Side Variations:** Generates both the lowest entry price Standard IR night vision variation (e.g. Hikvision @ ₹18,938) and the 24/7 ColorVu full-color variation (₹24,097) side-by-side for brands supporting both sensor technologies. Customers can easily find and compare entry-level versus full-color specifications.
+- **Prominent Key Difference Badging:** Each quotation card is tagged with an explicit differentiator badge directly beneath the resolution header (`🌙 Standard IR Night Vision · Lowest Entry Price` vs `🌈 24/7 ColorVu Full Color · Daytime Clarity in Darkness`), immediately explaining why that specific package has a different price.
+- **Compact Dropdown Filter Toolbar:** Replaces cluttered scrolling button strips with a clean, responsive 2×2 (mobile) / 4-column (desktop) toolbar organizing Camera Brand, Recording Retention, Storage Drive Brand (Seagate SkyHawk, WD Purple, Toshiba S300, Budget Brand), and Night Vision / Sensor type, along with live variation counts and an instant `[Reset Filters ✕]` button.
+- **Dedicated Storage Brand Selection:** Customers can filter and select their preferred storage drive manufacturer across genuine 3-Year warranty surveillance drives (Seagate SkyHawk, WD Purple, Toshiba S300) or 1-Year economy budget drives with full transparency.
+
 ---
 
 ## 🛠 Tech Stack
