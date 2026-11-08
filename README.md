@@ -88,7 +88,7 @@
   - IP Network (NVR): 14.0 GB/day (2MP H.265), 20.0 GB/day (5MP H.265), 35.0 GB/day (8MP H.265+).
   - Smart Wireless IP: 4.5 GB/day (2MP Smart Motion), 10.5 GB/day (2MP Continuous).
 - **Dedicated Wireless Edge Storage:** Smart Wireless IP cameras use independent MicroSD memory cards per camera (`qty = camera_count`). Adding more wireless cameras does not reduce individual backup days (`~14 Days Backup per Camera · Dedicated MicroSD`).
-- **Prominent Red Warning for Refurbished Storage:** Transparently unmasks competitor tactics of covertly bundling refurbished desktop HDDs with branded cameras. If an Economy Storage Match is configured, an unmissable Red Alert Box warns customers of the high 24×7 failure risk and reduced retention before purchase.
+- **Storage Transparency & Clean Advisory Architecture:** Transparently unmasks competitor tactics of covertly bundling refurbished desktop HDDs with branded cameras. Eliminates messy 10-line text boxes on cards by using a global retention banner under the storage selector (with 1-click 1TB upgrade), a compact 1-line amber pill on cards (`⚠️ Basic 500GB HDD · ~X Days Backup · 1-Yr Local [Advisory ⓘ]`), and an educational `StorageAdvisoryModal.tsx`.
 - **Green Trust Verification Badge:** Standard quotes pairing 100% genuine Seagate SkyHawk or WD Purple HDDs highlight their 3-Year Replacement Warranty and 24×7 surveillance endurance.
 
 ### 11. Statutory GST-Inclusive Pricing Standard ("GST Paid Master Invariant") & HSN/SAC Architecture

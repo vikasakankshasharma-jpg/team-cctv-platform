@@ -58,10 +58,12 @@ Never confuse or revert the quotation presentation strategy for this project. Th
 - **Zero Blocking Popups on Page Load:** Let the customer view their quote immediately upon landing. Checklist and Feature Guide modals are accessible on-demand.
 - **Centered Responsive Dialogs:** All modal dialogs must use centered layouts (`items-center justify-center max-h-[85vh] rounded-2xl sm:rounded-3xl`) with dedicated internal scroll containers to prevent action button clipping on mobile and tablet screens.
 
-## 8. Storage Transparency & Multi-Tier Presentation Rules
+## 8. Storage Transparency & Clean Advisory Architecture
 - **Physical Inverse Scaling Law:** For wired systems (HD/IP), storage days must scale inversely with camera count ($Days \propto \frac{Capacity}{Cameras}$). An 8-camera setup on a 500GB HDD yields **~3 Days Backup**, strictly half of a 4-camera setup (~7 Days).
 - **Dedicated Wireless Storage:** Wireless cameras receive 1 MicroSD card per camera (`qty = camera_count`). The UI must display `(~X Days Backup per Camera · Dedicated MicroSD)` and never divide card capacity across multiple wireless cameras.
-- **Red Alert Transparency Box:** When an Economy Storage Match or Budget drive is quoted, the package card MUST display the prominent Red Alert Box detailing reduced backup days and high 24×7 failure risk of refurbished drives.
+- **Global Advisory Banner at Selector Level:** When Economy/500GB storage is active (`selectedStorageDays === 7`), a clean, non-intrusive amber banner renders directly beneath the Recording Retention selector with market transparency context and a 1-click `[Switch to 1TB Rec. →]` button.
+- **Sleek Amber Card Pill (Zero-Clutter Invariant):** Packages quoting basic 500GB / refurbished storage must NOT render bloated 10-line text boxes on individual cards. Instead, they render a compact, elegant 1-line amber pill (`⚠️ Basic 500GB HDD · ~X Days Backup · 1-Yr Local [Advisory ⓘ]`) matching the exact height and rhythm of genuine surveillance badges.
+- **Interactive Storage Advisory Modal (`StorageAdvisoryModal.tsx`):** On clicking `[Advisory ⓘ]` or `[Learn More]`, a dedicated modal educates the user on competitor tactics (bundling scrap desktop HDDs) and presents a clean side-by-side comparison between 500GB desktop vs. 1TB+ genuine surveillance drives with direct 1-click upgrade.
 - **Green Trust Badge for Genuine Surveillance Drives:** Standard branded quotes pairing Seagate SkyHawk or WD Purple must display the Green Trust Badge: `100% Genuine 24×7 Surveillance HDD · ~X Days Backup · 3-Yr Warranty`.
 
 ## 9. Sticky Filter Bar Navigation for Catalog Variations

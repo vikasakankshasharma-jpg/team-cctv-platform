@@ -79,13 +79,12 @@
       - **8TB:** Seagate SkyHawk (₹38,409), WD Purple Pro (₹38,572).
       - **10TB:** Toshiba S300 (₹48,941), WD Purple Pro (₹50,950), Seagate SkyHawk (₹51,419).
 
-17. **Refurbished / Economy Storage Transparency Alert Standard:**
-    - Genuine surveillance hard drives start at 2TB in OEM distributor catalogs. For budget options below 2TB (500GB, 1TB) or economy options where competitors secretly bundle refurbished desktop HDDs with branded cameras to artificially lower quotes, our platform explicitly discloses the component honestly.
-    - The platform bundles the Budget Brand HDD option with a prominent Red Warning alert (`⚠️ Refurbished / Economy Storage Alert`):
-      - **Market Transparency:** Explains that competitors secretly bundle refurbished desktop HDDs with branded cameras to display artificially low quotes.
-      - **Physics-Accurate Backup Scaling:** Inversely scales backup days strictly according to camera count, resolution, and H.265 compression (e.g., 500GB yields ~7 days for 4 cameras, ~3 days for 8 cameras).
-      - **Warranty Notice:** Discloses 1-Year Local warranty and high 24x7 failure risk.
-      - **TEAM Advice:** Recommends upgrading to genuine Seagate SkyHawk / WD Purple for official 3-Year Replacement Warranty and 24x7 peace of mind.
+17. **Refurbished / Economy Storage Transparency & Clean Advisory Architecture:**
+    - Genuine surveillance hard drives start at 2TB in OEM distributor catalogs. For budget options below 2TB (500GB, 1TB) or economy options where competitors secretly bundle refurbished desktop HDDs with branded cameras to artificially lower quotes, our platform explicitly discloses the component honestly without degrading the quote card UX.
+    - **Global Advisory Banner:** A clean amber advisory banner sits directly below the Recording Retention selector when 500GB / Economy storage is selected, providing instant transparency and a 1-click upgrade button to 1TB Recommended.
+    - **Compact Card Badge (Zero Clutter):** Instead of bloated 10-line text boxes, package cards render a sleek 1-line amber pill (`⚠️ Basic 500GB HDD · ~X Days Backup · 1-Yr Local [Advisory ⓘ]`) preserving uniform card height and visual clarity.
+    - **Educational Modal (`StorageAdvisoryModal.tsx`):** On clicking `[Advisory ⓘ]` or `[Learn More]`, an interactive modal details competitor desktop HDD bundling tactics, compares 500GB vs 1TB+ surveillance drives, and allows seamless 1-click upgrading.
+    - **Physics-Accurate Backup Scaling:** Inversely scales backup days strictly according to camera count, resolution, and H.265 compression (e.g., 500GB yields ~7 days for 4 cameras, ~3 days for 8 cameras).
 
 18. **Statutory GST-Paid Master Invariant & Reverse-Tax Compliance:**
     - All vendor acquisition costs (`base_cost`) and customer retail unit prices (`unit_price`) across products, addons, and inventories are strictly GST-paid (18% inclusive) as defined in `BUSINESS_RULES.md` § 3.0.

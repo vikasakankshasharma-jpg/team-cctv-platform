@@ -100,7 +100,7 @@ This document serves as the master engineering and operational handover for the 
 - **Quality Tier Separation & Catalog Integrity:**
   - Standard branded packages (CP Plus, Hikvision, Dahua, Trueview) strictly pair **100% Genuine 24×7 Surveillance HDDs (Seagate SkyHawk / WD Purple)** with **3-Year Replacement Warranty** and Green Verification Badges.
   - Economy Match / Budget quotes pair Budget Brand HDDs (`HDD-BUD-500GB`, `HDD-BUD-1TB`, etc.) with transparent pricing.
-- **Mandatory Red Warning Box for Refurbished Storage:** Highlights competitor tactics of covertly bundling refurbished desktop HDDs with branded cameras to display deceptively low prices. Discloses reduced backup duration for the configured camera count and 1-year local warranty risks, warning customers before booking.
+- **Storage Transparency & Clean Advisory Architecture:** Highlights competitor tactics of covertly bundling refurbished desktop HDDs with branded cameras. Replaced cluttered 10-line red alert boxes on cards with a global retention banner under the storage selector (with 1-click 1TB upgrade), a compact 1-line amber pill on cards (`⚠️ Basic 500GB HDD · ~X Days Backup · 1-Yr Local [Advisory ⓘ]`), and an educational `StorageAdvisoryModal.tsx`.
 
 ---
 

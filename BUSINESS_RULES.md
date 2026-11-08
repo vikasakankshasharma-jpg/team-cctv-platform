@@ -215,11 +215,10 @@
 - **Quality Tiering & Market Transparency Rules:**
   - **Standard Branded Packages (CP Plus, Hikvision, Dahua, Trueview):** Must strictly select **100% Genuine 24×7 Surveillance HDDs (Seagate SkyHawk / WD Purple)** with **3-Year Replacement Warranty** and the Green Verification Badge. Branded packages must never secretly bundle refurbished drives in standard quotes.
   - **Economy Match Packages & Budget Brand (A+ Products):** Utilize active Budget Brand HDDs (`HDD-BUD-500GB`, `HDD-BUD-1TB`, etc.) to show lower initial costs.
-  - **Mandatory Red Transparency Alert Box:** Whenever a refurbished/budget hard drive is quoted, the UI must prominently render the Red Warning Box disclosing:
-    1. Competitor transparency alert regarding covert bundling of refurbished desktop drives.
-    2. Accurate reduced backup days for the total camera count (e.g. `• Backup: Only ~3 Days for 8 cameras`).
-    3. 1-Year Local warranty and high 24×7 failure risk warning.
-    4. TEAM CCTV recommendation to upgrade to genuine 3-Year warranty surveillance drives.
+  - **Storage Transparency & Clean Advisory Architecture (Non-Intrusive & High-Converting):**
+    1. **Global Retention Banner:** When 500GB / Economy storage is selected (`selectedStorageDays === 7`), a clean, non-intrusive amber banner renders directly beneath the Recording Retention selector disclosing the 1-Year local warranty, reduced backup days, and competitor refurbished HDD practices, with a 1-click `[Switch to 1TB Rec. →]` button.
+    2. **Compact Card Badge (Zero-Clutter Invariant):** Instead of bloated multi-line red boxes that overwhelm package cards, the card renders a sleek, balanced 1-line amber pill (`⚠️ Basic 500GB HDD · ~X Days Backup · 1-Yr Local [Advisory ⓘ]`) matching the exact height of genuine surveillance badges.
+    3. **Interactive Storage Advisory Modal (`StorageAdvisoryModal.tsx`):** Clicking `[Advisory ⓘ]` or `[Learn More]` opens an educational modal providing deep market transparency, side-by-side comparison between 500GB desktop vs. 1TB+ genuine surveillance drives, and 1-click upgrade to 1TB.
 
 ---
 
