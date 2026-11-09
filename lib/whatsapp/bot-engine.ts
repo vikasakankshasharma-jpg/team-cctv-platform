@@ -888,7 +888,15 @@ export async function processIncomingMessage(
         const text = String(content || "").toLowerCase().trim();
 
         // 1. Check if user wants to add another wireless camera variant FIRST
-        if (text.includes("wf_add_another") || text.includes("add another") || text.includes("add more") || text.includes("another wireless") || text === "add") {
+        if (
+          text.includes("wf_add_another") ||
+          text.includes("add_another") ||
+          text.includes("add another") ||
+          text.includes("add more") ||
+          text.includes("another wireless") ||
+          text.includes("another camera") ||
+          text === "add"
+        ) {
           nextState = "ASK_HYBRID_WIRELESS";
           replies.push(MessageBuilder.list(
             from,
@@ -951,8 +959,7 @@ export async function processIncomingMessage(
           text.includes("skip") || 
           text.includes("zero") || 
           text.includes("wired only") || 
-          /\bno\b/.test(text) || 
-          text === "1";
+          /\bno\b/.test(text);
 
         if (isDoneOrSkip) {
           const outCount = session.wizard_answers.outdoor_camera_count || 0;
