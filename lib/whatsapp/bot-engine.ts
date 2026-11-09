@@ -345,7 +345,7 @@ export async function processIncomingMessage(
           [
             { id: "prop_home", title: "🏠 Home / Flat" },
             { id: "prop_office", title: "🏢 Office / Shop" },
-            { id: "prop_factory", title: "🏭 Factory / Farm / Yard" }
+            { id: "prop_factory", title: "🏭 Factory / Farm" }
           ]
         ));
         break;
@@ -400,15 +400,15 @@ export async function processIncomingMessage(
           replies.push(MessageBuilder.list(
             from,
             `*Step 2:* What kind of installation do you require?`,
-            "Select Installation Type",
+            "Choose Install Type",
             [
               {
-                title: "Choose Installation Type",
+                title: "Installation Types",
                 rows: [
-                  { id: "ins_new_wired", title: "✨ Completely New Wired Setup", description: "Central DVR/NVR with dedicated copper cabling. Zero signal drop." },
+                  { id: "ins_new_wired", title: "✨ New Wired Setup", description: "Central DVR/NVR with dedicated copper cabling. Zero signal drop." },
                   { id: "ins_wireless", title: "📶 Smart Wireless CCTV", description: "Zero video cabling. 360° Pan-Tilt & live mobile phone viewing." },
-                  { id: "ins_4g_solar", title: "📡 4G SIM / Solar Standalone", description: "No Wi-Fi needed. Ideal for farmhouses, empty plots & remote gates." },
-                  { id: "ins_addon", title: "⬆️ Add to Existing System", description: "Expansion / upgrade with compatibility guarantee." }
+                  { id: "ins_4g_solar", title: "📡 4G SIM / Solar Cam", description: "No Wi-Fi needed. Ideal for farmhouses, empty plots & remote gates." },
+                  { id: "ins_addon", title: "⬆️ Add Existing System", description: "Expansion / upgrade with compatibility guarantee." }
                 ]
               }
             ]
@@ -421,7 +421,7 @@ export async function processIncomingMessage(
             [
               { id: "prop_home", title: "🏠 Home / Flat" },
               { id: "prop_office", title: "🏢 Office / Shop" },
-              { id: "prop_factory", title: "🏭 Factory / Farm / Yard" }
+              { id: "prop_factory", title: "🏭 Factory / Farm" }
             ]
           ));
         }
@@ -483,7 +483,7 @@ export async function processIncomingMessage(
             [
               { id: "addon_upload_photo", title: "📸 Send DVR Photo" },
               { id: "addon_know_specs", title: "✅ I Know My Specs" },
-              { id: "addon_free_callback", title: "📞 Free Callback (15m)" }
+              { id: "addon_free_callback", title: "📞 Request Callback" }
             ]
           ));
         } else if (choice === "4g_solar") {
@@ -561,15 +561,15 @@ export async function processIncomingMessage(
           replies.push(MessageBuilder.list(
             from,
             `*Step 2:* What kind of installation do you require? Please choose from the list below:`,
-            "Select Installation Type",
+            "Choose Install Type",
             [
               {
-                title: "Choose Installation Type",
+                title: "Installation Types",
                 rows: [
-                  { id: "ins_new_wired", title: "✨ Completely New Wired Setup", description: "Central DVR/NVR with dedicated copper cabling. Zero signal drop." },
+                  { id: "ins_new_wired", title: "✨ New Wired Setup", description: "Central DVR/NVR with dedicated copper cabling. Zero signal drop." },
                   { id: "ins_wireless", title: "📶 Smart Wireless CCTV", description: "Zero video cabling. 360° Pan-Tilt & live mobile phone viewing." },
-                  { id: "ins_4g_solar", title: "📡 4G SIM / Solar Standalone", description: "No Wi-Fi needed. Ideal for farmhouses, empty plots & remote gates." },
-                  { id: "ins_addon", title: "⬆️ Add to Existing System", description: "Expansion / upgrade with compatibility guarantee." }
+                  { id: "ins_4g_solar", title: "📡 4G SIM / Solar Cam", description: "No Wi-Fi needed. Ideal for farmhouses, empty plots & remote gates." },
+                  { id: "ins_addon", title: "⬆️ Add Existing System", description: "Expansion / upgrade with compatibility guarantee." }
                 ]
               }
             ]
@@ -599,7 +599,7 @@ export async function processIncomingMessage(
             `*Existing System Tech:* What wire connects your current cameras to the recorder?`,
             [
               { id: "addon_tech_hd", title: "Analog HD (BNC Wire)" },
-              { id: "addon_tech_ip", title: "IP Network (CAT6 Wire)" }
+              { id: "addon_tech_ip", title: "🌐 IP (CAT6 Wire)" }
             ]
           ));
         } else {
@@ -609,7 +609,7 @@ export async function processIncomingMessage(
             [
               { id: "addon_upload_photo", title: "📸 Send DVR Photo" },
               { id: "addon_know_specs", title: "✅ I Know My Specs" },
-              { id: "addon_free_callback", title: "📞 Free Callback (15m)" }
+              { id: "addon_free_callback", title: "📞 Request Callback" }
             ]
           ));
         }
@@ -640,7 +640,7 @@ export async function processIncomingMessage(
             `*Existing System Tech:* What wire connects your current cameras to the recorder?`,
             [
               { id: "addon_tech_hd", title: "Analog HD (BNC Wire)" },
-              { id: "addon_tech_ip", title: "IP Network (CAT6 Wire)" }
+              { id: "addon_tech_ip", title: "🌐 IP (CAT6 Wire)" }
             ]
           ));
         }
@@ -866,7 +866,7 @@ export async function processIncomingMessage(
         replies.push(MessageBuilder.list(
           from,
           `✓ *Wired Cameras Configured:* ${totalWired} Cameras (${session.wizard_answers.outdoor_camera_count || 0} Out + ${indoorCount} In)\n\n📡 *Add Smart Wireless Cameras (Wi-Fi / 4G SIM)*\n_Optional • Hybrid Setup (Website Step 2 Card 3)_\n\nDo you want to add wireless cameras for remote gate, terrace, baby room, or farm corners without video cables?`,
-          "Smart Wireless Options",
+          "Wireless Options",
           [
             {
               title: "Smart Wireless Add-on Options",
@@ -952,7 +952,7 @@ export async function processIncomingMessage(
             replies.push(MessageBuilder.list(
               from,
               `📡 *Add Smart Wireless Cameras (Wi-Fi / 4G SIM)*\nPlease select an option below:`,
-              "Smart Wireless Options",
+              "Wireless Options",
               [
                 {
                   title: "Smart Wireless Add-on Options",
@@ -1185,8 +1185,8 @@ export async function processIncomingMessage(
             from,
             `✓ *Priority Dispatch Saved:* ${timeChoice} (${rawCode.toUpperCase()})\n\n*Step 3 (Camera Technology):* ⚡\n\nWhich camera technology level do you prefer?`,
             [
-              { id: "tech_IP", title: "Digital IP (Best Quality)" },
-              { id: "tech_HD", title: "HD Analog (Lowest Cost)" }
+              { id: "tech_IP", title: "🌐 Digital IP (4K)" },
+              { id: "tech_HD", title: "📹 HD Analog (Value)" }
             ]
           ));
         }
@@ -1207,8 +1207,8 @@ export async function processIncomingMessage(
             from,
             `*Step 3 (Camera Technology):* ⚡\n\nWhich camera technology level do you prefer?`,
             [
-              { id: "tech_IP", title: "Digital IP (Best Quality)" },
-              { id: "tech_HD", title: "HD Analog (Lowest Cost)" }
+              { id: "tech_IP", title: "🌐 Digital IP (4K)" },
+              { id: "tech_HD", title: "📹 HD Analog (Value)" }
             ]
           ));
           break;
@@ -1308,7 +1308,7 @@ export async function processIncomingMessage(
             `*Step 3 (Recording Mode):* ⏺️\n\nHow would you like your system to record?`,
             [
               { id: "mode_continuous", title: "⏺️ 24x7 Continuous" },
-              { id: "mode_motion", title: "🏃 Smart Motion (Save 50%)" }
+              { id: "mode_motion", title: "🏃 Smart Motion" }
             ]
           ));
         }
@@ -1330,7 +1330,7 @@ export async function processIncomingMessage(
             `*Step 3 (Recording Mode):* ⏺️\n\nHow would you like your system to record?`,
             [
               { id: "mode_continuous", title: "⏺️ 24x7 Continuous" },
-              { id: "mode_motion", title: "🏃 Smart Motion (Save 50%)" }
+              { id: "mode_motion", title: "🏃 Smart Motion" }
             ]
           ));
           break;
@@ -1382,9 +1382,9 @@ export async function processIncomingMessage(
           from,
           `*Step 4 (Surface & Wall Type):* 🧱\n\nWhat surface will the cameras be mounted on?\n_(Helps our technician pack the right mounting anchors & drilling bits)_`,
           [
-            { id: "surf_brick", title: "🧱 Concrete / Brick Wall" },
+            { id: "surf_brick", title: "🧱 Concrete / Brick" },
             { id: "surf_ceiling", title: "🏗️ False Ceiling" },
-            { id: "surf_mixed", title: "🏢 Mixed (Wall + Ceiling)" }
+            { id: "surf_mixed", title: "🏢 Mixed Mounting" }
           ]
         ));
         break;
@@ -1406,9 +1406,9 @@ export async function processIncomingMessage(
             from,
             `*Step 4 (Surface & Wall Type):* 🧱\n\nWhat surface will the cameras be mounted on?\n_(Helps our technician pack the right mounting anchors & drilling bits)_`,
             [
-              { id: "surf_brick", title: "🧱 Concrete / Brick Wall" },
+              { id: "surf_brick", title: "🧱 Concrete / Brick" },
               { id: "surf_ceiling", title: "🏗️ False Ceiling" },
-              { id: "surf_mixed", title: "🏢 Mixed (Wall + Ceiling)" }
+              { id: "surf_mixed", title: "🏢 Mixed Mounting" }
             ]
           ));
           break;
@@ -1540,9 +1540,9 @@ export async function processIncomingMessage(
             from,
             `*Step 5 (Wi-Fi / Internet at Site):* 📶\n\nSelect Wi-Fi condition for live mobile app viewing:`,
             [
-              { id: "net_wifi_full", title: "📶 Have Wi-Fi (Full Reach)" },
-              { id: "net_wifi_extender", title: "📡 Have Wi-Fi, Need Extender" },
-              { id: "net_4g_router", title: "🌐 Need 4G SIM Router" }
+              { id: "net_wifi_full", title: "📶 Strong Wi-Fi" },
+              { id: "net_wifi_extender", title: "📡 Need Wi-Fi Boost" },
+              { id: "net_4g_router", title: "🌐 Need 4G Router" }
             ]
           ));
         } else {
@@ -1751,7 +1751,7 @@ async function sendWhatsAppMessages(messages: WhatsAppMessagePayload[]) {
           msg91Payload.document = msg.document;
         }
 
-        await fetch("https://control.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/", {
+        const res = await fetch("https://control.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1759,6 +1759,8 @@ async function sendWhatsAppMessages(messages: WhatsAppMessagePayload[]) {
           },
           body: JSON.stringify(msg91Payload),
         });
+        const resText = await res.text();
+        console.log(`[MSG91 Outbound Response]: HTTP ${res.status}`, resText);
       } catch (e) {
         console.error("🔥 Failed to send WhatsApp message via MSG91:", e);
       }
