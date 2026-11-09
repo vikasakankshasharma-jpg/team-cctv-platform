@@ -73,21 +73,82 @@ export async function POST(req: Request) {
       });
     } else {
       // Forward inbound message (e.g. "Hi P102" or interactive selection) to Bot Engine
-      const rawText = data.text || data.message || "";
-      const interactiveId = 
-        data.button || 
-        data.interactive || 
-        data.button_payload || 
-        data.payload || 
-        data.button_reply?.id || 
-        data.list_reply?.id;
+      let rawText = data.text || data.message || "";
+      let resolvedInteractiveId = "";
+      let resolvedTitle = "";
 
+      // 1. Inspect top-level interactive / button properties
+      let rawButton = data.button || data.button_payload || data.button_reply;
+      if (typeof rawButton === "string" && (rawButton.startsWith("{") || rawButton.startsWith("["))) {
+        try { rawButton = JSON.parse(rawButton); } catch {}
+      }
+      if (typeof rawButton === "object" && rawButton !== null) {
+        resolvedInteractiveId = rawButton.payload || rawButton.id || rawButton.button_reply?.id || "";
+        resolvedTitle = rawButton.text || rawButton.title || "";
+      } else if (typeof rawButton === "string" && rawButton.trim()) {
+        resolvedInteractiveId = rawButton.trim();
+      }
+
+      let rawInteractive = data.interactive || data.list_reply;
+      if (typeof rawInteractive === "string" && (rawInteractive.startsWith("{") || rawInteractive.startsWith("["))) {
+        try { rawInteractive = JSON.parse(rawInteractive); } catch {}
+      }
+      if (typeof rawInteractive === "object" && rawInteractive !== null) {
+        resolvedInteractiveId = 
+          rawInteractive.button_reply?.id || 
+          rawInteractive.list_reply?.id || 
+          rawInteractive.payload || 
+          rawInteractive.id || 
+          resolvedInteractiveId;
+        resolvedTitle = 
+          rawInteractive.button_reply?.title || 
+          rawInteractive.list_reply?.title || 
+          rawInteractive.text || 
+          rawInteractive.title || 
+          resolvedTitle;
+      } else if (typeof rawInteractive === "string" && rawInteractive.trim()) {
+        resolvedInteractiveId = rawInteractive.trim();
+      }
+
+      // 2. Inspect messages array (MSG91 passes stringified Meta array in data.messages)
+      let messagesArr: any[] = [];
+      if (Array.isArray(data.messages)) {
+        messagesArr = data.messages;
+      } else if (typeof data.messages === "string" && data.messages.trim().startsWith("[")) {
+        try { messagesArr = JSON.parse(data.messages); } catch {}
+      }
+      if (messagesArr.length > 0) {
+        const firstMsg = messagesArr[0];
+        if (firstMsg) {
+          if (firstMsg.type === "interactive" && firstMsg.interactive) {
+            const inter = firstMsg.interactive;
+            resolvedInteractiveId = inter.button_reply?.id || inter.list_reply?.id || resolvedInteractiveId;
+            resolvedTitle = inter.button_reply?.title || inter.list_reply?.title || resolvedTitle;
+          } else if (firstMsg.type === "button" && firstMsg.button) {
+            resolvedInteractiveId = firstMsg.button.payload || firstMsg.button.text || resolvedInteractiveId;
+            resolvedTitle = firstMsg.button.text || resolvedTitle;
+          } else if (firstMsg.type === "text" && firstMsg.text?.body) {
+            if (!rawText) rawText = firstMsg.text.body;
+          } else if (firstMsg.type === "location" && firstMsg.location) {
+            data.location = firstMsg.location;
+          } else if (firstMsg.type === "image" && firstMsg.image) {
+            data.image = firstMsg.image;
+          } else if (firstMsg.type === "document" && firstMsg.document) {
+            data.document = firstMsg.document;
+          }
+        }
+      }
+
+      // 3. Determine final content & incomingType
       let incomingType: "text" | "interactive" | "nfm_reply" | "location" | "image" | "document" = "text";
-      let content = rawText;
+      let content: any = rawText;
 
-      if (interactiveId) {
+      if (resolvedInteractiveId) {
         incomingType = "interactive";
-        content = typeof interactiveId === "object" ? (interactiveId.id || interactiveId.title || rawText) : interactiveId;
+        content = resolvedInteractiveId;
+      } else if (resolvedTitle && !rawText) {
+        incomingType = "interactive";
+        content = resolvedTitle;
       } else if (data.contentType === "location" || data.type === "location" || data.location || (data.latitude && data.longitude)) {
         incomingType = "location";
         content = data.location || { latitude: data.latitude, longitude: data.longitude };
@@ -100,6 +161,9 @@ export async function POST(req: Request) {
       } else if (data.type === "nfm_reply" || data.nfm_reply) {
         incomingType = "nfm_reply";
         content = data.nfm_reply?.response_json || data.response_json || data.payload;
+      } else {
+        incomingType = "text";
+        content = rawText;
       }
 
       // Schedule background execution using Next.js after()
