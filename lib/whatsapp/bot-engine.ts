@@ -886,7 +886,75 @@ export async function processIncomingMessage(
 
       case "ASK_HYBRID_WIRELESS": {
         const text = String(content || "").toLowerCase().trim();
-        if (text.includes("wf_none") || text.includes("none") || text.includes("skip") || text.includes("done") || text.includes("proceed") || text.includes("continue") || text.includes("no") || text.includes("zero") || text.includes("wired only") || text === "1") {
+
+        // 1. Check if user wants to add another wireless camera variant FIRST
+        if (text.includes("wf_add_another") || text.includes("add another") || text.includes("add more") || text.includes("another wireless") || text === "add") {
+          nextState = "ASK_HYBRID_WIRELESS";
+          replies.push(MessageBuilder.list(
+            from,
+            `📡 *Select Additional Smart Wireless Camera Type:*\n\nWhich type of smart wireless camera would you like to add?`,
+            "Select Camera Type",
+            [
+              {
+                title: "Smart Wireless Variants",
+                rows: [
+                  { id: "wf_in_ptz", title: "🏠 Indoor 360° Pan-Tilt", description: "Living room, counter, baby room with 2-way talk" },
+                  { id: "wf_in_fixed", title: "🏢 Indoor Fixed Dome", description: "Hallways, reception, cashier desk" },
+                  { id: "wf_out_bullet", title: "🌧️ Outdoor Fixed Bullet", description: "Main gate, porch, driveway, perimeter" },
+                  { id: "wf_out_ptz", title: "🔄 Outdoor 360° Pan-Tilt", description: "Open courtyard, terrace, front garden" },
+                  { id: "wf_4g_solar", title: "🛰️ 4G SIM / Solar Cam", description: "Farmhouse, empty plot, remote gate (No Wi-Fi needed)" },
+                  { id: "wf_done_proceed", title: "✅ Done Adding", description: "Lock camera counts and proceed to Timeline" }
+                ]
+              }
+            ]
+          ));
+          break;
+        }
+
+        // 2. Check if user selected a specific wireless camera variant
+        let variant = "";
+        if (text.includes("solar") || text.includes("4g") || text.includes("sim")) variant = "wf_4g_solar";
+        else if (text.includes("out_ptz") || (text.includes("outdoor") && text.includes("ptz"))) variant = "wf_out_ptz";
+        else if (text.includes("out_bullet") || (text.includes("outdoor") && text.includes("bullet"))) variant = "wf_out_bullet";
+        else if (text.includes("in_fixed") || (text.includes("indoor") && (text.includes("fixed") || text.includes("dome")))) variant = "wf_in_fixed";
+        else if (text.includes("in_ptz") || text.includes("ptz")) variant = "wf_in_ptz";
+
+        if (variant) {
+          session.wizard_answers.selected_wireless_variant = variant;
+          nextState = "ASK_WIRELESS_QTY";
+
+          const variantTitles: Record<string, { single: string; plural: string }> = {
+            wf_in_ptz: { single: "Indoor 360° Pan-Tilt (Wi-Fi)", plural: "Indoor 360° Pan-Tilt Cameras" },
+            wf_in_fixed: { single: "Indoor Fixed Dome / Cube (Wi-Fi)", plural: "Indoor Fixed Cameras" },
+            wf_out_bullet: { single: "Outdoor Fixed Weatherproof Bullet (Wi-Fi)", plural: "Outdoor Wi-Fi Bullets" },
+            wf_out_ptz: { single: "Outdoor 360° Pan-Tilt PTZ (Wi-Fi)", plural: "Outdoor 360° PTZ Cameras" },
+            wf_4g_solar: { single: "4G SIM / Solar Standalone Camera", plural: "4G SIM Cameras" }
+          };
+          const vInfo = variantTitles[variant] || { single: "Smart Wireless Camera", plural: "Smart Wireless Cameras" };
+
+          replies.push(buildQuantityListMessage(
+            from, "wfq", vInfo.single, vInfo.plural, 1,
+            `How many *${vInfo.single}* cameras do you need (0 to 32)?`,
+            "Select Quantity (0-7)"
+          ));
+          break;
+        }
+
+        // 3. Check if user wants to finalize/proceed to Timeline
+        const isDoneOrSkip = 
+          text.includes("wf_done_proceed") || 
+          text.includes("wf_none") || 
+          text.includes("done") || 
+          text.includes("proceed") || 
+          text.includes("continue") || 
+          text.includes("none") || 
+          text.includes("skip") || 
+          text.includes("zero") || 
+          text.includes("wired only") || 
+          /\bno\b/.test(text) || 
+          text === "1";
+
+        if (isDoneOrSkip) {
           const outCount = session.wizard_answers.outdoor_camera_count || 0;
           const inCount = session.wizard_answers.indoor_camera_count || 0;
           const inPtzCount = session.wizard_answers.wifi_indoor_ptz_count || 0;
@@ -920,74 +988,28 @@ export async function processIncomingMessage(
               }
             ]
           ));
-        } else if (text.includes("wf_add_another") || text.includes("add another") || text.includes("add more")) {
-          nextState = "ASK_HYBRID_WIRELESS";
-          replies.push(MessageBuilder.list(
-            from,
-            `📡 *Select Additional Smart Wireless Camera Type:*\n\nWhich type of smart wireless camera would you like to add?`,
-            "Select Camera Type",
-            [
-              {
-                title: "Smart Wireless Variants",
-                rows: [
-                  { id: "wf_in_ptz", title: "🏠 Indoor 360° Pan-Tilt (Wi-Fi)", description: "Living room, counter, baby room with 2-way talk" },
-                  { id: "wf_in_fixed", title: "🏢 Indoor Fixed Dome / Cube (Wi-Fi)", description: "Hallways, reception, cashier desk" },
-                  { id: "wf_out_bullet", title: "🌧️ Outdoor Fixed Weatherproof (Wi-Fi)", description: "Main gate, porch, driveway, perimeter" },
-                  { id: "wf_out_ptz", title: "🔄 Outdoor 360° Pan-Tilt PTZ (Wi-Fi)", description: "Open courtyard, terrace, front garden" },
-                  { id: "wf_4g_solar", title: "🛰️ 4G SIM / Solar Standalone Camera", description: "Farmhouse, empty plot, remote gate (No Wi-Fi needed)" },
-                  { id: "wf_done_proceed", title: "✅ Done Adding (Proceed to Timeline)", description: "Lock camera counts and continue" }
-                ]
-              }
-            ]
-          ));
-        } else {
-          let variant = "";
-          if (text.includes("solar") || text.includes("4g") || text.includes("sim")) variant = "wf_4g_solar";
-          else if (text.includes("out_ptz") || (text.includes("outdoor") && text.includes("ptz"))) variant = "wf_out_ptz";
-          else if (text.includes("out_bullet") || (text.includes("outdoor") && text.includes("bullet"))) variant = "wf_out_bullet";
-          else if (text.includes("in_fixed") || (text.includes("indoor") && (text.includes("fixed") || text.includes("dome")))) variant = "wf_in_fixed";
-          else if (text.includes("in_ptz") || text.includes("ptz")) variant = "wf_in_ptz";
-
-          if (!variant) {
-            replies.push(MessageBuilder.list(
-              from,
-              `📡 *Add Smart Wireless Cameras (Wi-Fi / 4G SIM)*\nPlease select an option below:`,
-              "Wireless Options",
-              [
-                {
-                  title: "Smart Wireless Add-on Options",
-                  rows: [
-                    { id: "wf_none", title: "❌ None (Pure Wired DVR Setup)", description: "Proceed with standard wired DVR setup only" },
-                    { id: "wf_in_ptz", title: "🏠 Indoor 360° Pan-Tilt (Wi-Fi)", description: "Living room, counter, baby room with 2-way talk" },
-                    { id: "wf_in_fixed", title: "🏢 Indoor Fixed Dome / Cube (Wi-Fi)", description: "Hallways, reception, cashier desk" },
-                    { id: "wf_out_bullet", title: "🌧️ Outdoor Fixed Weatherproof (Wi-Fi)", description: "Main gate, porch, driveway, perimeter" },
-                    { id: "wf_out_ptz", title: "🔄 Outdoor 360° Pan-Tilt PTZ (Wi-Fi)", description: "Open courtyard, terrace, front garden" },
-                    { id: "wf_4g_solar", title: "🛰️ 4G SIM / Solar Standalone Camera", description: "Farmhouse, empty plot, remote gate (No Wi-Fi needed)" },
-                  ]
-                }
-              ]
-            ));
-            break;
-          }
-
-          session.wizard_answers.selected_wireless_variant = variant;
-          nextState = "ASK_WIRELESS_QTY";
-
-          const variantTitles: Record<string, { single: string; plural: string }> = {
-            wf_in_ptz: { single: "Indoor 360° Pan-Tilt (Wi-Fi)", plural: "Indoor 360° Pan-Tilt Cameras" },
-            wf_in_fixed: { single: "Indoor Fixed Dome / Cube (Wi-Fi)", plural: "Indoor Fixed Cameras" },
-            wf_out_bullet: { single: "Outdoor Fixed Weatherproof Bullet (Wi-Fi)", plural: "Outdoor Wi-Fi Bullets" },
-            wf_out_ptz: { single: "Outdoor 360° Pan-Tilt PTZ (Wi-Fi)", plural: "Outdoor 360° PTZ Cameras" },
-            wf_4g_solar: { single: "4G SIM / Solar Standalone Camera", plural: "4G SIM Cameras" }
-          };
-          const vInfo = variantTitles[variant] || { single: "Smart Wireless Camera", plural: "Smart Wireless Cameras" };
-
-          replies.push(buildQuantityListMessage(
-            from, "wfq", vInfo.single, vInfo.plural, 1,
-            `How many *${vInfo.single}* cameras do you need (0 to 32)?`,
-            "Select Quantity (0-7)"
-          ));
+          break;
         }
+
+        // 4. Fallback: Re-send options so user is never stuck
+        replies.push(MessageBuilder.list(
+          from,
+          `📡 *Add Smart Wireless Cameras (Wi-Fi / 4G SIM)*\nPlease select an option below:`,
+          "Wireless Options",
+          [
+            {
+              title: "Wireless Add-on Options",
+              rows: [
+                { id: "wf_none", title: "❌ None (Pure Wired)", description: "Proceed with standard wired DVR setup only" },
+                { id: "wf_in_ptz", title: "🏠 Indoor 360° Pan-Tilt", description: "Living room, counter, baby room with 2-way talk" },
+                { id: "wf_in_fixed", title: "🏢 Indoor Fixed Dome", description: "Hallways, reception, cashier desk" },
+                { id: "wf_out_bullet", title: "🌧️ Outdoor Fixed Bullet", description: "Main gate, porch, driveway, perimeter" },
+                { id: "wf_out_ptz", title: "🔄 Outdoor 360° Pan-Tilt", description: "Open courtyard, terrace, front garden" },
+                { id: "wf_4g_solar", title: "🛰️ 4G SIM / Solar Cam", description: "Farmhouse, empty plot, remote gate (No Wi-Fi needed)" },
+              ]
+            }
+          ]
+        ));
         break;
       }
 
