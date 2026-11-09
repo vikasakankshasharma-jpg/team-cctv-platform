@@ -1116,10 +1116,10 @@ export async function processIncomingMessage(
           "Choose Action",
           [
             {
-              title: "Smart Wireless Setup Options",
+              title: "Wireless Setup",
               rows: [
-                { id: "wf_add_another", title: "➕ Add Another Wireless Camera", description: "Add outdoor bullet, PTZ, or 4G SIM camera" },
-                { id: "wf_done_proceed", title: "✅ Done Adding (Proceed to Timeline)", description: "Lock camera counts and continue to Priority Dispatch" }
+                { id: "wf_add_another", title: "➕ Add Another Wireless", description: "Add outdoor bullet, PTZ, or 4G SIM camera" },
+                { id: "wf_done_proceed", title: "✅ Done Adding", description: "Lock camera counts and proceed to Timeline" }
               ]
             }
           ]
@@ -1466,9 +1466,9 @@ export async function processIncomingMessage(
             from,
             `*Step 4 (Cabling Status & Free Allowance):* 🔌\n\nIs your site pre-wired or do we need fresh cables routed?\n\n• *Complimentary:* ~15m wire/camera included free (*${freeAllowance}m total* for your ${wiredCams} cameras).\n• Excess cable charged on actuals (₹15/m for HD, ₹18/m for IP).`,
             [
-              { id: "cab_new", title: `🆕 Need New Cables (~${freeAllowance}m Free)` },
-              { id: "cab_prewired", title: "🔌 Pre-Wired Site (Fitting Only)" },
-              { id: "cab_custom", title: "📏 Need Custom Wire Length" }
+              { id: "cab_new", title: "📦 Need New Cabling" },
+              { id: "cab_prewired", title: "🔌 Site Pre-Wired" },
+              { id: "cab_custom", title: "📏 Custom Cable Run" }
             ]
           ));
         }
@@ -1536,9 +1536,9 @@ export async function processIncomingMessage(
               from,
               `*Step 4 (Camera Power Point Availability):* 🔌\n\nCameras connect wirelessly, but each requires electrical power. Select site power condition:`,
               [
-                { id: "pwr_socket", title: "🔌 Socket Nearby (<1.5m)" },
-                { id: "pwr_wire", title: "⚡ Need Power Wire" },
-                { id: "pwr_survey", title: "📋 Decide on Site Visit" }
+                { id: "pwr_socket", title: "🔌 Socket Nearby" },
+                { id: "pwr_wire", title: "⚡ Need Power Cable" },
+                { id: "pwr_survey", title: "📋 Decide on Visit" }
               ]
             ));
           } else {
@@ -1548,9 +1548,9 @@ export async function processIncomingMessage(
               from,
               `*Step 4 (Cabling Status & Free Allowance):* 🔌\n\nIs your site pre-wired or do we need fresh cables routed?\n\n• *Complimentary:* ~15m wire/camera included free (*${freeAllowance}m total* for your ${wiredCams} cameras).\n• Excess cable charged on actuals (₹15/m for HD, ₹18/m for IP).`,
               [
-                { id: "cab_new", title: `🆕 Need New Cables (~${freeAllowance}m Free)` },
-                { id: "cab_prewired", title: "🔌 Pre-Wired Site (Fitting Only)" },
-                { id: "cab_custom", title: "📏 Need Custom Wire Length" }
+                { id: "cab_new", title: "📦 Need New Cabling" },
+                { id: "cab_prewired", title: "🔌 Site Pre-Wired" },
+                { id: "cab_custom", title: "📏 Custom Cable Run" }
               ]
             ));
           }
@@ -1746,17 +1746,17 @@ export async function processIncomingMessage(
   // Send replies
   await sendWhatsAppMessages(replies);
 
-  // If reached GENERATING state, trigger parallel price calculation
+  // If reached GENERATING state, await price calculation and summary dispatch
   if (nextState === "GENERATING") {
-    generateAndSendPriceRanges(from, session).catch(console.error);
+    await generateAndSendPriceRanges(from, session);
   }
 }
 
 async function sendWhatsAppMessages(messages: WhatsAppMessagePayload[]) {
-  const whatsappPhoneId = (process.env.WHATSAPP_PHONE_ID || process.env.WA_PHONE_NUMBER_ID || "").trim();
-  const whatsappToken = (process.env.WHATSAPP_TOKEN || process.env.WA_ACCESS_TOKEN || "").trim();
-  const msg91AuthKey = (process.env.MSG91_AUTH_KEY || "").trim();
-  const msg91FromNumber = (process.env.MSG91_WHATSAPP_NUMBER || "").trim();
+  const whatsappPhoneId = (process.env.WHATSAPP_PHONE_ID || process.env.WA_PHONE_NUMBER_ID || "").trim().replace(/^["']|["']$/g, '');
+  const whatsappToken = (process.env.WHATSAPP_TOKEN || process.env.WA_ACCESS_TOKEN || "").trim().replace(/^["']|["']$/g, '');
+  const msg91AuthKey = (process.env.MSG91_AUTH_KEY || "").trim().replace(/^["']|["']$/g, '');
+  const msg91FromNumber = (process.env.MSG91_WHATSAPP_NUMBER || "").trim().replace(/^["']|["']$/g, '');
   const providerPref = (process.env.WHATSAPP_PROVIDER || "").toLowerCase().trim();
 
   const useMsg91 = providerPref === "msg91" || (!!msg91AuthKey && providerPref !== "meta");

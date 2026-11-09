@@ -120,28 +120,28 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
     await sendMsg(MessageBuilder.text(phone, summaryText));
 
     // 2. Interactive List Menu: Explore Brand Options
-    const brandRows = brandSummaries.map(b => ({
+    const brandRows = brandSummaries.slice(0, 7).map(b => ({
       id: `view_brand_${b.brandKey}`,
-      title: `${b.brandName} (${b.minPrice.toLocaleString('en-IN')} - ${b.maxPrice.toLocaleString('en-IN')})`,
-      description: `View ${b.variations.length} package variations for ${b.brandName}`
+      title: `${b.brandName} (₹${Math.round(b.minPrice / 1000)}k-₹${Math.round(b.maxPrice / 1000)}k)`.slice(0, 24),
+      description: `₹${b.minPrice.toLocaleString('en-IN')} - ₹${b.maxPrice.toLocaleString('en-IN')} (${b.variations.length} packages)`.slice(0, 72)
     }));
 
     // Add Special Quick Action Rows
     const specialRows = [
       {
         id: "select_lowest_quote",
-        title: `⚡ Best Value (${lowestOverallQuote.camera_device?.brand || "Budget"} - ₹${lowestOverallQuote.total_payable.toLocaleString('en-IN')})`,
-        description: "Select the lowest price package across all brands"
+        title: "⚡ Best Value Quote",
+        description: `Lowest price package: ₹${lowestOverallQuote.total_payable.toLocaleString('en-IN')} (${lowestOverallQuote.camera_device?.brand || "Budget"})`.slice(0, 72)
       },
       {
         id: "upload_competitor_quote",
-        title: "📸 Upload Competitor Quote",
-        description: "Send photo/PDF of offline quote for price match"
+        title: "📸 Upload Offline Quote",
+        description: "Send photo/PDF of offline quote for 5%-10% price match".slice(0, 72)
       },
       {
         id: "open_web_studio",
-        title: "🎨 Open Live Web Studio",
-        description: "Inspect 3D camera angles and compare in browser"
+        title: "🎨 Open 3D Web Studio",
+        description: "Inspect 3D camera angles and compare in browser".slice(0, 72)
       }
     ];
 
@@ -150,8 +150,8 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
       "Choose a brand below to view specific packages and lock your quotation:",
       "View Brand Packages",
       [
-        { title: "Select Brand to Explore", rows: brandRows },
-        { title: "Quick Actions & Price Match", rows: specialRows }
+        { title: "Brand Packages", rows: brandRows },
+        { title: "Quick Actions", rows: specialRows }
       ]
     ));
 
@@ -242,31 +242,31 @@ export async function sendBrandVariations(phone: string, session: WhatsAppSessio
     const variationRows = [
       { 
         id: `lock_${brandKey}_standard`, 
-        title: `1. Standard 2MP (₹${standardQuote.total_payable.toLocaleString('en-IN')})`, 
-        description: `${storageLabel} with standard infrared night vision` 
+        title: `1. Standard 2MP Quote`.slice(0, 24), 
+        description: `₹${standardQuote.total_payable.toLocaleString('en-IN')} (${storageLabel})`.slice(0, 72) 
       }
     ];
 
     if (colorNightQuote) {
       variationRows.push({
         id: `lock_${brandKey}_color`,
-        title: `2. ColorVu 2K + Mic (₹${colorNightQuote.total_payable.toLocaleString('en-IN')})`,
-        description: "24/7 full color night vision + built-in audio mic"
+        title: `2. ColorVu 2K + Mic`.slice(0, 24),
+        description: `₹${colorNightQuote.total_payable.toLocaleString('en-IN')} (Full color night vision + mic)`.slice(0, 72)
       });
     }
 
     if (economyQuote) {
       variationRows.push({
         id: `lock_${brandKey}_economy`,
-        title: `3. Economy 500GB (₹${economyQuote.total_payable.toLocaleString('en-IN')})`,
-        description: `Save ₹${((standardQuote.total_payable || 0) - economyQuote.total_payable).toLocaleString('en-IN')} with basic 3-5 days backup`
+        title: `3. Economy 500GB`.slice(0, 24),
+        description: `₹${economyQuote.total_payable.toLocaleString('en-IN')} (Save ₹${((standardQuote.total_payable || 0) - economyQuote.total_payable).toLocaleString('en-IN')} with basic backup)`.slice(0, 72)
       });
     }
 
     variationRows.push({
       id: "back_to_brands",
-      title: "← Back to All Brands",
-      description: "Compare price spectrum across all brands"
+      title: "← Back to All Brands".slice(0, 24),
+      description: "Compare price spectrum across all brands".slice(0, 72)
     });
 
     await sendMsg(MessageBuilder.list(
@@ -511,10 +511,10 @@ function techResolution(quote: PricingResult): string {
 }
 
 async function sendMsg(msg: any) {
-  const whatsappPhoneId = (process.env.WHATSAPP_PHONE_ID || process.env.WA_PHONE_NUMBER_ID || "").trim();
-  const whatsappToken = (process.env.WHATSAPP_TOKEN || process.env.WA_ACCESS_TOKEN || "").trim();
-  const msg91AuthKey = (process.env.MSG91_AUTH_KEY || "").trim();
-  const msg91FromNumber = (process.env.MSG91_WHATSAPP_NUMBER || "").trim();
+  const whatsappPhoneId = (process.env.WHATSAPP_PHONE_ID || process.env.WA_PHONE_NUMBER_ID || "").trim().replace(/^["']|["']$/g, '');
+  const whatsappToken = (process.env.WHATSAPP_TOKEN || process.env.WA_ACCESS_TOKEN || "").trim().replace(/^["']|["']$/g, '');
+  const msg91AuthKey = (process.env.MSG91_AUTH_KEY || "").trim().replace(/^["']|["']$/g, '');
+  const msg91FromNumber = (process.env.MSG91_WHATSAPP_NUMBER || "").trim().replace(/^["']|["']$/g, '');
   const providerPref = (process.env.WHATSAPP_PROVIDER || "").toLowerCase().trim();
 
   const useMsg91 = providerPref === "msg91" || (!!msg91AuthKey && providerPref !== "meta");
@@ -537,7 +537,7 @@ async function sendMsg(msg: any) {
         msg91Payload.document = msg.document;
       }
 
-      await fetch("https://control.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/", {
+      const res = await fetch("https://control.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -545,8 +545,10 @@ async function sendMsg(msg: any) {
         },
         body: JSON.stringify(msg91Payload),
       });
+      const resText = await res.text();
+      console.log(`[MSG91 quote-dispatch Outbound Response]: HTTP ${res.status}`, resText);
     } catch (e) {
-      console.error("🔥 Failed to send WhatsApp message via MSG91:", e);
+      console.error("🔥 Failed to send WhatsApp message via MSG91 in quote-dispatch:", e);
     }
   } else if (whatsappPhoneId && whatsappToken) {
     // Mode A (Future with Meta Cloud API): Direct Meta WhatsApp Cloud API
