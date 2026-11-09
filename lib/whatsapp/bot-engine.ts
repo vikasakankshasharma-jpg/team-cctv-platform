@@ -39,13 +39,13 @@ export function buildQuantityListMessage(
     }
     rows.push({
       id: `${prefix}_page_2`,
-      title: `➡️ Next: 8 to 15 ${pluralLabel}...`,
+      title: `➡️ Next: 8 to 15`,
       description: `Tap to choose between 8 and 15 ${pluralLabel}`
     });
     rows.push({
       id: `${prefix}_custom`,
-      title: `✏️ Type Any Number (0-32)`,
-      description: `Reply directly in chat with your exact count`
+      title: `✏️ Type Any Number`,
+      description: `Reply directly in chat with your exact count (0-32)`
     });
   } else if (safePage === 2) {
     for (let i = 8; i <= 15; i++) {
@@ -57,12 +57,12 @@ export function buildQuantityListMessage(
     }
     rows.push({
       id: `${prefix}_page_1`,
-      title: `⬅️ Prev: 0 to 7 ${pluralLabel}`,
+      title: `⬅️ Prev: 0 to 7`,
       description: `Return to quantities 0 to 7`
     });
     rows.push({
       id: `${prefix}_page_3`,
-      title: `➡️ Next: 16 to 23 ${pluralLabel}...`,
+      title: `➡️ Next: 16 to 23`,
       description: `Tap to choose between 16 and 23 ${pluralLabel}`
     });
   } else if (safePage === 3) {
@@ -75,12 +75,12 @@ export function buildQuantityListMessage(
     }
     rows.push({
       id: `${prefix}_page_2`,
-      title: `⬅️ Prev: 8 to 15 ${pluralLabel}`,
+      title: `⬅️ Prev: 8 to 15`,
       description: `Return to quantities 8 to 15`
     });
     rows.push({
       id: `${prefix}_page_4`,
-      title: `➡️ Next: 24 to 32 ${pluralLabel}...`,
+      title: `➡️ Next: 24 to 32`,
       description: `Tap to choose between 24 and 32 ${pluralLabel}`
     });
   } else if (safePage === 4) {
@@ -93,7 +93,7 @@ export function buildQuantityListMessage(
     }
     rows.push({
       id: `${prefix}_page_3`,
-      title: `⬅️ Prev: 16 to 23 ${pluralLabel}`,
+      title: `⬅️ Prev: 16 to 23`,
       description: `Return to quantities 16 to 23`
     });
   }
@@ -106,7 +106,7 @@ export function buildQuantityListMessage(
     buttonText,
     [
       {
-        title: `${pluralLabel} (${rangeLabel})`,
+        title: `Quantity (${rangeLabel})`,
         rows
       }
     ]
@@ -729,41 +729,41 @@ export async function processIncomingMessage(
 
       case "ASK_CAMERA_OUTDOOR": {
         const text = String(content || "").toLowerCase().trim();
-        if (text === "out_page_1") {
+        if (text === "out_page_1" || text.includes("0 to 7")) {
           replies.push(buildQuantityListMessage(
             from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
             `*Step 3 (Outdoor Cameras):* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need mounted outside for your main gate, driveway, parking, or boundary walls?`,
             "Select Outdoor (0-7)"
           ));
-          return;
+          break;
         }
-        if (text === "out_page_2" || text === "out_more") {
+        if (text === "out_page_2" || text === "out_more" || text.includes("8 to 15")) {
           replies.push(buildQuantityListMessage(
             from, "out", "Outdoor Bullet", "Outdoor Bullets", 2,
             `*Commercial / Medium Setup (8 to 15 Outdoor Bullets):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
             "Select Outdoor (8-15)"
           ));
-          return;
+          break;
         }
-        if (text === "out_page_3") {
+        if (text === "out_page_3" || text.includes("16 to 23")) {
           replies.push(buildQuantityListMessage(
             from, "out", "Outdoor Bullet", "Outdoor Bullets", 3,
             `*Commercial / Large Setup (16 to 23 Outdoor Bullets):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
             "Select Outdoor (16-23)"
           ));
-          return;
+          break;
         }
-        if (text === "out_page_4") {
+        if (text === "out_page_4" || text.includes("24 to 32")) {
           replies.push(buildQuantityListMessage(
             from, "out", "Outdoor Bullet", "Outdoor Bullets", 4,
             `*Enterprise Setup (24 to 32 Outdoor Bullets):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
             "Select Outdoor (24-32)"
           ));
-          return;
+          break;
         }
         if (text === "out_custom") {
           replies.push(MessageBuilder.text(from, "Please reply directly in chat with your desired number of Outdoor Weatherproof Bullet cameras (0 to 32):"));
-          return;
+          break;
         }
 
         let outdoorCount: number | null = null;
@@ -800,41 +800,41 @@ export async function processIncomingMessage(
 
       case "ASK_CAMERA_INDOOR": {
         const text = String(content || "").toLowerCase().trim();
-        if (text === "in_page_1") {
+        if (text === "in_page_1" || text.includes("0 to 7")) {
           replies.push(buildQuantityListMessage(
             from, "in", "Indoor Dome", "Indoor Domes", 1,
             `*Step 4 (Indoor Cameras):* 🏠\n\nHow many *Compact Ceiling Dome Cameras* do you need mounted inside for your living room, corridors, office, or cashier counters?`,
             "Select Indoor (0-7)"
           ));
-          return;
+          break;
         }
-        if (text === "in_page_2" || text === "in_more") {
+        if (text === "in_page_2" || text === "in_more" || text.includes("8 to 15")) {
           replies.push(buildQuantityListMessage(
             from, "in", "Indoor Dome", "Indoor Domes", 2,
             `*Commercial / Medium Setup (8 to 15 Indoor Domes):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
             "Select Indoor (8-15)"
           ));
-          return;
+          break;
         }
-        if (text === "in_page_3") {
+        if (text === "in_page_3" || text.includes("16 to 23")) {
           replies.push(buildQuantityListMessage(
             from, "in", "Indoor Dome", "Indoor Domes", 3,
             `*Commercial / Large Setup (16 to 23 Indoor Domes):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
             "Select Indoor (16-23)"
           ));
-          return;
+          break;
         }
-        if (text === "in_page_4") {
+        if (text === "in_page_4" || text.includes("24 to 32")) {
           replies.push(buildQuantityListMessage(
             from, "in", "Indoor Dome", "Indoor Domes", 4,
             `*Enterprise Setup (24 to 32 Indoor Domes):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
             "Select Indoor (24-32)"
           ));
-          return;
+          break;
         }
         if (text === "in_custom") {
           replies.push(MessageBuilder.text(from, "Please reply directly in chat with your desired number of Indoor Ceiling Dome cameras (0 to 32):"));
-          return;
+          break;
         }
 
         let indoorCount: number | null = null;
@@ -1003,41 +1003,41 @@ export async function processIncomingMessage(
         const curVInfo = variantMeta[currentVType] || { single: "Smart Wireless Camera", plural: "Smart Wireless Cameras" };
 
         const text = String(content || "").toLowerCase().trim();
-        if (text === "wfq_page_1") {
+        if (text === "wfq_page_1" || text.includes("0 to 7")) {
           replies.push(buildQuantityListMessage(
             from, "wfq", curVInfo.single, curVInfo.plural, 1,
             `How many *${curVInfo.single}* cameras do you need (0 to 32)?`,
             "Select Quantity (0-7)"
           ));
-          return;
+          break;
         }
-        if (text === "wfq_page_2" || text === "wfq_more") {
+        if (text === "wfq_page_2" || text === "wfq_more" || text.includes("8 to 15")) {
           replies.push(buildQuantityListMessage(
             from, "wfq", curVInfo.single, curVInfo.plural, 2,
             `*Commercial / Medium Setup (8 to 15 ${curVInfo.plural}):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
             "Select (8-15)"
           ));
-          return;
+          break;
         }
-        if (text === "wfq_page_3") {
+        if (text === "wfq_page_3" || text.includes("16 to 23")) {
           replies.push(buildQuantityListMessage(
             from, "wfq", curVInfo.single, curVInfo.plural, 3,
             `*Commercial / Large Setup (16 to 23 ${curVInfo.plural}):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
             "Select (16-23)"
           ));
-          return;
+          break;
         }
-        if (text === "wfq_page_4") {
+        if (text === "wfq_page_4" || text.includes("24 to 32")) {
           replies.push(buildQuantityListMessage(
             from, "wfq", curVInfo.single, curVInfo.plural, 4,
             `*Enterprise Setup (24 to 32 ${curVInfo.plural}):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
             "Select (24-32)"
           ));
-          return;
+          break;
         }
         if (text === "wfq_custom") {
           replies.push(MessageBuilder.text(from, `Please reply directly in chat with your desired quantity of ${curVInfo.single} (0 to 32):`));
-          return;
+          break;
         }
 
         let wCount = 1;
