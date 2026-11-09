@@ -644,6 +644,9 @@
 - **Engine Hardening (`pricing-engine.ts`)**:
   - Implemented `sensor_preference` filtering (`"standard_ir"` vs `"colorvu"`) in `resolveCamera`.
   - Implemented `preferred_storage_brand` selection (`"seagate"`, `"wd"`, `"toshiba"`, `"budget"`) in `resolveHDD` with fallback logic and budget drive isolation.
+- **Elimination of Inaccurate "Unified Mobile App" Banner**:
+  - Completely purged the misleading banner from `DynamicVariantGenerator.tsx` that claimed wired DVR and wireless cameras stream in a single mobile app (Hik-Connect / gCMOB).
+  - Aligned catalog messaging with technical reality (e.g. CP Plus uses gCMOB for DVR and EzyKam+ for Wi-Fi; 4G SIM cameras run on cellular cloud endpoints), preventing customer complaints and warranty disputes.
 - **Verification**:
   - 100% pass rate in `test-storage-physics-parity.ts`.
   - 100% clean TypeScript build (`npx tsc --noEmit` exited 0).

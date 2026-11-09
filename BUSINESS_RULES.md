@@ -548,6 +548,13 @@ A **Hybrid CCTV System** combines a central wired CCTV setup (Analog HD with DVR
   2. **Wireless Camera Fitting:** Billed at `PRO_INSTALL_WIRELESS` (₹349/camera) for physical mounting and app/Wi-Fi pairing, or `PRO_INSTALL_DIY` (₹0) if self-installed.
 - **Server Parity & Verification:** `app/api/quote/save/route.ts` and `lib/pricing-engine.ts` independently evaluate wired vs. wireless camera counts to ensure 100% mathematical parity across Guided Setup and Pro Builder.
 
+### 12.7 Mobile App Architecture & Prohibition of "Single Unified App" Guarantees
+- **Prohibition of Inaccurate "Unified Single Mobile App" Guarantees:**
+  - In hybrid configurations, wired cameras connect to the central recorder (e.g. Hikvision DVR via `Hik-Connect`, CP Plus DVR via `gCMOB`, Dahua XVR via `DMSS`, Secureye via `SeeEasy`).
+  - Standalone smart wireless cameras stream via their respective OEM cloud platforms (e.g. `CP PLUS Ezykam+`, `Imou Life`, `EZVIZ`, `True Cloud`, `Tuya / Smart Life`), and 4G SIM cameras operate on independent cellular P2P clouds.
+  - The platform strictly PROHIBITS any marketing copy, banners, or guarantees claiming that wired DVR cameras and smart wireless cameras will stream together inside a "single unified mobile app". Such claims are factually inaccurate across multi-brand and hybrid combinations and constitute a direct customer dispute and complaint hazard.
+  - All promotional copy must instead emphasize comprehensive remote smartphone access with expert on-site technician pairing and configuration during installation.
+
 ---
 
 ## 13. Competitor Price Match Guarantee & Deal Desk Architecture

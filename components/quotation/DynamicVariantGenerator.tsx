@@ -1024,17 +1024,6 @@ export function DynamicVariantGenerator({
       </div>
 
       <div className="flex flex-col gap-4 items-center">
-        {/* Unified Mobile App Guarantee Banner for Hybrid Setup */}
-        {(activeTech === "hybrid" || isHybridInitial) && (
-          <div className="w-full max-w-2xl mx-auto p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 border border-indigo-200/80 dark:border-indigo-800/80 shadow-xs flex items-center gap-2.5 animate-in fade-in">
-            <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-base shrink-0 shadow-xs">
-              📱
-            </div>
-            <div className="text-[11px] sm:text-xs text-indigo-950 dark:text-indigo-200 leading-snug">
-              <span className="font-bold text-indigo-700 dark:text-indigo-300">Unified Mobile App Guarantee:</span> All your Wired DVR cameras and Smart Wireless cameras will stream together inside a <strong>single mobile app (Hik-Connect / CP PLUS gCMOB)</strong>. Zero multiple apps!
-            </div>
-          </div>
-        )}
         {/* Real-time System Composition & Specification Breakdown */}
         <div className="w-full max-w-2xl mx-auto bg-white dark:bg-[#1d1d1f] p-3 sm:p-3.5 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm space-y-2.5">
           <div className="flex items-center justify-between flex-wrap gap-2">

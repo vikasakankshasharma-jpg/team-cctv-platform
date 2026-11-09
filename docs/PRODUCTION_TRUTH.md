@@ -109,6 +109,10 @@
     - Each package card must carry an explicit differentiator badge (`key_difference`) directly below the resolution title explaining the technical difference driving the price variance.
     - The top-level toolbar provides 4 compact `<select>` dropdowns (Camera Brand, Retention Days, Storage Brand, Sensor Type) + live match count and one-click reset, keeping the sticky header clean and ultra-fast.
 
+21. **Prohibition of "Single Mobile App" Claims on Hybrid Setups:**
+    - Wired DVRs and standalone smart wireless/4G cameras use independent OEM cloud protocols (e.g. CP Plus uses `gCMOB` for DVR and `Ezykam+` for Wi-Fi; Hikvision uses `Hik-Connect` while EZVIZ uses `EZVIZ` app; 4G SIM cameras run on cellular cloud endpoints).
+    - Marketing banners or promises claiming all hybrid cameras stream together in a "single unified mobile app" are strictly prohibited to prevent misrepresentation and customer complaints.
+
 ---
 
 ## 4. Catalog Integrity & Test Hygiene Guardrails

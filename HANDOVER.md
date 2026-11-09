@@ -110,6 +110,7 @@ This document serves as the master engineering and operational handover for the 
 - **Compact Dropdown Filter Toolbar:**
   - 4 Dropdowns (Camera Brand, Recording Retention, Storage Drive Brand, Night Vision / Sensor) plus live match counter and instant `[Reset Filters ✕]` button.
   - Dedicated storage drive manufacturer selection supports Seagate SkyHawk, WD Purple, Toshiba S300, and Budget Brand with fallback resilience.
+- **Prohibition of "Single Mobile App" Claims on Hybrid Systems:** Standalone smart wireless and 4G cameras use independent OEM cloud applications (e.g. `CP PLUS Ezykam+` vs `gCMOB`, `EZVIZ` vs `Hik-Connect`). The false "Unified Mobile App Guarantee" banner has been completely removed to avoid customer complaints on installation day.
 
 ---
 
