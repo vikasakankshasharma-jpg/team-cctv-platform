@@ -81,7 +81,7 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
                 <div className="flex items-center gap-3">
                   <div className="w-[80px] h-[80px] bg-white rounded-xl p-1.5 shadow-sm border border-emerald-100 shrink-0">
                     <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919024097475"}?text=Hi ${referralCode}`)}`} 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(typeof window !== "undefined" ? `${window.location.origin}/wa/${referralCode}` : `https://cctvquotation.com/wa/${referralCode}`)}`} 
                       alt="WhatsApp QR Code" 
                       className="w-full h-full object-contain rounded-lg"
                     />
@@ -89,7 +89,7 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
                   <div className="flex flex-col gap-2">
                     <button 
                       onClick={() => {
-                        navigator.clipboard.writeText(`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919024097475"}?text=Hi ${referralCode}`);
+                        navigator.clipboard.writeText(typeof window !== "undefined" ? `${window.location.origin}/wa/${referralCode}` : `https://cctvquotation.com/wa/${referralCode}`);
                         setCopied(true);
                         setTimeout(() => setCopied(false), 2000);
                       }}
@@ -98,7 +98,7 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
                       <Copy className="w-3.5 h-3.5" /> Copy Link
                     </button>
                     <a 
-                      href={`https://wa.me/?text=Get an instant quote from TEAM CCTV using my link: https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919024097475"}?text=Hi%20${referralCode}`}
+                      href={`https://wa.me/?text=${encodeURIComponent(`Get an instant CCTV quotation from TEAM CCTV: ${typeof window !== "undefined" ? window.location.origin : "https://cctvquotation.com"}/wa/${referralCode}`)}`}
                       target="_blank"
                       className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:scale-105 transition-transform text-center"
                     >

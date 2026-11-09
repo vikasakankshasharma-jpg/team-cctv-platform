@@ -38,7 +38,7 @@ export default function MarketingQRClient({ initialCampaigns }: { initialCampaig
         id: data.id,
         ...formData,
         keyword: formData.keyword.toUpperCase(),
-        wa_link: `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919024097475"}?text=Hi ${formData.keyword.toUpperCase()}`,
+        wa_link: typeof window !== "undefined" ? `${window.location.origin}/wa/${formData.keyword.toUpperCase()}` : `https://cctvquotation.com/wa/${formData.keyword.toUpperCase()}`,
         is_active: true,
         total_leads: 0,
         created_at: new Date().toISOString()

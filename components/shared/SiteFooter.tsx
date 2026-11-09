@@ -38,13 +38,13 @@ export function SiteFooter() {
           {/* Mobile: Quick Direct WhatsApp Chat Button */}
           <div className="md:hidden">
             <a
-              href="https://wa.me/917357612865?text=Hi%20CCTVQuotation%20Team!%20I'm%20interested%20in%20CCTV%20Setup%20on%20EMI"
+              href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919982549315"}?text=Hi%20CCTVQuotation%20Team!%20I'm%20interested%20in%20CCTV%20Setup`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-bold transition-all active:scale-95"
             >
               <MessageCircle className="w-4 h-4 text-emerald-600" />
-              <span>Direct WhatsApp Support (+91 73576 12865)</span>
+              <span>Direct WhatsApp Quotation Support</span>
             </a>
           </div>
         </div>

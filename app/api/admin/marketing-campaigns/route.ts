@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Campaign Keyword is already in use" }, { status: 400 });
     }
 
-    const wa_link = `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919024097475"}?text=Hi ${keyword.toUpperCase()}`;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://cctvquotation.com";
+    const wa_link = `${baseUrl}/wa/${keyword.toUpperCase()}`;
 
     const newDoc = adminDb.collection(COLLECTIONS.MARKETING_CAMPAIGNS).doc();
     await newDoc.set({

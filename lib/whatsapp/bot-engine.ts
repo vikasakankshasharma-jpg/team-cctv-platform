@@ -17,6 +17,102 @@ import {
   handleSlotSelection 
 } from "./quote-dispatch";
 
+export function buildQuantityListMessage(
+  recipient: string,
+  prefix: string, // "out" | "in" | "wfq"
+  itemLabel: string, // e.g. "Outdoor Bullet", "Indoor Dome", "Indoor 360° Pan-Tilt"
+  pluralLabel: string, // e.g. "Outdoor Bullets", "Indoor Domes", "Cameras"
+  page: number, // 1 to 4
+  headerText: string,
+  buttonText: string = "Select Quantity"
+) {
+  const safePage = Math.max(1, Math.min(4, page));
+  const rows: Array<{ id: string; title: string; description: string }> = [];
+
+  if (safePage === 1) {
+    for (let i = 0; i <= 7; i++) {
+      rows.push({
+        id: `${prefix}_${i}`,
+        title: `${i} ${i === 1 ? itemLabel : pluralLabel}`,
+        description: i === 0 ? `0 Cameras (None)` : `${i}x ${itemLabel}`
+      });
+    }
+    rows.push({
+      id: `${prefix}_page_2`,
+      title: `➡️ Next: 8 to 15 ${pluralLabel}...`,
+      description: `Tap to choose between 8 and 15 ${pluralLabel}`
+    });
+    rows.push({
+      id: `${prefix}_custom`,
+      title: `✏️ Type Any Number (0-32)`,
+      description: `Reply directly in chat with your exact count`
+    });
+  } else if (safePage === 2) {
+    for (let i = 8; i <= 15; i++) {
+      rows.push({
+        id: `${prefix}_${i}`,
+        title: `${i} ${pluralLabel}`,
+        description: `${i}x ${itemLabel}`
+      });
+    }
+    rows.push({
+      id: `${prefix}_page_1`,
+      title: `⬅️ Prev: 0 to 7 ${pluralLabel}`,
+      description: `Return to quantities 0 to 7`
+    });
+    rows.push({
+      id: `${prefix}_page_3`,
+      title: `➡️ Next: 16 to 23 ${pluralLabel}...`,
+      description: `Tap to choose between 16 and 23 ${pluralLabel}`
+    });
+  } else if (safePage === 3) {
+    for (let i = 16; i <= 23; i++) {
+      rows.push({
+        id: `${prefix}_${i}`,
+        title: `${i} ${pluralLabel}`,
+        description: `${i}x ${itemLabel}`
+      });
+    }
+    rows.push({
+      id: `${prefix}_page_2`,
+      title: `⬅️ Prev: 8 to 15 ${pluralLabel}`,
+      description: `Return to quantities 8 to 15`
+    });
+    rows.push({
+      id: `${prefix}_page_4`,
+      title: `➡️ Next: 24 to 32 ${pluralLabel}...`,
+      description: `Tap to choose between 24 and 32 ${pluralLabel}`
+    });
+  } else if (safePage === 4) {
+    for (let i = 24; i <= 32; i++) {
+      rows.push({
+        id: `${prefix}_${i}`,
+        title: `${i} ${pluralLabel}`,
+        description: `${i}x ${itemLabel}`
+      });
+    }
+    rows.push({
+      id: `${prefix}_page_3`,
+      title: `⬅️ Prev: 16 to 23 ${pluralLabel}`,
+      description: `Return to quantities 16 to 23`
+    });
+  }
+
+  const rangeLabel = safePage === 1 ? "0 to 7" : safePage === 2 ? "8 to 15" : safePage === 3 ? "16 to 23" : "24 to 32";
+
+  return MessageBuilder.list(
+    recipient,
+    `${headerText}\n\n_Page ${safePage} of 4 • Select exact quantity (${rangeLabel}) or type any number (0 to 32) in chat:_`,
+    buttonText,
+    [
+      {
+        title: `${pluralLabel} (${rangeLabel})`,
+        rows
+      }
+    ]
+  );
+}
+
 export async function processIncomingMessage(
   from: string, 
   incomingType: "text" | "interactive" | "nfm_reply" | "location" | "image" | "document", 
@@ -144,19 +240,90 @@ export async function processIncomingMessage(
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 4. WHATSAPP FLOW (NFM_REPLY) SHORTCUT
+  // 4. WHATSAPP FLOW (NFM_REPLY) SUBMISSION HANDLER
   // ──────────────────────────────────────────────────────────────────────────
   if (incomingType === "nfm_reply") {
     try {
-      const answers = typeof content === "string" ? JSON.parse(content) : content;
-      session.wizard_answers = { ...session.wizard_answers, ...answers };
-      session.state = "GENERATING";
-      await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
-        wizard_answers: session.wizard_answers,
-        updated_at: new Date(),
-      });
+      const raw = typeof content === "string" ? JSON.parse(content) : content;
+      
+      const outdoor = parseInt(raw.outdoor_camera_count || "0", 10);
+      const indoor = parseInt(raw.indoor_camera_count || "0", 10);
+      
+      const wifiPtz = parseInt(raw.wifi_indoor_ptz || "0", 10);
+      const wifiBullet = parseInt(raw.wifi_outdoor_bullet || "0", 10);
+      const wifiOutPtz = parseInt(raw.wifi_outdoor_ptz || "0", 10);
+      const wifi4gSolar = parseInt(raw.wifi_4g_solar || "0", 10);
+      const wifiDome = parseInt(raw.wifi_indoor_dome || "0", 10);
+      const wifiTotal = wifiPtz + wifiBullet + wifiOutPtz + wifi4gSolar + wifiDome;
+      const totalCameras = Math.max(1, outdoor + indoor + wifiTotal);
+
+      const timeline = raw.timeline || session.wizard_answers?.timeline || "asap";
+      const storageDays = raw.storage_days !== undefined 
+        ? parseInt(String(raw.storage_days), 10) 
+        : (session.wizard_answers?.recording_days ?? 15);
+      const techPref = raw.technology || (wifiTotal > 0 && outdoor + indoor === 0 ? "Wireless" : "IP");
+      const pincode = raw.lead_pincode || raw.pincode || session.wizard_answers?.lead_pincode;
+
+      session.wizard_answers = {
+        ...session.wizard_answers,
+        outdoor_camera_count: outdoor,
+        indoor_camera_count: indoor,
+        wifi_indoor_ptz_count: wifiPtz,
+        wifi_outdoor_bullet_count: wifiBullet,
+        wifi_outdoor_ptz_count: wifiOutPtz,
+        wifi_4g_solar_count: wifi4gSolar,
+        wifi_camera_count: wifiTotal,
+        camera_count: totalCameras,
+        timeline,
+        recording_days: storageDays,
+        technology: techPref,
+        ...(pincode ? { lead_pincode: String(pincode).trim() } : {}),
+      };
+
+      if (session.wizard_answers.lead_pincode && /^\d{6}$/.test(session.wizard_answers.lead_pincode)) {
+        session.state = "GENERATING";
+        const replyMsg = MessageBuilder.text(
+          from,
+          `⚙️ *WhatsApp Flow Setup Received!*\n\n` +
+          `• Wired Outdoor Bullets: *${outdoor}*\n` +
+          `• Wired Indoor Domes: *${indoor}*\n` +
+          `• Smart Wireless Cameras: *${wifiTotal}*\n` +
+          `• Total Cameras: *${totalCameras}*\n` +
+          `• Storage Backup: *${storageDays} Days*\n` +
+          `• Timeline: *${String(timeline).toUpperCase()}*\n\n` +
+          `Calculating 100% transparent brand price ranges now... Please wait 3 seconds.`
+        );
+        await sendWhatsAppMessages([replyMsg]);
+        await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
+          wizard_answers: session.wizard_answers,
+          last_bot_state: "GENERATING",
+          updated_at: new Date(),
+        });
+        await generateAndSendPriceRanges(from, session);
+        return;
+      } else {
+        session.state = "ASK_PINCODE";
+        const replyMsg = MessageBuilder.text(
+          from,
+          `⚙️ *WhatsApp Flow Setup Received!*\n\n` +
+          `• Wired Outdoor Bullets: *${outdoor}*\n` +
+          `• Wired Indoor Domes: *${indoor}*\n` +
+          `• Smart Wireless Cameras: *${wifiTotal}*\n` +
+          `• Total Cameras: *${totalCameras}*\n` +
+          `• Storage Backup: *${storageDays} Days*\n` +
+          `• Timeline: *${String(timeline).toUpperCase()}*\n\n` +
+          `📍 To calculate exact local installation charges & brand price ranges, please reply with your *6-digit Indian Pincode* (e.g. 302012) or share your Location Pin.`
+        );
+        await sendWhatsAppMessages([replyMsg]);
+        await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
+          wizard_answers: session.wizard_answers,
+          last_bot_state: "ASK_PINCODE",
+          updated_at: new Date(),
+        });
+        return;
+      }
     } catch (e) {
-      console.error("NFM Parse error:", e);
+      console.error("🔥 Error parsing nfm_reply:", e);
     }
   }
 
@@ -168,9 +335,13 @@ export async function processIncomingMessage(
       case "IDLE":
       case "GREETING":
         nextState = "ASK_PROP";
+        const partnerGreeting = session.partner_id
+          ? `Welcome to *TEAM CCTV*! 📷\n\n🎁 *Store Partner Verified:* Referral Code *${session.partner_id}* applied!\nSpecial partner-tier discount & priority survey dispatch are unlocked for you.\n\n*Step 1:* What type of property are you securing?`
+          : `Welcome to *TEAM CCTV*! 📷\n\nLet's build your exact, transparent CCTV quotation matching our website customer journey.\n\n*Step 1:* What type of property are you securing?`;
+
         replies.push(MessageBuilder.buttons(
           from,
-          `Welcome to *TEAM CCTV*! 📷\n\nLet's build your exact, transparent CCTV quotation matching our website customer journey.\n\n*Step 1:* What type of property are you securing?`,
+          partnerGreeting,
           [
             { id: "prop_home", title: "🏠 Home / Flat" },
             { id: "prop_office", title: "🏢 Office / Shop" },
@@ -239,25 +410,21 @@ export async function processIncomingMessage(
 
             replies.push(MessageBuilder.list(
               from,
-              `*4G SIM & Solar Standalone Cameras Selected:* 🛰️\n\nHow many standalone 4G SIM / Solar cameras do you need mounted at your site?\n\n_Select quantity (1 to 32) from the menu below or reply directly with any number:_`,
+              `*4G SIM & Solar Standalone Cameras Selected:* 🛰️\n\nHow many standalone 4G SIM / Solar cameras do you need mounted at your site?\n\n_Select quantity below or reply directly with any number (e.g. 5, 7, 10, 11):_`,
               "Select 4G Solar Qty",
               [
                 {
-                  title: "Standard Quantities (1 to 4)",
+                  title: "Standard Quantities (1 to 8)",
                   rows: [
                     { id: "wfq_1", title: "1 Camera (Single Gate)", description: "Farmhouse entrance or remote gate" },
                     { id: "wfq_2", title: "2 Cameras (Gate + Yard)", description: "Gate + front yard or barn" },
                     { id: "wfq_3", title: "3 Cameras", description: "Perimeter and yard surveillance" },
                     { id: "wfq_4", title: "4 Cameras (Full Perimeter)", description: "4-corner coverage without Wi-Fi" },
-                  ]
-                },
-                {
-                  title: "Commercial & Large (6 to 32)",
-                  rows: [
+                    { id: "wfq_5", title: "5 Cameras", description: "Gate, yard, barn & approach road" },
                     { id: "wfq_6", title: "6 Cameras", description: "Agricultural field / farm boundaries" },
+                    { id: "wfq_7", title: "7 Cameras", description: "Multi-point rural site coverage" },
                     { id: "wfq_8", title: "8 Cameras", description: "Large estate / resort / remote warehouse" },
-                    { id: "wfq_16", title: "16 Cameras", description: "Highway / solar park / infrastructure" },
-                    { id: "wfq_32", title: "32 Cameras", description: "Extensive perimeter monitoring" },
+                    { id: "wfq_more", title: "🏢 9 to 32 Cameras (Commercial)...", description: "View 9 to 32 cameras or type any number" },
                     { id: "wfq_custom", title: "✏️ Custom Quantity (1-32)", description: "Reply with any number 1 to 32" }
                   ]
                 }
@@ -292,32 +459,10 @@ export async function processIncomingMessage(
             session.wizard_answers.technology_preference = "HD";
             nextState = "ASK_CAMERA_OUTDOOR";
 
-            replies.push(MessageBuilder.list(
-              from,
-              `*Step 3 (Outdoor Cameras):* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need mounted outside for your main gate, driveway, parking, or boundary walls?\n\n_Select quantity (0 to 32) from the menu below or reply directly with any number:_`,
-              "Select Outdoor Cameras",
-              [
-                {
-                  title: "Standard Quantities (0 to 4)",
-                  rows: [
-                    { id: "out_0", title: "0 Cameras (None Outside)", description: "All cameras will be mounted indoors" },
-                    { id: "out_1", title: "1 Outdoor Bullet", description: "Main gate / single entrance coverage" },
-                    { id: "out_2", title: "2 Outdoor Bullets", description: "Front gate + driveway / parking" },
-                    { id: "out_3", title: "3 Outdoor Bullets", description: "Front gate, side lane & backyard" },
-                    { id: "out_4", title: "4 Outdoor Bullets", description: "4-corner full perimeter coverage" },
-                  ]
-                },
-                {
-                  title: "Commercial & Large (6 to 32)",
-                  rows: [
-                    { id: "out_6", title: "6 Outdoor Bullets", description: "Multi-point perimeter security" },
-                    { id: "out_8", title: "8 Outdoor Bullets", description: "Comprehensive perimeter coverage" },
-                    { id: "out_16", title: "16 Outdoor Bullets", description: "Commercial enterprise perimeter" },
-                    { id: "out_32", title: "32 Outdoor Bullets", description: "Large factory / campus perimeter" },
-                    { id: "out_custom", title: "✏️ Custom Quantity (0-32)", description: "Reply with any exact number 0 to 32" }
-                  ]
-                }
-              ]
+            replies.push(buildQuantityListMessage(
+              from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
+              `*Step 3 (Outdoor Cameras):* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need mounted outside for your main gate, driveway, parking, or boundary walls?`,
+              "Select Outdoor (0-7)"
             ));
           }
         }
@@ -385,52 +530,67 @@ export async function processIncomingMessage(
             session.wizard_answers.selected_wireless_variant = content;
             nextState = "ASK_WIRELESS_QTY";
 
-            const variantTitles: Record<string, string> = {
-              wf_in_ptz: "Indoor 360° Pan-Tilt (Wi-Fi)",
-              wf_in_fixed: "Indoor Fixed Dome / Cube (Wi-Fi)",
-              wf_out_bullet: "Outdoor Fixed Weatherproof Bullet (Wi-Fi)",
-              wf_out_ptz: "Outdoor 360° Pan-Tilt PTZ (Wi-Fi)",
-              wf_4g_solar: "4G SIM / Solar Standalone Camera"
+            const variantTitles: Record<string, { single: string; plural: string }> = {
+              wf_in_ptz: { single: "Indoor 360° Pan-Tilt (Wi-Fi)", plural: "Indoor 360° Pan-Tilt Cameras" },
+              wf_in_fixed: { single: "Indoor Fixed Dome / Cube (Wi-Fi)", plural: "Indoor Fixed Cameras" },
+              wf_out_bullet: { single: "Outdoor Fixed Weatherproof Bullet (Wi-Fi)", plural: "Outdoor Wi-Fi Bullets" },
+              wf_out_ptz: { single: "Outdoor 360° Pan-Tilt PTZ (Wi-Fi)", plural: "Outdoor 360° PTZ Cameras" },
+              wf_4g_solar: { single: "4G SIM / Solar Standalone Camera", plural: "4G SIM Cameras" }
             };
-            const chosenName = variantTitles[content] || "Smart Wireless Camera";
+            const vInfo = variantTitles[content] || { single: "Smart Wireless Camera", plural: "Smart Wireless Cameras" };
 
-            replies.push(MessageBuilder.list(
-              from,
-              `How many *${chosenName}* cameras do you need (1 to 32)?\n\n_Select quantity below or reply directly with any number:_`,
-              "Select Quantity (1-32)",
-              [
-                {
-                  title: "Standard Quantities (1 to 4)",
-                  rows: [
-                    { id: "wfq_1", title: "1 Camera", description: `Add 1x ${chosenName}` },
-                    { id: "wfq_2", title: "2 Cameras", description: `Add 2x ${chosenName}` },
-                    { id: "wfq_3", title: "3 Cameras", description: `Add 3x ${chosenName}` },
-                    { id: "wfq_4", title: "4 Cameras", description: `Add 4x ${chosenName}` },
-                  ]
-                },
-                {
-                  title: "Larger Quantities (6 to 32)",
-                  rows: [
-                    { id: "wfq_6", title: "6 Cameras", description: `Add 6x ${chosenName}` },
-                    { id: "wfq_8", title: "8 Cameras", description: `Add 8x ${chosenName}` },
-                    { id: "wfq_16", title: "16 Cameras", description: `Add 16x ${chosenName}` },
-                    { id: "wfq_32", title: "32 Cameras", description: `Add 32x ${chosenName}` },
-                    { id: "wfq_custom", title: "✏️ Custom Quantity (1-32)", description: "Reply with any number between 1 and 32" }
-                  ]
-                }
-              ]
+            replies.push(buildQuantityListMessage(
+              from, "wfq", vInfo.single, vInfo.plural, 1,
+              `How many *${vInfo.single}* cameras do you need (0 to 32)?`,
+              "Select Quantity (0-7)"
             ));
           }
         }
         break;
 
       case "ASK_CAMERA_OUTDOOR":
+        if (incomingType === "interactive") {
+          if (content === "out_page_1") {
+            replies.push(buildQuantityListMessage(
+              from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
+              `*Step 3 (Outdoor Cameras):* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need mounted outside for your main gate, driveway, parking, or boundary walls?`,
+              "Select Outdoor (0-7)"
+            ));
+            return;
+          }
+          if (content === "out_page_2" || content === "out_more") {
+            replies.push(buildQuantityListMessage(
+              from, "out", "Outdoor Bullet", "Outdoor Bullets", 2,
+              `*Commercial / Medium Setup (8 to 15 Outdoor Bullets):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
+              "Select Outdoor (8-15)"
+            ));
+            return;
+          }
+          if (content === "out_page_3") {
+            replies.push(buildQuantityListMessage(
+              from, "out", "Outdoor Bullet", "Outdoor Bullets", 3,
+              `*Commercial / Large Setup (16 to 23 Outdoor Bullets):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
+              "Select Outdoor (16-23)"
+            ));
+            return;
+          }
+          if (content === "out_page_4") {
+            replies.push(buildQuantityListMessage(
+              from, "out", "Outdoor Bullet", "Outdoor Bullets", 4,
+              `*Enterprise Setup (24 to 32 Outdoor Bullets):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
+              "Select Outdoor (24-32)"
+            ));
+            return;
+          }
+          if (content === "out_custom") {
+            replies.push(MessageBuilder.text(from, "Please reply directly in chat with your desired number of Outdoor Weatherproof Bullet cameras (0 to 32):"));
+            return;
+          }
+        }
+
         let outdoorCount = 0;
         if (incomingType === "interactive") {
-          if (content === "out_custom") {
-            replies.push(MessageBuilder.text(from, "Please reply with your desired number of Outdoor Weatherproof Bullet cameras (0 to 32):"));
-            return;
-          } else if (content.startsWith("out_")) {
+          if (content.startsWith("out_") && !content.includes("page") && !content.includes("custom")) {
             outdoorCount = parseInt(content.replace("out_", ""), 10);
           } else {
             outdoorCount = parseInt(content, 10) || 0;
@@ -442,42 +602,56 @@ export async function processIncomingMessage(
         session.wizard_answers.outdoor_camera_count = outdoorCount;
         nextState = "ASK_CAMERA_INDOOR";
 
-        replies.push(MessageBuilder.list(
-          from,
-          `*Step 4 (Indoor Cameras):* 🏠\n\nHow many *Compact Ceiling Dome Cameras* do you need mounted inside for your living room, corridors, office, or cashier counters?\n\n_Select quantity (0 to 32) from the menu below or reply directly with any number:_`,
-          "Select Indoor Cameras",
-          [
-            {
-              title: "Standard Quantities (0 to 4)",
-              rows: [
-                { id: "in_0", title: "0 Cameras (None Inside)", description: "All cameras will be outdoor bullets" },
-                { id: "in_1", title: "1 Indoor Dome", description: "Living hall / main reception" },
-                { id: "in_2", title: "2 Indoor Domes", description: "Hall + cashier desk / master bedroom" },
-                { id: "in_3", title: "3 Indoor Domes", description: "Hall + 2 rooms / cabins" },
-                { id: "in_4", title: "4 Indoor Domes", description: "4 separate indoor zones" },
-              ]
-            },
-            {
-              title: "Commercial & Large (6 to 32)",
-              rows: [
-                { id: "in_6", title: "6 Indoor Domes", description: "Medium commercial interior / 6 rooms" },
-                { id: "in_8", title: "8 Indoor Domes", description: "Comprehensive commercial interior" },
-                { id: "in_16", title: "16 Indoor Domes", description: "Departmental store / corporate floor" },
-                { id: "in_32", title: "32 Indoor Domes", description: "Hotel, school, hospital campus" },
-                { id: "in_custom", title: "✏️ Custom Quantity (0-32)", description: "Reply with any exact number 0 to 32" }
-              ]
-            }
-          ]
+        replies.push(buildQuantityListMessage(
+          from, "in", "Indoor Dome", "Indoor Domes", 1,
+          `✓ Outdoor Cameras: *${outdoorCount} Weatherproof Bullets*\n\n*Step 4 (Indoor Cameras):* 🏠\n\nHow many *Compact Ceiling Dome Cameras* do you need mounted inside for your living room, corridors, office, or cashier counters?`,
+          "Select Indoor (0-7)"
         ));
         break;
 
       case "ASK_CAMERA_INDOOR":
+        if (incomingType === "interactive") {
+          if (content === "in_page_1") {
+            replies.push(buildQuantityListMessage(
+              from, "in", "Indoor Dome", "Indoor Domes", 1,
+              `*Step 4 (Indoor Cameras):* 🏠\n\nHow many *Compact Ceiling Dome Cameras* do you need mounted inside for your living room, corridors, office, or cashier counters?`,
+              "Select Indoor (0-7)"
+            ));
+            return;
+          }
+          if (content === "in_page_2" || content === "in_more") {
+            replies.push(buildQuantityListMessage(
+              from, "in", "Indoor Dome", "Indoor Domes", 2,
+              `*Commercial / Medium Setup (8 to 15 Indoor Domes):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
+              "Select Indoor (8-15)"
+            ));
+            return;
+          }
+          if (content === "in_page_3") {
+            replies.push(buildQuantityListMessage(
+              from, "in", "Indoor Dome", "Indoor Domes", 3,
+              `*Commercial / Large Setup (16 to 23 Indoor Domes):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
+              "Select Indoor (16-23)"
+            ));
+            return;
+          }
+          if (content === "in_page_4") {
+            replies.push(buildQuantityListMessage(
+              from, "in", "Indoor Dome", "Indoor Domes", 4,
+              `*Enterprise Setup (24 to 32 Indoor Domes):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
+              "Select Indoor (24-32)"
+            ));
+            return;
+          }
+          if (content === "in_custom") {
+            replies.push(MessageBuilder.text(from, "Please reply directly in chat with your desired number of Indoor Ceiling Dome cameras (0 to 32):"));
+            return;
+          }
+        }
+
         let indoorCount = 0;
         if (incomingType === "interactive") {
-          if (content === "in_custom") {
-            replies.push(MessageBuilder.text(from, "Please reply with your desired number of Indoor Ceiling Dome cameras (0 to 32):"));
-            return;
-          } else if (content.startsWith("in_")) {
+          if (content.startsWith("in_") && !content.includes("page") && !content.includes("custom")) {
             indoorCount = parseInt(content.replace("in_", ""), 10);
           } else {
             indoorCount = parseInt(content, 10) || 0;
@@ -494,7 +668,7 @@ export async function processIncomingMessage(
         nextState = "ASK_HYBRID_WIRELESS";
         replies.push(MessageBuilder.list(
           from,
-          `✓ *Wired Cameras Configured:* ${totalWired} Cameras (${session.wizard_answers.outdoor_camera_count || 0} Out + ${indoorCount} In)\n\n📡 *Add Smart Wireless Cameras (Wi-Fi / 4G SIM)*\n_Optional • Hybrid Setup (as per website Card 3)_\n\nDo you want to add any wireless cameras for areas where running video cables is difficult (e.g. remote gate, terrace, farm corner, baby room)?`,
+          `✓ *Wired Cameras Configured:* ${totalWired} Cameras (${session.wizard_answers.outdoor_camera_count || 0} Out + ${indoorCount} In)\n\n📡 *Add Smart Wireless Cameras (Wi-Fi / 4G SIM)*\n_Optional • Hybrid Setup (Website Step 2 Card 3)_\n\nDo you want to add wireless cameras for remote gate, terrace, baby room, or farm corners without video cables?`,
           "Smart Wireless Options",
           [
             {
@@ -514,77 +688,135 @@ export async function processIncomingMessage(
 
       case "ASK_HYBRID_WIRELESS":
         if (incomingType === "interactive") {
-          if (content === "wf_none") {
-            session.wizard_answers.wifi_camera_count = 0;
-            session.wizard_answers.wifi_indoor_ptz_count = 0;
-            session.wizard_answers.wifi_indoor_fixed_count = 0;
-            session.wizard_answers.wifi_outdoor_bullet_count = 0;
-            session.wizard_answers.wifi_outdoor_ptz_count = 0;
-            session.wizard_answers.wifi_4g_count = 0;
-
+          if (content === "wf_none" || content === "wf_done_proceed") {
             const outCount = session.wizard_answers.outdoor_camera_count || 0;
             const inCount = session.wizard_answers.indoor_camera_count || 0;
-            session.wizard_answers.camera_count = Math.max(1, outCount + inCount);
+            const inPtzCount = session.wizard_answers.wifi_indoor_ptz_count || 0;
+            const inFixedCount = session.wizard_answers.wifi_indoor_fixed_count || 0;
+            const outBulletCount = session.wizard_answers.wifi_outdoor_bullet_count || 0;
+            const outPtzCount = session.wizard_answers.wifi_outdoor_ptz_count || 0;
+            const sim4gCount = session.wizard_answers.wifi_4g_count || 0;
+            const wCount = inPtzCount + inFixedCount + outBulletCount + outPtzCount + sim4gCount;
 
-            nextState = "ASK_TECH";
-            replies.push(MessageBuilder.buttons(
+            session.wizard_answers.wifi_camera_count = wCount;
+            session.wizard_answers.camera_count = Math.max(1, outCount + inCount + wCount);
+
+            nextState = "ASK_TIMELINE";
+            const setupBadge = wCount > 0 
+              ? `⚡ Hybrid Setup (${outCount + inCount} Wired + ${wCount} Smart Wireless = ${outCount + inCount + wCount} Cameras)`
+              : `${outCount + inCount} Wired Cameras (${outCount} Outdoor Bullets + ${inCount} Indoor Domes)`;
+
+            replies.push(MessageBuilder.list(
               from,
-              `✓ *Camera Setup Confirmed:* ${outCount + inCount} Total (${outCount} Outdoor Bullet${outCount === 1 ? '' : 's'} + ${inCount} Indoor Dome${inCount === 1 ? '' : 's'})\n\n*Step 5 (Technology):* Which camera technology level do you prefer?`,
+              `✓ *Camera Setup Confirmed:* ${setupBadge}\n\n⏱️ *WHEN DO YOU WANT WORK DONE ON YOUR SITE?*\n_Priority Dispatch Scheduler (Step 2 of 6)_\n\nHelps us schedule certified technician availability & prioritize your site survey:`,
+              "Select Timeline",
               [
-                { id: "tech_IP", title: "Digital IP (Best Quality)" },
-                { id: "tech_HD", title: "HD Analog (Lowest Cost)" }
+                {
+                  title: "Installation Timeline",
+                  rows: [
+                    { id: "time_asap", title: "⚡ ASAP (1-2 Days)", description: "Ready for instant site survey & work" },
+                    { id: "time_week", title: "📅 Within a Week", description: "Finalizing quotation & setup" },
+                    { id: "time_month", title: "🗓️ This Month", description: "Site currently under construction" },
+                    { id: "time_research", title: "🔍 Just Planning", description: "Comparing prices & options" }
+                  ]
+                }
+              ]
+            ));
+          } else if (content === "wf_add_another") {
+            nextState = "ASK_HYBRID_WIRELESS";
+            replies.push(MessageBuilder.list(
+              from,
+              `📡 *Select Additional Smart Wireless Camera Type:*\n\nWhich type of smart wireless camera would you like to add?`,
+              "Select Camera Type",
+              [
+                {
+                  title: "Smart Wireless Variants",
+                  rows: [
+                    { id: "wf_in_ptz", title: "🏠 Indoor 360° Pan-Tilt (Wi-Fi)", description: "Living room, counter, baby room with 2-way talk" },
+                    { id: "wf_in_fixed", title: "🏢 Indoor Fixed Dome / Cube (Wi-Fi)", description: "Hallways, reception, cashier desk" },
+                    { id: "wf_out_bullet", title: "🌧️ Outdoor Fixed Weatherproof (Wi-Fi)", description: "Main gate, porch, driveway, perimeter" },
+                    { id: "wf_out_ptz", title: "🔄 Outdoor 360° Pan-Tilt PTZ (Wi-Fi)", description: "Open courtyard, terrace, front garden" },
+                    { id: "wf_4g_solar", title: "🛰️ 4G SIM / Solar Standalone Camera", description: "Farmhouse, empty plot, remote gate (No Wi-Fi needed)" },
+                    { id: "wf_done_proceed", title: "✅ Done Adding (Proceed to Timeline)", description: "Lock camera counts and continue" }
+                  ]
+                }
               ]
             ));
           } else {
             session.wizard_answers.selected_wireless_variant = content;
             nextState = "ASK_WIRELESS_QTY";
 
-            const variantTitles: Record<string, string> = {
-              wf_in_ptz: "Indoor 360° Pan-Tilt (Wi-Fi)",
-              wf_in_fixed: "Indoor Fixed Dome / Cube (Wi-Fi)",
-              wf_out_bullet: "Outdoor Fixed Weatherproof Bullet (Wi-Fi)",
-              wf_out_ptz: "Outdoor 360° Pan-Tilt PTZ (Wi-Fi)",
-              wf_4g_solar: "4G SIM / Solar Standalone Camera"
+            const variantTitles: Record<string, { single: string; plural: string }> = {
+              wf_in_ptz: { single: "Indoor 360° Pan-Tilt (Wi-Fi)", plural: "Indoor 360° Pan-Tilt Cameras" },
+              wf_in_fixed: { single: "Indoor Fixed Dome / Cube (Wi-Fi)", plural: "Indoor Fixed Cameras" },
+              wf_out_bullet: { single: "Outdoor Fixed Weatherproof Bullet (Wi-Fi)", plural: "Outdoor Wi-Fi Bullets" },
+              wf_out_ptz: { single: "Outdoor 360° Pan-Tilt PTZ (Wi-Fi)", plural: "Outdoor 360° PTZ Cameras" },
+              wf_4g_solar: { single: "4G SIM / Solar Standalone Camera", plural: "4G SIM Cameras" }
             };
-            const chosenName = variantTitles[content] || "Smart Wireless Camera";
+            const vInfo = variantTitles[content] || { single: "Smart Wireless Camera", plural: "Smart Wireless Cameras" };
 
-            replies.push(MessageBuilder.list(
-              from,
-              `How many *${chosenName}* do you want to add to your setup (0 to 32)?\n\n_Select quantity below or reply directly with any number:_`,
-              "Select Quantity (0-32)",
-              [
-                {
-                  title: "Standard Quantities (1 to 4)",
-                  rows: [
-                    { id: "wfq_1", title: "1 Camera", description: `Add 1x ${chosenName}` },
-                    { id: "wfq_2", title: "2 Cameras", description: `Add 2x ${chosenName}` },
-                    { id: "wfq_3", title: "3 Cameras", description: `Add 3x ${chosenName}` },
-                    { id: "wfq_4", title: "4 Cameras", description: `Add 4x ${chosenName}` },
-                  ]
-                },
-                {
-                  title: "Larger Quantities (6 to 32)",
-                  rows: [
-                    { id: "wfq_6", title: "6 Cameras", description: `Add 6x ${chosenName}` },
-                    { id: "wfq_8", title: "8 Cameras", description: `Add 8x ${chosenName}` },
-                    { id: "wfq_16", title: "16 Cameras", description: `Add 16x ${chosenName}` },
-                    { id: "wfq_32", title: "32 Cameras", description: `Add 32x ${chosenName}` },
-                    { id: "wfq_custom", title: "✏️ Custom Quantity (0-32)", description: "Reply with any number between 0 and 32" }
-                  ]
-                }
-              ]
+            replies.push(buildQuantityListMessage(
+              from, "wfq", vInfo.single, vInfo.plural, 1,
+              `How many *${vInfo.single}* cameras do you need (0 to 32)?`,
+              "Select Quantity (0-7)"
             ));
           }
         }
         break;
 
       case "ASK_WIRELESS_QTY":
+        const currentVType = session.wizard_answers.selected_wireless_variant || "wf_in_ptz";
+        const variantMeta: Record<string, { single: string; plural: string }> = {
+          wf_in_ptz: { single: "Indoor 360° Pan-Tilt (Wi-Fi)", plural: "Indoor 360° Pan-Tilt Cameras" },
+          wf_in_fixed: { single: "Indoor Fixed Dome / Cube (Wi-Fi)", plural: "Indoor Fixed Cameras" },
+          wf_out_bullet: { single: "Outdoor Fixed Weatherproof Bullet (Wi-Fi)", plural: "Outdoor Wi-Fi Bullets" },
+          wf_out_ptz: { single: "Outdoor 360° Pan-Tilt PTZ (Wi-Fi)", plural: "Outdoor 360° PTZ Cameras" },
+          wf_4g_solar: { single: "4G SIM / Solar Standalone Camera", plural: "4G SIM Cameras" }
+        };
+        const curVInfo = variantMeta[currentVType] || { single: "Smart Wireless Camera", plural: "Smart Wireless Cameras" };
+
+        if (incomingType === "interactive") {
+          if (content === "wfq_page_1") {
+            replies.push(buildQuantityListMessage(
+              from, "wfq", curVInfo.single, curVInfo.plural, 1,
+              `How many *${curVInfo.single}* cameras do you need (0 to 32)?`,
+              "Select Quantity (0-7)"
+            ));
+            return;
+          }
+          if (content === "wfq_page_2" || content === "wfq_more") {
+            replies.push(buildQuantityListMessage(
+              from, "wfq", curVInfo.single, curVInfo.plural, 2,
+              `*Commercial / Medium Setup (8 to 15 ${curVInfo.plural}):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
+              "Select (8-15)"
+            ));
+            return;
+          }
+          if (content === "wfq_page_3") {
+            replies.push(buildQuantityListMessage(
+              from, "wfq", curVInfo.single, curVInfo.plural, 3,
+              `*Commercial / Large Setup (16 to 23 ${curVInfo.plural}):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
+              "Select (16-23)"
+            ));
+            return;
+          }
+          if (content === "wfq_page_4") {
+            replies.push(buildQuantityListMessage(
+              from, "wfq", curVInfo.single, curVInfo.plural, 4,
+              `*Enterprise Setup (24 to 32 ${curVInfo.plural}):* 🏢\n\nSelect your exact camera count below, or reply directly with any number:`,
+              "Select (24-32)"
+            ));
+            return;
+          }
+          if (content === "wfq_custom") {
+            replies.push(MessageBuilder.text(from, `Please reply directly in chat with your desired quantity of ${curVInfo.single} (0 to 32):`));
+            return;
+          }
+        }
+
         let wCount = 1;
         if (incomingType === "interactive") {
-          if (content === "wfq_custom") {
-            replies.push(MessageBuilder.text(from, "Please reply with your desired quantity of Smart Wireless cameras (0 to 32):"));
-            return;
-          } else if (content.startsWith("wfq_")) {
+          if (content.startsWith("wfq_") && !content.includes("page") && !content.includes("custom")) {
             wCount = parseInt(content.replace("wfq_", ""), 10);
           } else {
             wCount = parseInt(content, 10) || 1;
@@ -594,17 +826,23 @@ export async function processIncomingMessage(
           wCount = match ? Math.min(32, Math.max(0, parseInt(match[0], 10))) : 1;
         }
 
-        const vType = session.wizard_answers.selected_wireless_variant;
-        if (vType === "wf_in_ptz") session.wizard_answers.wifi_indoor_ptz_count = wCount;
-        else if (vType === "wf_in_fixed") session.wizard_answers.wifi_indoor_fixed_count = wCount;
-        else if (vType === "wf_out_bullet") session.wizard_answers.wifi_outdoor_bullet_count = wCount;
-        else if (vType === "wf_out_ptz") session.wizard_answers.wifi_outdoor_ptz_count = wCount;
-        else if (vType === "wf_4g_solar") session.wizard_answers.wifi_4g_count = wCount;
+        if (currentVType === "wf_in_ptz") session.wizard_answers.wifi_indoor_ptz_count = wCount;
+        else if (currentVType === "wf_in_fixed") session.wizard_answers.wifi_indoor_fixed_count = wCount;
+        else if (currentVType === "wf_out_bullet") session.wizard_answers.wifi_outdoor_bullet_count = wCount;
+        else if (currentVType === "wf_out_ptz") session.wizard_answers.wifi_outdoor_ptz_count = wCount;
+        else if (currentVType === "wf_4g_solar") session.wizard_answers.wifi_4g_count = wCount;
 
-        session.wizard_answers.wifi_camera_count = wCount;
+        const inPtz = session.wizard_answers.wifi_indoor_ptz_count || 0;
+        const inFixed = session.wizard_answers.wifi_indoor_fixed_count || 0;
+        const outBullet = session.wizard_answers.wifi_outdoor_bullet_count || 0;
+        const outPtz = session.wizard_answers.wifi_outdoor_ptz_count || 0;
+        const sim4g = session.wizard_answers.wifi_4g_count || 0;
+        const totalWireless = inPtz + inFixed + outBullet + outPtz + sim4g;
+        session.wizard_answers.wifi_camera_count = totalWireless;
+
         const outWired = session.wizard_answers.outdoor_camera_count || 0;
         const inWired = session.wizard_answers.indoor_camera_count || 0;
-        const grandTotal = Math.max(1, outWired + inWired + wCount);
+        const grandTotal = Math.max(1, outWired + inWired + totalWireless);
         session.wizard_answers.camera_count = grandTotal;
 
         const isPureWireless = session.wizard_answers.technology === "Wireless" || 
@@ -612,37 +850,29 @@ export async function processIncomingMessage(
                                session.wizard_answers.installation_type === "wireless" ||
                                session.wizard_answers.installation_type === "solar_4g";
 
-        if (isPureWireless) {
-          nextState = "ASK_STORAGE_DAYS";
-          replies.push(MessageBuilder.list(
-            from,
-            `✓ *Smart Wireless Setup Confirmed:* ${wCount} Camera${wCount === 1 ? '' : 's'}\n\n*Step 4 (Storage):* How many days of recording retention do you require?`,
-            "Select Storage Days",
-            [
-              {
-                title: "Recording Retention",
-                rows: [
-                  { id: "storage_0", title: "0 Days (No Recording)", description: "Live mobile viewing only. Zero storage cost." },
-                  { id: "storage_7", title: "7 Days (Basic)", description: "Standard week buffer (32GB MicroSD)" },
-                  { id: "storage_15", title: "15 Days (Recommended)", description: "Optimal commercial/home standard (64GB MicroSD)" },
-                  { id: "storage_30", title: "30 Days (Extended)", description: "Full month peace-of-mind (128GB MicroSD)" },
-                  { id: "storage_45", title: "45 Days (High Security)", description: "Extended commercial compliance" },
-                  { id: "storage_60", title: "60 Days (Maximum)", description: "Highest statutory retention (256GB MicroSD)" }
-                ]
-              }
-            ]
-          ));
-        } else {
-          nextState = "ASK_TECH";
-          replies.push(MessageBuilder.buttons(
-            from,
-            `✓ *Hybrid Setup Confirmed:* ${grandTotal} Total Cameras (${outWired} Out + ${inWired} In + ${wCount} Wireless)\n\n*Step 5 (Technology):* Which camera technology level do you prefer?`,
-            [
-              { id: "tech_IP", title: "Digital IP (Best Quality)" },
-              { id: "tech_HD", title: "HD Analog (Lowest Cost)" }
-            ]
-          ));
-        }
+        // Build summary of configured wireless items
+        const wifiItems: string[] = [];
+        if (inPtz > 0) wifiItems.push(`• ${inPtz}x Indoor 360° Pan-Tilt (Wi-Fi)`);
+        if (inFixed > 0) wifiItems.push(`• ${inFixed}x Indoor Fixed Dome / Cube (Wi-Fi)`);
+        if (outBullet > 0) wifiItems.push(`• ${outBullet}x Outdoor Fixed Bullet (Wi-Fi)`);
+        if (outPtz > 0) wifiItems.push(`• ${outPtz}x Outdoor 360° Pan-Tilt PTZ (Wi-Fi)`);
+        if (sim4g > 0) wifiItems.push(`• ${sim4g}x 4G SIM / Solar Standalone Camera`);
+
+        nextState = "ASK_HYBRID_WIRELESS";
+        replies.push(MessageBuilder.list(
+          from,
+          `✓ *Added to Setup:* ${wCount}x ${curVInfo.single}\n\n📡 *Smart Wireless Cameras in Setup (${totalWireless} Added):*\n${wifiItems.join("\n")}\n\n⚡ *Total Cameras:* ${grandTotal} (${isPureWireless ? `${totalWireless} Smart Wireless` : `⚡ Hybrid Setup: ${outWired + inWired} Wired + ${totalWireless} Smart Wireless`})\n\nWould you like to add another wireless camera variant, or proceed to Timeline?`,
+          "Choose Action",
+          [
+            {
+              title: "Smart Wireless Setup Options",
+              rows: [
+                { id: "wf_add_another", title: "➕ Add Another Wireless Camera", description: "Add outdoor bullet, PTZ, or 4G SIM camera" },
+                { id: "wf_done_proceed", title: "✅ Done Adding (Proceed to Timeline)", description: "Lock camera counts and continue to Priority Dispatch" }
+              ]
+            }
+          ]
+        ));
         break;
 
       case "ASK_CAMERA_COUNT":
@@ -650,32 +880,10 @@ export async function processIncomingMessage(
           if (content.startsWith("addon_tech_")) {
             session.wizard_answers.technology = content.replace("addon_tech_", "").toUpperCase();
             nextState = "ASK_CAMERA_OUTDOOR";
-            replies.push(MessageBuilder.list(
-              from,
-              `*Step 3 (Outdoor Cameras to Add):* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need added outside for your main gate, driveway, parking, or boundary walls?\n\n_Select quantity (0 to 32) from the menu below or reply directly with any number:_`,
-              "Select Outdoor Cameras",
-              [
-                {
-                  title: "Standard Quantities (0 to 4)",
-                  rows: [
-                    { id: "out_0", title: "0 Cameras (None Outside)", description: "All add-on cameras will be mounted indoors" },
-                    { id: "out_1", title: "1 Outdoor Bullet", description: "Main gate / single entrance coverage" },
-                    { id: "out_2", title: "2 Outdoor Bullets", description: "Front gate + driveway / parking" },
-                    { id: "out_3", title: "3 Outdoor Bullets", description: "Front gate, side lane & backyard" },
-                    { id: "out_4", title: "4 Outdoor Bullets", description: "4-corner full perimeter coverage" },
-                  ]
-                },
-                {
-                  title: "Commercial & Large (6 to 32)",
-                  rows: [
-                    { id: "out_6", title: "6 Outdoor Bullets", description: "Multi-point perimeter security" },
-                    { id: "out_8", title: "8 Outdoor Bullets", description: "Comprehensive perimeter coverage" },
-                    { id: "out_16", title: "16 Outdoor Bullets", description: "Commercial enterprise perimeter" },
-                    { id: "out_32", title: "32 Outdoor Bullets", description: "Large factory / campus perimeter" },
-                    { id: "out_custom", title: "✏️ Custom Quantity (0-32)", description: "Reply with any exact number 0 to 32" }
-                  ]
-                }
-              ]
+            replies.push(buildQuantityListMessage(
+              from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
+              `*Step 3 (Outdoor Cameras to Add):* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need added outside for your main gate, driveway, parking, or boundary walls?`,
+              "Select Outdoor (0-7)"
             ));
             return;
           }
@@ -689,67 +897,24 @@ export async function processIncomingMessage(
           } else {
             // Forward directly to Outdoor & Indoor 0-32 selectors to ensure 100% website parity
             nextState = "ASK_CAMERA_OUTDOOR";
-            replies.push(MessageBuilder.list(
-              from,
-              `*Step 3 (Outdoor Cameras):* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need mounted outside for your main gate, driveway, parking, or boundary walls?\n\n_Select quantity (0 to 32) from the menu below or reply directly with any number:_`,
-              "Select Outdoor Cameras",
-              [
-                {
-                  title: "Standard Quantities (0 to 4)",
-                  rows: [
-                    { id: "out_0", title: "0 Cameras (None Outside)", description: "All cameras will be mounted indoors" },
-                    { id: "out_1", title: "1 Outdoor Bullet", description: "Main gate / single entrance coverage" },
-                    { id: "out_2", title: "2 Outdoor Bullets", description: "Front gate + driveway / parking" },
-                    { id: "out_3", title: "3 Outdoor Bullets", description: "Front gate, side lane & backyard" },
-                    { id: "out_4", title: "4 Outdoor Bullets", description: "4-corner full perimeter coverage" },
-                  ]
-                },
-                {
-                  title: "Commercial & Large (6 to 32)",
-                  rows: [
-                    { id: "out_6", title: "6 Outdoor Bullets", description: "Multi-point perimeter security" },
-                    { id: "out_8", title: "8 Outdoor Bullets", description: "Comprehensive perimeter coverage" },
-                    { id: "out_16", title: "16 Outdoor Bullets", description: "Commercial enterprise perimeter" },
-                    { id: "out_32", title: "32 Outdoor Bullets", description: "Large factory / campus perimeter" },
-                    { id: "out_custom", title: "✏️ Custom Quantity (0-32)", description: "Reply with any exact number 0 to 32" }
-                  ]
-                }
-              ]
+            replies.push(buildQuantityListMessage(
+              from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
+              `*Step 3 (Outdoor Cameras):* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need mounted outside for your main gate, driveway, parking, or boundary walls?`,
+              "Select Outdoor (0-7)"
             ));
           }
         }
         break;
 
       case "ASK_CAMERA_SPLIT":
-        // Fallback / legacy handler: forward directly to Indoor Dome selection with 0-32 quantities
+        // Fallback / legacy handler: forward directly to Indoor Dome selection with 0-32 contiguous quantities
         nextState = "ASK_CAMERA_INDOOR";
-        replies.push(MessageBuilder.list(
-          from,
-          `*Step 4 (Indoor Cameras):* 🏠\n\nHow many *Compact Ceiling Dome Cameras* do you need mounted inside for your living room, corridors, office, or cashier counters?\n\n_Select quantity (0 to 32) from the menu below or reply directly with any number:_`,
-          "Select Indoor Cameras",
-          [
-            {
-              title: "Standard Quantities (0 to 4)",
-              rows: [
-                { id: "in_0", title: "0 Cameras (None Inside)", description: "All cameras will be outdoor bullets" },
-                { id: "in_1", title: "1 Indoor Dome", description: "Living hall / main reception" },
-                { id: "in_2", title: "2 Indoor Domes", description: "Hall + cashier desk / master bedroom" },
-                { id: "in_3", title: "3 Indoor Domes", description: "Hall + 2 rooms / cabins" },
-                { id: "in_4", title: "4 Indoor Domes", description: "4 separate indoor zones" },
-              ]
-            },
-            {
-              title: "Commercial & Large (6 to 32)",
-              rows: [
-                { id: "in_6", title: "6 Indoor Domes", description: "Medium commercial interior / 6 rooms" },
-                { id: "in_8", title: "8 Indoor Domes", description: "Comprehensive commercial interior" },
-                { id: "in_16", title: "16 Indoor Domes", description: "Departmental store / corporate floor" },
-                { id: "in_32", title: "32 Indoor Domes", description: "Hotel, school, hospital campus" },
-                { id: "in_custom", title: "✏️ Custom Quantity (0-32)", description: "Reply with any exact number 0 to 32" }
-              ]
-            }
-          ]
+        replies.push(buildQuantityListMessage(
+          from, "in", "Indoor Dome", "Indoor Domes", 1,
+          `*Step 4 (Indoor Cameras):* 🏠\n\nHow many *Compact Ceiling Dome Cameras* do you need mounted inside for your living room, corridors, office, or cashier counters?`,
+          "Select Indoor (0-7)"
         ));
+        break;
         break;
 
       case "ASK_TECH":
@@ -759,7 +924,7 @@ export async function processIncomingMessage(
 
           replies.push(MessageBuilder.list(
             from,
-            `*Step 6 (Storage):* How many days of recording retention do you require?`,
+            `*Step 3 (Storage Retention):* 💾\n\nHow many days of recording retention do you require?`,
             "Select Storage Days",
             [
               {
@@ -789,7 +954,7 @@ export async function processIncomingMessage(
 
             replies.push(MessageBuilder.buttons(
               from,
-              `*Mounting Height:* What is the approximate ceiling / mounting height at your site?`,
+              `*Step 4 (Mounting Height):* 📐\n\nWhat is the approximate ceiling / mounting height at your site?`,
               [
                 { id: "mount_standard", title: "Standard (< 10 ft)" },
                 { id: "mount_high", title: "High (10-15 ft)" },
@@ -801,7 +966,7 @@ export async function processIncomingMessage(
 
             replies.push(MessageBuilder.buttons(
               from,
-              `*Recording Mode:* How would you like your system to record?`,
+              `*Step 3 (Recording Mode):* ⏺️\n\nHow would you like your system to record?`,
               [
                 { id: "mode_continuous", title: "⏺️ 24x7 Continuous" },
                 { id: "mode_motion", title: "🏃 Smart Motion (Save 50%)" }
@@ -818,7 +983,7 @@ export async function processIncomingMessage(
 
           replies.push(MessageBuilder.buttons(
             from,
-            `*Mounting Height:* What is the approximate ceiling / mounting height at your site?`,
+            `*Step 4 (Mounting Height):* 📐\n\nWhat is the approximate ceiling / mounting height at your site?`,
             [
               { id: "mount_standard", title: "Standard (< 10 ft)" },
               { id: "mount_high", title: "High (10-15 ft)" },
@@ -836,64 +1001,128 @@ export async function processIncomingMessage(
             mount_very_high: "very_high"
           };
           session.wizard_answers.ceiling_height = heightMap[content] || "standard";
+          nextState = "ASK_SURFACE_TYPE";
+
+          replies.push(MessageBuilder.buttons(
+            from,
+            `*Step 4 (Surface & Wall Type):* 🧱\n\nWhat surface will the cameras be mounted on?\n_(Helps our technician pack the right mounting anchors & drilling bits)_`,
+            [
+              { id: "surf_brick", title: "🧱 Concrete / Brick Wall" },
+              { id: "surf_ceiling", title: "🏗️ False Ceiling" },
+              { id: "surf_mixed", title: "🏢 Mixed (Wall + Ceiling)" }
+            ]
+          ));
+        }
+        break;
+
+      case "ASK_SURFACE_TYPE":
+        if (incomingType === "interactive") {
+          if (content === "surf_ceiling") {
+            session.wizard_answers.surface_types = ["false_ceiling"];
+          } else if (content === "surf_mixed") {
+            session.wizard_answers.surface_types = ["brick", "false_ceiling"];
+          } else {
+            session.wizard_answers.surface_types = ["brick"];
+          }
+
           nextState = "ASK_CABLING_OR_POWER";
 
-          if (session.wizard_answers.technology === "Wireless") {
+          const isWireless = session.wizard_answers.technology === "Wireless" || 
+                             session.wizard_answers.technology_preference === "Wireless";
+
+          if (isWireless) {
             replies.push(MessageBuilder.buttons(
               from,
-              `*Camera Power Point Availability:* Cameras communicate wirelessly, but need electrical power. Select site power condition:`,
+              `*Step 4 (Camera Power Point Availability):* 🔌\n\nCameras connect wirelessly, but each requires electrical power. Select site power condition:`,
               [
                 { id: "pwr_socket", title: "🔌 Socket Nearby (<1.5m)" },
-                { id: "pwr_wire", title: "⚡ Need 2-Core Wire" },
+                { id: "pwr_wire", title: "⚡ Need Power Wire" },
                 { id: "pwr_survey", title: "📋 Decide on Site Visit" }
               ]
             ));
           } else {
+            const wiredCams = Math.max(1, (session.wizard_answers.outdoor_camera_count || 0) + (session.wizard_answers.indoor_camera_count || 0));
+            const freeAllowance = wiredCams * 15;
             replies.push(MessageBuilder.buttons(
               from,
-              `*Cabling Status:* Is your property already pre-wired with CCTV cables, or do we need to lay new cables?`,
+              `*Step 4 (Cabling Status & Free Allowance):* 🔌\n\nIs your site pre-wired or do we need fresh cables routed?\n\n• *Complimentary:* ~15m wire/camera included free (*${freeAllowance}m total* for your ${wiredCams} cameras).\n• Excess cable charged on actuals (₹15/m for HD, ₹18/m for IP).`,
               [
-                { id: "cab_new", title: "🆕 Need New Cabling" },
-                { id: "cab_prewired", title: "🔌 Pre-Wired Site" }
+                { id: "cab_new", title: `🆕 Need New Cables (~${freeAllowance}m Free)` },
+                { id: "cab_prewired", title: "🔌 Pre-Wired Site (Fitting Only)" },
+                { id: "cab_custom", title: "📏 Need Custom Wire Length" }
               ]
             ));
           }
         }
         break;
 
+      case "ASK_CUSTOM_CABLE_METERS":
+        let customMeters = 60;
+        if (incomingType === "text") {
+          const match = content.match(/\d+/);
+          customMeters = match ? parseInt(match[0], 10) : 60;
+        } else {
+          customMeters = 60;
+        }
+        session.wizard_answers.cabling_status = "needed";
+        session.wizard_answers.cabling_done = false;
+        session.wizard_answers.total_cable_length_meters = customMeters;
+        session.wizard_answers.cable_length_meters = Math.ceil(customMeters / (session.wizard_answers.camera_count || 4));
+
+        nextState = "ASK_INTERNET";
+        replies.push(MessageBuilder.buttons(
+          from,
+          `✓ *Custom Cable Length Saved:* ${customMeters} meters total\n\n*Step 5 (Mobile Viewing & Internet):* 📱\n\nChoose how you want to watch live camera video on your smartphone:`,
+          [
+            { id: "net_wifi", title: "📶 Have Wi-Fi Router" },
+            { id: "net_4g", title: "🌐 Add 4G SIM Router" },
+            { id: "net_offline", title: "📺 Offline / TV Only" }
+          ]
+        ));
+        break;
+
       case "ASK_CABLING_OR_POWER":
         if (incomingType === "interactive") {
+          if (content === "cab_custom") {
+            nextState = "ASK_CUSTOM_CABLE_METERS";
+            replies.push(MessageBuilder.text(
+              from,
+              `📏 *Custom Cable Length:*\n\nPlease reply with your estimated total cable run in meters (e.g. 70, 90, 120, 150):`
+            ));
+            break;
+          }
+
           if (content === "cab_prewired") {
             session.wizard_answers.cabling_status = "done";
             session.wizard_answers.cabling_done = true;
+            session.wizard_answers.total_cable_length_meters = 0;
           } else if (content === "cab_new") {
             session.wizard_answers.cabling_status = "needed";
             session.wizard_answers.cabling_done = false;
+            session.wizard_answers.total_cable_length_meters = (session.wizard_answers.camera_count || 4) * 15;
           } else if (content === "pwr_socket") {
             session.wizard_answers.power_wiring_option = "socket_available";
+            session.wizard_answers.total_power_cable_meters = 0;
           } else if (content === "pwr_wire") {
             session.wizard_answers.power_wiring_option = "wire_needed";
+            session.wizard_answers.total_power_cable_meters = (session.wizard_answers.wifi_camera_count || 2) * 10;
           } else if (content === "pwr_survey") {
             session.wizard_answers.power_wiring_option = "site_survey";
+            session.wizard_answers.total_power_cable_meters = 0;
           }
 
           // If 4G SIM camera already chosen, broadband is already solved!
           if (session.wizard_answers.is_4g || session.wizard_answers.broadband_status === "independent_4g") {
-            nextState = "ASK_TIMELINE";
-            replies.push(MessageBuilder.buttons(
+            nextState = "ASK_PINCODE";
+            replies.push(MessageBuilder.text(
               from,
-              `⏱️ *When do you plan to get work / installation done at your site?*`,
-              [
-                { id: "time_asap", title: "⚡ ASAP (1-2 Days)" },
-                { id: "time_week", title: "📅 Within a Week" },
-                { id: "time_month", title: "🗓️ This Month / Later" }
-              ]
+              `📍 *Step 6 (Pincode & City Dispatch):*\n\nPlease enter your 6-digit Pincode (or tap the clip icon to share your *Location Pin*).\n\nThis matches our nearest Sub-Post Office micro-hub, inventory warehouse, and certified local installer.`
             ));
-          } else if (session.wizard_answers.technology === "Wireless") {
+          } else if (session.wizard_answers.technology === "Wireless" || session.wizard_answers.technology_preference === "Wireless") {
             nextState = "ASK_INTERNET";
             replies.push(MessageBuilder.buttons(
               from,
-              `*Wi-Fi / Internet at Site:* Select Wi-Fi condition for live mobile app viewing:`,
+              `*Step 5 (Wi-Fi / Internet at Site):* 📶\n\nSelect Wi-Fi condition for live mobile app viewing:`,
               [
                 { id: "net_wifi_full", title: "📶 Have Wi-Fi (Full Reach)" },
                 { id: "net_wifi_extender", title: "📡 Have Wi-Fi, Need Extender" },
@@ -904,7 +1133,7 @@ export async function processIncomingMessage(
             nextState = "ASK_INTERNET";
             replies.push(MessageBuilder.buttons(
               from,
-              `*Mobile Viewing & Internet:* Choose how you want to watch live camera video on your smartphone:`,
+              `*Step 5 (Mobile Viewing & Internet):* 📱\n\nChoose how you want to watch live camera video on your smartphone:`,
               [
                 { id: "net_wifi", title: "📶 Have Wi-Fi Router" },
                 { id: "net_4g", title: "🌐 Add 4G SIM Router" },
@@ -931,46 +1160,71 @@ export async function processIncomingMessage(
             session.wizard_answers.wants_remote_viewing = true;
           }
 
-          nextState = "ASK_TIMELINE";
-          replies.push(MessageBuilder.buttons(
+          nextState = "ASK_PINCODE";
+          replies.push(MessageBuilder.text(
             from,
-            `⏱️ *When do you plan to get work / installation done at your site?*`,
-            [
-              { id: "time_asap", title: "⚡ ASAP (1-2 Days)" },
-              { id: "time_week", title: "📅 Within a Week" },
-              { id: "time_month", title: "🗓️ This Month / Later" }
-            ]
+            `📍 *Step 6 (Pincode & City Dispatch):*\n\nPlease enter your 6-digit Pincode (or tap the clip icon to share your *Location Pin*).\n\nThis matches our nearest Sub-Post Office micro-hub, inventory warehouse, and certified local installer.`
           ));
         }
         break;
 
       case "ASK_TIMELINE":
         if (incomingType === "interactive") {
-          const timeChoice = content === "time_asap" ? "Immediately" : content === "time_week" ? "This week" : "This month";
+          const timeChoice = content === "time_asap" ? "Immediately" : content === "time_week" ? "This week" : content === "time_month" ? "This month" : "Planning";
           const rawCode = content.replace("time_", "");
           session.wizard_answers.timeline = timeChoice;
           session.wizard_answers.q_timeline = rawCode;
           session.wizard_answers.installation_timeline = rawCode;
           
-          const priority = timeChoice === "Immediately" ? "HOT" : timeChoice === "This week" ? "HOT" : "WARM";
-          await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
-            timeline: timeChoice,
-            priority,
-            is_hot_lead: priority === "HOT",
-            "wizard_answers.timeline": timeChoice,
-            "wizard_answers.q_timeline": rawCode,
-            "wizard_answers.installation_timeline": rawCode,
-            updated_at: new Date()
-          }).catch(console.error);
+          const priority = (rawCode === "asap" || rawCode === "week") ? "HOT" : "WARM";
+          if (leadId) {
+            await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
+              timeline: timeChoice,
+              priority,
+              is_hot_lead: priority === "HOT",
+              "wizard_answers.timeline": timeChoice,
+              "wizard_answers.q_timeline": rawCode,
+              "wizard_answers.installation_timeline": rawCode,
+              updated_at: new Date()
+            }).catch(console.error);
+          }
 
-          nextState = "ASK_PINCODE";
+          const isPureWireless = session.wizard_answers.technology === "Wireless" || 
+                                 session.wizard_answers.technology === "4G_Solar" ||
+                                 session.wizard_answers.installation_type === "wireless" ||
+                                 session.wizard_answers.installation_type === "solar_4g";
 
-          replies.push(MessageBuilder.text(
-            from,
-            `📍 *Final Step:* Please enter your 6-digit Pincode (or tap the clip icon to share your *Location Pin*).\n\nThis allows us to match our nearest Sub-Post Office micro-hub and certified local installer.`
-          ));
-        } else {
-          replies.push(MessageBuilder.text(from, "Please select an installation timeframe using the buttons above."));
+          if (isPureWireless) {
+            nextState = "ASK_STORAGE_DAYS";
+            replies.push(MessageBuilder.list(
+              from,
+              `✓ *Priority Dispatch Saved:* ${timeChoice} (${rawCode.toUpperCase()})\n\n*Step 3 (Storage Retention):* 💾\n\nHow many days of recording retention do you require?`,
+              "Select Storage Days",
+              [
+                {
+                  title: "Recording Retention",
+                  rows: [
+                    { id: "storage_0", title: "0 Days (No Recording)", description: "Live mobile viewing only. Zero storage cost." },
+                    { id: "storage_7", title: "7 Days (Basic)", description: "Standard week buffer (32GB MicroSD)" },
+                    { id: "storage_15", title: "15 Days (Recommended)", description: "Optimal commercial/home standard (64GB MicroSD)" },
+                    { id: "storage_30", title: "30 Days (Extended)", description: "Full month peace-of-mind (128GB MicroSD)" },
+                    { id: "storage_45", title: "45 Days (High Security)", description: "Extended commercial compliance" },
+                    { id: "storage_60", title: "60 Days (Maximum)", description: "Highest statutory retention (256GB MicroSD)" }
+                  ]
+                }
+              ]
+            ));
+          } else {
+            nextState = "ASK_TECH";
+            replies.push(MessageBuilder.buttons(
+              from,
+              `✓ *Priority Dispatch Saved:* ${timeChoice} (${rawCode.toUpperCase()})\n\n*Step 3 (Camera Technology):* ⚡\n\nWhich camera technology level do you prefer?`,
+              [
+                { id: "tech_IP", title: "Digital IP (Best Quality)" },
+                { id: "tech_HD", title: "HD Analog (Lowest Cost)" }
+              ]
+            ));
+          }
         }
         break;
 
@@ -1014,11 +1268,15 @@ export async function processIncomingMessage(
           } else if (content.startsWith("lock_")) {
             const parts = content.split("_");
             const brandKey = parts[1];
-            const isEconomy = parts[2] === "economy";
+            const variantType = parts[2]; // "standard" | "color" | "economy"
             const cachedSummaries = (session as any).cached_brand_summaries || [];
             const summary = cachedSummaries.find((b: any) => b.brandKey === brandKey);
-            // Recompute target quote
-            const targetQuote = isEconomy ? summary?.economyQuote || summary?.standardQuote : summary?.standardQuote;
+            let targetQuote = summary?.standardQuote;
+            if (variantType === "color" && summary?.colorNightQuote) {
+              targetQuote = summary.colorNightQuote;
+            } else if (variantType === "economy" && summary?.economyQuote) {
+              targetQuote = summary.economyQuote;
+            }
             if (targetQuote) {
               await finalizeAndSendQuote(from, session, targetQuote);
               return;
@@ -1079,26 +1337,62 @@ export async function processIncomingMessage(
 }
 
 async function sendWhatsAppMessages(messages: WhatsAppMessagePayload[]) {
-  const whatsappPhoneId = process.env.WHATSAPP_PHONE_ID;
-  const whatsappToken = process.env.WHATSAPP_TOKEN;
+  const whatsappPhoneId = (process.env.WHATSAPP_PHONE_ID || process.env.WA_PHONE_NUMBER_ID || "").trim();
+  const whatsappToken = (process.env.WHATSAPP_TOKEN || process.env.WA_ACCESS_TOKEN || "").trim();
+  const msg91AuthKey = (process.env.MSG91_AUTH_KEY || "").trim();
+  const msg91FromNumber = (process.env.MSG91_WHATSAPP_NUMBER || "").trim();
+  const providerPref = (process.env.WHATSAPP_PROVIDER || "").toLowerCase().trim();
 
-  if (!whatsappPhoneId || !whatsappToken) {
-    console.warn("⚠️ [WhatsApp Simulated] Keys missing. Payload:", JSON.stringify(messages, null, 2));
-    return;
-  }
+  const useMsg91 = providerPref === "msg91" || (!!msg91AuthKey && providerPref !== "meta");
 
-  for (const msg of messages) {
-    try {
-      await fetch(`https://graph.facebook.com/v17.0/${whatsappPhoneId}/messages`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${whatsappToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(msg),
-      });
-    } catch (e) {
-      console.error("🔥 Failed to send WhatsApp message:", e);
+  if (useMsg91 && msg91AuthKey && msg91FromNumber) {
+    // Mode B (Active with MSG91): MSG91 WhatsApp Outbound API
+    for (const msg of messages) {
+      try {
+        const msg91Payload: any = {
+          integrated_number: msg91FromNumber,
+          recipient_number: msg.to,
+          content_type: msg.type || "text",
+          payload: msg,
+        };
+
+        if (msg.type === "text" && msg.text?.body) {
+          msg91Payload.text = msg.text.body;
+        } else if (msg.type === "interactive" && msg.interactive) {
+          msg91Payload.interactive = msg.interactive;
+        } else if (msg.type === "document" && msg.document) {
+          msg91Payload.document = msg.document;
+        }
+
+        await fetch("https://control.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "authkey": msg91AuthKey,
+          },
+          body: JSON.stringify(msg91Payload),
+        });
+      } catch (e) {
+        console.error("🔥 Failed to send WhatsApp message via MSG91:", e);
+      }
     }
+  } else if (whatsappPhoneId && whatsappToken) {
+    // Mode A (Future with Meta Cloud API): Direct Meta WhatsApp Cloud API
+    for (const msg of messages) {
+      try {
+        await fetch(`https://graph.facebook.com/v20.0/${whatsappPhoneId}/messages`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${whatsappToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(msg),
+        });
+      } catch (e) {
+        console.error("🔥 Failed to send WhatsApp message via Meta Cloud API:", e);
+      }
+    }
+  } else {
+    console.warn("⚠️ [WhatsApp Simulated] Neither Meta Cloud API nor MSG91 credentials found. Payload:", JSON.stringify(messages, null, 2));
   }
 }

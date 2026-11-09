@@ -217,35 +217,72 @@ export async function sendBrandVariations(phone: string, session: WhatsAppSessio
       return;
     }
 
-    const { standardQuote, economyQuote, brandName } = targetBrandSummary;
+    const { standardQuote, economyQuote, colorNightQuote, brandName } = targetBrandSummary;
     const storageLabel = reqDays === 0 ? "Live Viewing Only (No HDD)" : `${reqDays} Days Storage`;
 
     let text = `📦 *${brandName.toUpperCase()} CCTV PACKAGES*\n\n`;
-    text += `1️⃣ *Standard Package (${storageLabel})*\n`;
-    text += `• Total: ₹${standardQuote.total_payable.toLocaleString('en-IN')} (Incl. GST & Fitting)\n`;
-    text += `• Hardware: ${selection.camera_count || 4}x ${techResolution(standardQuote)} Cameras (${formatCameraBreakdown(selection)}) + DVR/NVR + ${reqDays === 0 ? "Zero Storage" : "Surveillance HDD"}\n\n`;
+    text += `1️⃣ *Standard Package (2MP Full HD - ${storageLabel})*\n`;
+    text += `• Total: ₹${standardQuote.total_payable.toLocaleString('en-IN')} (Incl. 18% GST & Professional Installation)\n`;
+    text += `• Hardware: ${selection.camera_count || 4}x ${techResolution(standardQuote)} Cameras (${formatCameraBreakdown(selection)}) + Central DVR/NVR + ${reqDays === 0 ? "Zero Storage" : "Surveillance HDD"}\n\n`;
+
+    if (colorNightQuote) {
+      text += `2️⃣ *Enhanced 2K ColorVu / Color Night Vision Package (3MP/5MP)*\n`;
+      text += `• Total: ₹${colorNightQuote.total_payable.toLocaleString('en-IN')} (Incl. 18% GST & Installation)\n`;
+      text += `• Hardware: 24/7 Full Color Night Vision + Built-in Audio Microphone + Smart Motion Detection\n\n`;
+    }
 
     if (economyQuote) {
-      text += `2️⃣ *Economy Storage Match (500GB HDD)*\n`;
+      text += `3️⃣ *Economy Storage Match (500GB HDD)*\n`;
       text += `• Total: ₹${economyQuote.total_payable.toLocaleString('en-IN')} (Save ₹${((standardQuote.total_payable || 0) - economyQuote.total_payable).toLocaleString('en-IN')}!)\n`;
       text += `• Hardware: Same cameras with 3-5 days basic backup\n\n`;
     }
 
-    text += `Tap below to lock your preferred package and receive your official PDF quotation:`;
+    text += `Select your preferred variation below to freeze your quotation and receive your official PDF quotation:`;
 
-    const buttons = [
-      { id: `lock_${brandKey}_standard`, title: `Select Standard (₹${standardQuote.total_payable.toLocaleString('en-IN')})` }
+    const variationRows = [
+      { 
+        id: `lock_${brandKey}_standard`, 
+        title: `1. Standard 2MP (₹${standardQuote.total_payable.toLocaleString('en-IN')})`, 
+        description: `${storageLabel} with standard infrared night vision` 
+      }
     ];
 
-    if (economyQuote) {
-      buttons.push({ id: `lock_${brandKey}_economy`, title: `Select Economy (₹${economyQuote.total_payable.toLocaleString('en-IN')})` });
+    if (colorNightQuote) {
+      variationRows.push({
+        id: `lock_${brandKey}_color`,
+        title: `2. ColorVu 2K + Mic (₹${colorNightQuote.total_payable.toLocaleString('en-IN')})`,
+        description: "24/7 full color night vision + built-in audio mic"
+      });
     }
 
-    buttons.push({ id: "back_to_brands", title: "← All Brands" });
+    if (economyQuote) {
+      variationRows.push({
+        id: `lock_${brandKey}_economy`,
+        title: `3. Economy 500GB (₹${economyQuote.total_payable.toLocaleString('en-IN')})`,
+        description: `Save ₹${((standardQuote.total_payable || 0) - economyQuote.total_payable).toLocaleString('en-IN')} with basic 3-5 days backup`
+      });
+    }
 
-    await sendMsg(MessageBuilder.buttons(phone, text, buttons));
+    variationRows.push({
+      id: "back_to_brands",
+      title: "← Back to All Brands",
+      description: "Compare price spectrum across all brands"
+    });
 
-    // Update state
+    await sendMsg(MessageBuilder.list(
+      phone,
+      text,
+      "Select Package Variation",
+      [
+        {
+          title: `${brandName} Variations`,
+          rows: variationRows
+        }
+      ]
+    ));
+
+    // Update state & cache summaries on session for instant locking
+    (session as any).cached_brand_summaries = catalogResult.brandSummaries;
     await adminDb.collection(COLLECTIONS.WHATSAPP_SESSIONS).doc(phone).update({
       state: "SHOW_BRAND_VARIATIONS",
       selected_brand: brandKey,
@@ -474,22 +511,58 @@ function techResolution(quote: PricingResult): string {
 }
 
 async function sendMsg(msg: any) {
-  const whatsappPhoneId = process.env.WHATSAPP_PHONE_ID;
-  const whatsappToken = process.env.WHATSAPP_TOKEN;
-  if (!whatsappPhoneId || !whatsappToken) {
-    console.warn("⚠️ [WhatsApp Dispatch Simulated] API Keys missing. Payload:", JSON.stringify(msg, null, 2));
-    return;
-  }
-  try {
-    await fetch(`https://graph.facebook.com/v17.0/${whatsappPhoneId}/messages`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${whatsappToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(msg),
-    });
-  } catch (e) {
-    console.error("🔥 Failed to send WhatsApp message:", e);
+  const whatsappPhoneId = (process.env.WHATSAPP_PHONE_ID || process.env.WA_PHONE_NUMBER_ID || "").trim();
+  const whatsappToken = (process.env.WHATSAPP_TOKEN || process.env.WA_ACCESS_TOKEN || "").trim();
+  const msg91AuthKey = (process.env.MSG91_AUTH_KEY || "").trim();
+  const msg91FromNumber = (process.env.MSG91_WHATSAPP_NUMBER || "").trim();
+  const providerPref = (process.env.WHATSAPP_PROVIDER || "").toLowerCase().trim();
+
+  const useMsg91 = providerPref === "msg91" || (!!msg91AuthKey && providerPref !== "meta");
+
+  if (useMsg91 && msg91AuthKey && msg91FromNumber) {
+    // Mode B (Active with MSG91): MSG91 WhatsApp Outbound API
+    try {
+      const msg91Payload: any = {
+        integrated_number: msg91FromNumber,
+        recipient_number: msg.to,
+        content_type: msg.type || "text",
+        payload: msg,
+      };
+
+      if (msg.type === "text" && msg.text?.body) {
+        msg91Payload.text = msg.text.body;
+      } else if (msg.type === "interactive" && msg.interactive) {
+        msg91Payload.interactive = msg.interactive;
+      } else if (msg.type === "document" && msg.document) {
+        msg91Payload.document = msg.document;
+      }
+
+      await fetch("https://control.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "authkey": msg91AuthKey,
+        },
+        body: JSON.stringify(msg91Payload),
+      });
+    } catch (e) {
+      console.error("🔥 Failed to send WhatsApp message via MSG91:", e);
+    }
+  } else if (whatsappPhoneId && whatsappToken) {
+    // Mode A (Future with Meta Cloud API): Direct Meta WhatsApp Cloud API
+    try {
+      await fetch(`https://graph.facebook.com/v20.0/${whatsappPhoneId}/messages`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${whatsappToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(msg),
+      });
+    } catch (e) {
+      console.error("🔥 Failed to send WhatsApp message via Meta Cloud API:", e);
+    }
+  } else {
+    console.warn("⚠️ [WhatsApp Dispatch Simulated] Neither Meta Cloud API nor MSG91 credentials found. Payload:", JSON.stringify(msg, null, 2));
   }
 }

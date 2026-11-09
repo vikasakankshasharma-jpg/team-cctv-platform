@@ -5,7 +5,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 
 export function WhatsAppQR({ size = 150 }: { size?: number }) {
   const { t } = useTranslation();
-  const WA_NUMBER = "917357612865";
+  const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919982549315";
   const message = "Hi CCTVQuotation Team! 👋 I'd like a free quotation for CCTV installation at my property. Please help me.";
   const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
 

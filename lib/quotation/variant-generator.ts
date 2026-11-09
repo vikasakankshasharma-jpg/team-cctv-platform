@@ -35,6 +35,7 @@ export interface BrandPriceSummary {
   maxPrice: number;
   standardQuote: PricingResult;
   economyQuote?: PricingResult;
+  colorNightQuote?: PricingResult;
   variations: PricingResult[];
 }
 
@@ -154,7 +155,37 @@ export function generateAllCatalogVariations(params: {
       allVariants.push(rawStandardPricing);
     }
 
-    // 2. Economy Storage Match Quote (if requested > 3 days)
+    // 2. Enhanced Color Night Vision / 2K Resolution Package (ColorVu / Guard+ with Mic)
+    let colorNightPricing: PricingResult | undefined = undefined;
+    const colorNightSel: ConfiguratorSelection = {
+      ...standardSel,
+      resolution_preference: "3MP",
+      requested_features: ["color_night_vision", "mic"],
+    };
+
+    const rawColorNightPricing = calculatePricing({
+      selection: colorNightSel,
+      products: effectiveProducts,
+      addons,
+      settings,
+      cablingDone,
+      cablingMeters,
+      referralDiscountPercent: promoterDiscount?.percent || 0,
+      referralDiscountFlat: promoterDiscount?.flat || 0,
+      evaluatedAddonRules,
+      activeOffer,
+    });
+
+    if (!rawColorNightPricing.error && rawColorNightPricing.total_payable !== rawStandardPricing.total_payable) {
+      (rawColorNightPricing as any).brandKey = b.brandKey;
+      (rawColorNightPricing as any).brandName = b.brandName;
+      (rawColorNightPricing as any).is_color_night = true;
+      colorNightPricing = rawColorNightPricing;
+      brandVariations.push(rawColorNightPricing);
+      allVariants.push(rawColorNightPricing);
+    }
+
+    // 3. Economy Storage Match Quote (if requested > 3 days)
     const reqDays = selection.recording_days ?? 15;
     let economyPricing: PricingResult | undefined = undefined;
 
@@ -197,6 +228,7 @@ export function generateAllCatalogVariations(params: {
         maxPrice: Math.max(...prices),
         standardQuote: rawStandardPricing,
         economyQuote: economyPricing,
+        colorNightQuote: colorNightPricing,
         variations: brandVariations,
       });
     }
