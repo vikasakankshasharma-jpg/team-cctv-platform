@@ -557,6 +557,22 @@ A **Hybrid CCTV System** combines a central wired CCTV setup (Analog HD with DVR
 
 ---
 
+### 12.8 Camera Count Breakdown Mathematical Parity Invariant
+- **Rule of Universal Mathematical Parity:**
+  Across all customer-facing touchpoints (e.g., Wizard Step 4 Security Blueprint badge in `WizardClientV2.tsx`, Setup Assistant in `SpecificationChecklistModal.tsx`, and WhatsApp quotation summary in `lib/whatsapp/quote-dispatch.ts`), any parenthetical camera breakdown displayed alongside a total camera count MUST strictly sum to that exact total:
+  $\text{camera\_count} = \text{outdoor\_camera\_count} + \text{indoor\_camera\_count} + \text{wifi\_camera\_count}$
+- **Prohibition of Unaccounted Quantities:**
+  Displaying `📹 74 Cameras (36 Out + 2 In)` when 36 wireless cameras are configured is strictly prohibited as it creates a mathematical discrepancy ($36 + 2 = 38 \neq 74$).
+- **Standard Formatting Protocol:**
+  1. **Hybrid Configurations (`wifi_camera_count > 0`):**
+     Format as: `📹 {total} Cameras ({out} Out + {in} In + {wifi} Wireless)`. If indoor or outdoor count is 0, omit the zero component to keep tags compact and clean (e.g., `📹 72 Cameras (36 Out + 36 Wireless)`).
+  2. **Standard Wired Configurations (`wifi_camera_count == 0`):**
+     Format as: `📹 {total} Cameras ({out} Out + {in} In)`.
+  3. **Pure Wireless Configurations (`technology_preference == "Wireless"`):**
+     Format as: `📹 {total} Cameras ({out} Out + {in} In Wireless)` or `📹 {total} Cameras ({total} Wireless)`.
+
+---
+
 ## 13. Competitor Price Match Guarantee & Deal Desk Architecture
 
 ### 13.1 Contextual On-Card Anchoring (No Unanchored Submissions)

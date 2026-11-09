@@ -2917,9 +2917,41 @@ export function WizardClientV2() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs font-semibold text-slate-700 dark:text-zinc-300">
-                      <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-2xs">
-                        📹 {Number(req.camera_count) || 4} Cameras ({req.outdoor_camera_count ?? 2} Out + {req.indoor_camera_count ?? 2} In)
-                      </span>
+                      {(() => {
+                        const isPureWireless = req.technology_preference === "Wireless";
+                        const wifiCount = Number(req.wifi_camera_count) || 0;
+                        const outCount = typeof req.outdoor_camera_count === "number" ? req.outdoor_camera_count : (isPureWireless ? 0 : 2);
+                        const inCount = typeof req.indoor_camera_count === "number" ? req.indoor_camera_count : (isPureWireless ? 0 : 2);
+                        const totalCams = Number(req.camera_count) || (isPureWireless ? (wifiCount || (outCount + inCount) || 2) : (outCount + inCount + wifiCount)) || 4;
+
+                        let breakdown = "";
+                        if (isPureWireless) {
+                          if (outCount > 0 && inCount > 0) {
+                            breakdown = ` (${outCount} Out + ${inCount} In Wireless)`;
+                          } else {
+                            breakdown = ` (${totalCams} Wireless)`;
+                          }
+                        } else {
+                          const parts: string[] = [];
+                          if (outCount > 0) parts.push(`${outCount} Out`);
+                          else if (inCount > 0 && wifiCount === 0) parts.push("0 Out");
+
+                          if (inCount > 0) parts.push(`${inCount} In`);
+                          else if (outCount > 0 && wifiCount === 0) parts.push("0 In");
+
+                          if (wifiCount > 0) parts.push(`${wifiCount} Wireless`);
+
+                          if (parts.length > 0) {
+                            breakdown = ` (${parts.join(" + ")})`;
+                          }
+                        }
+
+                        return (
+                          <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-2xs">
+                            📹 {totalCams} Cameras{breakdown}
+                          </span>
+                        );
+                      })()}
                       <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-2xs">
                         💾 {req.recording_days ?? 7} Days Backup
                       </span>

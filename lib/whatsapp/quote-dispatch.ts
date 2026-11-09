@@ -91,7 +91,7 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
     // 1. Text Summary Card: All-Inclusive Brand Price Range
     let summaryText = `📷 *COMPLETE CCTV PRICE SUMMARY*\n`;
     summaryText += `━━━━━━━━━━━━━━━━━━━━━\n`;
-    summaryText += `📍 *Site Setup:* ${totalCams} Cameras (${selection.outdoor_camera_count || 0} Out + ${selection.indoor_camera_count || 0} In)\n`;
+    summaryText += `📍 *Site Setup:* ${totalCams} Cameras (${formatCameraBreakdown(selection)})\n`;
     summaryText += `⚡ *Technology:* ${tech === "IP" ? "Digital IP (Best Quality)" : tech === "HD" ? "HD Analog (Lowest Cost)" : "Smart Wireless"}\n`;
     summaryText += `💾 *Storage:* ${storageDays === 0 ? "Live Viewing Only (No HDD)" : `${storageDays} Days Retention (${selection.recording_mode === "motion" ? "Motion" : "24x7"})`}\n`;
     summaryText += `🔌 *Cabling:* ${cablingDone ? "Pre-Wired Site (Fitting only)" : "Need New Cabling (~15m wire/cam incl)"}\n`;
@@ -223,7 +223,7 @@ export async function sendBrandVariations(phone: string, session: WhatsAppSessio
     let text = `📦 *${brandName.toUpperCase()} CCTV PACKAGES*\n\n`;
     text += `1️⃣ *Standard Package (${storageLabel})*\n`;
     text += `• Total: ₹${standardQuote.total_payable.toLocaleString('en-IN')} (Incl. GST & Fitting)\n`;
-    text += `• Hardware: ${selection.camera_count || 4}x ${techResolution(standardQuote)} Cameras (${selection.outdoor_camera_count || 0} Out + ${selection.indoor_camera_count || 0} In) + DVR/NVR + ${reqDays === 0 ? "Zero Storage" : "Surveillance HDD"}\n\n`;
+    text += `• Hardware: ${selection.camera_count || 4}x ${techResolution(standardQuote)} Cameras (${formatCameraBreakdown(selection)}) + DVR/NVR + ${reqDays === 0 ? "Zero Storage" : "Surveillance HDD"}\n\n`;
 
     if (economyQuote) {
       text += `2️⃣ *Economy Storage Match (500GB HDD)*\n`;
@@ -444,6 +444,29 @@ export async function handleSlotSelection(phone: string, session: WhatsAppSessio
   } catch (err) {
     console.error("🔥 Error in handleSlotSelection:", err);
   }
+}
+
+function formatCameraBreakdown(selection: any): string {
+  const isPureWireless = selection.technology === "Wireless" || selection.technology === "wifi";
+  const outCount = Number(selection.outdoor_camera_count) || 0;
+  const inCount = Number(selection.indoor_camera_count) || 0;
+  const wifiCount = Number(selection.wifi_camera_count) || 0;
+  const total = Number(selection.camera_count) || (isPureWireless ? (wifiCount || (outCount + inCount) || 4) : (outCount + inCount + wifiCount || 4));
+
+  if (isPureWireless) {
+    if (outCount > 0 && inCount > 0) return `${outCount} Out + ${inCount} In Wireless`;
+    return `${total} Smart Wireless`;
+  }
+  const parts: string[] = [];
+  if (outCount > 0) parts.push(`${outCount} Out`);
+  else if (inCount > 0 && wifiCount === 0) parts.push("0 Out");
+
+  if (inCount > 0) parts.push(`${inCount} In`);
+  else if (outCount > 0 && wifiCount === 0) parts.push("0 In");
+
+  if (wifiCount > 0) parts.push(`${wifiCount} Wireless`);
+
+  return parts.length > 0 ? parts.join(" + ") : `${total} Wired`;
 }
 
 function techResolution(quote: PricingResult): string {

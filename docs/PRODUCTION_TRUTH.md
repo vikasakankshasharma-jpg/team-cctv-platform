@@ -115,6 +115,13 @@
 
 ---
 
+22. **Camera Count Breakdown Mathematical Parity Invariant:**
+    - Across all UI badges (`WizardClientV2.tsx` security blueprint summary), checklist modals (`SpecificationChecklistModal.tsx`), and WhatsApp quotation notifications (`quote-dispatch.ts`), any parenthetical breakdown displayed alongside a total camera count MUST strictly sum to that exact total:
+      $\text{total\_cameras} = \text{outdoor} + \text{indoor} + \text{wireless}$
+    - Disallowed Omission: Displaying `📹 74 Cameras (36 Out + 2 In)` when 36 wireless cameras are configured is strictly prohibited. The breakdown dynamically interpolates `${wifi} Wireless` (e.g. `📹 74 Cameras (36 Out + 2 In + 36 Wireless)`), guaranteeing 100% mathematical consistency.
+
+---
+
 ## 4. Catalog Integrity & Test Hygiene Guardrails
 1. **Zero Fake Products Policy:**
    - No mock/placeholder SKUs (e.g. `"Test Camera"`, `"TEST-CAM"`) are permitted in the catalog or quotation pipeline.

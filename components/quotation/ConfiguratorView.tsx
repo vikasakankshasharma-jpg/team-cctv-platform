@@ -835,6 +835,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         currentTags={selection.requested_features || []}
         outdoorCount={selection.outdoor_camera_count}
         indoorCount={selection.indoor_camera_count}
+        wifiCount={selection.wifi_camera_count}
         availableFeatureTags={availableFeatureTags}
       />
 

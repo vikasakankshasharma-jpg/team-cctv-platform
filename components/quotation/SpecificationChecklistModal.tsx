@@ -71,6 +71,7 @@ interface SpecificationChecklistModalProps {
   currentTags: string[];
   outdoorCount?: number;
   indoorCount?: number;
+  wifiCount?: number;
   availableFeatureTags?: string[];
 }
 
@@ -81,6 +82,7 @@ export function SpecificationChecklistModal({
   currentTags = [],
   outdoorCount = 0,
   indoorCount = 0,
+  wifiCount = 0,
   availableFeatureTags,
 }: SpecificationChecklistModalProps) {
   // Filter specification options to only those available in active product inventory

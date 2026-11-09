@@ -626,6 +626,25 @@
 
 ---
 
+### Milestone 49: Hybrid Camera Breakdown Mathematical Parity Invariant
+- **Root Cause & Visual Defect Identified**:
+  - In a Hybrid setup (Wired + Wireless), the wizard's Step 4 Security Blueprint badge displayed `📹 74 Cameras (36 Out + 2 In)` when 36 outdoor, 2 indoor, and 36 wireless cameras were selected.
+  - The breakdown only evaluated `outdoor_camera_count` and `indoor_camera_count`, leaving 36 wireless cameras omitted from the badge text, resulting in a mathematical contradiction ($36 + 2 = 38 \neq 74$).
+- **Universal Dynamic Breakdown Implementation**:
+  - **Wizard Blueprint Badge (`WizardClientV2.tsx`)**:
+    - Replaced hardcoded `({req.outdoor_camera_count ?? 2} Out + {req.indoor_camera_count ?? 2} In)` with a dynamic evaluator checking `isPureWireless`, `outCount`, `inCount`, and `wifiCount`.
+    - Produces `📹 74 Cameras (36 Out + 2 In + 36 Wireless)`, achieving 100% mathematical parity.
+    - Preserves standard wired display (`📹 4 Cameras (2 Out + 2 In)`) and pure wireless display (`📹 2 Cameras (2 Wireless)`).
+  - **WhatsApp Quote Dispatch (`lib/whatsapp/quote-dispatch.ts`)**:
+    - Centralized `formatCameraBreakdown(selection)` helper used in both Price Summary card (line 94) and Brand Variations message (line 226) to include wireless cameras whenever present.
+  - **Quotation Specification Checklist Modal (`SpecificationChecklistModal.tsx`)**:
+    - Added `wifiCount` prop from `ConfiguratorView.tsx` to display `36 Outdoor + 2 Indoor + 36 Wireless` in the Setup Assistant header.
+- **Automated Verification**:
+  - Created `scripts/test-camera-breakdown-parity.ts` testing hybrid, pure wired, all-outdoor, all-indoor, and pure wireless configurations (100% pass rate).
+  - TypeScript compilation check (`npx tsc --noEmit`) verified clean with 0 errors.
+
+---
+
 ### Milestone 48: Multi-Variation Catalog Architecture & Compact Dropdown Filter Toolbar
 - **Lowest-Priced Entry Point & Multi-Variation Generation**:
   - Resolved root cause of high initial branded quotes (Hikvision displaying ColorVu at ₹24,451 instead of entry price):

@@ -843,18 +843,27 @@ async function runSimulationAndRender() {
       sender: "bot",
       time: "10:16 AM",
       type: "list",
-      text: "*Step 3 (Outdoor Cameras):* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need mounted outside for your main gate, driveway, parking, or boundary walls?",
-      listButtonTitle: "Select Outdoor Cameras",
+      text: "*Step 3 (Outdoor Cameras):* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need mounted outside for your main gate, driveway, parking, or boundary walls?\n\n_Select quantity (0 to 32) from the menu below or reply directly with any number:_ ",
+      listButtonTitle: "Select Outdoor Cameras (0-32)",
       listSections: [
         {
-          title: "Outdoor Weatherproof Bullets",
+          title: "Standard Quantities (0 to 4)",
           rows: [
-            { id: "out_0", title: "0 Cameras (None Outside)", desc: "All cameras will be installed indoors" },
+            { id: "out_0", title: "0 Cameras (None Outside)", desc: "All cameras will be mounted indoors" },
             { id: "out_1", title: "1 Outdoor Bullet", desc: "Main gate / single entrance coverage" },
             { id: "out_2", title: "2 Outdoor Bullets", desc: "Front gate + driveway / parking" },
-            { id: "out_3", title: "3 Outdoor Bullets", desc: "Front gate, porch & backyard" },
+            { id: "out_3", title: "3 Outdoor Bullets", desc: "Front gate, side lane & backyard" },
             { id: "out_4", title: "4 Outdoor Bullets", desc: "4-corner full perimeter coverage" },
-            { id: "out_custom", title: "5+ Outdoor Bullets", desc: "Large perimeter / commercial yard" }
+          ]
+        },
+        {
+          title: "Commercial & Large (6 to 32)",
+          rows: [
+            { id: "out_6", title: "6 Outdoor Bullets", desc: "Multi-point perimeter security" },
+            { id: "out_8", title: "8 Outdoor Bullets", desc: "Comprehensive perimeter coverage" },
+            { id: "out_16", title: "16 Outdoor Bullets", desc: "Commercial enterprise perimeter" },
+            { id: "out_32", title: "32 Outdoor Bullets", desc: "Large factory / campus perimeter" },
+            { id: "out_custom", title: "✏️ Custom Quantity (0-32)", desc: "Reply with any exact number 0 to 32" }
           ]
         }
       ]
@@ -867,33 +876,42 @@ async function runSimulationAndRender() {
     }
   ];
 
-  await page.setContent(generateWhatsAppHtml(messagesStep2, "Step 2: Installation Types & Outdoor Cameras"));
+  await page.setContent(generateWhatsAppHtml(messagesStep2, "Step 2: Installation Types & Outdoor Cameras (0-32)"));
   const pathStep2 = path.join(outputDir, "step2_wizard_camera_config.png");
   await page.screenshot({ path: pathStep2 });
   fs.copyFileSync(pathStep2, path.join(baseArtifactDir, "step2_wizard_camera_config.png"));
   console.log(`   Saved: ${pathStep2}`);
 
   // ───────────────────────────────────────────────────────────────────────────
-  // SCREENSHOT 3: Indoor Cameras, Technology & Storage Retention (0 to 60 Days)
+  // SCREENSHOT 3: Indoor Cameras (0-32), Dedicated Smart Wireless Dropdown & Tech/Storage
   // ───────────────────────────────────────────────────────────────────────────
-  console.log("\n📸 Capturing Milestone 3: Indoor Domes, Technology & Storage (0-60 Days)...");
+  console.log("\n📸 Capturing Milestone 3: Indoor Domes (0-32), Smart Wireless Dropdown & Storage...");
   const messagesStep3: ChatMessage[] = [
     {
       sender: "bot",
       time: "10:16 AM",
       type: "list",
-      text: "*Step 4 (Indoor Cameras):* 🏠\n\nHow many *Compact Ceiling Dome Cameras* do you need mounted inside for your living room, corridors, office, or cashier counters?",
-      listButtonTitle: "Select Indoor Cameras",
+      text: "*Step 4 (Indoor Cameras):* 🏠\n\nHow many *Compact Ceiling Dome Cameras* do you need mounted inside for your living room, corridors, office, or cashier counters?\n\n_Select quantity (0 to 32) from the menu below or reply directly with any number:_ ",
+      listButtonTitle: "Select Indoor Cameras (0-32)",
       listSections: [
         {
-          title: "Indoor Ceiling Domes",
+          title: "Standard Quantities (0 to 4)",
           rows: [
             { id: "in_0", title: "0 Cameras (None Inside)", desc: "All cameras will be outdoor bullets" },
             { id: "in_1", title: "1 Indoor Dome", desc: "Living hall / main reception" },
             { id: "in_2", title: "2 Indoor Domes", desc: "Hall + cashier desk / master bedroom" },
             { id: "in_3", title: "3 Indoor Domes", desc: "Hall + 2 rooms / cabins" },
             { id: "in_4", title: "4 Indoor Domes", desc: "4 separate indoor zones" },
-            { id: "in_custom", title: "5+ Indoor Domes", desc: "Large commercial / office floor" }
+          ]
+        },
+        {
+          title: "Commercial & Large (6 to 32)",
+          rows: [
+            { id: "in_6", title: "6 Indoor Domes", desc: "Medium commercial interior / 6 rooms" },
+            { id: "in_8", title: "8 Indoor Domes", desc: "Comprehensive commercial interior" },
+            { id: "in_16", title: "16 Indoor Domes", desc: "Departmental store / corporate floor" },
+            { id: "in_32", title: "32 Indoor Domes", desc: "Hotel, school, hospital campus" },
+            { id: "in_custom", title: "✏️ Custom Quantity (0-32)", desc: "Reply with any exact number 0 to 32" }
           ]
         }
       ]
@@ -903,6 +921,32 @@ async function runSimulationAndRender() {
       time: "10:16 AM",
       type: "text",
       text: "2 Indoor Domes"
+    },
+    {
+      sender: "bot",
+      time: "10:17 AM",
+      type: "list",
+      text: "✓ *Wired Cameras Configured:* 4 Cameras (2 Out + 2 In)\n\n📡 *Add Smart Wireless Cameras (Wi-Fi / 4G SIM)*\n_Optional • Hybrid Setup (Website Card 3 Parity)_\n\nDo you want to add any wireless cameras for remote gate, terrace, farm corner, or baby room without video cables?",
+      listButtonTitle: "Select Wireless Option",
+      listSections: [
+        {
+          title: "Smart Wireless Add-on Options",
+          rows: [
+            { id: "wf_none", title: "❌ None (Pure Wired DVR Setup)", desc: "Proceed with standard wired DVR setup only" },
+            { id: "wf_in_ptz", title: "🏠 Indoor 360° Pan-Tilt (Wi-Fi)", desc: "Living room, counter, baby room with 2-way talk" },
+            { id: "wf_in_fixed", title: "🏢 Indoor Fixed Dome / Cube (Wi-Fi)", desc: "Hallways, reception, cashier desk" },
+            { id: "wf_out_bullet", title: "🌧️ Outdoor Fixed Weatherproof (Wi-Fi)", desc: "Main gate, porch, driveway, perimeter" },
+            { id: "wf_out_ptz", title: "🔄 Outdoor 360° Pan-Tilt PTZ (Wi-Fi)", desc: "Open courtyard, terrace, front garden" },
+            { id: "wf_4g_solar", title: "🛰️ 4G SIM / Solar Standalone Camera", desc: "Farmhouse, empty plot, remote gate (No Wi-Fi needed)" },
+          ]
+        }
+      ]
+    },
+    {
+      sender: "customer",
+      time: "10:17 AM",
+      type: "text",
+      text: "❌ None (Pure Wired DVR Setup)"
     },
     {
       sender: "bot",
@@ -1284,20 +1328,67 @@ async function runSimulationAndRender() {
       sender: "bot",
       time: "11:05 AM",
       type: "list",
-      text: "*Smart Wireless Purpose Variants:*\nChoose your primary camera configuration:",
+      text: "*Smart Wireless Purpose Variants:*\nSelect the type of smart wireless camera you need for your site:",
       listButtonTitle: "Select Wireless Camera Variant",
       listSections: [
         {
           title: "Purpose-Driven Wireless Cameras",
           rows: [
-            { id: "wf_in_ptz", title: "🏠 Indoor 360° Pan-Tilt", desc: "Living room, counter, 2-way talk" },
-            { id: "wf_out_bullet", title: "🌧️ Outdoor Fixed Weatherproof", desc: "IP66 waterproof bullet for gates & porch" },
-            { id: "wf_out_ptz", title: "🔄 Outdoor 360° Motorized PTZ", desc: "360° remote sweep via phone app" },
-            { id: "wf_4g_solar", title: "📡 4G SIM / Solar Standalone", desc: "No Wi-Fi needed. Farmhouse & remote gates" },
+            { id: "wf_in_ptz", title: "🏠 Indoor 360° Pan-Tilt (Wi-Fi)", desc: "Living room, counter, baby room with 2-way talk" },
+            { id: "wf_in_fixed", title: "🏢 Indoor Fixed Dome / Cube (Wi-Fi)", desc: "Hallways, reception, cashier desk" },
+            { id: "wf_out_bullet", title: "🌧️ Outdoor Fixed Weatherproof (Wi-Fi)", desc: "IP66 waterproof bullet for gates & porch" },
+            { id: "wf_out_ptz", title: "🔄 Outdoor 360° Motorized PTZ (Wi-Fi)", desc: "360° remote sweep via phone app" },
+            { id: "wf_4g_solar", title: "🛰️ 4G SIM / Solar Standalone Camera", desc: "No Wi-Fi needed. Farmhouse & remote gates" },
             { id: "wf_combo_2x2", title: "✨ 4-Cam Combo (2 In + 2 Out)", desc: "Complete home / office wireless coverage" }
           ]
         }
       ]
+    },
+    {
+      sender: "customer",
+      time: "11:06 AM",
+      type: "text",
+      text: "🏠 Indoor 360° Pan-Tilt (Wi-Fi)"
+    },
+    {
+      sender: "bot",
+      time: "11:06 AM",
+      type: "list",
+      text: "How many *Indoor 360° Pan-Tilt (Wi-Fi)* cameras do you need (1 to 32)?\n\n_Select quantity below or reply directly with any number:_ ",
+      listButtonTitle: "Select Quantity (1-32)",
+      listSections: [
+        {
+          title: "Standard Quantities (1 to 4)",
+          rows: [
+            { id: "wfq_1", title: "1 Camera", desc: "Add 1x Indoor 360° Pan-Tilt (Wi-Fi)" },
+            { id: "wfq_2", title: "2 Cameras", desc: "Add 2x Indoor 360° Pan-Tilt (Wi-Fi)" },
+            { id: "wfq_3", title: "3 Cameras", desc: "Add 3x Indoor 360° Pan-Tilt (Wi-Fi)" },
+            { id: "wfq_4", title: "4 Cameras", desc: "Add 4x Indoor 360° Pan-Tilt (Wi-Fi)" },
+          ]
+        },
+        {
+          title: "Larger Quantities (6 to 32)",
+          rows: [
+            { id: "wfq_6", title: "6 Cameras", desc: "Add 6x Indoor 360° Pan-Tilt (Wi-Fi)" },
+            { id: "wfq_8", title: "8 Cameras", desc: "Add 8x Indoor 360° Pan-Tilt (Wi-Fi)" },
+            { id: "wfq_16", title: "16 Cameras", desc: "Add 16x Indoor 360° Pan-Tilt (Wi-Fi)" },
+            { id: "wfq_32", title: "32 Cameras", desc: "Add 32x Indoor 360° Pan-Tilt (Wi-Fi)" },
+            { id: "wfq_custom", title: "✏️ Custom Quantity (1-32)", desc: "Reply with any number 1 to 32" }
+          ]
+        }
+      ]
+    },
+    {
+      sender: "customer",
+      time: "11:06 AM",
+      type: "text",
+      text: "2 Cameras"
+    },
+    {
+      sender: "bot",
+      time: "11:06 AM",
+      type: "text",
+      text: "✓ *Smart Wireless Setup Confirmed:* 2 Cameras (Indoor 360° Pan-Tilt)\n\nProceeding to storage selection..."
     }
   ];
 
