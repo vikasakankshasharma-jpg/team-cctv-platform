@@ -67,23 +67,29 @@ export async function POST(req: Request) {
     } else {
       // Forward inbound message (e.g. "Hi P102" or interactive selection) to Bot Engine
       const rawText = data.text || data.message || "";
-      const interactiveId = data.button_payload || data.payload || data.button_reply?.id || data.list_reply?.id;
+      const interactiveId = 
+        data.button || 
+        data.interactive || 
+        data.button_payload || 
+        data.payload || 
+        data.button_reply?.id || 
+        data.list_reply?.id;
 
       let incomingType: "text" | "interactive" | "nfm_reply" | "location" | "image" | "document" = "text";
       let content = rawText;
 
       if (interactiveId) {
         incomingType = "interactive";
-        content = interactiveId;
-      } else if (data.type === "location" || data.location) {
+        content = typeof interactiveId === "object" ? (interactiveId.id || interactiveId.title || rawText) : interactiveId;
+      } else if (data.contentType === "location" || data.type === "location" || data.location || (data.latitude && data.longitude)) {
         incomingType = "location";
-        content = data.location;
-      } else if (data.type === "image" || data.image) {
+        content = data.location || { latitude: data.latitude, longitude: data.longitude };
+      } else if (data.contentType === "image" || data.type === "image" || data.image) {
         incomingType = "image";
-        content = data.image;
-      } else if (data.type === "document" || data.document) {
+        content = data.image || { url: data.url, caption: data.caption };
+      } else if (data.contentType === "document" || data.type === "document" || data.document || data.filename) {
         incomingType = "document";
-        content = data.document;
+        content = data.document || { url: data.url, filename: data.filename, caption: data.caption };
       } else if (data.type === "nfm_reply" || data.nfm_reply) {
         incomingType = "nfm_reply";
         content = data.nfm_reply?.response_json || data.response_json || data.payload;
@@ -91,8 +97,8 @@ export async function POST(req: Request) {
 
       await processIncomingMessage(cleanPhone, incomingType, content, {
         profileName: data.customerName || data.name || data.sender_name || "WhatsApp Customer",
-        locationCoords: data.location,
-        mediaId: data.image?.id || data.document?.id,
+        locationCoords: data.location || (data.latitude && data.longitude ? { latitude: data.latitude, longitude: data.longitude } : undefined),
+        mediaId: data.image?.id || data.document?.id || data.uuid || data.requestId,
       });
     }
 
