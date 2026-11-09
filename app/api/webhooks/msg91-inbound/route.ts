@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { addLeadActivity } from "@/app/actions/leads";
 import { processIncomingMessage } from "@/lib/whatsapp/bot-engine";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
@@ -24,6 +26,7 @@ export async function POST(req: Request) {
     const messageText = (data.text || data.message || "").toLowerCase().trim();
     const buttonPayload = (data.button_payload || data.payload || data.button_reply?.id || data.list_reply?.id || "").toLowerCase().trim();
 
+    // If no customer phone found (e.g. synthetic test ping without phone), immediately return success
     if (!customerPhone) {
       return NextResponse.json({ success: true, message: "Ignored: No customer phone found in payload" });
     }
@@ -39,31 +42,35 @@ export async function POST(req: Request) {
       messageText === "not interested";
 
     if (isStopRequest) {
-      // Find the lead associated with this phone number (last 10 digits)
-      const last10Digits = cleanPhone.slice(-10);
-      
-      const leadsSnapshot = await adminDb.collection("leads")
-        .where("phone", "==", last10Digits)
-        .limit(1)
-        .get();
+      // Find the lead associated with this phone number (last 10 digits) in background
+      after(async () => {
+        try {
+          const last10Digits = cleanPhone.slice(-10);
+          const leadsSnapshot = await adminDb.collection("leads")
+            .where("phone", "==", last10Digits)
+            .limit(1)
+            .get();
 
-      if (!leadsSnapshot.empty) {
-        const leadDoc = leadsSnapshot.docs[0];
-        
-        await leadDoc.ref.update({
-          status: "lost",
-          do_not_disturb: true,
-          updated_at: new Date()
-        });
+          if (!leadsSnapshot.empty) {
+            const leadDoc = leadsSnapshot.docs[0];
+            await leadDoc.ref.update({
+              status: "lost",
+              do_not_disturb: true,
+              updated_at: new Date()
+            });
 
-        await addLeadActivity(
-          leadDoc.id, 
-          "system", 
-          "Customer opted out via WhatsApp Quick Reply. Status automatically changed to LOST."
-        );
-        
-        console.log(`[MSG91 Webhook] Opt-out processed for ${last10Digits}`);
-      }
+            await addLeadActivity(
+              leadDoc.id, 
+              "system", 
+              "Customer opted out via WhatsApp Quick Reply. Status automatically changed to LOST."
+            );
+            
+            console.log(`[MSG91 Webhook] Opt-out processed for ${last10Digits}`);
+          }
+        } catch (e) {
+          console.error("[MSG91 Webhook Opt-Out Error]:", e);
+        }
+      });
     } else {
       // Forward inbound message (e.g. "Hi P102" or interactive selection) to Bot Engine
       const rawText = data.text || data.message || "";
@@ -95,13 +102,22 @@ export async function POST(req: Request) {
         content = data.nfm_reply?.response_json || data.response_json || data.payload;
       }
 
-      await processIncomingMessage(cleanPhone, incomingType, content, {
-        profileName: data.customerName || data.name || data.sender_name || "WhatsApp Customer",
-        locationCoords: data.location || (data.latitude && data.longitude ? { latitude: data.latitude, longitude: data.longitude } : undefined),
-        mediaId: data.image?.id || data.document?.id || data.uuid || data.requestId,
+      // Schedule background execution using Next.js after()
+      // This allows the webhook HTTP request to respond in < 50ms while keeping execution alive
+      after(async () => {
+        try {
+          await processIncomingMessage(cleanPhone, incomingType, content, {
+            profileName: data.customerName || data.name || data.sender_name || "WhatsApp Customer",
+            locationCoords: data.location || (data.latitude && data.longitude ? { latitude: data.latitude, longitude: data.longitude } : undefined),
+            mediaId: data.image?.id || data.document?.id || data.uuid || data.requestId,
+          });
+        } catch (err) {
+          console.error("[MSG91 Webhook Processing Error]:", err);
+        }
       });
     }
 
+    // Immediately respond to MSG91 with HTTP 200 within milliseconds
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("[MSG91 Webhook] Error:", error);
