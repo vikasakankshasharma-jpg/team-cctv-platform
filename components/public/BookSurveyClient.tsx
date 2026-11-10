@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { extractErrorMessage } from "@/lib/utils";
 import { Calendar as CalendarIcon, Clock, MapPin, User, Phone, CheckCircle2, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -60,11 +61,10 @@ export function BookSurveyClient() {
       if (data.success) {
         setIsSuccess(true);
       } else {
-        const errBook = data.error?.message || (typeof data.error === "string" ? data.error : null) || "Failed to book survey.";
-        toast.error(errBook);
+        toast.error(extractErrorMessage(data, "Failed to book survey."));
       }
     } catch (e) {
-      toast.error("An error occurred. Please try again.");
+      toast.error(extractErrorMessage(e, "An error occurred. Please try again."));
     } finally {
       setIsSubmitting(false);
     }

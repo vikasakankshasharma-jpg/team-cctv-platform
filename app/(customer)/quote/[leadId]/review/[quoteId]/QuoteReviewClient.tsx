@@ -11,6 +11,7 @@ import { RevisionBanner } from "@/components/quote/RevisionBanner";
 import { BillingOverviewModal, BillingFormData } from "@/components/checkout/BillingOverviewModal";
 import { SiteVisitBookingModal } from "@/components/checkout/SiteVisitBookingModal";
 import { EmiBreakdownModal } from "@/components/quotation/EmiBreakdownModal";
+import { extractErrorMessage } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -266,8 +267,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         if (data.success && data.payment_url) {
           return data.payment_url;
         }
-        const errLink = data.error?.message || (typeof data.error === "string" ? data.error : null) || "Failed to generate payment link";
-        toast.error(errLink);
+        toast.error(extractErrorMessage(data, "Failed to generate payment link"));
         return null;
       }
 
@@ -285,8 +285,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        const errInit = data.error?.message || (typeof data.error === "string" ? data.error : null) || "Failed to initialize payment";
-        toast.error(errInit, { id: toastId });
+        toast.error(extractErrorMessage(data, "Failed to initialize payment"), { id: toastId });
         return;
       }
 
@@ -431,8 +430,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        const errPay = data.error?.message || (typeof data.error === "string" ? data.error : null) || "Failed to initiate payment";
-        throw new Error(errPay);
+        throw new Error(extractErrorMessage(data, "Failed to initiate payment"));
       }
 
       const options = {
@@ -464,14 +462,11 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any){
-        toast.error(response.error?.description || "Payment failed or cancelled.");
+        toast.error(extractErrorMessage(response, "Payment failed or cancelled."));
       });
       rzp.open();
     } catch (err: any) {
-      const msg = typeof err?.message === "string" && err.message !== "[object Object]"
-        ? err.message
-        : "Payment initiation failed";
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, "Payment initiation failed"));
       console.error(err);
     } finally {
       setIsPayingEMI(false);

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ShieldCheck, ShieldAlert, Wrench, FileText, CheckCircle2, ChevronRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { extractErrorMessage } from "@/lib/utils";
 
 export function SupportPanel({ customerInfo, warranties, activeTickets }: { customerInfo: any, warranties: any[], activeTickets: any[] }) {
   const [isRaising, setIsRaising] = useState(false);
@@ -38,11 +39,10 @@ export function SupportPanel({ customerInfo, warranties, activeTickets }: { cust
         setIssueDesc("");
         // In a real app, you'd trigger a router refresh or local state update here
       } else {
-        const errSupport = data.error?.message || (typeof data.error === "string" ? data.error : null) || "Failed to create support ticket";
-        toast.error(errSupport);
+        toast.error(extractErrorMessage(data, "Failed to create support ticket"));
       }
     } catch (e) {
-      toast.error("An error occurred");
+      toast.error(extractErrorMessage(e, "An error occurred"));
     } finally {
       setIsRaising(false);
     }

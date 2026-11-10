@@ -10,6 +10,7 @@ import {
   BarChart2, Users, ArrowRight, CheckCircle2, AlertCircle, ArrowLeft,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { extractErrorMessage } from "@/lib/utils";
 
 // ─── Animated Background Ambient Glow ──────────────────────────────────────────
 function BackgroundOrbs() {
@@ -123,7 +124,7 @@ export default function AdminLoginForm() {
           body: JSON.stringify({ email: identifier }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to send code.");
+        if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to send code."));
       } else {
         const res = await fetch("/api/auth/otp/mobile", {
           method: "POST",
@@ -131,7 +132,7 @@ export default function AdminLoginForm() {
           body: JSON.stringify({ mobile: identifier }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Unauthorized mobile number.");
+        if (!res.ok) throw new Error(extractErrorMessage(data, "Unauthorized mobile number."));
         const appVerifier = (window as any).recaptchaVerifier;
         const confirmationResult = await signInWithPhoneNumber(auth, data.e164Mobile, appVerifier);
         (window as any).confirmationResult = confirmationResult;
@@ -144,7 +145,7 @@ export default function AdminLoginForm() {
       } else if (err.code === "auth/internal-error" || err.message?.includes("internal-error")) {
         setError(`Firebase error: Ensure '${window.location.hostname}' is in Authorized Domains.`);
       } else {
-        setError(err.message || "An unexpected error occurred.");
+        setError(extractErrorMessage(err, "An unexpected error occurred."));
       }
     } finally {
       setLoading(false);
@@ -166,7 +167,7 @@ export default function AdminLoginForm() {
           body: JSON.stringify({ identifier, otp: code, type: "email" }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Invalid verification code.");
+        if (!res.ok) throw new Error(extractErrorMessage(data, "Invalid verification code."));
         customToken = data.customToken;
         if (customToken !== "mock-custom-token") await signInWithCustomToken(auth, customToken);
       } else {
@@ -180,7 +181,7 @@ export default function AdminLoginForm() {
           body: JSON.stringify({ identifier, otp: idToken, type: "mobile" }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to upgrade session.");
+        if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to upgrade session."));
         customToken = data.customToken;
         if (customToken !== "mock-custom-token") await signInWithCustomToken(auth, customToken);
       }
@@ -197,7 +198,7 @@ export default function AdminLoginForm() {
       
       if (!sessionRes.ok) {
         const errData = await sessionRes.json().catch(() => ({}));
-        throw new Error(errData.error || "Failed to establish secure session.");
+        throw new Error(extractErrorMessage(errData, "Failed to establish secure session."));
       }
 
       setSuccess(true);
@@ -208,7 +209,7 @@ export default function AdminLoginForm() {
     } catch (err: any) {
       console.error(err);
       setOtpError(true);
-      setError(err.message || "Verification failed.");
+      setError(extractErrorMessage(err, "Verification failed."));
     } finally {
       setLoading(false);
     }

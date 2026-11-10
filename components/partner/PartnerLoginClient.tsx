@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ShieldCheck, Mail, Smartphone, ArrowRight, ArrowLeft, ShieldAlert, BadgeDollarSign, Target, Activity } from "lucide-react";
 import { auth } from "@/lib/firebase-client";
 import { signInWithCustomToken, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { extractErrorMessage } from "@/lib/utils";
 
 export function PartnerLoginClient() {
   const router = useRouter();
@@ -51,7 +52,7 @@ export function PartnerLoginClient() {
         });
         const data = await res.json();
         
-        if (!res.ok) throw new Error(data.error || "Failed to send code.");
+        if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to send code."));
         setPartnerName(data.partnerName);
       } else {
         // Mobile flow
@@ -62,7 +63,7 @@ export function PartnerLoginClient() {
         });
         const data = await res.json();
         
-        if (!res.ok) throw new Error(data.error || "Failed to initiate mobile verification.");
+        if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to initiate mobile verification."));
         setPartnerName(data.partnerName);
 
         // Call Firebase Phone Auth
@@ -78,7 +79,7 @@ export function PartnerLoginClient() {
       if (err.code === "auth/unauthorized-domain") {
         setError("Mobile login is restricted in the local environment. Please switch to Email login.");
       } else {
-        setError(err.message || "An unexpected error occurred.");
+        setError(extractErrorMessage(err, "An unexpected error occurred."));
       }
     } finally {
       setLoading(false);
@@ -103,7 +104,7 @@ export function PartnerLoginClient() {
             body: JSON.stringify({ identifier, otp: code, type: "email" }),
           });
           const data = await res.json();
-          if (!res.ok) throw new Error(data.error || "Invalid verification code.");
+          if (!res.ok) throw new Error(extractErrorMessage(data, "Invalid verification code."));
           customToken = data.customToken;
           if (customToken !== "mock-custom-token") await signInWithCustomToken(auth, customToken);
         } else {
@@ -121,7 +122,7 @@ export function PartnerLoginClient() {
             body: JSON.stringify({ identifier, otp: idToken, type: "mobile" }),
           });
           const data = await res.json();
-          if (!res.ok) throw new Error(data.error || "Failed to upgrade session.");
+          if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to upgrade session."));
           customToken = data.customToken;
           if (customToken !== "mock-custom-token") await signInWithCustomToken(auth, customToken);
         }
@@ -141,7 +142,7 @@ export function PartnerLoginClient() {
       
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Verification failed. Please try again.");
+      setError(extractErrorMessage(err, "Verification failed. Please try again."));
     } finally {
       setLoading(false);
     }

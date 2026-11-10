@@ -23,6 +23,7 @@ import { SpecificationChecklistModal } from "./SpecificationChecklistModal";
 import { ShareDialog } from "./ShareDialog";
 import { CompetitorQuoteUploader, SelectedPackageInfo } from "@/components/shared/CompetitorQuoteUploader";
 import { useRealtimeInventory } from "@/hooks/useRealtimeInventory";
+import { extractErrorMessage } from "@/lib/utils";
 
 import type { Lead, Product, Addon, AddonRule, AppSettings, PricingResult, Address, RecommendationRule, CardLayoutRule } from "@/types";
 import { useRouter } from "next/navigation";
@@ -563,11 +564,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);
         console.error("Quote save failed:", errorData);
-        const errMsg = errorData?.error?.message 
-          || errorData?.message 
-          || (typeof errorData?.error === "string" ? errorData.error : null) 
-          || "Failed to save quote";
-        throw new Error(errMsg);
+        throw new Error(extractErrorMessage(errorData, "Failed to save quote"));
       }
       const resData = await res.json();
       setSavedQuoteId(resData.data.id);
@@ -578,10 +575,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       router.push(`/quote/${currentLead.id}/review/${resData.data.id}`);
     } catch (err: any) {
       console.error(err);
-      const msg = typeof err?.message === "string" && err.message !== "[object Object]"
-        ? err.message
-        : "Error saving your quote. Please try again.";
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, "Error saving your quote. Please try again."));
     } finally {
       setIsSaving(false);
     }
@@ -596,10 +590,15 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lead_id: currentLead.id, address: currentLead.address, quote_id: savedQuoteId || "pending", firebase_uid: currentLead.firebase_uid })
       });
-      if (res.ok) toast.success("Visit Booked! Our technician will reach you shortly.");
-      else toast.error("Booking failed. Please try again.");
+      if (res.ok) {
+        toast.success("Visit Booked! Our technician will reach you shortly.");
+      } else {
+        const errJson = await res.json().catch(() => null);
+        toast.error(extractErrorMessage(errJson, "Booking failed. Please try again."));
+      }
     } catch (err) {
       console.error(err);
+      toast.error(extractErrorMessage(err, "Booking failed. Please try again."));
     } finally {
       setIsSaving(false);
     }
@@ -798,7 +797,10 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(data),
                       });
-                      if (!res.ok) throw new Error("Failed to submit price match");
+                      if (!res.ok) {
+                        const errJson = await res.json().catch(() => null);
+                        throw new Error(extractErrorMessage(errJson, "Failed to submit price match"));
+                      }
                       setPriceMatchSubmitted(true);
                       setShowPriceMatchUploader(false);
                     } catch (err) {
