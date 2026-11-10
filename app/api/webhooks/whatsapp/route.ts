@@ -1,6 +1,6 @@
 import { NextResponse, after } from "next/server";
 import { processIncomingMessage } from "@/lib/whatsapp/bot-engine";
-import { isDuplicateMessage, buildDedupeKey } from "@/lib/whatsapp/deduplication";
+import { isDuplicateMessage, buildDedupeKey, acquireDistributedLock } from "@/lib/whatsapp/deduplication";
 
 export const dynamic = "force-dynamic";
 
@@ -49,9 +49,10 @@ export async function POST(request: Request) {
     const from = message.from; // Customer's verified mobile number
     const messageId = message.id; // Unique Meta message ID (e.g. wamid.HBgL...)
 
-    // 2. Deduplication check using unique Meta message ID or payload fingerprint
+    // 2. Distributed deduplication check using unique Meta message ID or payload fingerprint
     const dedupeKey = buildDedupeKey(from, messageId, message.type, message.text?.body || message.interactive);
-    if (isDuplicateMessage(dedupeKey)) {
+    const isLockAcquired = await acquireDistributedLock(dedupeKey, from, message.text?.body || message.interactive);
+    if (!isLockAcquired) {
       console.warn(`[Meta WhatsApp Webhook] Duplicate inbound message detected and suppressed: ${dedupeKey}`);
       return NextResponse.json({ success: true, message: "Ignored duplicate message" });
     }

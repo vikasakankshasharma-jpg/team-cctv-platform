@@ -130,7 +130,34 @@ export function cleanInboundText(content: any): string {
   return cleaned || content.trim();
 }
 
+// In-process mutex to prevent concurrent double-execution of the state machine for the same user
+const currentlyExecutingPhones = new Set<string>();
+
 export async function processIncomingMessage(
+  from: string, 
+  incomingType: "text" | "interactive" | "nfm_reply" | "location" | "image" | "document", 
+  content: any,
+  context?: {
+    profileName?: string;
+    referral?: any;
+    locationCoords?: { latitude: number; longitude: number };
+    mediaId?: string;
+  }
+) {
+  if (currentlyExecutingPhones.has(from)) {
+    console.warn(`[BotEngine] Mutex lock: ${from} is already processing an inbound webhook. Dropping concurrent request.`);
+    return;
+  }
+
+  currentlyExecutingPhones.add(from);
+  try {
+    await processIncomingMessageInternal(from, incomingType, content, context);
+  } finally {
+    currentlyExecutingPhones.delete(from);
+  }
+}
+
+async function processIncomingMessageInternal(
   from: string, 
   incomingType: "text" | "interactive" | "nfm_reply" | "location" | "image" | "document", 
   content: any,

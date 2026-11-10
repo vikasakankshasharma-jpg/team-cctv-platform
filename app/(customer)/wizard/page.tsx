@@ -20,7 +20,7 @@ export default async function WizardPage({ searchParams }: { searchParams: Promi
         </div>
       )}
       <div className="flex-1">
-        <WizardClientV2 />
+        <WizardClientV2 searchParams={params} />
       </div>
     </div>
   );

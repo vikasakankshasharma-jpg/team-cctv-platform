@@ -2,7 +2,7 @@ import { NextResponse, after } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { addLeadActivity } from "@/app/actions/leads";
 import { processIncomingMessage } from "@/lib/whatsapp/bot-engine";
-import { isDuplicateMessage, buildDedupeKey } from "@/lib/whatsapp/deduplication";
+import { isDuplicateMessage, buildDedupeKey, acquireDistributedLock } from "@/lib/whatsapp/deduplication";
 
 export const dynamic = "force-dynamic";
 
@@ -153,12 +153,13 @@ export async function POST(req: Request) {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // 3. ATOMIC DEDUPLICATION & IDEMPOTENCY CHECK
+    // 3. ATOMIC DISTRIBUTED DEDUPLICATION & IDEMPOTENCY CHECK
     // ──────────────────────────────────────────────────────────────────────────
-    const rawId = data.messageId || data.msgId || data.requestId || data.uuid || data.id || data.messages?.[0]?.id;
+    const rawId = data.messageId || data.msgId || data.messages?.[0]?.id || data.id;
     const dedupeKey = buildDedupeKey(cleanPhone, rawId, incomingType, content);
 
-    if (isDuplicateMessage(dedupeKey)) {
+    const isLockAcquired = await acquireDistributedLock(dedupeKey, cleanPhone, content);
+    if (!isLockAcquired) {
       console.warn(`[MSG91 Webhook] Dropping duplicate inbound delivery for key: ${dedupeKey}`);
       return NextResponse.json({ success: true, duplicate: true, message: "Duplicate message dropped" });
     }

@@ -24,7 +24,11 @@ const GOOGLE_MAPS_LIBRARIES: any = ["places"];
 
 
 
-export function WizardClientV2() {
+interface WizardClientV2Props {
+  searchParams?: Record<string, string | string[] | undefined>;
+}
+
+export function WizardClientV2({ searchParams: serverSearchParams }: WizardClientV2Props = {}) {
   const { t } = useTranslation();
   const router = useRouter();
     const [sessionId] = useState(() => {
@@ -257,24 +261,54 @@ export function WizardClientV2() {
     installation_timeline: "asap"
   });
   
-  // Auto-capture referral code from URL parameters
+  // Auto-capture referral code & WhatsApp verified lead details from URL parameters & Session
   useEffect(() => {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
-      const ref = urlParams.get("ref") || urlParams.get("partner_id") || urlParams.get("promo");
+      const getParam = (k: string) => {
+        const serverVal = serverSearchParams?.[k];
+        if (typeof serverVal === "string") return serverVal;
+        if (Array.isArray(serverVal) && serverVal[0]) return serverVal[0];
+        return urlParams.get(k);
+      };
+
+      // 1. Restore previous WhatsApp session if user navigated away and returned
+      let cachedSession: any = null;
+      try {
+        const rawCached = sessionStorage.getItem("team_cctv_wa_session");
+        if (rawCached) cachedSession = JSON.parse(rawCached);
+      } catch {}
+
+      const ref = getParam("ref") || getParam("partner_id") || getParam("promo") || cachedSession?.ref;
+      const rawPhone = getParam("phone") || getParam("mobile") || cachedSession?.phone;
+      const nameParam = getParam("name") || getParam("customer_name") || cachedSession?.name;
+      const existingLeadIdParam = getParam("leadId") || getParam("lead_id") || cachedSession?.leadId;
+
+      if (existingLeadIdParam && !leadId) {
+        setLeadId(existingLeadIdParam);
+      }
+
       // Pre-capture verified mobile from WhatsApp redirect
-      const rawPhone = urlParams.get("phone") || urlParams.get("mobile");
       if (rawPhone) {
-        const digits = rawPhone.replace(/\D/g, "");
+        const digits = String(rawPhone).replace(/\D/g, "");
         const cleanPhone = digits.length === 12 && digits.startsWith("91") ? digits.slice(2) : digits;
         if (cleanPhone.length === 10 && /^[6-9]\d{9}$/.test(cleanPhone)) {
           setReq(prev => ({ ...prev, customer_mobile: cleanPhone }));
           setIsPhonePreVerified(true);
           setPreVerifiedPhone(cleanPhone);
+
+          // Persist to sessionStorage so user can browse and return without losing verified state
+          try {
+            sessionStorage.setItem("team_cctv_wa_session", JSON.stringify({
+              phone: cleanPhone,
+              name: nameParam || cachedSession?.name || "",
+              ref: ref || cachedSession?.ref || "",
+              leadId: existingLeadIdParam || cachedSession?.leadId || null
+            }));
+          } catch {}
         }
       }
 
-      const nameParam = urlParams.get("name") || urlParams.get("customer_name");
       if (nameParam) {
         setReq(prev => ({ ...prev, customer_name: prev.customer_name || nameParam }));
       }
@@ -282,8 +316,8 @@ export function WizardClientV2() {
         setReq(prev => ({ ...prev, partner_id: ref.toUpperCase() }));
       }
       
-      const propParam = urlParams.get("property");
-      const camParam = urlParams.get("cameras");
+      const propParam = getParam("property");
+      const camParam = getParam("cameras");
       if (propParam || camParam) {
         const count = camParam ? Math.min(Math.max(parseInt(camParam, 10) || 4, 1), 64) : 4;
         const indoor = Math.floor(count / 2);
@@ -295,7 +329,7 @@ export function WizardClientV2() {
         }));
       }
 
-      const pin = urlParams.get("pincode");
+      const pin = getParam("pincode");
       if (pin) {
         setReq(prev => ({ ...prev, customer_pincode: pin }));
         setIsLoadingLocalities(true);
@@ -317,7 +351,7 @@ export function WizardClientV2() {
           .finally(() => setIsLoadingLocalities(false));
       }
     }
-  }, []);
+  }, [serverSearchParams]);
 
   const [loading, setLoading] = useState(false);
   const [quoteResult, setQuoteResult] = useState<any>(null);
@@ -427,7 +461,13 @@ export function WizardClientV2() {
         property_type: req.property_type || "home",
         technology_choice: (Number(req.wifi_camera_count) > 0 && (Number(req.outdoor_camera_count) > 0 || Number(req.indoor_camera_count) > 0)) ? "Hybrid" : (req.technology_preference || "HD"),
         cabling_done: req.cabling_done || false,
-        camera_count: req.camera_count,
+        camera_count: (() => {
+          const calcWired = (Number(req.outdoor_camera_count) || 0) + (Number(req.indoor_camera_count) || 0);
+          const calcTotal = req.technology_preference === "Wireless"
+            ? (Number(req.wifi_camera_count) || calcWired || 2)
+            : (calcWired + (Number(req.wifi_camera_count) || 0));
+          return calcTotal || Number(req.camera_count) || 4;
+        })(),
         detected_city: city,
         firebase_uid: auth.currentUser?.uid || (isPreVerified ? `wa_${cleanMobile}` : "anonymous")
       };
@@ -2964,7 +3004,11 @@ export function WizardClientV2() {
                         const wifiCount = Number(req.wifi_camera_count) || 0;
                         const outCount = typeof req.outdoor_camera_count === "number" ? req.outdoor_camera_count : (isPureWireless ? 0 : 2);
                         const inCount = typeof req.indoor_camera_count === "number" ? req.indoor_camera_count : (isPureWireless ? 0 : 2);
-                        const totalCams = Number(req.camera_count) || (isPureWireless ? (wifiCount || (outCount + inCount) || 2) : (outCount + inCount + wifiCount)) || 4;
+                        const calculatedWired = outCount + inCount;
+                        const calculatedTotal = isPureWireless 
+                          ? (wifiCount || calculatedWired || 2) 
+                          : (calculatedWired + wifiCount);
+                        const totalCams = calculatedTotal || Number(req.camera_count) || 4;
 
                         let breakdown = "";
                         if (isPureWireless) {
@@ -2976,12 +3020,12 @@ export function WizardClientV2() {
                         } else {
                           const parts: string[] = [];
                           if (outCount > 0) parts.push(`${outCount} Out`);
-                          else if (inCount > 0 && wifiCount === 0) parts.push("0 Out");
+                          else if (inCount > 0) parts.push("0 Out");
 
                           if (inCount > 0) parts.push(`${inCount} In`);
-                          else if (outCount > 0 && wifiCount === 0) parts.push("0 In");
+                          else if (outCount > 0) parts.push("0 In");
 
-                          if (wifiCount > 0) parts.push(`${wifiCount} Wireless`);
+                          if (wifiCount > 0) parts.push(`${wifiCount} Smart Wireless`);
 
                           if (parts.length > 0) {
                             breakdown = ` (${parts.join(" + ")})`;
