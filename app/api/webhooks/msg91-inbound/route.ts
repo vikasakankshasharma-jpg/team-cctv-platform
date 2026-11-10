@@ -2,7 +2,8 @@ import { NextResponse, after } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { addLeadActivity } from "@/app/actions/leads";
 import { processIncomingMessage } from "@/lib/whatsapp/bot-engine";
-import { isDuplicateMessage, buildDedupeKey, acquireDistributedLock } from "@/lib/whatsapp/deduplication";
+import { isDuplicateMessage, buildDedupeKey, acquireDistributedLock, normalizePhoneNumber } from "@/lib/whatsapp/deduplication";
+import { WhatsAppIncomingType } from "@/types/whatsapp";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, message: "Ignored: No customer phone found in payload" });
     }
 
-    const cleanPhone = String(customerPhone).replace(/[^0-9]/g, "");
+    const cleanPhone = normalizePhoneNumber(customerPhone);
 
     const messageText = (data.text || data.message || "").toLowerCase().trim();
     const buttonPayload = (data.button_payload || data.payload || data.button_reply?.id || data.list_reply?.id || "").toLowerCase().trim();
@@ -121,7 +122,7 @@ export async function POST(req: Request) {
     }
 
     // 2C. Determine final content & incomingType
-    let incomingType: "text" | "interactive" | "nfm_reply" | "location" | "image" | "document" = "text";
+    let incomingType: WhatsAppIncomingType = "text";
     let content: any = rawText;
 
     if (resolvedInteractiveId) {
@@ -139,6 +140,15 @@ export async function POST(req: Request) {
     } else if (data.contentType === "document" || data.type === "document" || data.document || data.filename) {
       incomingType = "document";
       content = data.document || { url: data.url, filename: data.filename, caption: data.caption };
+    } else if (data.contentType === "audio" || data.type === "audio" || data.type === "voice" || data.audio) {
+      incomingType = "audio";
+      content = data.audio || { url: data.url, type: "audio" };
+    } else if (data.contentType === "video" || data.type === "video" || data.video) {
+      incomingType = "video";
+      content = data.video || { url: data.url, type: "video" };
+    } else if (data.contentType === "sticker" || data.type === "sticker" || data.sticker) {
+      incomingType = "sticker";
+      content = data.sticker || { type: "sticker" };
     } else if (data.type === "nfm_reply" || data.nfm_reply) {
       incomingType = "nfm_reply";
       content = data.nfm_reply?.response_json || data.response_json || data.payload;

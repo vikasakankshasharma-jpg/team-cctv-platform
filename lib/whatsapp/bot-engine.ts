@@ -7,9 +7,10 @@
 
 import { adminDb } from "../firebase-admin";
 import { COLLECTIONS } from "../constants";
-import { WhatsAppBotState, WhatsAppSession } from "../../types/whatsapp";
+import { WhatsAppBotState, WhatsAppSession, WhatsAppIncomingType } from "../../types/whatsapp";
 import { MessageBuilder, WhatsAppMessagePayload } from "./message-builder";
 import { addLeadActivity } from "@/app/actions/leads";
+import { normalizePhoneNumber } from "./deduplication";
 import { 
   generateAndSendPriceRanges, 
   sendBrandVariations, 
@@ -441,7 +442,7 @@ const currentlyExecutingPhones = new Set<string>();
 
 export async function processIncomingMessage(
   from: string, 
-  incomingType: "text" | "interactive" | "nfm_reply" | "location" | "image" | "document", 
+  incomingType: WhatsAppIncomingType, 
   content: any,
   context?: {
     profileName?: string;
@@ -450,22 +451,23 @@ export async function processIncomingMessage(
     mediaId?: string;
   }
 ) {
-  if (currentlyExecutingPhones.has(from)) {
-    console.warn(`[BotEngine] Mutex lock: ${from} is already processing an inbound webhook. Dropping concurrent request.`);
+  const canonicalFrom = normalizePhoneNumber(from);
+  if (currentlyExecutingPhones.has(canonicalFrom)) {
+    console.warn(`[BotEngine] Mutex lock: ${canonicalFrom} is already processing an inbound webhook. Dropping concurrent request.`);
     return;
   }
 
-  currentlyExecutingPhones.add(from);
+  currentlyExecutingPhones.add(canonicalFrom);
   try {
-    await processIncomingMessageInternal(from, incomingType, content, context);
+    await processIncomingMessageInternal(canonicalFrom, incomingType, content, context);
   } finally {
-    currentlyExecutingPhones.delete(from);
+    currentlyExecutingPhones.delete(canonicalFrom);
   }
 }
 
 async function processIncomingMessageInternal(
   from: string, 
-  incomingType: "text" | "interactive" | "nfm_reply" | "location" | "image" | "document", 
+  incomingType: WhatsAppIncomingType, 
   content: any,
   context?: {
     profileName?: string;
@@ -647,6 +649,66 @@ async function processIncomingMessageInternal(
       `• *Site Photo:* If this is your gate, walls, ceiling, or DVR, our certified technician will review it for your *Free On-Site Survey*.\n\n` +
       `👇 *Let's continue customizing your CCTV setup:*`;
 
+    const ackMsg = MessageBuilder.text(from, ackText);
+    const stepPrompts = getStepPrompt(session, session.state, from);
+    await sendWhatsAppMessages([ackMsg, ...stepPrompts]);
+    return;
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 3B. VOICE NOTE (AUDIO), SITE VIDEO & STICKER HANDLER
+  // Captures non-text media into lead file and prompts user with active controls
+  // ──────────────────────────────────────────────────────────────────────────
+  if (incomingType === "audio") {
+    if (leadId) {
+      await addLeadActivity(
+        leadId,
+        "customer_voice_note_uploaded",
+        `Received Voice Note from customer via WhatsApp. Preserved active step: ${session.state}`
+      ).catch(console.error);
+      await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
+        has_media_attachments: true,
+        updated_at: new Date(),
+      }).catch(console.error);
+    }
+
+    const ackText = 
+      `🎙️ *Voice Note Received & Attached to Your Project File!* 📁\n\n` +
+      `Our technical desk will listen to your audio instructions for your installation layout.\n\n` +
+      `👇 *To get your instant quotation right now, please select from the options below:*`;
+
+    const ackMsg = MessageBuilder.text(from, ackText);
+    const stepPrompts = getStepPrompt(session, session.state, from);
+    await sendWhatsAppMessages([ackMsg, ...stepPrompts]);
+    return;
+  }
+
+  if (incomingType === "video") {
+    if (leadId) {
+      await addLeadActivity(
+        leadId,
+        "customer_video_uploaded",
+        `Received Site Video from customer via WhatsApp. Preserved active step: ${session.state}`
+      ).catch(console.error);
+      await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
+        has_media_attachments: true,
+        updated_at: new Date(),
+      }).catch(console.error);
+    }
+
+    const ackText = 
+      `🎥 *Site Video Received & Saved to Your Project File!* 📁\n\n` +
+      `Our installation engineer will inspect your premises layout from your video for camera viewing angles and cable routing.\n\n` +
+      `👇 *Let's continue customizing your CCTV setup:*`;
+
+    const ackMsg = MessageBuilder.text(from, ackText);
+    const stepPrompts = getStepPrompt(session, session.state, from);
+    await sendWhatsAppMessages([ackMsg, ...stepPrompts]);
+    return;
+  }
+
+  if (incomingType === "sticker") {
+    const ackText = `👍 *Received! Let's continue building your CCTV quotation:*`;
     const ackMsg = MessageBuilder.text(from, ackText);
     const stepPrompts = getStepPrompt(session, session.state, from);
     await sendWhatsAppMessages([ackMsg, ...stepPrompts]);
@@ -857,6 +919,45 @@ async function processIncomingMessageInternal(
       await sendWhatsAppMessages([locationAck, ...stepPrompts]);
       return;
     }
+
+    // 5. Help / Stuck / Navigation Guidance & Reset Command
+    const isResetCommand = 
+      /^(reset|restart|start over|shuru se|clear)$/i.test(textLower);
+
+    if (isResetCommand) {
+      session.wizard_answers = {};
+      session.state = "ASK_PROP";
+      await sessionRef.set({ state: "ASK_PROP", wizard_answers: {} }, { merge: true });
+      if (leadId) {
+        await addLeadActivity(leadId, "journey_reset", `Customer requested reset: "${rawInbound}"`).catch(console.error);
+      }
+      const resetAck = MessageBuilder.text(
+        from,
+        `🔄 *Quotation Wizard Reset!*\n\nLet's start fresh to build your customized CCTV setup:`
+      );
+      const propPrompt = getStepPrompt(session, "ASK_PROP", from);
+      await sendWhatsAppMessages([resetAck, ...propPrompt]);
+      return;
+    }
+
+    const isHelpQuery = 
+      /\b(help|madad|stuck|confused|samajh|kaise|options|menu)\b/i.test(textLower) &&
+      !/^\d+$/.test(textLower);
+
+    if (isHelpQuery) {
+      const helpAck = MessageBuilder.text(
+        from,
+        `💡 *TEAM CCTV Assistant: Here to Help!* 🛡️\n\n` +
+        `• *Current Step:* We are currently configuring your system specifications.\n` +
+        `• *Easy Tap:* You can tap any button or list option below instead of typing.\n` +
+        `• *Specialist Call:* Reply *CALL* anytime if you'd like a technician to call you directly.\n` +
+        `• *Start Over:* Reply *RESET* to restart questions from Step 1.\n\n` +
+        `👇 *Please continue your setup by choosing below:*`
+      );
+      const stepPrompts = getStepPrompt(session, session.state, from);
+      await sendWhatsAppMessages([helpAck, ...stepPrompts]);
+      return;
+    }
   }
 
   let replies: WhatsAppMessagePayload[] = [];
@@ -960,10 +1061,16 @@ async function processIncomingMessageInternal(
             console.log(`[BotEngine] Suppressing duplicate greeting in ASK_PROP for ${from}`);
             return;
           }
-          // Re-send fresh clickable buttons so the user is never stuck with disabled buttons!
+
+          // Check cross-step intent: if user typed camera count in Step 1
+          const mentionsCameras = /\b(\d+\s*cam|camera|cctv)\b/i.test(text);
+          const errorMsg = mentionsCameras
+            ? `👍 *Noted:* You need CCTV cameras! To suggest the right weatherproofing (bullet vs dome) and cabling design, please first choose your *Property Type* below:`
+            : `⚠️ *We couldn't recognize "${text.slice(0, 30)}" for Property Type.*\n\nPlease tap one of the 3 buttons below to proceed:`;
+
           replies.push(MessageBuilder.buttons(
             from,
-            `*Step 1 of 6: Property Type*\nPlease select your property type using the buttons below:`,
+            errorMsg,
             [
               { id: "prop_home", title: "🏠 Home / Flat" },
               { id: "prop_office", title: "🏢 Office / Shop" },
@@ -1109,10 +1216,10 @@ async function processIncomingMessageInternal(
             "Select Outdoor (0-7)"
           ));
         } else {
-          // Fallback: Re-send fresh clickable list options so user is never stuck
+          // Fallback: Re-send fresh clickable list options with helpful explanation
           replies.push(MessageBuilder.list(
             from,
-            `*Step 1 of 6: Installation Type*\nWhat kind of installation do you require? Please choose from the list below:`,
+            `⚠️ *We couldn't recognize "${text.slice(0, 30)}".*\n\n*Step 1 of 6: Installation Type*\nPlease choose your preferred setup from the options below:`,
             "Choose Install Type",
             [
               {
@@ -1324,21 +1431,38 @@ async function processIncomingMessageInternal(
         }
 
         let outdoorCount: number | null = null;
+        let isOutOfBounds = false;
+        let requestedCount = 0;
+
         if (text.startsWith("out_") && !text.includes("page") && !text.includes("custom")) {
           outdoorCount = parseInt(text.replace("out_", ""), 10);
         } else {
-          const match = text.match(/\d+/);
+          const match = text.match(/\b\d+\b/);
           if (match) {
-            outdoorCount = Math.min(32, Math.max(0, parseInt(match[0], 10)));
-          } else if (text.includes("none") || text.includes("zero") || text.includes("no outdoor")) {
+            requestedCount = parseInt(match[0], 10);
+            if (requestedCount > 32) {
+              isOutOfBounds = true;
+            } else {
+              outdoorCount = Math.max(0, requestedCount);
+            }
+          } else if (text.includes("none") || text.includes("zero") || text.includes("no outdoor") || text.includes("nahi") || text.includes("ek bhi nahi")) {
             outdoorCount = 0;
           }
+        }
+
+        if (isOutOfBounds) {
+          replies.push(buildQuantityListMessage(
+            from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
+            `⚠️ *You entered ${requestedCount} Outdoor Cameras.*\n\nOur automated instant quotation engine supports packages up to *32 cameras*.\n• For sites requiring 32+ cameras (large industrial complexes / malls / schools), our enterprise engineering team prepares custom multi-NVR architectural blueprints.\n\n👉 Please select a quantity between *0 and 32* from the list below, or reply *CALL* for custom multi-NVR design:`,
+            "Select Outdoor (0-7)"
+          ));
+          break;
         }
 
         if (outdoorCount === null || isNaN(outdoorCount)) {
           replies.push(buildQuantityListMessage(
             from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
-            `*Step 2 of 6: Outdoor Cameras* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need mounted outside for your main gate, driveway, parking, or boundary walls?`,
+            `⚠️ *We couldn't recognize "${text.slice(0, 30)}" as a camera quantity.*\n\n*Step 2 of 6: Outdoor Cameras* 🌧️\nPlease select a quantity (0 to 32) from the list below or type any number in chat:`,
             "Select Outdoor (0-7)"
           ));
           break;
@@ -1400,22 +1524,53 @@ async function processIncomingMessageInternal(
         }
 
         let indoorCount: number | null = null;
+        let isOutOfBounds = false;
+        let requestedCount = 0;
+
         if (text.startsWith("in_") && !text.includes("page") && !text.includes("custom")) {
           indoorCount = parseInt(text.replace("in_", ""), 10);
         } else {
-          const match = text.match(/\d+/);
+          const match = text.match(/\b\d+\b/);
           if (match) {
-            indoorCount = Math.min(32, Math.max(0, parseInt(match[0], 10)));
-          } else if (text.includes("none") || text.includes("zero") || text.includes("no indoor")) {
+            requestedCount = parseInt(match[0], 10);
+            if (requestedCount > 32) {
+              isOutOfBounds = true;
+            } else {
+              indoorCount = Math.max(0, requestedCount);
+            }
+          } else if (text.includes("none") || text.includes("zero") || text.includes("no indoor") || text.includes("nahi") || text.includes("ek bhi nahi")) {
             indoorCount = 0;
           }
+        }
+
+        if (isOutOfBounds) {
+          replies.push(buildQuantityListMessage(
+            from, "in", "Indoor Dome", "Indoor Domes", 1,
+            `⚠️ *You entered ${requestedCount} Indoor Cameras.*\n\nOur automated quotation engine supports packages up to *32 cameras*.\n• For sites requiring 32+ cameras, our enterprise team prepares custom multi-NVR architectural blueprints.\n\n👉 Please select a quantity between *0 and 32* from the list below, or reply *CALL* for custom design:`,
+            "Select Indoor (0-7)"
+          ));
+          break;
         }
 
         if (indoorCount === null || isNaN(indoorCount)) {
           replies.push(buildQuantityListMessage(
             from, "in", "Indoor Dome", "Indoor Domes", 1,
-            `*Step 2 of 6: Indoor Cameras* 🏠\n\nHow many *Compact Ceiling Dome Cameras* do you need mounted inside for your living room, corridors, office, or cashier counters?`,
+            `⚠️ *We couldn't recognize "${text.slice(0, 30)}" as a camera quantity.*\n\n*Step 2 of 6: Indoor Cameras* 🏠\nPlease select a quantity (0 to 32) from the list below or type any number in chat:`,
             "Select Indoor (0-7)"
+          ));
+          break;
+        }
+
+        const outCount = session.wizard_answers.outdoor_camera_count || 0;
+        if (outCount === 0 && indoorCount === 0) {
+          replies.push(MessageBuilder.buttons(
+            from,
+            `⚠️ *0 Cameras Selected.*\nA CCTV setup requires at least 1 camera to generate a quotation.\n\nWould you like to install Smart Wireless cameras or add cameras?`,
+            [
+              { id: "ins_wireless", title: "📶 Smart Wireless Setup" },
+              { id: "out_page_1", title: "🌧️ Add Outdoor Cameras" },
+              { id: "in_page_1", title: "🏠 Add Indoor Domes" }
+            ]
           ));
           break;
         }
@@ -1838,7 +1993,7 @@ async function processIncomingMessageInternal(
         if (days === null) {
           replies.push(MessageBuilder.list(
             from,
-            `*Step 3 of 6: Recording & Storage Backup* 💾\n\nPlease select how many days of recording retention you require:`,
+            `⚠️ *We couldn't recognize "${text.slice(0, 30)}" for storage retention.*\n\n*Step 3 of 6: Recording & Storage Backup* 💾\nPlease choose one of the standardized surveillance drive tiers below:`,
             "Select Storage Days",
             [
               {
@@ -2275,10 +2430,31 @@ async function processIncomingMessageInternal(
             replies.push(MessageBuilder.text(from, namePrompt));
           }
         } else {
-          replies.push(MessageBuilder.text(
-            from,
-            `📍 *Step 6 of 6: Site Location & Pincode Dispatch*\n\nPlease enter your *6-digit Indian Pincode* (e.g. 302012) or tap the clip 📎 icon to share your Location Pin so we can calculate exact local delivery and certified installation rates for your area.`
-          ));
+          const rawInput = typeof content === "string" ? content.trim() : "";
+          const mobMatch = rawInput.match(/\b[6-9]\d{9}\b/);
+          const digitMatch = rawInput.match(/\b\d+\b/);
+
+          if (mobMatch) {
+            replies.push(MessageBuilder.text(
+              from,
+              `⚠️ *You entered a 10-digit mobile number (${mobMatch[0]}).*\n\nYour WhatsApp number is already automatically verified for your quotation! 📱\n\n📍 *Please enter your 6-digit Indian Postal Pincode* (e.g. 302012) or tap 📎 to share Location Pin:`
+            ));
+          } else if (digitMatch && digitMatch[0].length !== 6) {
+            replies.push(MessageBuilder.text(
+              from,
+              `⚠️ *Indian postal pincodes must be exactly 6 digits.* (You entered: "${digitMatch[0]}")\n\n📍 Please reply with your 6-digit Pincode (e.g. 302012) or tap 📎 to send Location Pin:`
+            ));
+          } else if (rawInput.length > 0) {
+            replies.push(MessageBuilder.text(
+              from,
+              `📍 *Location landmark noted: "${rawInput.slice(0, 40)}"* 🚚\n\nTo match our nearest local Sub-Post Office warehouse and local technician rates, please also enter your *6-digit Pincode* (e.g. 302012) or tap 📎 to share Location Pin:`
+            ));
+          } else {
+            replies.push(MessageBuilder.text(
+              from,
+              `📍 *Step 6 of 6: Site Location & Pincode Dispatch*\n\nPlease enter your *6-digit Indian Pincode* (e.g. 302012) or tap the clip 📎 icon to share your Location Pin so we can calculate exact local delivery and certified installation rates for your area.`
+            ));
+          }
         }
         break;
       }

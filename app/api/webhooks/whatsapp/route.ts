@@ -1,6 +1,7 @@
 import { NextResponse, after } from "next/server";
 import { processIncomingMessage } from "@/lib/whatsapp/bot-engine";
-import { isDuplicateMessage, buildDedupeKey, acquireDistributedLock } from "@/lib/whatsapp/deduplication";
+import { isDuplicateMessage, buildDedupeKey, acquireDistributedLock, normalizePhoneNumber } from "@/lib/whatsapp/deduplication";
+import { WhatsAppIncomingType } from "@/types/whatsapp";
 
 export const dynamic = "force-dynamic";
 
@@ -46,16 +47,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true });
     }
 
-    const from = message.from; // Customer's verified mobile number
+    const from = normalizePhoneNumber(message.from); // Customer's verified mobile number in canonical 9198XXXXXXXX format
     const messageId = message.id; // Unique Meta message ID (e.g. wamid.HBgL...)
-
-    // 2. Distributed deduplication check using unique Meta message ID or payload fingerprint
-    const dedupeKey = buildDedupeKey(from, messageId, message.type, message.text?.body || message.interactive);
-    const isLockAcquired = await acquireDistributedLock(dedupeKey, from, message.text?.body || message.interactive);
-    if (!isLockAcquired) {
-      console.warn(`[Meta WhatsApp Webhook] Duplicate inbound message detected and suppressed: ${dedupeKey}`);
-      return NextResponse.json({ success: true, message: "Ignored duplicate message" });
-    }
 
     const profileName = contact?.profile?.name || "WhatsApp Customer";
     const referral = message.referral; // CTWA referral object
@@ -67,10 +60,10 @@ export async function POST(request: Request) {
         latitude: message.location.latitude,
         longitude: message.location.longitude,
       } : undefined,
-      mediaId: message.image?.id || message.document?.id,
+      mediaId: message.image?.id || message.document?.id || message.audio?.id || message.video?.id,
     };
 
-    let incomingType: "text" | "interactive" | "nfm_reply" | "location" | "image" | "document" = "text";
+    let incomingType: WhatsAppIncomingType = "text";
     let content: any = "";
 
     if (message.type === "text") {
@@ -83,11 +76,7 @@ export async function POST(request: Request) {
         content = interactive.nfm_reply?.response_json;
       } else {
         incomingType = "interactive";
-        if (interactive.type === "button_reply") {
-          content = interactive.button_reply?.id;
-        } else if (interactive.type === "list_reply") {
-          content = interactive.list_reply?.id;
-        }
+        content = interactive.button_reply?.id || interactive.list_reply?.id || interactive.button_reply?.title || interactive.list_reply?.title || "";
       }
     } else if (message.type === "location") {
       incomingType = "location";
@@ -98,24 +87,38 @@ export async function POST(request: Request) {
     } else if (message.type === "document") {
       incomingType = "document";
       content = message.document;
+    } else if (message.type === "audio" || message.type === "voice") {
+      incomingType = "audio";
+      content = message.audio || { type: "audio" };
+    } else if (message.type === "video") {
+      incomingType = "video";
+      content = message.video || { type: "video" };
+    } else if (message.type === "sticker") {
+      incomingType = "sticker";
+      content = message.sticker || { type: "sticker" };
+    }
+
+    // 2. Distributed deduplication check using unique Meta message ID or payload fingerprint
+    const dedupeKey = buildDedupeKey(from, messageId, incomingType, content);
+    const isLockAcquired = await acquireDistributedLock(dedupeKey, from, content);
+    if (!isLockAcquired) {
+      console.warn(`[Meta WhatsApp Webhook] Duplicate inbound message detected and suppressed: ${dedupeKey}`);
+      return NextResponse.json({ success: true, message: "Ignored duplicate message" });
     }
 
     // 3. Process asynchronously via Next.js after() to immediately return HTTP 200 within <15ms
     after(async () => {
       try {
-        if (content) {
-          await processIncomingMessage(from, incomingType, content, context);
-        }
-      } catch (err) {
-        console.error("🔥 [WhatsApp Webhook Async Execution Error]:", err);
+        console.log(`[Meta WhatsApp Webhook] Processing background message from ${from}: ${incomingType}`);
+        await processIncomingMessage(from, incomingType, content, context);
+      } catch (error) {
+        console.error("🔥 Error in background processIncomingMessage:", error);
       }
     });
 
-    // Return HTTP 200 immediately so Meta never retries
-    return NextResponse.json({ success: true }, { status: 200 });
-
-  } catch (error: any) {
-    console.error("🔥 WhatsApp Webhook Error:", error);
-    return NextResponse.json({ success: false, message: error.message }, { status: 200 });
+    return NextResponse.json({ success: true, status: "queued" });
+  } catch (error) {
+    console.error("🔥 WhatsApp Webhook Processing Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

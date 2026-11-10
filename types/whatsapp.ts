@@ -32,6 +32,17 @@ export type WhatsAppBotState =
   | "PAUSED_FOR_AGENT"
   | "COMPLETED";
 
+export type WhatsAppIncomingType = 
+  | "text" 
+  | "interactive" 
+  | "nfm_reply" 
+  | "location" 
+  | "image" 
+  | "document" 
+  | "audio" 
+  | "video" 
+  | "sticker";
+
 export interface WhatsAppSession {
   id?: string;
   phone_number: string;

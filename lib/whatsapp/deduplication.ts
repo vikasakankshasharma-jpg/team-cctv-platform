@@ -23,12 +23,58 @@ const TTL_MS = 180000;
 const DEBOUNCE_WINDOW_MS = 15000; // 15 seconds covers all webhook retry schedules
 
 /**
+ * Normalizes phone numbers to standard 12-digit Indian format (e.g. 919876543210)
+ * Handles raw 10-digit, 91-prefixed, or +91-prefixed numbers.
+ */
+export function normalizePhoneNumber(raw: string): string {
+  let digits = String(raw || "").replace(/\D/g, "");
+  // Strip leading zero(s) (e.g. 09877269939 -> 9877269939)
+  digits = digits.replace(/^0+/, "");
+  if (digits.length === 10) return `91${digits}`;
+  if (digits.length === 12 && digits.startsWith("91")) return digits;
+  if (digits.length > 10) {
+    const last10 = digits.slice(-10);
+    return `91${last10}`;
+  }
+  return digits;
+}
+
+/**
+ * Extracts a clean string snippet from string, object, or button reply
+ */
+export function extractCleanSnippet(content: any): string {
+  if (typeof content === "string") {
+    return content.trim().toLowerCase().slice(0, 50);
+  }
+  if (content && typeof content === "object") {
+    const idOrText = 
+      content.id || 
+      content.list_reply?.id || 
+      content.button_reply?.id || 
+      content.payload || 
+      content.list_reply?.title || 
+      content.button_reply?.title || 
+      content.title || 
+      content.text || 
+      content.body || 
+      "";
+    if (idOrText) return String(idOrText).trim().toLowerCase().slice(0, 50);
+    try {
+      return JSON.stringify(content).slice(0, 50).toLowerCase();
+    } catch {
+      return "media_payload";
+    }
+  }
+  return String(content || "").slice(0, 50).toLowerCase();
+}
+
+/**
  * Synchronous in-memory check to immediately drop duplicate webhooks on the same worker
  */
 export function isDuplicateMessage(
   dedupeKey: string, 
   phone?: string, 
-  contentSnippet?: string
+  contentSnippet?: any
 ): boolean {
   if (!dedupeKey) return false;
 
@@ -50,9 +96,9 @@ export function isDuplicateMessage(
 
   // Check 2: Sliding-window debounce per phone (blocks exact same payload within 15s)
   if (phone) {
-    const cleanPhone = String(phone).replace(/\D/g, "");
+    const cleanPhone = normalizePhoneNumber(phone);
     const last = phoneLastAction.get(cleanPhone);
-    const fp = String(contentSnippet || dedupeKey).trim().toLowerCase();
+    const fp = extractCleanSnippet(contentSnippet || dedupeKey);
     if (last && last.fingerprint === fp && (now - last.time < DEBOUNCE_WINDOW_MS)) {
       return true;
     }
@@ -71,10 +117,13 @@ export function isDuplicateMessage(
 export async function acquireDistributedLock(
   dedupeKey: string,
   phone?: string,
-  contentSnippet?: string
+  contentSnippet?: any
 ): Promise<boolean> {
+  const cleanPhone = phone ? normalizePhoneNumber(phone) : "";
+  const snippet = extractCleanSnippet(contentSnippet || dedupeKey);
+
   // Step 1: In-memory fast path
-  if (isDuplicateMessage(dedupeKey, phone, contentSnippet)) {
+  if (isDuplicateMessage(dedupeKey, cleanPhone, snippet)) {
     return false;
   }
 
@@ -88,16 +137,15 @@ export async function acquireDistributedLock(
       created_at: new Date(),
       expires_at: new Date(Date.now() + TTL_MS),
       dedupe_key: dedupeKey,
-      phone: phone || null,
+      phone: cleanPhone || null,
     });
 
-    // Step 3: If phone and contentSnippet provided, also check an atomic phone-action lock
-    if (phone && contentSnippet) {
-      const cleanPhone = String(phone).replace(/\D/g, "");
-      const fp = String(contentSnippet).trim().toLowerCase().slice(0, 40).replace(/[^a-zA-Z0-9_-]/g, "_");
-      // 15-second time bucket for phone action lock
+    // Step 3: If phone provided, also acquire an atomic phone+action bucket lock
+    // This catches cross-provider duplicates where Meta and MSG91 have different raw message IDs
+    if (cleanPhone) {
+      const cleanFp = snippet.slice(0, 40).replace(/[^a-zA-Z0-9_-]/g, "_") || "action";
       const actionBucket = Math.floor(Date.now() / DEBOUNCE_WINDOW_MS);
-      const actionLockKey = `act_${cleanPhone}_${fp}_${actionBucket}`;
+      const actionLockKey = `act_${cleanPhone}_${cleanFp}_${actionBucket}`;
       const actionLockRef = adminDb.collection("whatsapp_dedupe_locks").doc(actionLockKey);
       try {
         await actionLockRef.create({
@@ -106,7 +154,12 @@ export async function acquireDistributedLock(
           phone: cleanPhone,
         });
       } catch (actErr: any) {
-        if (actErr?.code === 6 || actErr?.code === "already-exists" || String(actErr?.message).includes("ALREADY_EXISTS")) {
+        if (
+          actErr?.code === 6 || 
+          actErr?.code === "already-exists" || 
+          String(actErr?.message).includes("ALREADY_EXISTS") ||
+          String(actErr?.message).includes("already exists")
+        ) {
           console.warn(`[DedupeLock] Dropping concurrent phone action duplicate: ${actionLockKey}`);
           return false;
         }
@@ -116,11 +169,16 @@ export async function acquireDistributedLock(
     return true;
   } catch (err: any) {
     // Code 6 is ALREADY_EXISTS in gRPC/Firestore
-    if (err?.code === 6 || err?.code === "already-exists" || String(err?.message).includes("ALREADY_EXISTS") || String(err?.message).includes("already exists")) {
+    if (
+      err?.code === 6 || 
+      err?.code === "already-exists" || 
+      String(err?.message).includes("ALREADY_EXISTS") || 
+      String(err?.message).includes("already exists")
+    ) {
       return false; // Duplicate webhook invocation dropped!
     }
 
-    // If Firestore is at quota (code 8) or offline, log warning and let in-memory lock govern
+    // If Firestore has an error or permission issue, log warning and let in-memory lock govern
     console.warn(`[DedupeLock] Firestore lock fallback to memory (${err?.message || err})`);
     return true;
   }
@@ -137,7 +195,7 @@ export function buildDedupeKey(
   incomingType?: string, 
   content?: any
 ): string {
-  const cleanPhone = String(phone).replace(/\D/g, "");
+  const cleanPhone = normalizePhoneNumber(phone);
   
   // If an inbound message ID exists from provider (e.g. wamid.HBgL... or MSG91 message id)
   if (rawId && String(rawId).trim()) {
@@ -146,12 +204,10 @@ export function buildDedupeKey(
   }
 
   // Normalized content snippet
-  const contentSnippet = typeof content === "string" 
-    ? content.slice(0, 50).trim().toLowerCase() 
-    : JSON.stringify(content || "").slice(0, 50);
+  const snippet = extractCleanSnippet(content).replace(/[^a-zA-Z0-9_-]/g, "_");
 
   // 15-second sliding window aligns with provider retry timelines
   const timeBucket = Math.floor(Date.now() / DEBOUNCE_WINDOW_MS);
 
-  return `fingerprint_${cleanPhone}_${incomingType || "text"}_${contentSnippet}_${timeBucket}`;
+  return `fingerprint_${cleanPhone}_${incomingType || "text"}_${snippet}_${timeBucket}`;
 }
