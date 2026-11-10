@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
+import { getBaselineCatalogData } from "@/lib/baseline-quote";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { CatalogSubNav } from "@/components/admin/navigation/AdminSubNav";
 import { HeartPulse, AlertCircle, CheckCircle2, ShieldAlert, Package, Database, Sparkles, ChevronRight } from "lucide-react";
@@ -12,16 +13,28 @@ export const dynamic = "force-dynamic";
 export default async function CatalogHealthPage() {
   await requireAdmin();
 
-  const productsSnap = await adminDb.collection("products").get();
-  const products = productsSnap.docs
-    .map(doc => {
-      const data = doc.data() as any;
-      if (!Array.isArray(data.technologies)) {
-        data.technologies = data.technology ? [data.technology] : ["Common"];
-      }
-      return { id: doc.id, ...data } as Product;
-    })
-    .filter(p => !p.is_deleted);
+  let products: Product[] = [];
+  try {
+    const productsSnap = await adminDb.collection("products").get();
+    products = productsSnap.docs
+      .map(doc => {
+        const data = doc.data() as any;
+        if (!Array.isArray(data.technologies)) {
+          data.technologies = data.technology ? [data.technology] : ["Common"];
+        }
+        return { id: doc.id, ...data } as Product;
+      })
+      .filter(p => !p.is_deleted);
+  } catch (err) {
+    console.warn("⚠️ Failed to load products in CatalogHealthPage, using baseline catalog:", err);
+    const catalog = await getBaselineCatalogData();
+    products = catalog.products || [];
+  }
+
+  if (products.length === 0) {
+    const catalog = await getBaselineCatalogData();
+    products = catalog.products || [];
+  }
 
   // Diagnostic Categories: Ensure the 6 core hardware pillars exist for quotation engine
   const missingMandatory: Product[] = [];

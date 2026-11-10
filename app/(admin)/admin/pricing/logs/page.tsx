@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { History } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { PricingSubNav } from "@/components/admin/navigation/AdminSubNav";
 import { AuditLogClient } from "@/components/admin/AuditLogClient";
 import type { Metadata } from "next";
 
@@ -15,22 +16,28 @@ export const dynamic = "force-dynamic";
 export default async function PriceLogsPage() {
   await requireAdmin();
 
-  const snapshot = await adminDb.collection("price_change_log")
-    .orderBy("created_at", "desc")
-    .limit(100)
-    .get();
+  let logs: any[] = [];
+  try {
+    const snapshot = await adminDb.collection("price_change_log")
+      .orderBy("created_at", "desc")
+      .limit(100)
+      .get();
 
-  const logs = snapshot.docs.map(doc => {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      ...data,
-      created_at: (data.created_at as any)?.toDate?.()?.toISOString() || data.created_at || null,
-    };
-  });
+    logs = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        created_at: (data.created_at as any)?.toDate?.()?.toISOString() || data.created_at || null,
+      };
+    });
+  } catch (err) {
+    console.warn("⚠️ Failed to load price change logs from Firestore:", err);
+  }
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
+    <div className="space-y-6 animate-in fade-in duration-700">
+      <PricingSubNav />
       <PageHeader
         icon={History}
         title="Price Audit Log"

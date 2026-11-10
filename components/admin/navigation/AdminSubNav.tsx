@@ -122,9 +122,32 @@ export function FinanceSubNav() {
 export function OperationsSubNav() {
   const items: SubNavItem[] = [
     { name: "Dispatch Center", href: "/admin/dispatch", icon: Truck },
-    { name: "City Hubs & Expansion", href: "/admin/expansion", icon: MapPin },
-    { name: "Verified Installers", href: "/admin/installers", icon: HardHat },
+    { name: "Verified Technicians", href: "/admin/installers", icon: HardHat },
+    { name: "City Inventory Hubs", href: "/admin/hubs", icon: Database },
+    { name: "Territory Beat Plans", href: "/admin/beat-plans", icon: Navigation },
+    { name: "Regional Expansion", href: "/admin/expansion", icon: MapPin },
     { name: "Operating Hours & SLA", href: "/admin/settings?tab=sla", icon: Clock },
+  ];
+  return <AdminSubNavStrip items={items} />;
+}
+
+// ─── 6. OVERVIEW & PIPELINE SUB-NAV ───────────────────────────────────────────
+export function PipelineSubNav() {
+  const items: SubNavItem[] = [
+    { name: "Executive Dashboard", href: "/admin", icon: TrendingUp },
+    { name: "Quote Funnel", href: "/admin/analytics/funnel", icon: Zap },
+    { name: "Analytics Trends", href: "/admin/analytics", icon: TrendingUp },
+  ];
+  return <AdminSubNavStrip items={items} />;
+}
+
+// ─── 7. PROMOTERS & GROWTH SUB-NAV ────────────────────────────────────────────
+export function GrowthSubNav() {
+  const items: SubNavItem[] = [
+    { name: "Promoter Network", href: "/admin/promoters", icon: BadgePercent },
+    { name: "Follow-Up Campaigns", href: "/admin/campaigns", icon: Zap },
+    { name: "Marketing Collaterals", href: "/admin/marketing", icon: FileBox },
+    { name: "Regional Expansion", href: "/admin/expansion", icon: MapPin },
   ];
   return <AdminSubNavStrip items={items} />;
 }

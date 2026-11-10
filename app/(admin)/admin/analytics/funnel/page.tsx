@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/auth-server";
 import { FunnelAnalyticsClient } from "@/components/admin/FunnelAnalyticsClient";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { PipelineSubNav } from "@/components/admin/navigation/AdminSubNav";
 import { Filter } from "lucide-react";
 
 export const metadata = {
@@ -13,7 +14,8 @@ export default async function FunnelAnalyticsPage() {
   await requireAdmin();
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
+    <div className="space-y-6 animate-in fade-in duration-700">
+      <PipelineSubNav />
       <PageHeader
         title="Quotation Funnel"
         description="Analyze customer drop-off rates through the quotation wizard steps."

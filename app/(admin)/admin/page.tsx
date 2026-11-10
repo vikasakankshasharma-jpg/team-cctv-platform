@@ -6,10 +6,13 @@ import { AlertTriangle, CheckCircle } from "lucide-react";
 import { Users, FileText, Percent, BadgeIndianRupee, LayoutDashboard, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { DashboardClient, type WeeklyBucket, type SourceBreakdown, type RecentActivity } from "@/components/admin/DashboardClient";
 import ActionCenterWidget from "@/components/admin/ActionCenterWidget";
+import { PipelineSubNav } from "@/components/admin/navigation/AdminSubNav";
 import type { Metadata } from "next";
 import type { Promoter, Lead } from "@/types";
 import fs from "fs";
 import path from "path";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Intelligence Dashboard | Admin Command Centre",
@@ -240,6 +243,7 @@ export default async function AdminDashboard() {
 
   return (
     <div className="animate-in fade-in duration-700 pb-6 md:pb-12 space-y-6">
+      <PipelineSubNav />
       {/* ── Quota Fallback Alert ── */}
       {isQuotaFallback && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-3">

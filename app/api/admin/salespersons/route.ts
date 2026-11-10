@@ -22,7 +22,7 @@ export async function GET() {
 
 // POST — create new salesperson
 export async function POST(req: NextRequest) {
-  const session = await requireRoleApi(["super_admin"]).catch(() => null);
+  const session = await requireRoleApi(["super_admin", "admin"]).catch(() => null);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }

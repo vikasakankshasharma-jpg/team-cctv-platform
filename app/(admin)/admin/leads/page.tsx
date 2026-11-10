@@ -14,6 +14,8 @@ import { AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
 import fs from "fs";
 import path from "path";
 
+export const dynamic = "force-dynamic";
+
 type LeadListRow = {
   id: string;
   leadId?: string;

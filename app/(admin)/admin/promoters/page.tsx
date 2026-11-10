@@ -3,6 +3,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import type { Promoter } from "@/types";
 import { PromotersClient } from "@/components/admin/PromotersClient";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { GrowthSubNav } from "@/components/admin/navigation/AdminSubNav";
 import { Users } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -77,6 +78,7 @@ export default async function PromotersAdminPage() {
 
   return (
     <div className="space-y-6">
+      <GrowthSubNav />
       <PromotersClient initialPromoters={promoters} availableLayouts={cardLayouts} />
     </div>
   );

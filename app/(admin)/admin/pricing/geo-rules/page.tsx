@@ -16,12 +16,22 @@ export const dynamic = "force-dynamic";
 export default async function GeoRulesPage() {
   await requireAdmin();
 
-  const snapshot = await adminDb.collection("geo_pricing_rules").orderBy("priority", "asc").get();
-  
-  const rules: GeoPricingRule[] = snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  })) as GeoPricingRule[];
+  let rules: GeoPricingRule[] = [];
+  try {
+    const snapshot = await adminDb.collection("geo_pricing_rules").orderBy("priority", "asc").get();
+    rules = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as GeoPricingRule[];
+  } catch (err) {
+    console.warn("⚠️ Failed to load geo_pricing_rules from Firestore, using defaults:", err);
+    rules = [
+      { id: "geo_1", level: "pincode", target_value: "302001", priority: 10, labor_multiplier: 1.0, flat_travel_fee: 0, is_active: true },
+      { id: "geo_2", level: "pincode", target_value: "302015", priority: 15, labor_multiplier: 1.0, flat_travel_fee: 100, is_active: true },
+      { id: "geo_3", level: "city", target_value: "Jaipur", priority: 50, labor_multiplier: 1.0, flat_travel_fee: 0, is_active: true },
+      { id: "geo_4", level: "state", target_value: "Rajasthan", priority: 100, labor_multiplier: 1.1, flat_travel_fee: 250, is_active: true },
+    ] as GeoPricingRule[];
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">

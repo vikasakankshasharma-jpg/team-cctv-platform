@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/auth-server";
 import { CompatibilityMatrix } from "@/components/admin/CompatibilityMatrix";
 import { PricingSubNav } from "@/components/admin/navigation/AdminSubNav";
 import { adminDb } from "@/lib/firebase-admin";
+import { getBaselineCatalogData } from "@/lib/baseline-quote";
 import type { Product } from "@/types";
 import type { Metadata } from "next";
 
@@ -18,10 +19,6 @@ export default async function CompatibilityPage() {
   let products: Product[] = [];
   
   try {
-    // NOTE: Do NOT use .where("is_deleted", "==", false) — that Firestore query
-    // excludes documents that don't have the `is_deleted` field at all.
-    // Instead, fetch all and filter in code so newly-seeded products (without the
-    // field) are still visible in the Compatibility Matrix.
     const snapshot = await adminDb.collection("products").get();
     products = snapshot.docs
       .filter(doc => doc.data().is_deleted !== true)
@@ -35,11 +32,18 @@ export default async function CompatibilityPage() {
         };
       });
   } catch (error) {
-    console.error("Compatibility Matrix: Failed to fetch products", error);
+    console.warn("Compatibility Matrix: Failed to fetch products, using baseline catalog:", error);
+    const catalog = await getBaselineCatalogData();
+    products = catalog.products || [];
+  }
+
+  if (products.length === 0) {
+    const catalog = await getBaselineCatalogData();
+    products = catalog.products || [];
   }
 
   // Sort products to ensure consistent rendering
-  products.sort((a, b) => a.category.localeCompare(b.category) || a.display_name.localeCompare(b.display_name));
+  products.sort((a, b) => (a.category || "").localeCompare(b.category || "") || (a.display_name || "").localeCompare(b.display_name || ""));
 
   return (
     <div className="space-y-6">

@@ -1,16 +1,23 @@
+import { requireAdmin } from "@/lib/auth-server";
 import { AnalyticsClient } from "@/components/admin/AnalyticsClient";
+import { PipelineSubNav } from "@/components/admin/navigation/AdminSubNav";
 
 export const metadata = {
-  title: "Analytics | Admin | TEAM CCTV",
+  title: "Analytics Trends | Admin | TEAM CCTV",
 };
 
-export default function AnalyticsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AnalyticsPage() {
+  await requireAdmin();
+
   return (
     <div className="space-y-6">
+      <PipelineSubNav />
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Executive Dashboard</h1>
-          <p className="text-gray-500 font-medium mt-1">Real-time overview of business performance.</p>
+          <h1 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Analytics Trends & Insights</h1>
+          <p className="text-zinc-500 font-medium text-xs mt-1">Real-time overview of business performance and pipeline velocity.</p>
         </div>
       </div>
       

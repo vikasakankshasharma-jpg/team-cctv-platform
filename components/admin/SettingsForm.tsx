@@ -118,8 +118,10 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
     cost_labor_visit_charge: initialSettings.cost_labor_visit_charge ?? 300,
     cost_labor_small_job_rate: initialSettings.cost_labor_small_job_rate ?? 350,
     cost_conduit_per_meter: initialSettings.cost_conduit_per_meter ?? 12,
+    high_reach_fee: initialSettings.high_reach_fee ?? initialSettings.site_preparation?.ladderArrangementFee ?? 500,
+    minimum_margin_threshold: initialSettings.minimum_margin_threshold ?? 15,
     site_preparation: {
-      ladderArrangementFee: initialSettings.site_preparation?.ladderArrangementFee ?? 500,
+      ladderArrangementFee: initialSettings.site_preparation?.ladderArrangementFee ?? initialSettings.high_reach_fee ?? 500,
       marbleLaborSurcharge: initialSettings.site_preparation?.marbleLaborSurcharge ?? 400,
       metalInstallationSurcharge: initialSettings.site_preparation?.metalInstallationSurcharge ?? 200,
       furnishedSiteSurcharge: initialSettings.site_preparation?.furnishedSiteSurcharge ?? 300,
@@ -234,11 +236,13 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
 
   const handleSitePrepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    const num = Number(value) || 0;
     setFormData(prev => ({
       ...prev,
+      high_reach_fee: name === 'ladderArrangementFee' ? num : prev.high_reach_fee,
       site_preparation: {
         ...(prev.site_preparation || {}),
-        [name]: Number(value)
+        [name]: num
       }
     }));
   };

@@ -23,56 +23,71 @@ export default async function AdminExpansionPage() {
   const { tree, summary } = await getGeoHierarchyData();
 
   // 2. Fetch waitlisted leads and enrich with hierarchy metadata
-  const snapshot = await adminDb
-    .collection("leads")
-    .where("service_status", "==", "waitlist")
-    .get();
+  let leads: any[] = [];
+  try {
+    const snapshot = await adminDb
+      .collection("leads")
+      .where("service_status", "==", "waitlist")
+      .get();
 
-  const leads = snapshot.docs.map((doc) => {
-    const data = doc.data();
-    const pin = data.detected_pincode || "";
-    const meta = pin ? resolveStaticHierarchy(pin) : null;
+    leads = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      const pin = data.detected_pincode || "";
+      const meta = pin ? resolveStaticHierarchy(pin) : null;
 
-    return {
-      id: doc.id,
-      customer_name: data.customer_name || "Anonymous",
-      mobile_number: data.mobile_number || "N/A",
-      detected_pincode: pin || "N/A",
-      detected_tehsil: data.detected_tehsil || meta?.tehsil || "General",
-      detected_city: data.detected_district || data.detected_city || meta?.district || "Unknown",
-      detected_district: data.detected_district || data.detected_city || meta?.district || "Unknown",
-      detected_state: data.detected_state || meta?.state || "Rajasthan",
-      detected_city_slug: data.detected_city_slug || "",
-      waitlist_confirmed: data.waitlist_confirmed || false,
-      created_at: data.created_at?.toDate?.()?.toISOString() || null,
-    };
-  }).sort((a, b) => {
-    const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-    const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-    return dateB - dateA;
-  });
+      return {
+        id: doc.id,
+        customer_name: data.customer_name || "Anonymous",
+        mobile_number: data.mobile_number || "N/A",
+        detected_pincode: pin || "N/A",
+        detected_tehsil: data.detected_tehsil || meta?.tehsil || "General",
+        detected_city: data.detected_district || data.detected_city || meta?.district || "Unknown",
+        detected_district: data.detected_district || data.detected_city || meta?.district || "Unknown",
+        detected_state: data.detected_state || meta?.state || "Rajasthan",
+        detected_city_slug: data.detected_city_slug || "",
+        waitlist_confirmed: data.waitlist_confirmed || false,
+        created_at: data.created_at?.toDate?.()?.toISOString() || null,
+      };
+    }).sort((a, b) => {
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return dateB - dateA;
+    });
+  } catch (err) {
+    console.warn("⚠️ Failed to load waitlist leads from Firestore:", err);
+  }
 
   // 3. Fetch service area metadata (aggregates)
-  const serviceAreasSnap = await adminDb.collection("service_areas").get();
-  const serviceAreas = serviceAreasSnap.docs.map((doc) => {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      city: data.city || doc.id,
-      waitlist_count: data.waitlist_count || 0,
-      served: data.served || false,
-    };
-  });
+  let serviceAreas: any[] = [];
+  try {
+    const serviceAreasSnap = await adminDb.collection("service_areas").get();
+    serviceAreas = serviceAreasSnap.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        city: data.city || doc.id,
+        waitlist_count: data.waitlist_count || 0,
+        served: data.served || false,
+      };
+    });
+  } catch (err) {
+    console.warn("⚠️ Failed to load service areas from Firestore:", err);
+  }
 
   // 4. Fetch impressions
-  const impressionsSnap = await adminDb.collection("demand_impressions").get();
-  const impressions = impressionsSnap.docs.map((doc) => {
-    const data = doc.data();
-    return {
-      city: data.city || "",
-      pincode: data.pincode || ""
-    };
-  });
+  let impressions: any[] = [];
+  try {
+    const impressionsSnap = await adminDb.collection("demand_impressions").get();
+    impressions = impressionsSnap.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        city: data.city || "",
+        pincode: data.pincode || ""
+      };
+    });
+  } catch (err) {
+    console.warn("⚠️ Failed to load impressions from Firestore:", err);
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700">

@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth-server";
+import { requireAdminApi } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { CreateGeoPricingRuleSchema } from "@/lib/validators";
 import type { GeoPricingRule } from "@/types";
 
 export async function GET() {
   try {
-    await requireAdmin();
+    await requireAdminApi();
     const snapshot = await adminDb.collection("geo_pricing_rules").orderBy("priority", "asc").get();
     const rules = snapshot.docs.map(doc => ({
       id: doc.id,
@@ -14,20 +14,20 @@ export async function GET() {
     }));
     return NextResponse.json(rules);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: error.message === "Unauthorized" ? 401 : 500 });
   }
 }
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminApi();
     const body = await req.json();
     
     const validatedData = CreateGeoPricingRuleSchema.parse(body);
 
     const docRef = await adminDb.collection("geo_pricing_rules").add({
       ...validatedData,
-      is_active: true,
+      is_active: validatedData.is_active ?? true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
@@ -37,6 +37,6 @@ export async function POST(req: Request) {
     if (error.name === "ZodError") {
       return NextResponse.json({ error: error.errors }, { status: 400 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: error.message === "Unauthorized" ? 401 : 500 });
   }
 }
