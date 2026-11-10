@@ -111,6 +111,17 @@ export function DynamicVariantGenerator({
     return "hd";
   });
   
+  const [hybridWiredTech, setHybridWiredTech] = useState<"all" | "hd" | "ip">(() => {
+    const pref = String((selection as any).hybrid_wired_technology || "").toUpperCase();
+    if (pref === "IP") return "ip";
+    if (pref === "HD") return "hd";
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('quote_hybrid_wired_tech');
+      if (saved === 'all' || saved === 'hd' || saved === 'ip') return saved as any;
+    }
+    return "all";
+  });
+
   const initialBrand = selection.brand_preference ? normalizeBrandKey(selection.brand_preference) : "all";
   const [activeBrand, setActiveBrand] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -132,12 +143,13 @@ export function DynamicVariantGenerator({
     return (selection as any).sensor_preference || "all";
   });
 
-  const isFiltered = activeBrand !== "all" || selectedStorageDays !== 15 || selectedStorageBrand !== "all" || selectedSensorType !== "all";
+  const isFiltered = activeBrand !== "all" || selectedStorageDays !== 15 || selectedStorageBrand !== "all" || selectedSensorType !== "all" || (activeTech === "hybrid" && hybridWiredTech !== "all");
   const handleResetFilters = () => {
     setActiveBrand("all");
     setSelectedStorageDays(15);
     setSelectedStorageBrand("all");
     setSelectedSensorType("all");
+    setHybridWiredTech("all");
   };
 
   useEffect(() => {
@@ -166,6 +178,12 @@ export function DynamicVariantGenerator({
       sessionStorage.setItem('quote_active_tech', activeTech);
     }
   }, [activeTech]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('quote_hybrid_wired_tech', hybridWiredTech);
+    }
+  }, [hybridWiredTech]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -320,6 +338,8 @@ export function DynamicVariantGenerator({
         ? (p.category === "cctv_camera" && (pTech === "WIRELESS" || pTech === "WIFI" || pTechs.includes("WIRELESS") || pTechs.includes("WIFI") || !!p.has_wifi || !!p.has_4g_sim))
         : activeTech === "ip"
         ? (p.category === "cctv_camera" && (pTech === "IP" || pTechs.includes("IP")))
+        : activeTech === "hybrid"
+        ? (p.category === "cctv_camera" && (pTech === "HD" || pTechs.includes("HD") || pTech === "IP" || pTechs.includes("IP")))
         : (p.category === "cctv_camera" && (pTech === "HD" || pTechs.includes("HD")));
       
       if (isConnMatch && p.brand) {
@@ -347,6 +367,8 @@ export function DynamicVariantGenerator({
         ? (pTech === "WIRELESS" || pTech === "WIFI" || pTechs.includes("WIRELESS") || pTechs.includes("WIFI") || !!p.has_wifi || !!p.has_4g_sim)
         : activeTech === "ip"
         ? (pTech === "IP" || pTechs.includes("IP"))
+        : activeTech === "hybrid"
+        ? (pTech === "HD" || pTechs.includes("HD") || pTech === "IP" || pTechs.includes("IP"))
         : (pTech === "HD" || pTechs.includes("HD"));
         
       if (!isConnMatch) return false;
@@ -502,7 +524,7 @@ export function DynamicVariantGenerator({
           features: allFeatures
         };
       });
-    const enrich = (pricing: any, brandKey: string, brandName: string) => {
+    const enrich = (pricing: any, brandKey: string, brandName: string, wiredTech?: "HD" | "IP") => {
       if (!pricing || pricing.error) return null;
       const camItems = pricing.items?.filter((i: any) => effectiveProducts.find(p => p.id === i.product_id)?.category === "cctv_camera");
       const firstCamId = camItems?.[0]?.product_id;
@@ -558,7 +580,7 @@ export function DynamicVariantGenerator({
             : (typeof cap === "string" && cap.includes("6TB")) ? 6000 : 1000;
 
           const effectiveCamCount = Math.max(1, totalWiredCount > 0 ? totalWiredCount : totalHardwareCount);
-          const isIP = activeTech === "ip";
+          const isIP = activeTech === "ip" || (activeTech === "hybrid" && wiredTech === "IP");
           const dailyGbPerCam = 14.0;
           actualCalculatedDays = (strItem as any)?.approx_days || Math.max(1, Math.floor(capacityGb / (effectiveCamCount * dailyGbPerCam)));
         }
@@ -622,6 +644,7 @@ export function DynamicVariantGenerator({
       return { 
         ...pricing, 
         technology: activeTech === "wireless" ? "Wireless" : activeTech === "hybrid" ? "Hybrid" : activeTech.toUpperCase(),
+        hybridWiredTech: wiredTech || (activeTech === "ip" ? "IP" : "HD"),
         camera_device: camera_device ? { ...camera_device, derivedResolution: displayResolution } : { derivedResolution: displayResolution, brand: brandName }, 
         storage_device, 
         camera_count: totalHardwareCount, 
@@ -639,6 +662,13 @@ export function DynamicVariantGenerator({
     const totalWifiCount = wifiBuckets.reduce((sum, b) => sum + b.count, 0);
     const totalHardwareCount = totalWiredCount + totalWifiCount;
 
+    const wiredTechsToRun: ("HD" | "IP")[] = 
+      activeTech === "hybrid"
+        ? (hybridWiredTech === "all" ? ["HD", "IP"] : hybridWiredTech === "ip" ? ["IP"] : ["HD"])
+        : activeTech === "ip"
+        ? ["IP"]
+        : ["HD"];
+
     brandsToGenerate.forEach(b => {
       const uniqueRes = Array.from(new Set(mixedReqs.map(r => r.resolution)));
       const isEconomy = selectedStorageDays === 7;
@@ -647,112 +677,186 @@ export function DynamicVariantGenerator({
         : selectedStorageDays === 30 ? 2.0
         : selectedStorageDays === 60 ? 4.0 : 1.0;
 
-      // Check if brand has ColorVu / Full Color cameras in catalog for this tech
-      const brandHasColor = effectiveProducts.some(p => {
-        if (p.category !== "cctv_camera") return false;
-        if (normalizeBrandKey(p.brand || "") !== b.brandKey) return false;
-        const pTech = (p.technology || "").toUpperCase();
-        const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
-        const isTechMatch = activeTech === "hd" 
-          ? (pTech === "HD" || pTechs.includes("HD"))
-          : activeTech === "ip"
-          ? (pTech === "IP" || pTechs.includes("IP"))
-          : activeTech === "hybrid"
-          ? (pTech === "HD" || pTechs.includes("HD") || pTech === "IP" || pTechs.includes("IP"))
-          : (pTech === "WIRELESS" || pTech === "WIFI" || pTechs.includes("WIRELESS") || pTechs.includes("WIFI") || !!p.has_wifi || !!p.has_4g_sim);
-        if (!isTechMatch) return false;
-        return p.has_color === true || p.has_colorvu === true || (p.features || []).includes("color") || (p.features || []).includes("colorvu") || (p.features || []).includes("dual_light") || p.night_vision_type === "color" || p.night_vision_type === "dual_light" || (p.display_name || "").toLowerCase().includes("colorvu") || (p.display_name || "").toLowerCase().includes("full color");
-      });
+      wiredTechsToRun.forEach(currentWiredTech => {
+        // Verify brand has camera matching current wired tech
+        const brandHasMatchingCam = effectiveProducts.some(p => {
+          if (p.category !== "cctv_camera") return false;
+          if (normalizeBrandKey(p.brand || "") !== b.brandKey) return false;
+          const pTech = (p.technology || "").toUpperCase();
+          const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
+          if (activeTech === "wireless") {
+            return pTech === "WIRELESS" || pTech === "WIFI" || pTechs.includes("WIRELESS") || pTechs.includes("WIFI") || !!p.has_wifi || !!p.has_4g_sim;
+          }
+          return pTech === currentWiredTech || pTechs.includes(currentWiredTech);
+        });
+        if (!brandHasMatchingCam) return;
 
-      // 1. Standard IR Variation (Lowest Entry Price)
-      if (selectedSensorType === "all" || selectedSensorType === "standard_ir") {
-        const standardReqs = mixedReqs.map(r => ({
-          ...r,
-          features: (r.features || []).filter((f: string) => f !== "color" && f !== "colorvu" && f !== "dual_light")
-        }));
-        const selStandard: ConfiguratorSelection = {
-          ...selection,
-          technology: (activeTech === "wireless" ? "Wireless" : activeTech === "ip" ? "IP" : "HD") as any,
-          brand_preference: b.brand,
-          mixed_camera_requirements: standardReqs,
-          outdoor_camera_count: cameraBuckets.filter(b => b.type === "outdoor" && b.connection !== "wifi" && b.connection !== "4g").reduce((sum, b) => sum + b.count, 0),
-          indoor_camera_count: cameraBuckets.filter(b => b.type === "indoor" && b.connection !== "wifi" && b.connection !== "4g").reduce((sum, b) => sum + b.count, 0),
-          wifi_camera_count: totalWifiCount,
-          camera_count: totalHardwareCount,
-          resolution_preference: uniqueRes.length === 1 ? uniqueRes[0] : "5MP",
-          plan_type: "budget", // Pick lowest entry price camera!
-          sensor_preference: "standard_ir",
-          preferred_storage_brand: selectedStorageBrand !== "all" ? selectedStorageBrand : undefined,
-          recording_days: selectedStorageDays,
-          is_economy_storage: isEconomy as any,
-          target_storage_tb: targetStorageTB,
-        };
+        // Dynamic mixed requirements with currentWiredTech for wired cameras
+        const techMixedReqs = cameraBuckets.filter(bkt => bkt.count > 0).map(bkt => {
+          const conn = isWireless ? (bkt.connection === "4g" ? "4g" : "wifi") : (bkt.connection || "wired");
+          const bucketResList = getResolutionsForBucket(bkt);
+          const res = bucketResList.includes(bkt.resolution) ? bkt.resolution : (bucketResList.includes("3MP") ? "3MP" : (bucketResList.includes("2MP") ? "2MP" : (bucketResList[0] || "2MP")));
 
-        const rawStandard = calculatePricing({
-          selection: selStandard, products: effectiveProducts, addons, settings, cablingDone, cablingMeters,
-          referralDiscountPercent: promoterDiscount?.percent || 0,
-          referralDiscountFlat: promoterDiscount?.flat || 0,
-          evaluatedAddonRules, activeOffer,
+          let baseFeatures: string[] = [];
+          if (conn === "4g") {
+            baseFeatures = bkt.type === "outdoor" ? ["outdoor", "4g", "sim"] : ["indoor", "4g", "sim"];
+          } else if (conn === "wifi") {
+            baseFeatures = bkt.type === "outdoor" ? ["bullet", "wireless", "wifi"] : ["dome", "wireless", "wifi", "ptz"];
+          } else {
+            baseFeatures = bkt.type === "outdoor" ? ["bullet", "outdoor"] : ["dome", "indoor"];
+          }
+          const extra = bkt.features && Array.isArray(bkt.features) ? bkt.features : [];
+          const allFeatures = Array.from(new Set([...baseFeatures, ...extra]));
+
+          if (conn === "4g") {
+            return {
+              type: bkt.type === "outdoor" ? "Outdoor 4G SIM Camera" : "Indoor 4G SIM Camera",
+              count: bkt.count,
+              resolution: res,
+              technology: "Wireless",
+              features: allFeatures
+            };
+          }
+          if (conn === "wifi") {
+            return {
+              type: bkt.type === "outdoor" ? "Outdoor Wi-Fi Camera" : "Indoor Wi-Fi Camera",
+              count: bkt.count,
+              resolution: res,
+              technology: "Wireless",
+              features: allFeatures
+            };
+          }
+          return {
+            type: bkt.type === "outdoor" ? "Outdoor Bullet Camera" : "Indoor Dome Camera",
+            count: bkt.count,
+            resolution: res,
+            technology: currentWiredTech,
+            features: allFeatures
+          };
         });
 
-        const enrichedStandard = enrich(rawStandard, b.brandKey, b.brand);
-        if (enrichedStandard) {
-          enrichedStandard.is_economy_storage = isEconomy;
-          (enrichedStandard as any).sensor_type = "standard_ir";
-          (enrichedStandard as any).key_difference = "🌙 Standard IR Night Vision · Lowest Entry Price";
-          results.push(enrichedStandard);
-        }
-      }
-
-      // 2. 24/7 ColorVu / Full Color Variation
-      if (brandHasColor && (selectedSensorType === "all" || selectedSensorType === "colorvu")) {
-        const colorReqs = mixedReqs.map(r => ({
-          ...r,
-          features: Array.from(new Set([...(r.features || []), "color"]))
-        }));
-        const selColor: ConfiguratorSelection = {
-          ...selection,
-          technology: (activeTech === "wireless" ? "Wireless" : activeTech === "ip" ? "IP" : "HD") as any,
-          brand_preference: b.brand,
-          mixed_camera_requirements: colorReqs,
-          outdoor_camera_count: cameraBuckets.filter(b => b.type === "outdoor" && b.connection !== "wifi" && b.connection !== "4g").reduce((sum, b) => sum + b.count, 0),
-          indoor_camera_count: cameraBuckets.filter(b => b.type === "indoor" && b.connection !== "wifi" && b.connection !== "4g").reduce((sum, b) => sum + b.count, 0),
-          wifi_camera_count: totalWifiCount,
-          camera_count: totalHardwareCount,
-          resolution_preference: uniqueRes.length === 1 ? uniqueRes[0] : "5MP",
-          plan_type: "recommended",
-          sensor_preference: "colorvu",
-          requested_features: Array.from(new Set([...(selection.requested_features || []), "color"])),
-          preferred_storage_brand: selectedStorageBrand !== "all" ? selectedStorageBrand : undefined,
-          recording_days: selectedStorageDays,
-          is_economy_storage: isEconomy as any,
-          target_storage_tb: targetStorageTB,
-        };
-
-        const rawColor = calculatePricing({
-          selection: selColor, products: effectiveProducts, addons, settings, cablingDone, cablingMeters,
-          referralDiscountPercent: promoterDiscount?.percent || 0,
-          referralDiscountFlat: promoterDiscount?.flat || 0,
-          evaluatedAddonRules, activeOffer,
+        // Check if brand has ColorVu / Full Color cameras in catalog for this currentWiredTech
+        const brandHasColor = effectiveProducts.some(p => {
+          if (p.category !== "cctv_camera") return false;
+          if (normalizeBrandKey(p.brand || "") !== b.brandKey) return false;
+          const pTech = (p.technology || "").toUpperCase();
+          const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
+          const isTechMatch = activeTech === "wireless"
+            ? (pTech === "WIRELESS" || pTech === "WIFI" || pTechs.includes("WIRELESS") || pTechs.includes("WIFI") || !!p.has_wifi || !!p.has_4g_sim)
+            : (pTech === currentWiredTech || pTechs.includes(currentWiredTech));
+          if (!isTechMatch) return false;
+          return p.has_color === true || p.has_colorvu === true || (p.features || []).includes("color") || (p.features || []).includes("colorvu") || (p.features || []).includes("dual_light") || p.night_vision_type === "color" || p.night_vision_type === "dual_light" || (p.display_name || "").toLowerCase().includes("colorvu") || (p.display_name || "").toLowerCase().includes("full color");
         });
 
-        const enrichedColor = enrich(rawColor, b.brandKey, b.brand);
-        if (enrichedColor) {
-          enrichedColor.is_economy_storage = isEconomy;
-          (enrichedColor as any).sensor_type = "colorvu";
-          (enrichedColor as any).key_difference = "🌈 24/7 ColorVu Full Color · Daytime Clarity in Darkness";
-          
-          // Only add if it's different from standard or if standard wasn't added
-          const alreadyHasSamePrice = results.some(r => 
-            normalizeBrandKey(r.camera_device?.brand || "") === b.brandKey && 
-            r.total_payable === enrichedColor.total_payable && 
-            (r as any).sensor_type === "standard_ir"
-          );
-          if (!alreadyHasSamePrice) {
-            results.push(enrichedColor);
+        // 1. Standard IR Variation (Lowest Entry Price)
+        if (selectedSensorType === "all" || selectedSensorType === "standard_ir") {
+          const standardReqs = techMixedReqs.map(r => ({
+            ...r,
+            features: (r.features || []).filter((f: string) => f !== "color" && f !== "colorvu" && f !== "dual_light")
+          }));
+          const selStandard: ConfiguratorSelection = {
+            ...selection,
+            technology: (activeTech === "wireless" ? "Wireless" : currentWiredTech) as any,
+            hybrid_wired_technology: currentWiredTech,
+            is_hybrid: activeTech === "hybrid",
+            brand_preference: b.brand,
+            mixed_camera_requirements: standardReqs,
+            outdoor_camera_count: cameraBuckets.filter(bkt => bkt.type === "outdoor" && bkt.connection !== "wifi" && bkt.connection !== "4g").reduce((sum, bkt) => sum + bkt.count, 0),
+            indoor_camera_count: cameraBuckets.filter(bkt => bkt.type === "indoor" && bkt.connection !== "wifi" && bkt.connection !== "4g").reduce((sum, bkt) => sum + bkt.count, 0),
+            wifi_camera_count: totalWifiCount,
+            camera_count: totalHardwareCount,
+            resolution_preference: uniqueRes.length === 1 ? uniqueRes[0] : (currentWiredTech === "IP" ? "3MP" : "2MP"),
+            plan_type: "budget", // Pick lowest entry price camera!
+            sensor_preference: "standard_ir",
+            preferred_storage_brand: selectedStorageBrand !== "all" ? selectedStorageBrand : undefined,
+            recording_days: selectedStorageDays,
+            is_economy_storage: isEconomy as any,
+            target_storage_tb: targetStorageTB,
+          };
+
+          const rawStandard = calculatePricing({
+            selection: selStandard, products: effectiveProducts, addons, settings, cablingDone, cablingMeters,
+            referralDiscountPercent: promoterDiscount?.percent || 0,
+            referralDiscountFlat: promoterDiscount?.flat || 0,
+            evaluatedAddonRules, activeOffer,
+          });
+
+          const enrichedStandard = enrich(rawStandard, b.brandKey, b.brand, currentWiredTech);
+          if (enrichedStandard) {
+            enrichedStandard.is_economy_storage = isEconomy;
+            (enrichedStandard as any).sensor_type = "standard_ir";
+            (enrichedStandard as any).hybridWiredTech = currentWiredTech;
+            if (activeTech === "hybrid") {
+              (enrichedStandard as any).key_difference = currentWiredTech === "IP"
+                ? "🌙 Standard IR Night Vision · Pro IP (NVR & PoE)"
+                : "🌙 Standard IR Night Vision · Value HD (DVR)";
+            } else {
+              (enrichedStandard as any).key_difference = "🌙 Standard IR Night Vision · Lowest Entry Price";
+            }
+            results.push(enrichedStandard);
           }
         }
-      }
+
+        // 2. 24/7 ColorVu / Full Color Variation
+        if (brandHasColor && (selectedSensorType === "all" || selectedSensorType === "colorvu")) {
+          const colorReqs = techMixedReqs.map(r => ({
+            ...r,
+            features: Array.from(new Set([...(r.features || []), "color"]))
+          }));
+          const selColor: ConfiguratorSelection = {
+            ...selection,
+            technology: (activeTech === "wireless" ? "Wireless" : currentWiredTech) as any,
+            hybrid_wired_technology: currentWiredTech,
+            is_hybrid: activeTech === "hybrid",
+            brand_preference: b.brand,
+            mixed_camera_requirements: colorReqs,
+            outdoor_camera_count: cameraBuckets.filter(bkt => bkt.type === "outdoor" && bkt.connection !== "wifi" && bkt.connection !== "4g").reduce((sum, bkt) => sum + bkt.count, 0),
+            indoor_camera_count: cameraBuckets.filter(bkt => bkt.type === "indoor" && bkt.connection !== "wifi" && bkt.connection !== "4g").reduce((sum, bkt) => sum + bkt.count, 0),
+            wifi_camera_count: totalWifiCount,
+            camera_count: totalHardwareCount,
+            resolution_preference: uniqueRes.length === 1 ? uniqueRes[0] : (currentWiredTech === "IP" ? "3MP" : "2MP"),
+            plan_type: "recommended",
+            sensor_preference: "colorvu",
+            requested_features: Array.from(new Set([...(selection.requested_features || []), "color"])),
+            preferred_storage_brand: selectedStorageBrand !== "all" ? selectedStorageBrand : undefined,
+            recording_days: selectedStorageDays,
+            is_economy_storage: isEconomy as any,
+            target_storage_tb: targetStorageTB,
+          };
+
+          const rawColor = calculatePricing({
+            selection: selColor, products: effectiveProducts, addons, settings, cablingDone, cablingMeters,
+            referralDiscountPercent: promoterDiscount?.percent || 0,
+            referralDiscountFlat: promoterDiscount?.flat || 0,
+            evaluatedAddonRules, activeOffer,
+          });
+
+          const enrichedColor = enrich(rawColor, b.brandKey, b.brand, currentWiredTech);
+          if (enrichedColor) {
+            enrichedColor.is_economy_storage = isEconomy;
+            (enrichedColor as any).sensor_type = "colorvu";
+            (enrichedColor as any).hybridWiredTech = currentWiredTech;
+            if (activeTech === "hybrid") {
+              (enrichedColor as any).key_difference = currentWiredTech === "IP"
+                ? "🌈 24/7 ColorVu Full Color · Pro IP (NVR & PoE)"
+                : "🌈 24/7 ColorVu Full Color · Value HD (DVR)";
+            } else {
+              (enrichedColor as any).key_difference = "🌈 24/7 ColorVu Full Color · Daytime Clarity in Darkness";
+            }
+            
+            // Only add if it's different from standard or if standard wasn't added
+            const alreadyHasSamePrice = results.some(r => 
+              normalizeBrandKey(r.camera_device?.brand || "") === b.brandKey && 
+              r.total_payable === enrichedColor.total_payable && 
+              (r as any).sensor_type === "standard_ir" &&
+              (r as any).hybridWiredTech === currentWiredTech
+            );
+            if (!alreadyHasSamePrice) {
+              results.push(enrichedColor);
+            }
+          }
+        }
+      });
     });
 
     // Sort packages by price (low to high)
@@ -765,7 +869,7 @@ export function DynamicVariantGenerator({
     });
 
     return results;
-  }, [activeTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, cablingMeters, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions, selectedStorageDays, selectedStorageBrand, selectedSensorType]);
+  }, [activeTech, hybridWiredTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, cablingMeters, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions, selectedStorageDays, selectedStorageBrand, selectedSensorType]);
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-4 sm:space-y-6">
@@ -868,6 +972,55 @@ export function DynamicVariantGenerator({
             </span>
           </button>
         </div>
+
+        {/* Hybrid Backbone Sub-Bar */}
+        {activeTech === "hybrid" && (
+          <div className="w-full bg-linear-to-r from-indigo-50/90 via-purple-50/90 to-pink-50/90 dark:from-indigo-950/40 dark:via-purple-950/40 dark:to-pink-950/40 border border-purple-200/80 dark:border-purple-800/60 p-2 sm:p-2.5 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-2 shadow-2xs">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="font-extrabold text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
+                <span>⚡</span> Wired Backbone:
+              </span>
+              <span className="text-[11px] text-purple-700/90 dark:text-purple-300/90 hidden sm:inline">
+                Compare DVR vs. NVR PoE wired tiers
+              </span>
+            </div>
+            <div className="flex items-center gap-1 bg-white/90 dark:bg-zinc-900/90 p-1 rounded-lg border border-purple-200/70 dark:border-purple-800/50 w-full sm:w-auto shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setHybridWiredTech("all")}
+                className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+                  hybridWiredTech === "all"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+                }`}
+              >
+                All Hybrid ({variants.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setHybridWiredTech("hd")}
+                className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                  hybridWiredTech === "hd"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+                }`}
+              >
+                <span>🏷️</span> Value HD (DVR)
+              </button>
+              <button
+                type="button"
+                onClick={() => setHybridWiredTech("ip")}
+                className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                  hybridWiredTech === "ip"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+                }`}
+              >
+                <span>💎</span> Pro IP (NVR & PoE)
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Compact Dropdown Filter Toolbar */}
         <div className="w-full pt-1.5 pb-0.5 border-t border-zinc-200/70 dark:border-zinc-800/70 space-y-1.5">
@@ -1360,8 +1513,30 @@ export function DynamicVariantGenerator({
       )}
 
       {variants.length > 0 && (
-        <div className="mt-8 mb-4">
-          <h2 className="text-xl font-bold text-[#1d1d1f] dark:text-white">{t("wz_available_packages")}</h2>
+        <div className="mt-8 mb-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-[#1d1d1f] dark:text-white">{t("wz_available_packages")}</h2>
+            {activeTech === "hybrid" && (
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                {hybridWiredTech === "all" ? "Showing Value HD & Pro IP Packages" : hybridWiredTech === "ip" ? "Filtered: Pro IP Network (NVR)" : "Filtered: Value HD Analog (DVR)"}
+              </span>
+            )}
+          </div>
+
+          {activeTech === "hybrid" && (
+            <div className="bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/70 dark:border-purple-900/50 rounded-xl p-3 text-xs text-purple-900 dark:text-purple-200 flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-bold">
+                  💡 Hybrid Setup Guide: Wired Perimeter Stability + Smart Wireless Indoor Flexibility
+                </p>
+                <p className="text-[11.5px] text-purple-800 dark:text-purple-300 leading-relaxed">
+                  • <strong>🏷️ Value HD Hybrid (HD DVR):</strong> Wired cameras connect to an HD DVR via copper coaxial cable with central SMPS power. <em>Lowest entry cost for budget-conscious homes and shops.</em><br />
+                  • <strong>💎 Pro IP Hybrid (Digital IP NVR & PoE):</strong> Wired cameras connect to a PoE network switch via Cat6 LAN cable. Zero signal drop, 4K digital clarity, and Smart Wi-Fi cameras link into the NVR for unified recording.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1385,6 +1560,15 @@ export function DynamicVariantGenerator({
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-b-xl z-10 flex items-center gap-1 shadow-sm">
                   <Tag className="w-3 h-3" />  {t("wz_economy_match")}
                                           </div>
+              )}
+              {((variant as any).hybridWiredTech && totalWiredCount > 0 && totalWifiCount > 0) && (
+                <div className={`absolute top-0 right-3 px-2.5 py-0.5 rounded-b-lg text-[9px] font-black uppercase tracking-wider z-10 shadow-2xs ${
+                  (variant as any).hybridWiredTech === "IP"
+                    ? "bg-purple-600 text-white"
+                    : "bg-indigo-600 text-white"
+                }`}>
+                  {(variant as any).hybridWiredTech === "IP" ? "💎 Pro IP Hybrid" : "🏷️ Value HD Hybrid"}
+                </div>
               )}
               
               <CardContent className="py-4 md:py-8 px-5 flex flex-col items-center justify-center min-h-[180px]">
@@ -1419,9 +1603,29 @@ export function DynamicVariantGenerator({
                   
                   {/* Hybrid Architecture Breakdown Badge */}
                   {(totalWiredCount > 0 && totalWifiCount > 0) && (
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 mb-2 rounded-full bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800/60 text-purple-800 dark:text-purple-300 text-[10px] font-extrabold uppercase tracking-wide">
-                      <span>⚡ Hybrid:</span>
-                      <span>{totalWiredCount} Wired (DVR) + {totalWifiCount} Smart Wireless</span>
+                    <div className="flex flex-col items-center gap-1 mb-2">
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wide border shadow-2xs ${
+                        (variant as any).hybridWiredTech === "IP"
+                          ? "bg-purple-50 dark:bg-purple-950/60 border-purple-300 dark:border-purple-800 text-purple-900 dark:text-purple-200"
+                          : "bg-indigo-50 dark:bg-indigo-950/60 border-indigo-300 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200"
+                      }`}>
+                        {(variant as any).hybridWiredTech === "IP" ? (
+                          <>
+                            <span className="text-purple-600 dark:text-purple-400">💎 PRO HYBRID:</span>
+                            <span>{totalWiredCount} Wired (IP NVR & PoE) + {totalWifiCount} Smart Wireless</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-indigo-600 dark:text-indigo-400">🏷️ VALUE HYBRID:</span>
+                            <span>{totalWiredCount} Wired (HD DVR) + {totalWifiCount} Smart Wireless</span>
+                          </>
+                        )}
+                      </div>
+                      <span className="text-[9.5px] font-medium text-slate-500 dark:text-zinc-400">
+                        {(variant as any).hybridWiredTech === "IP"
+                          ? "PoE Switch + Cat6 Copper Cable + NVR + MicroSD Recording"
+                          : "Central SMPS + 3+1 Copper Cable + DVR + MicroSD Recording"}
+                      </span>
                     </div>
                   )}
                   

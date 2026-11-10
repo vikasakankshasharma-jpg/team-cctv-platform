@@ -83,8 +83,10 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
       return;
     }
 
-    // Also calculate Digital IP alternative if currently in HD mode to present transparent dual-spectrum choices
+    // Also calculate alternative wired technology (IP if currently HD, HD if currently IP)
     let proIpLowestPrice: number | null = null;
+    let valueHdLowestPrice: number | null = null;
+
     if (tech === "HD") {
       try {
         const ipCatalogResult = generateAllCatalogVariations({
@@ -100,6 +102,22 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
         }
       } catch (err) {
         console.warn("Could not compute IP alternative pricing:", err);
+      }
+    } else if (tech === "IP") {
+      try {
+        const hdCatalogResult = generateAllCatalogVariations({
+          selection: { ...selection, technology: "HD" },
+          products,
+          addons,
+          settings,
+          cablingDone,
+          promoterDiscount,
+        });
+        if (hdCatalogResult.lowestOverallQuote) {
+          valueHdLowestPrice = hdCatalogResult.lowestOverallQuote.total_payable;
+        }
+      } catch (err) {
+        console.warn("Could not compute HD alternative pricing:", err);
       }
     }
 
@@ -123,7 +141,12 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
     let summaryText = `📷 *COMPLETE CCTV PRICE SUMMARY${customerDisplayName}*\n`;
     summaryText += `━━━━━━━━━━━━━━━━━━━━━\n`;
     summaryText += `📍 *Site Setup:* ${totalCams} Cameras (${formatCameraBreakdown(selection)})\n`;
-    summaryText += `⚡ *Technology:* ${tech === "IP" ? "Digital IP (Best Quality)" : tech === "HD" ? "HD Analog (Lowest Price Guarantee)" : "Smart Wireless"}\n`;
+    const isHybrid = Number(selection.wifi_camera_count || 0) > 0 && 
+      ((Number(selection.outdoor_camera_count) || 0) + (Number(selection.indoor_camera_count) || 0) > 0);
+    const techDisplay = isHybrid
+      ? (tech === "IP" ? "Pro Hybrid - Digital IP & PoE (with Smart Wireless)" : "Value Hybrid - HD Analog DVR (with Smart Wireless)")
+      : (tech === "IP" ? "Digital IP (Best Quality)" : tech === "HD" ? "HD Analog (Lowest Price Guarantee)" : "Smart Wireless");
+    summaryText += `⚡ *Technology:* ${techDisplay}\n`;
     summaryText += `💾 *Storage:* ${storageDays === 0 ? "Live Viewing Only (No HDD)" : `${storageDays} Days Retention (${selection.recording_mode === "motion" ? "Motion" : "24x7"})`}\n`;
     summaryText += `🔌 *Cabling:* ${cablingDone ? "Pre-Wired Site (Fitting only)" : "Need New Cabling (~15m wire/cam incl)"}\n`;
     if (selection.broadband_status === "sim_router") {
@@ -136,11 +159,20 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
 
     if (tech === "HD" && proIpLowestPrice) {
       summaryText += `💡 *DUAL SETUP CHOICES:*\n`;
-      summaryText += `🏷️ *Value Tier (HD Analog DVR):* From *₹${lowestOverallQuote.total_payable.toLocaleString('en-IN')}* (Best for Price-Conscious)\n`;
-      summaryText += `💎 *Pro Tier (Digital IP NVR):* From *₹${proIpLowestPrice.toLocaleString('en-IN')}* (Best for 4K / Commercial)\n\n`;
+      summaryText += isHybrid
+        ? `🏷️ *Value Hybrid (HD DVR + Wi-Fi):* From *₹${lowestOverallQuote.total_payable.toLocaleString('en-IN')}* (Best for Price-Conscious)\n💎 *Pro Hybrid (IP NVR & PoE + Wi-Fi):* From *₹${proIpLowestPrice.toLocaleString('en-IN')}* (Best for 4K / Network Structured)\n\n`
+        : `🏷️ *Value Tier (HD Analog DVR):* From *₹${lowestOverallQuote.total_payable.toLocaleString('en-IN')}* (Best for Price-Conscious)\n💎 *Pro Tier (Digital IP NVR):* From *₹${proIpLowestPrice.toLocaleString('en-IN')}* (Best for 4K / Commercial)\n\n`;
+    } else if (tech === "IP" && valueHdLowestPrice) {
+      summaryText += `💡 *DUAL SETUP CHOICES:*\n`;
+      summaryText += isHybrid
+        ? `💎 *Pro Hybrid (IP NVR & PoE + Wi-Fi):* From *₹${lowestOverallQuote.total_payable.toLocaleString('en-IN')}* (Currently Viewing)\n🏷️ *Value Hybrid (HD DVR + Wi-Fi):* From *₹${valueHdLowestPrice.toLocaleString('en-IN')}* (Save ₹${(lowestOverallQuote.total_payable - valueHdLowestPrice).toLocaleString('en-IN')}!)\n\n`
+        : `💎 *Pro Tier (Digital IP NVR):* From *₹${lowestOverallQuote.total_payable.toLocaleString('en-IN')}* (Currently Viewing)\n🏷️ *Value Tier (HD Analog DVR):* From *₹${valueHdLowestPrice.toLocaleString('en-IN')}* (Save ₹${(lowestOverallQuote.total_payable - valueHdLowestPrice).toLocaleString('en-IN')}!)\n\n`;
     }
 
-    summaryText += `🏆 *ALL-INCLUSIVE BRAND PRICE SPECTRUM (${tech === "HD" ? "Value Tier - HD Analog" : tech === "IP" ? "Pro Tier - Digital IP" : "Smart Wireless"}):*\n\n`;
+    const spectrumTierName = isHybrid
+      ? (tech === "HD" ? "Value Hybrid - HD Analog" : "Pro Hybrid - Digital IP")
+      : (tech === "HD" ? "Value Tier - HD Analog" : tech === "IP" ? "Pro Tier - Digital IP" : "Smart Wireless");
+    summaryText += `🏆 *ALL-INCLUSIVE BRAND PRICE SPECTRUM (${spectrumTierName}):*\n\n`;
 
     brandSummaries.forEach((b, idx) => {
       const isLowest = b.minPrice === lowestOverallQuote.total_payable;
@@ -182,8 +214,10 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
     } else if (tech === "IP") {
       specialRows.push({
         id: "toggle_tech_hd",
-        title: "🏷️ View Value HD Analog",
-        description: "Switch to HD Analog / DVR packages (lowest price guarantee)".slice(0, 72)
+        title: isHybrid ? "🏷️ View Value HD Hybrid" : "🏷️ View Value HD Analog",
+        description: valueHdLowestPrice 
+          ? `Switch to HD Analog packages (from ₹${valueHdLowestPrice.toLocaleString('en-IN')})`.slice(0, 72)
+          : "Switch to HD Analog / DVR packages (lowest price guarantee)".slice(0, 72)
       });
     }
 

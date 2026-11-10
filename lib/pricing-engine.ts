@@ -121,6 +121,10 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   const rawTech = (selection.technology || "HD").toLowerCase();
   if (rawTech === "analog" || rawTech === "hd") selection.technology = "HD";
   else if (rawTech === "wifi" || rawTech === "4g" || rawTech === "wireless") selection.technology = "Wireless";
+  else if (rawTech === "hybrid") {
+    const wiredTech = String((selection as any).hybrid_wired_technology || "").toUpperCase();
+    selection.technology = wiredTech === "IP" ? "IP" : "HD";
+  }
   else selection.technology = "IP";
 
   // Derive and synchronize totalCameraCount from mixed_camera_requirements or indoor/outdoor counts

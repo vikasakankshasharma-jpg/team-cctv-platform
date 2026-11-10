@@ -478,6 +478,8 @@ export interface ConfiguratorSelection {
   selected_mixed_camera_ids?: Record<string, string>; // NEW: Maps mixed camera requirement types to pinned camera IDs
   
   // NEW FIELDS FROM WIZARD REDESIGN
+  is_hybrid?: boolean;
+  hybrid_wired_technology?: "HD" | "IP";
   surface_types?: string[];
   ceiling_height?: "standard" | "high" | "very_high";
   ladder_arrangement?: "customer" | "team";

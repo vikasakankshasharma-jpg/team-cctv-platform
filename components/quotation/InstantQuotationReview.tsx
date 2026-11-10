@@ -316,7 +316,7 @@ export function InstantQuotationReview({
           </button>
 
           <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-            {brandName} • {techName === "HD" ? t("wz_standard_hd") : t("wz_premium_ip")}
+            {brandName} • {Boolean(selection.is_hybrid || (activePricing as any).is_hybrid || ((selection.wifi_camera_count || 0) > 0 && camCount > (selection.wifi_camera_count || 0))) ? (selection.hybrid_wired_technology === "IP" ? "⚡ Pro IP Hybrid (NVR + Wi-Fi)" : "⚡ Value HD Hybrid (DVR + Wi-Fi)") : (techName === "HD" ? t("wz_standard_hd") : t("wz_premium_ip"))}
           </span>
         </div>
 

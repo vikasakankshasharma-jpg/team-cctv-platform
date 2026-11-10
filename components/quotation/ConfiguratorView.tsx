@@ -251,7 +251,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     const isHybridSetup = (wifiCountVal > 0 && (outdoorCountVal > 0 || indoorCountVal > 0)) || String(rawTech).toLowerCase() === "hybrid";
 
     const normalizedTech: "HD" | "IP" | "Wireless" = 
-      isHybridSetup ? "HD"
+      isHybridSetup ? (String(rawTech).toLowerCase().includes("ip") ? "IP" : "HD")
       : (rawTech === "Analog" || rawTech === "analog" || rawTech === "HD" || rawTech === "hd") ? "HD"
       : (rawTech === "WiFi" || rawTech === "wifi" || rawTech === "Wireless" || rawTech === "wireless") ? "Wireless"
       : "IP";
@@ -259,6 +259,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     const initialSelection = {
       ...selection,
       technology: isHybridSetup ? "hybrid" : normalizedTech,
+      hybrid_wired_technology: (String(rawTech).toLowerCase().includes("ip") ? "IP" : "HD") as "HD" | "IP",
       is_hybrid: isHybridSetup,
       camera_count: initialCamCount,
       indoor_camera_count: lead.wizard_answers?.["indoor_camera_count"] !== undefined ? Number(lead.wizard_answers["indoor_camera_count"]) : undefined,
@@ -560,7 +561,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     const recItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "recorder");
     const strItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "storage");
 
-    const rawTech = String(pricing.technology || selection.technology || "HD");
+    const rawTech = String(pricing.hybridWiredTech || pricing.technology || selection.technology || "HD");
     const tech: "HD" | "IP" | "Wireless" = 
       (rawTech.toLowerCase() === "wireless" || rawTech.toLowerCase() === "wifi") ? "Wireless" : 
       (rawTech.toUpperCase() === "IP" ? "IP" : "HD");
@@ -577,7 +578,9 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       selected_recorder_id: undefined,
       selected_power_id: undefined,
       selected_storage_id: undefined,
-      technology: tech,
+      technology: (pricing.hybridWiredTech || pricing.technology === "Hybrid" || (pricing as any).is_hybrid || selection.is_hybrid) ? "hybrid" : tech,
+      hybrid_wired_technology: ((pricing as any).hybridWiredTech || (tech === "IP" ? "IP" : "HD")) as "HD" | "IP",
+      is_hybrid: Boolean((pricing as any).hybridWiredTech || pricing.technology === "Hybrid" || (pricing as any).is_hybrid || selection.is_hybrid),
       plan_type: pricing.plan_type,
       camera_count: totalCams,
       brand_preference: pricing.camera_device?.brand || selection.brand_preference,
