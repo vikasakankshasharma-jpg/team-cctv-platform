@@ -206,3 +206,11 @@ export const MarginEngine = {
     };
   }
 };
+
+export {
+  calculateQuotationProfitBreakup,
+  classifyItem,
+  type QuotationProfitBreakup,
+  type ItemProfitDetail,
+  type CategoryProfitSummary
+} from "./quotation-profit";

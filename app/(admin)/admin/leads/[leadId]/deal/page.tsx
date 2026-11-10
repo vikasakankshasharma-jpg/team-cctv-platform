@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { calculateQuotationProfitBreakup } from "@/lib/quotation-profit";
+import { QuotationProfitBreakupCard } from "@/components/admin/leads/QuotationProfitBreakupCard";
 
 export default function DealConversionPage() {
   const params = useParams();
@@ -43,16 +45,22 @@ export default function DealConversionPage() {
   if (loading) return <div className="p-4 md:p-8">Loading quote details...</div>;
   if (!lead) return <div className="p-4 md:p-8">Quote not found.</div>;
 
-  // Derive financials
-  // Assuming pricingSnapshot contains base_cost and total_payable
-  const baseCost = lead.pricingSnapshot?.total_cost || 0; // Total hardware cost
+  // Dynamic financial derivation using rigorous profit breakup
+  const dynamicPricing = {
+    ...(lead.pricingSnapshot || {}),
+    discount_amount: discountAmount,
+    total_payable: Math.max(0, (lead.pricingSnapshot?.total_payable || 0) - discountAmount)
+  };
+  const breakup = calculateQuotationProfitBreakup(dynamicPricing);
+
+  const baseCost = breakup.overall.cost;
   const listPrice = lead.pricingSnapshot?.total_payable || 0;
+  const finalPrice = Math.max(0, listPrice - discountAmount);
+  const grossProfit = breakup.overall.profit;
+  const marginPercent = breakup.overall.margin_percent;
+  const productMarginPercent = breakup.products.margin_percent;
   
-  const finalPrice = listPrice - discountAmount;
-  const grossProfit = finalPrice - baseCost;
-  const marginPercent = finalPrice > 0 ? (grossProfit / finalPrice) * 100 : 0;
-  
-  const requiresApproval = marginPercent < MIN_MARGIN_PERCENT;
+  const requiresApproval = marginPercent < MIN_MARGIN_PERCENT || productMarginPercent < 10;
 
   const handleSendToCustomer = async () => {
     setSaving(true);
@@ -165,16 +173,25 @@ export default function DealConversionPage() {
           <CardTitle>Margin Status</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-4 border rounded-md text-center">
-              <div className="text-sm text-gray-500 mb-1">Gross Profit (₹)</div>
-              <div className="text-xl font-bold text-green-600">₹{grossProfit.toLocaleString("en-IN")}</div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className={`p-4 border rounded-xl text-center ${productMarginPercent < 10 ? "bg-amber-50 border-amber-200" : "bg-blue-50/50 border-blue-200"}`}>
+              <div className="text-xs text-muted-foreground font-bold mb-1 uppercase tracking-wider">Product Margin (No Services)</div>
+              <div className="text-2xl font-black text-blue-700">{productMarginPercent.toFixed(1)}%</div>
+              <div className="text-xs text-muted-foreground mt-0.5">₹{Math.round(breakup.products.profit).toLocaleString("en-IN")} Profit</div>
             </div>
-            <div className={`p-4 border rounded-md text-center ${requiresApproval ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"}`}>
-              <div className="text-sm text-gray-500 mb-1">Gross Margin (%)</div>
-              <div className={`text-xl font-bold ${requiresApproval ? "text-red-600" : "text-green-600"}`}>
+
+            <div className="p-4 border rounded-xl text-center bg-amber-50/50 border-amber-200">
+              <div className="text-xs text-muted-foreground font-bold mb-1 uppercase tracking-wider">Services Margin</div>
+              <div className="text-2xl font-black text-amber-700">{breakup.services.margin_percent.toFixed(1)}%</div>
+              <div className="text-xs text-muted-foreground mt-0.5">₹{Math.round(breakup.services.profit).toLocaleString("en-IN")} Profit</div>
+            </div>
+
+            <div className={`p-4 border rounded-xl text-center ${requiresApproval ? "bg-red-50 border-red-200" : "bg-emerald-50/60 border-emerald-300"}`}>
+              <div className="text-xs text-muted-foreground font-bold mb-1 uppercase tracking-wider">Total Deal (With Services)</div>
+              <div className={`text-2xl font-black ${requiresApproval ? "text-red-600" : "text-emerald-700"}`}>
                 {marginPercent.toFixed(1)}%
               </div>
+              <div className="text-xs text-muted-foreground mt-0.5">₹{Math.round(grossProfit).toLocaleString("en-IN")} Net Profit</div>
             </div>
           </div>
           
@@ -190,6 +207,10 @@ export default function DealConversionPage() {
               </div>
             </div>
           )}
+
+          <div className="mt-6">
+            <QuotationProfitBreakupCard quote={{ pricingSnapshot: dynamicPricing }} defaultExpanded={false} />
+          </div>
         </CardContent>
       </Card>
       

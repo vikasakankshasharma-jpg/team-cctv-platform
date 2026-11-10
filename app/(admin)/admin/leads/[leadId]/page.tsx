@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FollowUpManager } from "@/components/admin/leads/FollowUpManager";
 import { QuoteVersionHistory } from "@/components/admin/leads/QuoteVersionHistory";
+import { QuotationProfitBreakupCard } from "@/components/admin/leads/QuotationProfitBreakupCard";
 import { CompleteQuoteModal } from "@/components/admin/leads/CompleteQuoteModal";
 import { QuotationRevisionModal } from "@/components/admin/leads/QuotationRevisionModal";
 import { DeleteQuoteModal } from "@/components/admin/leads/DeleteQuoteModal";
@@ -604,6 +605,9 @@ export default function LeadDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Quotation Profitability & Margin Breakup Intelligence */}
+          <QuotationProfitBreakupCard quote={lead} />
 
           {/* Quotation Version History & Changelog */}
           <Card>

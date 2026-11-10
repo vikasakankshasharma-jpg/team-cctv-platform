@@ -585,6 +585,7 @@ export interface PricingResult {
   gross_profit_value?: number;
   gross_profit_percent?: number;
   margin_warnings?: string[];
+  margin_breakup?: any;
   
   // Error state for missing essential hardware
   error?: boolean;

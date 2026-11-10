@@ -145,6 +145,7 @@ export function parseResolutionMP(item: any): number {
   if (text.includes("8MP") || text.includes("4K") || text.includes("12MP")) return 8;
   if (text.includes("6MP")) return 6;
   if (text.includes("5MP") || text.includes("3K")) return 5;
+  if (text.includes("2.4MP") || text.includes("2.4 MP")) return 2.4;
   if (text.includes("4MP") || text.includes("2K")) return 4;
   if (text.includes("3MP")) return 3;
   if (text.includes("2MP") || text.includes("1080P") || text.includes("1080")) return 2;

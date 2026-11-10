@@ -22,6 +22,7 @@ import type {
 } from "../types";
 import { getCatalogCapacity } from "./catalog-capacity";
 import { MarginEngine, DEFAULT_MARGIN_POLICY } from "./margin-engine";
+import { calculateQuotationProfitBreakup } from "./quotation-profit";
 
 export interface PricingEngineParams {
   selection: ConfiguratorSelection;
@@ -190,7 +191,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
       const techStr = String(r.technology || "").toUpperCase();
       return t.includes("wifi") || t.includes("wireless") || techStr === "WIRELESS" || techStr === "WIFI";
     }));
-    const isWirelessTech = effectiveTech === "Wireless" || selection.technology === "Wireless" || (selection as any).technology_preference === "Wireless";
+    const isWirelessTech = effectiveTech === "WIRELESS" || effectiveTech === "WIFI" || String(selection.technology || "").toUpperCase() === "WIRELESS" || String((selection as any).technology_preference || "").toUpperCase() === "WIRELESS";
     const needsElectricalWire = (isWirelessTech || hasHybridWifi) && (
       (selection as any).power_wiring_option === "wire_needed" || 
       (typeof (selection as any).total_power_cable_meters === "number" && (selection as any).total_power_cable_meters > 0)
@@ -377,7 +378,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     }
   }
 
-  return {
+  const pricingResult: PricingResult = {
     plan_type: selection.plan_type,
     technology: effectiveTech,
     items: lineItems,
@@ -402,6 +403,11 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     error,
     error_message: errorMessage
   };
+
+  // Attach multi-tier profit and margin breakup (with/without services & category intelligence)
+  pricingResult.margin_breakup = calculateQuotationProfitBreakup(pricingResult, settings);
+
+  return pricingResult;
 }
 
 /**
@@ -434,7 +440,7 @@ function calculateHardware(
     const sim4g = Number(selection.wifi_4g_count) || 0;
     const hasDistinctVariants = (inPtz + inFixed + outBullet + outPtz + sim4g) > 0;
     const wifi = hasDistinctVariants ? (inPtz + inFixed + outBullet + outPtz + sim4g) : (Number(selection.wifi_camera_count) || 0);
-    const isWirelessMode = tech === "Wireless" || tech === "WiFi";
+    const isWirelessMode = String(tech || "").toUpperCase() === "WIRELESS" || String(tech || "").toUpperCase() === "WIFI";
 
     if (hasDistinctVariants) {
       mixedReqs = [];
@@ -2128,18 +2134,15 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
   // 1. Bitrate & Daily GB determination based on technology & resolution (Surveillance Industry Standard)
   const isIP = upperTech.includes("IP");
   const res = String(selection.resolution_preference || cameraProduct?.resolution || "").toUpperCase();
+  const numMP = parseResolutionMP(res || cameraProduct || "2MP");
 
   let baseDailyGb = 14.0; // Modern H.265 / H.265+ encoding (industry standard across HD & IP)
-  if (isIP) {
-    // IP Network with modern H.265 / H.265+ encoding
-    if (res.includes("8MP") || res.includes("4K")) baseDailyGb = 35.0;
-    else if (res.includes("6MP") || res.includes("5MP") || res.includes("4MP")) baseDailyGb = 20.0;
-    else baseDailyGb = 14.0; // 2MP / 3MP IP
+  if (numMP >= 7.5) {
+    baseDailyGb = 35.0; // 8MP / 4K
+  } else if (numMP >= 3.5) {
+    baseDailyGb = 20.0; // 4MP / 5MP / 6MP
   } else {
-    // HD Analog (modern H.265 / H.265 Pro+ DVRs: Hikvision Turbo HD, CP Plus Cosmic, Dahua XVR)
-    if (res.includes("8MP") || res.includes("4K")) baseDailyGb = 35.0;
-    else if (res.includes("6MP") || res.includes("5MP") || res.includes("4MP")) baseDailyGb = 20.0;
-    else baseDailyGb = 14.0; // 2MP / 2.4MP HD Analog
+    baseDailyGb = 14.0; // 2MP, 2.4MP, 3MP baseline
   }
 
   // 2. Recording mode: Continuous (1.0) vs Smart Motion (0.85 sustained daytime activity)
@@ -2182,7 +2185,7 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
     selection.brand_preference === "budget" || 
     (selection.brand_preference || "").toLowerCase().includes("budget") ||
     (selection.brand_preference || "").toLowerCase().includes("a+");
-  const isEconomyStorage = (selection as any).is_economy_storage === true || (selection as any).target_storage_tb === 0.5;
+  const isEconomyStorage = (selection as any).is_economy_storage === true || (selection as any).target_storage_tb === 0.5 || selection.recording_days === 7;
   const isBudgetDriveRequested = preferredStorageBrand === "budget" || preferredStorageBrand.includes("refurbished");
   const isBudgetRequested = isBudgetBrand || isEconomyStorage || isBudgetDriveRequested;
 
@@ -2206,7 +2209,13 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
   });
 
   // Support explicit target capacity & preferred storage brand
-  const explicitTargetTB = (selection as any).target_storage_tb;
+  let explicitTargetTB = (selection as any).target_storage_tb;
+  if (!explicitTargetTB && selection.recording_days && (selection.camera_count || 4) <= 8) {
+    if (selection.recording_days === 7 || (selection as any).is_economy_storage) explicitTargetTB = 0.5;
+    else if (selection.recording_days === 15) explicitTargetTB = 1.0;
+    else if (selection.recording_days === 30) explicitTargetTB = 2.0;
+    else if (selection.recording_days === 60) explicitTargetTB = 4.0;
+  }
   let chosenHdd: any = undefined;
 
   let brandDisks = disksToUse;
@@ -2824,7 +2833,19 @@ export function generatePricingSnapshot(
     gross_profit_value: grossProfitValue,
     gross_profit_percent: Number(grossProfitPercent.toFixed(2)),
     margin_warnings: marginWarnings,
-    recommendation_reasons: []
+    recommendation_reasons: [],
+    margin_breakup: calculateQuotationProfitBreakup({
+      items: lineItems,
+      addons: quoteAddons,
+      labor_cost: laborCost,
+      gross_subtotal: rawSubtotal,
+      referral_discount: referralDiscount,
+      net_taxable_amount: netTaxableAmount,
+      gst_rate: gstRate,
+      gst_amount: gstAmount,
+      total_payable: totalPayable,
+      total_purchase_cost: totalPurchaseCost
+    })
   };
 }
 

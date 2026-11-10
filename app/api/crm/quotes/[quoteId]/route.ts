@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { toIsoStringSafe } from "@/lib/date-utils";
 import { getOrCreateLeadQuote } from "@/lib/baseline-quote";
+import { calculateQuotationProfitBreakup } from "@/lib/quotation-profit";
 
 export async function GET(
   request: Request,
@@ -117,7 +118,15 @@ export async function GET(
           name: it.name || it.display_name || "Hardware Item",
           qty: it.qty || it.quantity || 1,
           price: it.price || it.sellingPriceExTax || it.unit_price || 0
-        }))
+        })),
+        margin_breakup: v.pricingSnapshot?.margin_breakup || calculateQuotationProfitBreakup(v.pricingSnapshot || {
+          items,
+          addons: v.addons || [],
+          labor_cost: v.labor_cost,
+          total_payable: payable,
+          gross_subtotal: v.gross_subtotal,
+          total_purchase_cost: v.total_purchase_cost
+        })
       };
     });
 
@@ -142,14 +151,15 @@ export async function GET(
       // Commercial & Pricing Snapshot
       pricingSnapshot: (() => {
         const pSnap = quoteData?.pricingSnapshot || leadData?.pricingSnapshot;
-        if (pSnap && (pSnap.total_payable > 0 || pSnap.finalPrice > 0)) {
-          return pSnap;
+        const resolvedSnap = (pSnap && (pSnap.total_payable > 0 || pSnap.finalPrice > 0))
+          ? { ...pSnap }
+          : { total_payable: activeQuotePayable, finalPrice: activeQuotePayable };
+        if (!resolvedSnap.margin_breakup) {
+          resolvedSnap.margin_breakup = calculateQuotationProfitBreakup(resolvedSnap);
         }
-        return {
-          total_payable: activeQuotePayable,
-          finalPrice: activeQuotePayable
-        };
+        return resolvedSnap;
       })(),
+      margin_breakup: calculateQuotationProfitBreakup(quoteData?.pricingSnapshot || leadData?.pricingSnapshot || { total_payable: activeQuotePayable }),
       requirementSnapshot: quoteData?.requirementSnapshot || leadData?.wizard_answers || {},
       
       // Billing Details (merged)

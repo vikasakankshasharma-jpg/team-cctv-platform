@@ -46,6 +46,7 @@ export interface VersionItem {
     qty: number;
     price: number;
   }>;
+  margin_breakup?: any;
 }
 
 interface QuoteVersionHistoryProps {
@@ -204,6 +205,17 @@ export function QuoteVersionHistory({
                     <p className="text-base font-black text-zinc-900 dark:text-white">
                       ₹{ver.total_payable?.toLocaleString("en-IN")}
                     </p>
+                    {ver.margin_breakup && (
+                      <div className="flex items-center gap-1.5 justify-end text-[10px] font-bold mt-0.5">
+                        <span className="text-blue-600 dark:text-blue-400" title="Product Margin (Without Services)">
+                          Prod: {ver.margin_breakup.products?.margin_percent}%
+                        </span>
+                        <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                        <span className="text-emerald-600 dark:text-emerald-400" title="Overall Margin (With Services)">
+                          Total: {ver.margin_breakup.overall?.margin_percent}%
+                        </span>
+                      </div>
+                    )}
                     {hasDelta && (
                       <p className={`text-xs font-bold flex items-center justify-end gap-0.5 ${
                         ver.price_delta > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
@@ -273,6 +285,30 @@ export function QuoteVersionHistory({
                       <span className="font-bold text-foreground text-xs">{ver.items_count || 0} Items</span>
                     </div>
                   </div>
+
+                  {/* Version Profit & Margin Breakup Strip */}
+                  {ver.margin_breakup && (
+                    <div className="p-2.5 rounded-lg bg-zinc-100/80 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700/60 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
+                      <div>
+                        <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Product Margin (Without Services)</span>
+                        <span className="font-bold text-blue-600 dark:text-blue-400">
+                          {ver.margin_breakup.products?.margin_percent}% (₹{Math.round(ver.margin_breakup.products?.profit || 0).toLocaleString("en-IN")})
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Services Margin</span>
+                        <span className="font-bold text-amber-600 dark:text-amber-400">
+                          {ver.margin_breakup.services?.margin_percent}% (₹{Math.round(ver.margin_breakup.services?.profit || 0).toLocaleString("en-IN")})
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Total Deal Margin (With Services)</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                          {ver.margin_breakup.overall?.margin_percent}% (₹{Math.round(ver.margin_breakup.overall?.profit || 0).toLocaleString("en-IN")})
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Surcharges if present */}
                   {ver.surcharges && Object.values(ver.surcharges).some(Boolean) && (
