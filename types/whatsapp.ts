@@ -23,6 +23,7 @@ export type WhatsAppBotState =
   | "ASK_INTERNET"
   | "ASK_TIMELINE"
   | "ASK_PINCODE"
+  | "ASK_NAME"
   | "GENERATING"
   | "SHOW_PRICE_RANGES"
   | "SHOW_BRAND_VARIATIONS"

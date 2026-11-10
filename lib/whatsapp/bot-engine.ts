@@ -1687,6 +1687,8 @@ export async function processIncomingMessage(
 
       case "ASK_PINCODE": {
         let pincode = "";
+        let autoDetectedName = "";
+
         if (incomingType === "location" && context?.locationCoords) {
           pincode = "302012"; // Default Jaipur if reverse geocode pending
           session.wizard_answers.lead_pincode = pincode;
@@ -1697,6 +1699,14 @@ export async function processIncomingMessage(
           if (pinMatch) {
             pincode = pinMatch[0];
             session.wizard_answers.lead_pincode = pincode;
+
+            // Check if user also provided their name in the same message (e.g. "302012 Rahul Kumar" or "Rahul Kumar 302012")
+            const remaining = text.replace(pinMatch[0], "").replace(/[^a-zA-Z\s]/g, " ").trim();
+            const stopWords = ["pincode", "pin", "code", "jaipur", "delhi", "area", "my", "is", "location", "address", "near", "hi", "hello"];
+            const words = remaining.split(/\s+/).filter(w => w.length > 1 && !stopWords.includes(w.toLowerCase()));
+            if (words.length >= 1 && words.join(" ").length >= 3) {
+              autoDetectedName = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+            }
           } else {
             const lower = text.toLowerCase();
             if (lower.includes("jaipur")) pincode = "302012";
@@ -1713,17 +1723,99 @@ export async function processIncomingMessage(
         }
 
         if (pincode) {
-          nextState = "GENERATING";
-          replies.push(MessageBuilder.text(
-            from,
-            `⚙️ *Calculating All Brand Quotations for Pincode ${pincode}...*\nSizing recorders, checking power supplies, applying ₹0-markup labor rates, and computing 100% transparent market price ranges. Please wait 3 seconds...`
-          ));
+          if (autoDetectedName) {
+            session.customer_name = autoDetectedName;
+            if (leadId) {
+              await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
+                customer_name: autoDetectedName,
+                updated_at: new Date()
+              }).catch(console.error);
+            }
+            nextState = "GENERATING";
+            replies.push(MessageBuilder.text(
+              from,
+              `✓ Thank you, *${autoDetectedName}*! 🤝\n\n⚙️ *Calculating All Brand Quotations for ${autoDetectedName} (Pincode ${pincode})...*\nSizing recorders, checking power supplies, applying ₹0-markup labor rates, and computing 100% transparent market price ranges. Please wait 3 seconds...`
+            ));
+          } else {
+            // Transition to ASK_NAME to collect Customer Name for personalized quotation & warranty certificate
+            nextState = "ASK_NAME";
+            const knownName = session.customer_name && session.customer_name !== "WhatsApp Customer" && !/^\+?\d+$/.test(session.customer_name)
+              ? session.customer_name
+              : "";
+            
+            const namePrompt = knownName
+              ? `✓ Site Location Confirmed: *Pincode ${pincode}* 🚚\n\n👤 *Final Step: What is your full name?*\n\nPlease reply with your name (or type *1* or *Yes* to use *${knownName}*).\n\n_This will appear on your official GST quotation PDF, 7-day price lock, and 1-year on-site warranty certificate._`
+              : `✓ Site Location Confirmed: *Pincode ${pincode}* 🚚\n\n👤 *Final Step: What is your full name?*\n\nPlease reply with your full name (e.g. *Rahul Kumar*).\n\n_This will appear on your official GST quotation PDF, 7-day price lock, and 1-year on-site warranty certificate._`;
+
+            replies.push(MessageBuilder.text(from, namePrompt));
+          }
         } else {
           replies.push(MessageBuilder.text(
             from,
-            `📍 *Step 6 of 6: Site Location & Pincode Dispatch*\n\nPlease enter your *6-digit Indian Pincode* (e.g. 302012) or tap the clip icon to share your Location Pin so we can calculate exact local delivery and certified installation rates for your area.`
+            `📍 *Step 6 of 6: Site Location & Pincode Dispatch*\n\nPlease enter your *6-digit Indian Pincode* (e.g. 302012) or tap the clip 📎 icon to share your Location Pin so we can calculate exact local delivery and certified installation rates for your area.`
           ));
         }
+        break;
+      }
+
+      case "ASK_NAME": {
+        const text = String(content || "").trim();
+        const lower = text.toLowerCase();
+        let finalName = "";
+
+        // If user says "yes", "1", "ok", "same", "confirm" to use their WhatsApp profile name
+        if (
+          lower === "yes" || 
+          lower === "1" || 
+          lower === "y" || 
+          lower === "same" || 
+          lower === "ok" || 
+          lower === "use" || 
+          lower === "confirm"
+        ) {
+          if (session.customer_name && session.customer_name !== "WhatsApp Customer" && !/^\+?\d+$/.test(session.customer_name)) {
+            finalName = session.customer_name;
+          }
+        }
+
+        // Otherwise parse typed text as customer name
+        if (!finalName) {
+          const cleaned = text.replace(/[^a-zA-Z\s\.]/g, "").trim();
+          const words = cleaned.split(/\s+/).filter(w => w.length > 0);
+          if (words.length >= 1 && cleaned.length >= 2) {
+            finalName = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+          }
+        }
+
+        // If user typed skip or unable to parse, fallback gracefully
+        if (!finalName && (lower.includes("skip") || lower.includes("no") || lower.includes("later"))) {
+          finalName = (session.customer_name && session.customer_name !== "WhatsApp Customer") 
+            ? session.customer_name 
+            : "Valued Customer";
+        }
+
+        if (!finalName) {
+          replies.push(MessageBuilder.text(
+            from,
+            `👤 *Please enter your full name (e.g. Rahul Kumar):*\n\nThis personalizes your official CCTV quotation PDF and activates your warranty certificate.`
+          ));
+          break;
+        }
+
+        session.customer_name = finalName;
+        if (leadId) {
+          await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
+            customer_name: finalName,
+            updated_at: new Date()
+          }).catch(console.error);
+        }
+
+        const pin = session.wizard_answers?.lead_pincode || session.wizard_answers?.pincode || "302012";
+        nextState = "GENERATING";
+        replies.push(MessageBuilder.text(
+          from,
+          `✓ Thank you, *${finalName}*! 🤝\n\n⚙️ *Calculating All Brand Quotations for ${finalName} (Pincode ${pin})...*\nSizing recorders, checking power supplies, applying ₹0-markup labor rates, and computing 100% transparent market price ranges. Please wait 3 seconds...`
+        ));
         break;
       }
 

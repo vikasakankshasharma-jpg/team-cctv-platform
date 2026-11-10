@@ -89,7 +89,10 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
     });
 
     // 1. Text Summary Card: All-Inclusive Brand Price Range
-    let summaryText = `📷 *COMPLETE CCTV PRICE SUMMARY*\n`;
+    const customerDisplayName = (session.customer_name && session.customer_name !== "WhatsApp Customer")
+      ? ` FOR ${session.customer_name.toUpperCase()}`
+      : "";
+    let summaryText = `📷 *COMPLETE CCTV PRICE SUMMARY${customerDisplayName}*\n`;
     summaryText += `━━━━━━━━━━━━━━━━━━━━━\n`;
     summaryText += `📍 *Site Setup:* ${totalCams} Cameras (${formatCameraBreakdown(selection)})\n`;
     summaryText += `⚡ *Technology:* ${tech === "IP" ? "Digital IP (Best Quality)" : tech === "HD" ? "HD Analog (Lowest Cost)" : "Smart Wireless"}\n`;
