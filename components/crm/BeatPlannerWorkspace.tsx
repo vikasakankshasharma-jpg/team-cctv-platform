@@ -48,8 +48,31 @@ const mapContainerStyle = {
   borderRadius: "1rem",
 };
 
+/** Formats date in Indian Standard Time (IST / Asia/Kolkata) to prevent UTC midnight date drift */
+function getISTDateString(d: Date = new Date()): string {
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(d);
+  } catch {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+}
+
+/** Shifts date string safely by delta days without timezone boundary skips */
+function shiftDateString(dateStr: string, daysDelta: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + daysDelta);
+  const year = dt.getFullYear();
+  const month = String(dt.getMonth() + 1).padStart(2, "0");
+  const day = String(dt.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspaceProps) {
-  const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const todayStr = useMemo(() => getISTDateString(), []);
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [scheduledStops, setScheduledStops] = useState<BeatStop[]>([]);
   const [overdueBacklog, setOverdueBacklog] = useState<BeatStop[]>([]);
@@ -59,7 +82,9 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
   const [activeTab, setActiveTab] = useState<"schedule" | "backlog" | "map">("schedule");
   const [selectedMarker, setSelectedMarker] = useState<BeatStop | null>(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [isSmartFilling, setIsSmartFilling] = useState(false);
   const [technicianLocation, setTechnicianLocation] = useState<LatLng | null>(null);
+  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
 
   // Check-In Modal State
   const [checkInStop, setCheckInStop] = useState<BeatStop | null>(null);
@@ -206,6 +231,48 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
     }
   };
 
+  // Smart-Fill Beat with top priority backlog items
+  const handleSmartFillBeat = async (countToSchedule: number = 5) => {
+    if (overdueBacklog.length === 0) {
+      toast.info("No overdue accounts in backlog to schedule.");
+      return;
+    }
+    setIsSmartFilling(true);
+    try {
+      const candidateAccounts = overdueBacklog.slice(0, countToSchedule);
+      const slotDistribution = ["morning", "morning", "afternoon", "afternoon", "evening", "evening"];
+
+      const stopsToSchedule = candidateAccounts.map((account, idx) => ({
+        entity_type: account.entity_type,
+        id: account.id,
+        time_slot: slotDistribution[idx] || "morning",
+        route_order: scheduledStops.length + idx + 1,
+      }));
+
+      const res = await fetch("/api/crm/beat-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "batch_schedule",
+          stops: stopsToSchedule,
+          scheduled_date: selectedDate,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`⚡ Added ${stopsToSchedule.length} overdue accounts to Beat Plan!`);
+        await fetchBeatPlan(selectedDate);
+        setActiveTab("schedule");
+      } else {
+        toast.error(data.error || "Failed to batch schedule stops");
+      }
+    } catch {
+      toast.error("Failed to connect to Beat Plan service");
+    } finally {
+      setIsSmartFilling(false);
+    }
+  };
+
   // Auto-optimize route
   const handleAutoOptimize = async () => {
     if (scheduledStops.length <= 1) {
@@ -214,13 +281,26 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
     }
     setIsOptimizing(true);
     try {
+      let origin = technicianLocation;
+      if (!origin && typeof navigator !== "undefined" && navigator.geolocation) {
+        try {
+          const pos = await new Promise<GeolocationPosition>((res, rej) => {
+            navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000 });
+          });
+          origin = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setTechnicianLocation(origin);
+        } catch {
+          // Proceed without origin if permission denied/timeout
+        }
+      }
+
       const res = await fetch("/api/crm/beat-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "auto_optimize",
           stops: scheduledStops,
-          origin: technicianLocation,
+          origin,
         }),
       });
       const data = await res.json();
@@ -301,6 +381,46 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
     return { lat: 26.8550, lng: 75.7650 }; // Default Mansarovar Jaipur
   }, [scheduledStops, technicianLocation]);
 
+  // Dynamic Map Bounds Fitting
+  const fitMapToBounds = useCallback(() => {
+    if (!mapInstance || typeof window === "undefined" || !window.google?.maps) return;
+    const bounds = new window.google.maps.LatLngBounds();
+    let count = 0;
+
+    scheduledStops.forEach((s) => {
+      if (s.coordinates?.lat && s.coordinates?.lng) {
+        bounds.extend(s.coordinates);
+        count++;
+      }
+    });
+
+    nearbyB2BPartners.forEach((p) => {
+      if (p.coordinates?.lat && p.coordinates?.lng) {
+        bounds.extend(p.coordinates);
+        count++;
+      }
+    });
+
+    if (technicianLocation?.lat && technicianLocation?.lng) {
+      bounds.extend(technicianLocation);
+      count++;
+    }
+
+    if (count > 1) {
+      mapInstance.fitBounds(bounds, { top: 60, right: 60, bottom: 60, left: 60 });
+    } else if (count === 1) {
+      const center = bounds.getCenter();
+      mapInstance.setCenter(center);
+      mapInstance.setZoom(13);
+    }
+  }, [mapInstance, scheduledStops, nearbyB2BPartners, technicianLocation]);
+
+  useEffect(() => {
+    if (activeTab === "map" && mapInstance) {
+      fitMapToBounds();
+    }
+  }, [activeTab, mapInstance, fitMapToBounds]);
+
   return (
     <div className="space-y-6">
       {/* HEADER & DATE SELECTOR */}
@@ -325,11 +445,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {
-                const prev = new Date(selectedDate);
-                prev.setDate(prev.getDate() - 1);
-                setSelectedDate(prev.toISOString().split("T")[0]);
-              }}
+              onClick={() => setSelectedDate((prev) => shiftDateString(prev, -1))}
               className="h-8 px-2 text-xs"
             >
               ◀ Prev
@@ -343,11 +459,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {
-                const next = new Date(selectedDate);
-                next.setDate(next.getDate() + 1);
-                setSelectedDate(next.toISOString().split("T")[0]);
-              }}
+              onClick={() => setSelectedDate((prev) => shiftDateString(prev, 1))}
               className="h-8 px-2 text-xs"
             >
               Next ▶
@@ -362,6 +474,18 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
           >
             Today
           </Button>
+
+          {scheduledStops.length === 0 && overdueBacklog.length > 0 && (
+            <Button
+              size="sm"
+              onClick={() => handleSmartFillBeat(5)}
+              disabled={isSmartFilling}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs gap-1.5 shadow-xs"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              {isSmartFilling ? "Filling..." : "⚡ Quick-Fill Beat (5)"}
+            </Button>
+          )}
 
           <Button
             size="sm"
@@ -473,16 +597,29 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
             <Card className="p-8 text-center bg-white dark:bg-zinc-900 border-dashed">
               <p className="text-muted-foreground text-sm font-medium">No stops scheduled for {selectedDate}.</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Switch to the <strong>Overdue Accounts Backlog</strong> tab to add pending customer leads or B2B partners to today&apos;s beat!
+                Switch to the <strong>Overdue Accounts Backlog</strong> tab to add pending customer leads or B2B partners to today&apos;s beat, or use Quick-Fill below!
               </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setActiveTab("backlog")}
-                className="mt-4 text-xs font-semibold"
-              >
-                Browse Overdue Backlog
-              </Button>
+              <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
+                {overdueBacklog.length > 0 && (
+                  <Button
+                    size="sm"
+                    onClick={() => handleSmartFillBeat(5)}
+                    disabled={isSmartFilling}
+                    className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold gap-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {isSmartFilling ? "Filling Beat..." : "⚡ Smart-Fill Today's Beat (5 Accounts)"}
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setActiveTab("backlog")}
+                  className="text-xs font-semibold"
+                >
+                  Browse Overdue Backlog ({overdueBacklog.length})
+                </Button>
+              </div>
             </Card>
           ) : (
             ["morning", "afternoon", "evening"].map((slotKey) => {
@@ -743,6 +880,19 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                 <span className="flex items-center gap-1.5 font-medium">
                   <span className="w-3 h-3 rounded-full bg-amber-500 inline-block" /> B2B Partners
                 </span>
+                {technicianLocation && (
+                  <span className="flex items-center gap-1.5 font-medium text-sky-600 dark:text-sky-400">
+                    <span className="w-3 h-3 rounded-full bg-sky-500 inline-block" /> GPS Origin
+                  </span>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fitMapToBounds}
+                  className="h-7 px-2 text-xs font-semibold gap-1 text-zinc-700 dark:text-zinc-300"
+                >
+                  <Locate className="w-3 h-3 text-blue-600" /> Fit View
+                </Button>
               </div>
             </CardHeader>
 
@@ -752,6 +902,8 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                   mapContainerStyle={mapContainerStyle}
                   center={mapCenter}
                   zoom={12}
+                  onLoad={(map) => setMapInstance(map)}
+                  onUnmount={() => setMapInstance(null)}
                   options={{
                     disableDefaultUI: false,
                     zoomControl: true,
@@ -759,6 +911,28 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                     streetViewControl: false,
                   }}
                 >
+                  {/* Technician Starting GPS Location */}
+                  {technicianLocation?.lat && technicianLocation?.lng && (
+                    <MarkerF
+                      position={technicianLocation}
+                      title="Route Origin (Technician Location)"
+                      label={{
+                        text: "📍 START",
+                        color: "#0369a1",
+                        fontWeight: "bold",
+                        fontSize: "11px",
+                      }}
+                      icon={{
+                        path: google.maps.SymbolPath.CIRCLE,
+                        fillColor: "#0284c7",
+                        fillOpacity: 1,
+                        strokeWeight: 2,
+                        strokeColor: "#ffffff",
+                        scale: 9,
+                      }}
+                    />
+                  )}
+
                   {/* Scheduled Stops (Numbered) */}
                   {scheduledStops.map((stop) => {
                     if (!stop.coordinates?.lat || !stop.coordinates?.lng) return null;
@@ -786,7 +960,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                     );
                   })}
 
-                  {/* Nearby B2B Partners (Amber Diamonds) */}
+                  {/* Nearby B2B Partners (Prominent Amber Diamonds) */}
                   {nearbyB2BPartners.map((partner) => {
                     if (!partner.coordinates?.lat || !partner.coordinates?.lng) return null;
 
@@ -794,13 +968,18 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                       <MarkerF
                         key={`nearby-${partner.id}`}
                         position={partner.coordinates}
+                        title={`B2B Partner: ${partner.title}`}
+                        label={{
+                          text: "🏢",
+                          fontSize: "12px",
+                        }}
                         icon={{
-                          path: "M 0,-10 L 10,0 L 0,10 L -10,0 Z", // Diamond
-                          fillColor: "#eab308",
-                          fillOpacity: 0.85,
-                          strokeWeight: 1.5,
+                          path: "M 0,-14 L 14,0 L 0,14 L -14,0 Z", // High-visibility diamond
+                          fillColor: "#f59e0b",
+                          fillOpacity: 0.95,
+                          strokeWeight: 2,
                           strokeColor: "#ffffff",
-                          scale: 1.2,
+                          scale: 1.1,
                         }}
                         onClick={() => setSelectedMarker(partner)}
                       />

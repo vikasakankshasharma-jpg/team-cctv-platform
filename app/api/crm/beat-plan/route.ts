@@ -6,6 +6,14 @@ import { calculateInactivityAging, getLatestTouchpointDate } from "@/lib/inactiv
 import { optimizeRouteWithTimeWindows, buildGoogleMapsMultiStopUrl, LatLng } from "@/lib/routing/optimizer";
 import type { BeatStop } from "@/types";
 
+function getISTDateString(date: Date = new Date()): string {
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(date);
+  } catch {
+    return date.toISOString().split("T")[0];
+  }
+}
+
 export async function GET(req: Request) {
   try {
     const session = await verifySession();
@@ -14,7 +22,7 @@ export async function GET(req: Request) {
     }
 
     const { searchParams } = new URL(req.url);
-    const selectedDate = searchParams.get("date") || new Date().toISOString().split("T")[0];
+    const selectedDate = searchParams.get("date") || getISTDateString();
     const salespersonId = searchParams.get("salesperson_id") || (session.role === "sales_staff" ? session.uid : null);
 
     // Fetch Leads and Promoters concurrently
@@ -255,6 +263,32 @@ export async function POST(req: Request) {
         success: true,
         message: "Beat Plan optimized with shortest round trip",
         result,
+      });
+    }
+
+    // 5. Batch Schedule Multiple Stops from Backlog
+    if (action === "batch_schedule") {
+      const { stops, scheduled_date } = body;
+      if (!Array.isArray(stops) || stops.length === 0 || !scheduled_date) {
+        return NextResponse.json({ success: false, error: "stops array and scheduled_date required" }, { status: 400 });
+      }
+
+      const batch = adminDb.batch();
+      stops.forEach((item: { entity_type: string; id: string; time_slot?: string; route_order?: number }, idx: number) => {
+        const col = item.entity_type === "b2b_partner" || item.entity_type === "promoter" ? "promoters" : "leads";
+        const ref = adminDb.collection(col).doc(item.id);
+        batch.update(ref, {
+          scheduled_visit_date: scheduled_date,
+          scheduled_visit_slot: item.time_slot || "morning",
+          route_order: Number(item.route_order) || idx + 1,
+          updated_at: serverTimestamp(),
+        });
+      });
+      await batch.commit();
+
+      return NextResponse.json({
+        success: true,
+        message: `Successfully scheduled ${stops.length} stops for ${scheduled_date}`,
       });
     }
 
