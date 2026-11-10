@@ -6,6 +6,7 @@ import { ArrowRight, Loader2, MapPin, ShieldAlert, CheckCircle2 } from "lucide-r
 import { PhoneCaptureModal } from "@/components/shared/PhoneCaptureModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "@/hooks/useTranslation";
+import { extractErrorMessage } from "@/lib/utils";
 
 export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer" }) {
   const router = useRouter();
@@ -29,7 +30,7 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Pincode check failed.");
+        throw new Error(extractErrorMessage(data, "Pincode check failed."));
       }
 
       if (data.citySlug) {
@@ -71,7 +72,7 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
         setLoading(false);
       }
     } catch (err: any) {
-      setError(err.message || t("failed_check_availability", "Failed to check service availability."));
+      setError(extractErrorMessage(err, t("failed_check_availability", "Failed to check service availability.")));
       setLoading(false);
     }
   };

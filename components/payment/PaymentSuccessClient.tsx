@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslation } from "@/hooks/useTranslation";
 import { BillingOverviewModal, BillingFormData } from "@/components/checkout/BillingOverviewModal";
 import { toast } from "sonner";
+import { extractErrorMessage } from "@/lib/utils";
 
 interface Props {
   quoteId: string;
@@ -102,11 +103,11 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
         setIsEditModalOpen(false);
         toast.success("Billing and GST details updated! Your invoice PDF is refreshed.");
       } else {
-        toast.error(data.error || "Failed to update billing details");
+        toast.error(extractErrorMessage(data, "Failed to update billing details"));
       }
     } catch (err: any) {
       console.error("Error saving billing details:", err);
-      toast.error("Failed to update billing details");
+      toast.error(extractErrorMessage(err, "Failed to update billing details"));
     } finally {
       setIsSubmittingEdit(false);
     }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { extractErrorMessage } from "@/lib/utils";
 import { 
   Layers, 
   Check, 
@@ -94,11 +95,11 @@ export function SiteSurveyRevisionModal({
         onClose();
         router.refresh();
       } else {
-        toast.error(data.message || data.error || "Failed to create revised quotation");
+        toast.error(extractErrorMessage(data, "Failed to create revised quotation"));
       }
     } catch (err: any) {
       console.error("Revision error:", err);
-      toast.error(err.message || "Network error while creating revision");
+      toast.error(extractErrorMessage(err, "Network error while creating revision"));
     } finally {
       setSubmitting(false);
     }

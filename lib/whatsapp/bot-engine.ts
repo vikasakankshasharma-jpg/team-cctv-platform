@@ -11,6 +11,8 @@ import { WhatsAppBotState, WhatsAppSession, WhatsAppIncomingType } from "../../t
 import { MessageBuilder, WhatsAppMessagePayload } from "./message-builder";
 import { addLeadActivity } from "@/app/actions/leads";
 import { normalizePhoneNumber } from "./deduplication";
+import { resolveLanguageInput, languageNames, ALL_11_LANGUAGES } from "../i18n/mapping";
+import { buildWelcomeLanguageMenu, getConversationalStrings } from "./conversational-i18n";
 import { 
   generateAndSendPriceRanges, 
   sendBrandVariations, 
@@ -130,38 +132,56 @@ export function getStepPrompt(
   const nameParam = session.customer_name && session.customer_name !== "WhatsApp Customer" ? `&name=${encodeURIComponent(session.customer_name)}` : "";
   const propParam = session.wizard_answers?.property_type ? `&property=${session.wizard_answers.property_type}` : "";
   const pinParam = session.wizard_answers?.lead_pincode ? `&pincode=${session.wizard_answers.lead_pincode}` : "";
-  const webWizardUrl = `https://cctvquotation.com/wizard?phone=${cleanPhone}${partnerRef}${nameParam}${propParam}${pinParam}&source=wa_prompt_resume`;
+  const langParam = session.language ? `&lang=${session.language}` : "";
+  const webWizardUrl = `https://cctvquotation.com/wizard?phone=${cleanPhone}${partnerRef}${nameParam}${propParam}${pinParam}${langParam}&source=wa_prompt_resume`;
+  const conv = getConversationalStrings(session.language);
 
   switch (state) {
     case "IDLE":
     case "GREETING":
     case "ASK_PROP": {
-      replies.push(MessageBuilder.buttons(
-        from,
-        `*Step 1 of 6: Property Type*\nWhat type of property are you securing?`,
-        [
-          { id: "prop_home", title: "🏠 Home / Flat" },
-          { id: "prop_office", title: "🏢 Office / Shop" },
-          { id: "prop_factory", title: "🏭 Factory / Farm" }
-        ]
-      ));
+      if (!session.language) {
+        replies.push(MessageBuilder.buttons(
+          from,
+          buildWelcomeLanguageMenu(),
+          [
+            { id: "prop_home", title: "🏠 Home / घर" },
+            { id: "prop_office", title: "🏢 Office / दुकान" },
+            { id: "prop_factory", title: "🏭 Factory / गोदाम" }
+          ]
+        ));
+      } else {
+        replies.push(MessageBuilder.buttons(
+          from,
+          `*${conv.propHeader}*\n${conv.propQuestion}`,
+          [
+            { id: "prop_home", title: conv.propHomeTitle.slice(0, 20) },
+            { id: "prop_office", title: conv.propOfficeTitle.slice(0, 20) },
+            { id: "prop_factory", title: conv.propFactoryTitle.slice(0, 20) }
+          ]
+        ));
+      }
       break;
     }
 
     case "ASK_INSTALL_TYPE": {
-      const propTitle = session.wizard_answers?.property_type === "home" ? "Home / Flat" : session.wizard_answers?.property_type === "office" ? "Office / Shop" : "Factory / Farm";
+      const propTitle = session.wizard_answers?.property_type === "home" 
+        ? conv.propHomeTitle.replace(/^[^\w\s\u0900-\u0D7F]+/, "").trim() 
+        : session.wizard_answers?.property_type === "office" 
+        ? conv.propOfficeTitle.replace(/^[^\w\s\u0900-\u0D7F]+/, "").trim() 
+        : conv.propFactoryTitle.replace(/^[^\w\s\u0900-\u0D7F]+/, "").trim();
       replies.push(MessageBuilder.list(
         from,
-        `✓ Property: *${propTitle}*\n\n*Step 1 of 6: Installation Type*\nWhat kind of installation do you require? Please choose from the list below:`,
+        `✓ Property: *${propTitle}*\n\n*${conv.installHeader}*\n${session.language && session.language !== 'en' ? 'कृपया अपनी आवश्यकतानुसार इंस्टालेशन प्रकार चुनें:' : 'What kind of installation do you require? Please choose from the list below:'}`,
         "Choose Install Type",
         [
           {
             title: "Installation Types",
             rows: [
-              { id: "ins_new_wired", title: "✨ New Wired Setup", description: "Central DVR/NVR with dedicated copper cabling. Zero signal drop." },
-              { id: "ins_wireless", title: "📶 Smart Wireless CCTV", description: "Zero video cabling. 360° Pan-Tilt & live mobile phone viewing." },
-              { id: "ins_4g_solar", title: "📡 4G SIM / Solar Cam", description: "No Wi-Fi needed. Ideal for farmhouses, empty plots & remote gates." },
-              { id: "ins_addon", title: "⬆️ Add Existing System", description: "Expansion / upgrade with compatibility guarantee." }
+              { id: "ins_new_wired", title: conv.installWiredTitle.slice(0, 24), description: conv.installWiredDesc.slice(0, 72) },
+              { id: "ins_wireless", title: conv.installWirelessTitle.slice(0, 24), description: conv.installWirelessDesc.slice(0, 72) },
+              { id: "ins_4g_solar", title: conv.install4gTitle.slice(0, 24), description: conv.install4gDesc.slice(0, 72) },
+              { id: "ins_addon", title: conv.installAddonTitle.slice(0, 24), description: conv.installAddonDesc.slice(0, 72) }
             ]
           }
         ]
@@ -172,7 +192,7 @@ export function getStepPrompt(
     case "ASK_CAMERA_OUTDOOR": {
       replies.push(buildQuantityListMessage(
         from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
-        `*Step 2 of 6: Outdoor Cameras* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need mounted outside for your main gate, driveway, parking, or boundary walls?`,
+        `*${conv.outdoorHeader}*\n\n${conv.outdoorQuestion}`,
         "Select Outdoor (0-7)"
       ));
       break;
@@ -182,7 +202,7 @@ export function getStepPrompt(
       const outCount = session.wizard_answers?.outdoor_camera_count || 0;
       replies.push(buildQuantityListMessage(
         from, "in", "Indoor Dome", "Indoor Domes", 1,
-        `✓ Outdoor Cameras: *${outCount} Weatherproof Bullets*\n\n*Step 2 of 6: Indoor Cameras* 🏠\n\nHow many *Compact Ceiling Dome Cameras* do you need mounted inside for your living room, corridors, office, or cashier counters?`,
+        `✓ Outdoor Cameras: *${outCount}*\n\n*${conv.indoorHeader}*\n\n${conv.indoorQuestion}`,
         "Select Indoor (0-7)"
       ));
       break;
@@ -252,7 +272,7 @@ export function getStepPrompt(
     case "ASK_STORAGE_DAYS": {
       replies.push(MessageBuilder.list(
         from,
-        `💾 *Step 3 of 6: Recording & Storage Backup*\n\nHow long do you want to keep recorded video stored?`,
+        `*${conv.storageHeader}*\n\n${conv.storageQuestion}`,
         "Select Storage Days",
         [
           {
@@ -375,7 +395,7 @@ export function getStepPrompt(
     case "ASK_PINCODE": {
       replies.push(MessageBuilder.text(
         from,
-        `📍 *Step 6 of 6: Site Location & Pincode Dispatch*\n\nPlease enter your *6-digit Indian Pincode* (e.g. 302012) or tap the clip 📎 icon to share your Location Pin so we can calculate exact local delivery and certified installation rates for your area.`
+        `*${conv.pincodeHeader}*\n\n${conv.pincodeQuestion}`
       ));
       break;
     }
@@ -385,8 +405,8 @@ export function getStepPrompt(
         ? session.customer_name
         : "";
       const namePrompt = knownName
-        ? `👤 *Final Step: What is your full name?*\n\nPlease reply with your name (or type *1* or *Yes* to use *${knownName}*).\n\n_This will appear on your official GST quotation PDF, 7-day price lock, and 1-year on-site warranty certificate._`
-        : `👤 *Final Step: What is your full name?*\n\nPlease reply with your full name (e.g. *Rahul Kumar*).\n\n_This will appear on your official GST quotation PDF, 7-day price lock, and 1-year on-site warranty certificate._`;
+        ? `*${conv.nameHeader}*\n\n${conv.nameQuestion}\n\n_Or reply *1* or *Yes* to use *${knownName}*._`
+        : `*${conv.nameHeader}*\n\n${conv.nameQuestion}`;
       replies.push(MessageBuilder.text(from, namePrompt));
       break;
     }
@@ -829,6 +849,25 @@ async function processIncomingMessageInternal(
   if (incomingType === "text" && session.state !== "IDLE" && session.state !== "GREETING" && session.state !== "SHOW_PRICE_RANGES") {
     const textLower = rawInbound;
 
+    // 0. On-The-Fly Language Switcher (supports all 11 Indian languages at any time)
+    const isExplicitLangQuery = /\b(language|bhasha|boli|zuban|change language)\b/i.test(textLower);
+    const resolvedLang = resolveLanguageInput(textLower.trim());
+    if (resolvedLang && (isExplicitLangQuery || !/^\d+$/.test(textLower.trim()))) {
+      session.language = resolvedLang;
+      if (leadId) {
+        await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
+          preferred_language: resolvedLang,
+          preferred_language_name: languageNames[resolvedLang],
+          updated_at: new Date()
+        }).catch(console.error);
+      }
+      const conv = getConversationalStrings(resolvedLang);
+      const ackMsg = MessageBuilder.text(from, conv.langConfirmed);
+      const stepPrompts = getStepPrompt(session, session.state, from);
+      await sendWhatsAppMessages([ackMsg, ...stepPrompts]);
+      return;
+    }
+
     // 1. Human Specialist / Phone Callback Request
     const isCallRequest = 
       /\b(call|calling|phone|contact|baat|specialist|executive|agent|talk|dial|karo|batao|phone pe|call me)\b/i.test(textLower) &&
@@ -973,26 +1012,64 @@ async function processIncomingMessageInternal(
         const nameParam = session.customer_name && session.customer_name !== "WhatsApp Customer" ? `&name=${encodeURIComponent(session.customer_name)}` : "";
         const propParam = session.wizard_answers?.property_type ? `&property=${session.wizard_answers.property_type}` : "";
         const pinParam = session.wizard_answers?.pincode ? `&pincode=${session.wizard_answers.pincode}` : "";
-        const webWizardUrl = `https://cctvquotation.com/wizard?phone=${cleanPhone}${partnerRef}${nameParam}${propParam}${pinParam}&source=wa_welcome`;
+        const langParam = session.language ? `&lang=${session.language}` : "";
+        const webWizardUrl = `https://cctvquotation.com/wizard?phone=${cleanPhone}${partnerRef}${nameParam}${propParam}${pinParam}${langParam}&source=wa_welcome`;
 
-        const partnerGreeting = session.partner_id
-          ? `Welcome to *TEAM CCTV*! 🛡️\n\n🎁 *Store Partner Verified:* Referral Code *${session.partner_id}* applied! Priority survey dispatch & partner discount unlocked.\n\n✨ *Prefer an interactive visual experience?*\nDesign your system on our visual website wizard with 3D views & custom sliders:\n👉 ${webWizardUrl}\n\n💬 *Or build your quote right here in 4 quick questions on WhatsApp!*\n\n*Step 1 of 6: Property Type*\nWhat type of property are you securing?`
-          : `Welcome to *TEAM CCTV*! 🛡️\n\nGet your 100% transparent CCTV quotation in 60 seconds with zero hidden costs.\n\n✨ *Prefer an interactive visual experience?*\nDesign your system on our visual website wizard with 3D views & custom sliders:\n👉 ${webWizardUrl}\n\n💬 *Or build your quote right here in 4 quick questions on WhatsApp!*\n\n*Step 1 of 6: Property Type*\nWhat type of property are you securing?`;
-
-        replies.push(MessageBuilder.buttons(
-          from,
-          partnerGreeting,
-          [
-            { id: "prop_home", title: "🏠 Home / Flat" },
-            { id: "prop_office", title: "🏢 Office / Shop" },
-            { id: "prop_factory", title: "🏭 Factory / Farm" }
-          ]
-        ));
+        if (!session.language) {
+          replies.push(MessageBuilder.buttons(
+            from,
+            buildWelcomeLanguageMenu(),
+            [
+              { id: "prop_home", title: "🏠 Home / घर" },
+              { id: "prop_office", title: "🏢 Office / दुकान" },
+              { id: "prop_factory", title: "🏭 Factory / गोदाम" }
+            ]
+          ));
+        } else {
+          const conv = getConversationalStrings(session.language);
+          replies.push(MessageBuilder.buttons(
+            from,
+            `*${conv.propHeader}*\n${conv.propQuestion}`,
+            [
+              { id: "prop_home", title: conv.propHomeTitle.slice(0, 20) },
+              { id: "prop_office", title: conv.propOfficeTitle.slice(0, 20) },
+              { id: "prop_factory", title: conv.propFactoryTitle.slice(0, 20) }
+            ]
+          ));
+        }
         break;
       }
 
       case "ASK_PROP": {
         const text = String(content || "").toLowerCase().trim();
+
+        // 1. Language Selection check (replying 1 to 11 or language name before property)
+        const langSelected = resolveLanguageInput(text);
+        if (langSelected && !session.language) {
+          session.language = langSelected;
+          if (leadId) {
+            await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
+              preferred_language: langSelected,
+              preferred_language_name: languageNames[langSelected],
+              updated_at: new Date()
+            }).catch(console.error);
+          }
+          const conv = getConversationalStrings(langSelected);
+          replies.push(MessageBuilder.text(from, conv.langConfirmed));
+          replies.push(MessageBuilder.buttons(
+            from,
+            `*${conv.propHeader}*\n${conv.propQuestion}`,
+            [
+              { id: "prop_home", title: conv.propHomeTitle.slice(0, 20) },
+              { id: "prop_office", title: conv.propOfficeTitle.slice(0, 20) },
+              { id: "prop_factory", title: conv.propFactoryTitle.slice(0, 20) }
+            ]
+          ));
+          nextState = "ASK_PROP";
+          break;
+        }
+
+        // 2. Resolve Property Type
         let propType: "home" | "office" | "factory" | null = null;
 
         if (
@@ -1000,11 +1077,12 @@ async function processIncomingMessageInternal(
           text.includes("home") || 
           text.includes("flat") || 
           text.includes("house") || 
+          text.includes("ghar") ||
           text.includes("residence") || 
           text.includes("residential") || 
           text.includes("villa") || 
           text.includes("apartment") || 
-          text === "1"
+          (session.language ? text === "1" : false)
         ) {
           propType = "home";
         } else if (
@@ -1012,45 +1090,52 @@ async function processIncomingMessageInternal(
           text.includes("office") || 
           text.includes("shop") || 
           text.includes("store") || 
+          text.includes("dukan") ||
           text.includes("commercial") || 
           text.includes("retail") || 
           text.includes("showroom") || 
           text.includes("business") || 
-          text === "2"
+          (session.language ? text === "2" : false)
         ) {
           propType = "office";
         } else if (
           text === "prop_factory" || 
           text.includes("factory") || 
           text.includes("farm") || 
+          text.includes("godown") || 
+          text.includes("godam") ||
+          text.includes("karkhana") ||
           text.includes("yard") || 
           text.includes("warehouse") || 
-          text.includes("godown") || 
           text.includes("industrial") || 
           text.includes("shed") || 
           text.includes("plot") || 
-          text === "3"
+          (session.language ? text === "3" : false)
         ) {
           propType = "factory";
         }
 
         if (propType) {
+          if (!session.language) {
+            session.language = "en"; // Default fallback
+          }
+          const conv = getConversationalStrings(session.language);
           session.wizard_answers.property_type = propType;
           nextState = "ASK_INSTALL_TYPE";
-          const propTitle = propType === "home" ? "Home / Flat" : propType === "office" ? "Office / Shop" : "Factory / Farm";
+          const propTitle = propType === "home" ? conv.propHomeTitle : propType === "office" ? conv.propOfficeTitle : conv.propFactoryTitle;
 
           replies.push(MessageBuilder.list(
             from,
-            `✓ Property: *${propTitle}*\n\n*Step 1 of 6: Installation Type*\nWhat kind of installation do you require?`,
+            `✓ Property: *${propTitle}*\n\n*${conv.installHeader}*\n${session.language && session.language !== 'en' ? 'कृपया नीचे दिए विकल्पों में से चुनें:' : 'What kind of installation do you require?'}`,
             "Choose Install Type",
             [
               {
                 title: "Installation Types",
                 rows: [
-                  { id: "ins_new_wired", title: "✨ New Wired Setup", description: "Central DVR/NVR with dedicated copper cabling. Zero signal drop." },
-                  { id: "ins_wireless", title: "📶 Smart Wireless CCTV", description: "Zero video cabling. 360° Pan-Tilt & live mobile phone viewing." },
-                  { id: "ins_4g_solar", title: "📡 4G SIM / Solar Cam", description: "No Wi-Fi needed. Ideal for farmhouses, empty plots & remote gates." },
-                  { id: "ins_addon", title: "⬆️ Add Existing System", description: "Expansion / upgrade with compatibility guarantee." }
+                  { id: "ins_new_wired", title: conv.installWiredTitle.slice(0, 24), description: conv.installWiredDesc.slice(0, 72) },
+                  { id: "ins_wireless", title: conv.installWirelessTitle.slice(0, 24), description: conv.installWirelessDesc.slice(0, 72) },
+                  { id: "ins_4g_solar", title: conv.install4gTitle.slice(0, 24), description: conv.install4gDesc.slice(0, 72) },
+                  { id: "ins_addon", title: conv.installAddonTitle.slice(0, 24), description: conv.installAddonDesc.slice(0, 72) }
                 ]
               }
             ]

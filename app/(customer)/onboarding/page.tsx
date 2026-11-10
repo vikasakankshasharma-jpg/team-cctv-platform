@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowRight, Building2, CheckCircle2, ShieldCheck, MapPin, User, Phone, Briefcase } from "lucide-react";
 import Link from "next/link";
 import { ApplyInstallerSchema, ApplyInstallerInput } from "@/lib/validators";
+import { extractErrorMessage } from "@/lib/utils";
 
 export default function InstallerOnboardingPage() {
   const [formData, setFormData] = useState<Partial<ApplyInstallerInput>>({
@@ -49,11 +50,11 @@ export default function InstallerOnboardingPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to submit application");
+      if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to submit application"));
       
       setSuccess(true);
     } catch (err: any) {
-      setServerError(err.message);
+      setServerError(extractErrorMessage(err, "Failed to submit application"));
     } finally {
       setLoading(false);
     }

@@ -46,7 +46,17 @@ interface ConfiguratorViewProps {
 
 export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDiscount, customLayoutId }: ConfiguratorViewProps) {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, setLocale } = useTranslation();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const langParam = params.get("lang") || params.get("locale");
+      if (langParam && ['en', 'hi', 'mr', 'gu', 'ta', 'te', 'kn', 'bn', 'ml', 'pa', 'or'].includes(langParam.toLowerCase())) {
+        setLocale(langParam.toLowerCase() as any);
+      }
+    }
+  }, [setLocale]);
   const [lead, setLead] = useState<Lead>(initialLead);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<"download" | "whatsapp" | "booking" | "accept" | null>(null);

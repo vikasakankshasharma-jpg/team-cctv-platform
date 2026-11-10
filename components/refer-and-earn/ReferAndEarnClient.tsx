@@ -20,6 +20,7 @@ import {
 import { auth } from "@/lib/firebase-client";
 import { signInWithCustomToken } from "firebase/auth";
 import { toast } from "sonner";
+import { extractErrorMessage } from "@/lib/utils";
 
 export default function ReferAndEarnClient() {
   const router = useRouter();
@@ -70,13 +71,13 @@ export default function ReferAndEarnClient() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send verification code.");
+      if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to send verification code."));
 
       setStep("otp");
       setTimeLeft(60);
       toast.success("Verification code sent to your WhatsApp/SMS!");
     } catch (err: any) {
-      setError(err.message || "Failed to send OTP.");
+      setError(extractErrorMessage(err, "Failed to send OTP."));
     } finally {
       setLoading(false);
     }
@@ -140,7 +141,7 @@ export default function ReferAndEarnClient() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Invalid verification code.");
+      if (!res.ok) throw new Error(extractErrorMessage(data, "Invalid verification code."));
 
       // Sign in client Firebase SDK
       if (data.customToken) {
@@ -163,7 +164,7 @@ export default function ReferAndEarnClient() {
       router.refresh();
     } catch (err: any) {
       console.error("[Refer & Earn Verify Error]", err);
-      setError(err.message || "Verification failed. Please try again.");
+      setError(extractErrorMessage(err, "Verification failed. Please try again."));
     } finally {
       setLoading(false);
     }

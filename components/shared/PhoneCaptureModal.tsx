@@ -5,6 +5,7 @@ import { ShieldCheck, Phone, CheckCircle2, Loader2, ArrowRight, X, Sparkles } fr
 import { useTranslation } from "@/hooks/useTranslation";
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
+import { extractErrorMessage } from "@/lib/utils";
 
 interface PhoneCaptureModalProps {
   pincode: string;
@@ -206,18 +207,17 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
       });
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error || "Verification failed.");
+      if (!res.ok) throw new Error(extractErrorMessage(data, "Verification failed."));
 
       setStep("success");
     } catch (err: any) {
       setOtp(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
       
-      let errMsg = err.message || "Incorrect code. Please try again.";
+      let errMsg = extractErrorMessage(err, "Incorrect code. Please try again.");
       if (errMsg.includes("auth/invalid-verification-code")) errMsg = "The code you entered is incorrect.";
       else if (errMsg.includes("auth/code-expired")) errMsg = "The code has expired. Please resend.";
       else if (errMsg.includes("auth/too-many-requests")) errMsg = "Too many attempts. Please try again later.";
-      
       
       setError(errMsg);
     } finally {
@@ -246,13 +246,13 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Verification failed.");
+      if (!res.ok) throw new Error(extractErrorMessage(data, "Verification failed."));
       
       setStep("success");
     } catch (err: any) {
       setOtp(["", "", "", "", "", ""]);
       
-      let errMsg = err.message || "Auto-fill verification failed. Please enter code manually.";
+      let errMsg = extractErrorMessage(err, "Auto-fill verification failed. Please enter code manually.");
       if (errMsg.includes("auth/invalid-verification-code")) errMsg = "The code you entered is incorrect.";
       else if (errMsg.includes("auth/code-expired")) errMsg = "The code has expired. Please resend.";
       

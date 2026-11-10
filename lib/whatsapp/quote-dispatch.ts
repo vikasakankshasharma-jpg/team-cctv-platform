@@ -184,9 +184,11 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
       summaryText += `   • Standard ${storageDays} Days: ₹${b.standardQuote.total_payable.toLocaleString('en-IN')}\n\n`;
     });
 
+    const langParam = session.language ? `?lang=${session.language}` : "";
+    const nameParam = session.customer_name && session.customer_name !== "WhatsApp Customer" ? `&name=${encodeURIComponent(session.customer_name)}` : "";
     const webStudioUrl = session.lead_id 
-      ? `https://cctvquotation.com/quote/${session.lead_id}` 
-      : `https://cctvquotation.com/wizard?phone=${phone}`;
+      ? `https://cctvquotation.com/quote/${session.lead_id}${langParam}${nameParam ? (langParam ? nameParam : `?${nameParam.slice(1)}`) : ""}` 
+      : `https://cctvquotation.com/wizard?phone=${phone}${session.language ? `&lang=${session.language}` : ""}${nameParam}`;
 
     summaryText += `━━━━━━━━━━━━━━━━━━━━━\n`;
     summaryText += `🌐 *Interactive Web Studio & 3D Viewer:*\n`;
@@ -391,6 +393,7 @@ export async function sendBrandVariations(phone: string, session: WhatsAppSessio
 
   } catch (err) {
     console.error("🔥 Error in sendBrandVariations:", err);
+    await sendMsg(MessageBuilder.text(phone, "Sorry, we could not retrieve the package options right now. Please type 'Hi' to restart."));
   }
 }
 
@@ -413,10 +416,17 @@ export async function finalizeAndSendQuote(phone: string, session: WhatsAppSessi
       const leadRef = await adminDb.collection(COLLECTIONS.LEADS).add(newLead);
       leadId = leadRef.id;
     } else {
-      await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
+      const updatePayload: any = {
         status: "quoted",
         updated_at: new Date(),
-      });
+      };
+      if (session.customer_name && session.customer_name !== "WhatsApp Customer") {
+        updatePayload.customer_name = session.customer_name;
+      }
+      if (session.language) {
+        updatePayload.preferred_language = session.language;
+      }
+      await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update(updatePayload);
     }
 
     // Create quote record in Firestore subcollection
@@ -464,6 +474,7 @@ export async function finalizeAndSendQuote(phone: string, session: WhatsAppSessi
 
   } catch (err) {
     console.error("🔥 Error in finalizeAndSendQuote:", err);
+    await sendMsg(MessageBuilder.text(phone, "Sorry, we encountered an issue finalizing your quotation. Please type 'Hi' to try again or reach our support."));
   }
 }
 
@@ -537,6 +548,7 @@ export async function handleCheckoutAction(phone: string, session: WhatsAppSessi
 
   } catch (err) {
     console.error("🔥 Error in handleCheckoutAction:", err);
+    await sendMsg(MessageBuilder.text(phone, "Sorry, we could not generate your checkout link right now. Please type 'Hi' or check your online quote page directly."));
   }
 }
 

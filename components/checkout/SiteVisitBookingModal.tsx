@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
+import { extractErrorMessage } from "@/lib/utils";
 
 const HybridMap = dynamic(() => import("@/components/maps/HybridMap"), { ssr: false });
 
@@ -193,11 +194,11 @@ export function SiteVisitBookingModal({
         toast.success("Free Site Survey booked successfully!");
         if (onBookingSuccess) onBookingSuccess();
       } else {
-        toast.error(data.message || data.error || "Failed to book site survey. Please try again.");
+        toast.error(extractErrorMessage(data, "Failed to book site survey. Please try again."));
       }
     } catch (err: any) {
       console.error("Booking error:", err);
-      toast.error("An error occurred while booking your survey.");
+      toast.error(extractErrorMessage(err, "An error occurred while booking your survey."));
     } finally {
       setIsSubmitting(false);
     }

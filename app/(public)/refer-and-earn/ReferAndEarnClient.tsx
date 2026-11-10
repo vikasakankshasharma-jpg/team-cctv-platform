@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { ArrowRight, Gift, IndianRupee, Users, CheckCircle, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { extractErrorMessage } from "@/lib/utils";
 
 export default function ReferAndEarnClient() {
   const router = useRouter();
@@ -28,12 +29,12 @@ export default function ReferAndEarnClient() {
       const data = await res.json();
       
       if (!res.ok) {
-        throw new Error(data.error?.message || data.message || "Failed to register");
+        throw new Error(extractErrorMessage(data, "Failed to register"));
       }
       
       setSuccessCode(data.data.referral_code);
     } catch (err: any) {
-      setErrorMsg(err.message);
+      setErrorMsg(extractErrorMessage(err, "Registration failed"));
     } finally {
       setLoading(false);
     }

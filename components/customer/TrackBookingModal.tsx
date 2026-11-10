@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Search, AlertCircle, Loader2 } from "lucide-react";
 import { TranslatedText } from "@/components/shared/TranslatedText";
+import { extractErrorMessage } from "@/lib/utils";
 
 interface TrackBookingModalProps {
   isOpen: boolean;
@@ -36,10 +37,10 @@ export function TrackBookingModal({ isOpen, onClose }: TrackBookingModalProps) {
         onClose();
         router.push(`/track/${data.leadId}`);
       } else {
-        setError(data.error || "Failed to find booking. Please check your details.");
+        setError(extractErrorMessage(data, "Failed to find booking. Please check your details."));
       }
     } catch (err) {
-      setError("Network error. Please try again.");
+      setError(extractErrorMessage(err, "Network error. Please try again."));
     } finally {
       setLoading(false);
     }

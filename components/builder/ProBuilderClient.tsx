@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { SmartAddressInput } from "@/components/shared/SmartAddressInput";
 import { WhatsAppOtpNotice } from "@/components/shared/WhatsAppOtpNotice";
 import { toast } from "sonner";
+import { extractErrorMessage } from "@/lib/utils";
 import { getUniqueCanonicalBrands, isBrandMatch } from "@/lib/brand-utils";
 
 function FilterSelect({
@@ -828,14 +829,14 @@ const isWirelessItem = (item: any) => {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to send SMS OTP.");
+        throw new Error(extractErrorMessage(data, "Failed to send SMS OTP."));
       }
       setOtpSent(true);
       setCountdown(30);
       setOtp(["", "", "", ""]);
       toast.success("SMS OTP sent to your number.");
     } catch (error: any) {
-      setPhoneError(error.message || "Failed to send SMS OTP.");
+      setPhoneError(extractErrorMessage(error, "Failed to send SMS OTP."));
     } finally {
       setOtpLoading(false);
     }
@@ -863,14 +864,14 @@ const isWirelessItem = (item: any) => {
         const data = await res.json();
         
         if (!res.ok) {
-          throw new Error(data.error || "Failed to send OTP.");
+          throw new Error(extractErrorMessage(data, "Failed to send OTP."));
         }
         
         setOtpSent(true);
         setCountdown(30);
         setOtp(["", "", "", ""]);
       } catch (error: any) {
-        setPhoneError(error.message || "Failed to send OTP. Please try again.");
+        setPhoneError(extractErrorMessage(error, "Failed to send OTP. Please try again."));
       } finally {
         setOtpLoading(false);
       }
@@ -895,12 +896,12 @@ const isWirelessItem = (item: any) => {
         const data = await res.json();
         
         if (!res.ok) {
-          throw new Error(data.error || "Invalid OTP code.");
+          throw new Error(extractErrorMessage(data, "Invalid OTP code."));
         }
         
         setIsLeadCaptured(true);
       } catch (error: any) {
-        setPhoneError(error.message || "Invalid OTP code.");
+        setPhoneError(extractErrorMessage(error, "Invalid OTP code."));
         setOtp(["", "", "", ""]); // Reset OTP on failure
       } finally {
         setOtpLoading(false);

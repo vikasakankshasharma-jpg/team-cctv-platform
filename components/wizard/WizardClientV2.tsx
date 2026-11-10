@@ -14,11 +14,13 @@ import { auth } from "@/lib/firebase-client";
 import { createLeadAction } from "@/app/actions/lead";
 import { ShieldCheck, Loader2, Sparkles, Wrench, MapPin, CheckCircle2, HelpCircle, ChevronDown, ChevronUp, Plus, Minus } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { LocaleCode } from "@/lib/i18n/mapping";
 import { PlacesAutocomplete } from "@/components/shared/PlacesAutocomplete";
 import { useJsApiLoader, GoogleMap, Marker } from "@react-google-maps/api";
 import { buildMixedCameraRequirements } from "@/lib/camera-requirements";
 import { SmartAddressInput } from "@/components/shared/SmartAddressInput";
 import { WhatsAppOtpNotice } from "@/components/shared/WhatsAppOtpNotice";
+import { extractErrorMessage } from "@/lib/utils";
 
 const GOOGLE_MAPS_LIBRARIES: any = ["places"];
 
@@ -29,7 +31,7 @@ interface WizardClientV2Props {
 }
 
 export function WizardClientV2({ searchParams: serverSearchParams }: WizardClientV2Props = {}) {
-  const { t } = useTranslation();
+  const { t, setLocale } = useTranslation();
   const router = useRouter();
     const [sessionId] = useState(() => {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -309,6 +311,11 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
         }
       }
 
+      const langParam = getParam("lang") || getParam("locale");
+      if (langParam && ['en', 'hi', 'mr', 'gu', 'ta', 'te', 'kn', 'bn', 'ml', 'pa', 'or'].includes(langParam.toLowerCase())) {
+        setLocale(langParam.toLowerCase() as LocaleCode);
+      }
+
       if (nameParam) {
         setReq(prev => ({ ...prev, customer_name: prev.customer_name || nameParam }));
       }
@@ -414,15 +421,15 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
           setQuoteResult(data);
         } else {
           console.error("API error success:false", data);
-          toast.error("Error generating quote");
+          toast.error(extractErrorMessage(data, t("toast_quote_error", "Error generating quote")));
         }
       } catch (err) {
         console.error("Failed to parse JSON. Response text was:", text.substring(0, 500));
-        toast.error("Error generating quote");
+        toast.error(t("toast_quote_error", "Error generating quote"));
       }
     } catch (e: any) {
       console.error(e);
-      toast.error(t("toast_quote_error", "Error generating quote"));
+      toast.error(extractErrorMessage(e, t("toast_quote_error", "Error generating quote")));
     }
     setLoading(false);
   };
@@ -500,11 +507,11 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
         return;
       } else {
         console.error("Failed to save lead: ", (newLeadId as any)?.error, (newLeadId as any)?.details);
-        toast.error("Failed to save lead. Please try again.");
+        toast.error(extractErrorMessage(newLeadId, "Failed to save lead. Please try again."));
       }
     } catch (error: any) {
       console.error("Lead submission error:", error);
-      toast.error(error.message || "Failed to generate quotation. Please try again.");
+      toast.error(extractErrorMessage(error, "Failed to generate quotation. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -547,7 +554,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
       const data = await res.json();
       
       if (!res.ok) {
-        toast.error(data.error || "Failed to send WhatsApp OTP.");
+        toast.error(extractErrorMessage(data, "Failed to send WhatsApp OTP."));
         return;
       }
       
@@ -558,7 +565,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
       
     } catch (error: any) {
       console.error("OTP Send Error:", error);
-      toast.error(t("toast_network_error", "Network error. Please try again."));
+      toast.error(extractErrorMessage(error, t("toast_network_error", "Network error. Please try again.")));
     } finally {
       setLoading(false);
     }
@@ -583,7 +590,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
       const data = await res.json();
       
       if (!res.ok) {
-        throw new Error(data.error || "Invalid OTP code.");
+        throw new Error(extractErrorMessage(data, "Invalid OTP code."));
       }
       
       // We get a custom token back, sign in with it!
@@ -596,7 +603,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
       await submitLeadAndNavigate(cleanMobile, false);
     } catch (error: any) {
       console.error("OTP verification error:", error);
-      toast.error(error.message || "Please check the code and try again.");
+      toast.error(extractErrorMessage(error, "Please check the code and try again."));
     } finally {
       setLoading(false);
     }
@@ -701,10 +708,11 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
         router.push(`/quote/${targetId}`);
         return;
       } else {
-        toast.error(data.message || "Failed to save quote.");
+        toast.error(extractErrorMessage(data, "Failed to save quote."));
       }
     } catch (e) {
       console.error(e);
+      toast.error(extractErrorMessage(e, "Failed to save quote."));
     }
     setLoading(false);
   };

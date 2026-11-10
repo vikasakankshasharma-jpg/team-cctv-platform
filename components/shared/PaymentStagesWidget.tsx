@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { CheckCircle2, Lock, ArrowRight, ExternalLink, RefreshCw, Send, Download, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "@/hooks/useTranslation";
+import { extractErrorMessage } from "@/lib/utils";
 
 const formatCurrency = (amount: number) => `₹${amount.toLocaleString('en-IN')}`;
 
@@ -96,12 +97,12 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to generate payment link");
+      if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to generate payment link"));
       if (data.payment_url) {
         window.location.href = data.payment_url;
       }
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(extractErrorMessage(error, "Failed to generate payment link"));
     } finally {
       setLoadingType(null);
     }
@@ -119,10 +120,10 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to resend payment link");
+      if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to resend payment link"));
       toast.success(isAdmin ? "Link sent to customer via WhatsApp" : "Payment link sent to your WhatsApp");
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(extractErrorMessage(error, "Failed to resend payment link"));
     } finally {
       setLoadingType(null);
     }

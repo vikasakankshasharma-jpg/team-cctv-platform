@@ -20,6 +20,7 @@ import { signInWithCustomToken } from "firebase/auth";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 import { WhatsAppOtpNotice } from "@/components/shared/WhatsAppOtpNotice";
 import { toast } from "sonner";
+import { extractErrorMessage } from "@/lib/utils";
 
 export function CustomerLoginClient() {
   const router = useRouter();
@@ -94,7 +95,7 @@ export function CustomerLoginClient() {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to send WhatsApp OTP. Please try again.");
+        throw new Error(extractErrorMessage(data, "Failed to send WhatsApp OTP. Please try again."));
       }
 
       setStep(2);
@@ -111,7 +112,7 @@ export function CustomerLoginClient() {
       }, 100);
     } catch (err: any) {
       console.error("WhatsApp OTP Send Error:", err);
-      setError(err.message || "Failed to send WhatsApp OTP. Please try again.");
+      setError(extractErrorMessage(err, "Failed to send WhatsApp OTP. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -134,7 +135,7 @@ export function CustomerLoginClient() {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Invalid OTP code. Please check your WhatsApp and try again.");
+        throw new Error(extractErrorMessage(data, "Invalid OTP code. Please check your WhatsApp and try again."));
       }
 
       const customToken = data.customToken;
@@ -157,7 +158,7 @@ export function CustomerLoginClient() {
 
         if (!sessionRes.ok) {
           const errData = await sessionRes.json().catch(() => ({}));
-          throw new Error(errData.error || "Failed to establish secure session. Please try again.");
+          throw new Error(extractErrorMessage(errData, "Failed to establish secure session. Please try again."));
         }
 
         toast.success("Welcome! Redirecting to your dashboard...");
@@ -167,7 +168,7 @@ export function CustomerLoginClient() {
       }
     } catch (err: any) {
       console.error("Verification error:", err);
-      setError(err.message || "Invalid OTP code. Please try again.");
+      setError(extractErrorMessage(err, "Invalid OTP code. Please try again."));
     } finally {
       setLoading(false);
     }

@@ -60,4 +60,5 @@ export interface WhatsAppSession {
   nearest_hub?: string;
   last_processed_message_id?: string;
   last_inbound_text?: string;
+  language?: string; // LocaleCode e.g. "en" | "hi" | "mr" | "gu" | "ta" | "te" | "kn" | "bn" | "ml" | "pa" | "or"
 }
