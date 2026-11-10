@@ -387,38 +387,6 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                     />
                   </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">
-                    Value / Budget Price <span className="normal-case tracking-normal font-normal opacity-70">(Optional)</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">₹</span>
-                    <input
-                      type="number"
-                      min="0"
-                      {...register("unit_price_budget", { valueAsNumber: true })}
-                      placeholder="Auto-calculated if empty"
-                      className="w-full bg-background border border-border rounded-xl pl-8 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">
-                    Elite / Premium Price <span className="normal-case tracking-normal font-normal opacity-70">(Optional)</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">₹</span>
-                    <input
-                      type="number"
-                      min="0"
-                      {...register("unit_price_premium", { valueAsNumber: true })}
-                      placeholder="Auto-calculated if empty"
-                      className="w-full bg-background border border-border rounded-xl pl-8 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
-                    />
-                  </div>
-                </div>
               </div>
 
               {category === "cctv_camera" && (

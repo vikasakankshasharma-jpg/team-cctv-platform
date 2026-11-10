@@ -4,6 +4,20 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+---
+
+# CORE BUSINESS ARCHITECTURE: BRAND & RESOLUTION MATRIX (PERMANENT BAN ON 3-TIERS)
+
+**CRITICAL INVARIANT:** Never confuse or revert the quotation presentation strategy for this project.
+1. **Permanent Ban on "Plan 1 / 2 / 3" & "Budget / Recommended / Premium" Tiers:**
+   - The platform strictly prohibits labeling packages or quotes as `"Plan 1"`, `"Plan 2"`, `"Plan 3"`, `"Value"`, `"Budget"`, `"Recommended"`, `"Pro"`, `"Premium"`, `"Elite"`, or `"Essential"`.
+   - Never box customers into arbitrary 3-tier buckets or construct canned 3-tier objects.
+2. **Ground Truth: Brand & Resolution Variations (`DynamicVariantGenerator.tsx`):**
+   - Quotes are keyed strictly by `${Brand}_${Technology}_${Resolution}`.
+   - Customers filter quotes using interactive selectors: Brand (CP Plus, Hikvision, Dahua, Trueview, Prama, Hi-Focus, Budget), Resolution (2MP, 3MP, 4MP, 5MP, 8MP), Technology (HD, IP, Wireless, Hybrid), and Storage Days (15, 30, 60 days).
+3. **All Prices Are GST-Paid (18% Inclusive Standard):**
+   - Wholesale costs and customer retail prices are 18% GST inclusive.
+   - Taxable Base = Price / 1.18. GST (18%) = Price - Taxable Base. Zero hidden tax at checkout.
 
 ---
 

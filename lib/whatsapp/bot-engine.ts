@@ -21,6 +21,28 @@ import {
   handleSlotSelection 
 } from "./quote-dispatch";
 
+/**
+ * Hybrid Quick-Tap Buttons Message for Camera Quantities.
+ * Presents up to 3 quick-tap buttons (e.g. 2 Bullets, 4 Bullets, 0 None)
+ * combined with a clear prompt to reply directly with any number (0 to 32).
+ * Meta Cloud API strictly enforces maximum 3 buttons per interactive message.
+ */
+export function buildQuantityButtonsMessage(
+  recipient: string,
+  prefix: string, // "out" | "in" | "wfq"
+  headerText: string,
+  buttonLabels: { id: string; title: string }[],
+  numberHintText?: string
+) {
+  const hint = numberHintText || "👉 *Reply with any number (0 to 32)*, or tap below:";
+  const text = `${headerText}\n\n${hint}`;
+  const buttons = buttonLabels.slice(0, 3).map(b => ({
+    id: b.id,
+    title: b.title.slice(0, 20)
+  }));
+  return MessageBuilder.buttons(recipient, text, buttons);
+}
+
 export function buildQuantityListMessage(
   recipient: string,
   prefix: string, // "out" | "in" | "wfq"
@@ -190,20 +212,30 @@ export function getStepPrompt(
     }
 
     case "ASK_CAMERA_OUTDOOR": {
-      replies.push(buildQuantityListMessage(
-        from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
+      replies.push(buildQuantityButtonsMessage(
+        from, "out",
         `*${conv.outdoorHeader}*\n\n${conv.outdoorQuestion}`,
-        "Select Outdoor (0-7)"
+        [
+          { id: "out_2", title: `2 ${conv.quickBtnBullets || "Bullets"}` },
+          { id: "out_4", title: `4 ${conv.quickBtnBullets || "Bullets"}` },
+          { id: "out_0", title: conv.quickBtnNone || "0 (None)" }
+        ],
+        conv.numberReplyHint
       ));
       break;
     }
 
     case "ASK_CAMERA_INDOOR": {
       const outCount = session.wizard_answers?.outdoor_camera_count || 0;
-      replies.push(buildQuantityListMessage(
-        from, "in", "Indoor Dome", "Indoor Domes", 1,
+      replies.push(buildQuantityButtonsMessage(
+        from, "in",
         `✓ Outdoor Cameras: *${outCount}*\n\n*${conv.indoorHeader}*\n\n${conv.indoorQuestion}`,
-        "Select Indoor (0-7)"
+        [
+          { id: "in_2", title: `2 ${conv.quickBtnDomes || "Domes"}` },
+          { id: "in_4", title: `4 ${conv.quickBtnDomes || "Domes"}` },
+          { id: "in_0", title: conv.quickBtnNone || "0 (None)" }
+        ],
+        conv.numberReplyHint
       ));
       break;
     }
@@ -241,10 +273,15 @@ export function getStepPrompt(
         wf_4g_solar: { single: "4G SIM / Solar Standalone Camera", plural: "4G SIM Cameras" }
       };
       const vInfo = variantTitles[variant] || { single: "Smart Wireless Camera", plural: "Smart Wireless Cameras" };
-      replies.push(buildQuantityListMessage(
-        from, "wfq", vInfo.single, vInfo.plural, 1,
-        `How many *${vInfo.single}* cameras do you need (0 to 32)?`,
-        "Select Quantity (0-7)"
+      replies.push(buildQuantityButtonsMessage(
+        from, "wfq",
+        `How many *${vInfo.single}* cameras do you need mounted at your site?`,
+        [
+          { id: "wfq_1", title: "1 Camera" },
+          { id: "wfq_2", title: "2 Cameras" },
+          { id: "wfq_0", title: conv.quickBtnNone || "0 (None)" }
+        ],
+        conv.numberReplyHint
       ));
       break;
     }
@@ -1001,6 +1038,7 @@ async function processIncomingMessageInternal(
 
   let replies: WhatsAppMessagePayload[] = [];
   let nextState: WhatsAppBotState = session.state;
+  let conv = getConversationalStrings(session.language || "en");
 
   try {
     switch (session.state) {
@@ -1026,7 +1064,7 @@ async function processIncomingMessageInternal(
             ]
           ));
         } else {
-          const conv = getConversationalStrings(session.language);
+          conv = getConversationalStrings(session.language);
           replies.push(MessageBuilder.buttons(
             from,
             `*${conv.propHeader}*\n${conv.propQuestion}`,
@@ -1054,7 +1092,7 @@ async function processIncomingMessageInternal(
               updated_at: new Date()
             }).catch(console.error);
           }
-          const conv = getConversationalStrings(langSelected);
+          conv = getConversationalStrings(langSelected);
           replies.push(MessageBuilder.text(from, conv.langConfirmed));
           replies.push(MessageBuilder.buttons(
             from,
@@ -1119,7 +1157,7 @@ async function processIncomingMessageInternal(
           if (!session.language) {
             session.language = "en"; // Default fallback
           }
-          const conv = getConversationalStrings(session.language);
+          conv = getConversationalStrings(session.language);
           session.wizard_answers.property_type = propType;
           nextState = "ASK_INSTALL_TYPE";
           const propTitle = propType === "home" ? conv.propHomeTitle : propType === "office" ? conv.propOfficeTitle : conv.propFactoryTitle;
@@ -1241,27 +1279,15 @@ async function processIncomingMessageInternal(
           session.wizard_answers.selected_wireless_variant = "wf_4g_solar";
           nextState = "ASK_WIRELESS_QTY";
 
-          replies.push(MessageBuilder.list(
-            from,
-            `*4G SIM & Solar Standalone Cameras Selected:* 🛰️\n\nHow many standalone 4G SIM / Solar cameras do you need mounted at your site?\n\n_Select quantity below or reply directly with any number (e.g. 5, 7, 10, 11):_`,
-            "Select 4G Solar Qty",
+          replies.push(buildQuantityButtonsMessage(
+            from, "wfq",
+            `*4G SIM & Solar Standalone Cameras Selected:* 🛰️\n\nHow many standalone 4G SIM / Solar cameras do you need mounted at your site?`,
             [
-              {
-                title: "Standard Quantities (1 to 8)",
-                rows: [
-                  { id: "wfq_1", title: "1 Camera (Single Gate)", description: "Farmhouse entrance or remote gate" },
-                  { id: "wfq_2", title: "2 Cameras (Gate + Yard)", description: "Gate + front yard or barn" },
-                  { id: "wfq_3", title: "3 Cameras", description: "Perimeter and yard surveillance" },
-                  { id: "wfq_4", title: "4 Cameras (Full Perimeter)", description: "4-corner coverage without Wi-Fi" },
-                  { id: "wfq_5", title: "5 Cameras", description: "Gate, yard, barn & approach road" },
-                  { id: "wfq_6", title: "6 Cameras", description: "Agricultural field / farm boundaries" },
-                  { id: "wfq_7", title: "7 Cameras", description: "Multi-point rural site coverage" },
-                  { id: "wfq_8", title: "8 Cameras", description: "Large estate / resort / remote warehouse" },
-                  { id: "wfq_more", title: "🏢 9 to 32 Cameras (Commercial)...", description: "View 9 to 32 cameras or type any number" },
-                  { id: "wfq_custom", title: "✏️ Custom Quantity (1-32)", description: "Reply with any number 1 to 32" }
-                ]
-              }
-            ]
+              { id: "wfq_1", title: "1 4G Cam" },
+              { id: "wfq_2", title: "2 4G Cams" },
+              { id: "wfq_4", title: "4 4G Cams" }
+            ],
+            conv.numberReplyHint
           ));
         } else if (choice === "wireless") {
           session.wizard_answers.installation_type = "new";
@@ -1295,10 +1321,15 @@ async function processIncomingMessageInternal(
           session.wizard_answers.technology_preference = "HD";
           nextState = "ASK_CAMERA_OUTDOOR";
 
-          replies.push(buildQuantityListMessage(
-            from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
-            `*Step 2 of 6: Outdoor Cameras* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need mounted outside for your main gate, driveway, parking, or boundary walls?`,
-            "Select Outdoor (0-7)"
+          replies.push(buildQuantityButtonsMessage(
+            from, "out",
+            `*${conv.outdoorHeader}*\n\n${conv.outdoorQuestion}`,
+            [
+              { id: "out_2", title: `2 ${conv.quickBtnBullets || "Bullets"}` },
+              { id: "out_4", title: `4 ${conv.quickBtnBullets || "Bullets"}` },
+              { id: "out_0", title: conv.quickBtnNone || "0 (None)" }
+            ],
+            conv.numberReplyHint
           ));
         } else {
           // Fallback: Re-send fresh clickable list options with helpful explanation
@@ -1365,18 +1396,28 @@ async function processIncomingMessageInternal(
         if (text.includes("addon_tech_hd") || text.includes("hd") || text.includes("analog") || text.includes("bnc") || text === "1") {
           session.wizard_answers.technology = "HD";
           nextState = "ASK_CAMERA_OUTDOOR";
-          replies.push(buildQuantityListMessage(
-            from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
+          replies.push(buildQuantityButtonsMessage(
+            from, "out",
             `*Step 3 (Outdoor Cameras to Add):* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need added outside for your main gate, driveway, parking, or boundary walls?`,
-            "Select Outdoor (0-7)"
+            [
+              { id: "out_2", title: `2 ${conv.quickBtnBullets || "Bullets"}` },
+              { id: "out_4", title: `4 ${conv.quickBtnBullets || "Bullets"}` },
+              { id: "out_0", title: conv.quickBtnNone || "0 (None)" }
+            ],
+            conv.numberReplyHint
           ));
         } else if (text.includes("addon_tech_ip") || text.includes("ip") || text.includes("cat6") || text.includes("network") || text === "2") {
           session.wizard_answers.technology = "IP";
           nextState = "ASK_CAMERA_OUTDOOR";
-          replies.push(buildQuantityListMessage(
-            from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
+          replies.push(buildQuantityButtonsMessage(
+            from, "out",
             `*Step 3 (Outdoor Cameras to Add):* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need added outside for your main gate, driveway, parking, or boundary walls?`,
-            "Select Outdoor (0-7)"
+            [
+              { id: "out_2", title: `2 ${conv.quickBtnBullets || "Bullets"}` },
+              { id: "out_4", title: `4 ${conv.quickBtnBullets || "Bullets"}` },
+              { id: "out_0", title: conv.quickBtnNone || "0 (None)" }
+            ],
+            conv.numberReplyHint
           ));
         } else {
           replies.push(MessageBuilder.buttons(
@@ -1462,10 +1503,15 @@ async function processIncomingMessageInternal(
           };
           const vInfo = variantTitles[variant] || { single: "Smart Wireless Camera", plural: "Smart Wireless Cameras" };
 
-          replies.push(buildQuantityListMessage(
-            from, "wfq", vInfo.single, vInfo.plural, 1,
-            `How many *${vInfo.single}* cameras do you need (0 to 32)?`,
-            "Select Quantity (0-7)"
+          replies.push(buildQuantityButtonsMessage(
+            from, "wfq",
+            `How many *${vInfo.single}* cameras do you need mounted at your site?`,
+            [
+              { id: "wfq_1", title: "1 Camera" },
+              { id: "wfq_2", title: "2 Cameras" },
+              { id: "wfq_0", title: conv.quickBtnNone || "0 (None)" }
+            ],
+            conv.numberReplyHint
           ));
         }
         break;
@@ -1536,19 +1582,28 @@ async function processIncomingMessageInternal(
         }
 
         if (isOutOfBounds) {
-          replies.push(buildQuantityListMessage(
-            from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
-            `⚠️ *You entered ${requestedCount} Outdoor Cameras.*\n\nOur automated instant quotation engine supports packages up to *32 cameras*.\n• For sites requiring 32+ cameras (large industrial complexes / malls / schools), our enterprise engineering team prepares custom multi-NVR architectural blueprints.\n\n👉 Please select a quantity between *0 and 32* from the list below, or reply *CALL* for custom multi-NVR design:`,
-            "Select Outdoor (0-7)"
+          replies.push(MessageBuilder.buttons(
+            from,
+            `⚠️ *You entered ${requestedCount} Outdoor Cameras.*\n\nOur instant quotation engine automates systems up to *32 cameras*.\n• For sites requiring 32+ cameras, our commercial engineering team prepares custom multi-NVR architectural blueprints.\n\n👉 Please select a quantity (0 to 32) below, or request a specialist callback:`,
+            [
+              { id: "out_16", title: "16 Bullets" },
+              { id: "out_32", title: "32 Bullets" },
+              { id: "addon_free_callback", title: "📞 Call Specialist" }
+            ]
           ));
           break;
         }
 
         if (outdoorCount === null || isNaN(outdoorCount)) {
-          replies.push(buildQuantityListMessage(
-            from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
-            `⚠️ *We couldn't recognize "${text.slice(0, 30)}" as a camera quantity.*\n\n*Step 2 of 6: Outdoor Cameras* 🌧️\nPlease select a quantity (0 to 32) from the list below or type any number in chat:`,
-            "Select Outdoor (0-7)"
+          replies.push(buildQuantityButtonsMessage(
+            from, "out",
+            `⚠️ *We couldn't recognize "${text.slice(0, 30)}" as a camera quantity.*\n\n*${conv.outdoorHeader}*\n\n${conv.outdoorQuestion}`,
+            [
+              { id: "out_2", title: `2 ${conv.quickBtnBullets || "Bullets"}` },
+              { id: "out_4", title: `4 ${conv.quickBtnBullets || "Bullets"}` },
+              { id: "out_0", title: conv.quickBtnNone || "0 (None)" }
+            ],
+            conv.numberReplyHint
           ));
           break;
         }
@@ -1556,10 +1611,15 @@ async function processIncomingMessageInternal(
         session.wizard_answers.outdoor_camera_count = outdoorCount;
         nextState = "ASK_CAMERA_INDOOR";
 
-        replies.push(buildQuantityListMessage(
-          from, "in", "Indoor Dome", "Indoor Domes", 1,
-          `✓ Outdoor Cameras: *${outdoorCount} Weatherproof Bullets*\n\n*Step 2 of 6: Indoor Cameras* 🏠\n\nHow many *Compact Ceiling Dome Cameras* do you need mounted inside for your living room, corridors, office, or cashier counters?`,
-          "Select Indoor (0-7)"
+        replies.push(buildQuantityButtonsMessage(
+          from, "in",
+          `✓ Outdoor Cameras: *${outdoorCount} Weatherproof Bullets*\n\n*${conv.indoorHeader}*\n\n${conv.indoorQuestion}`,
+          [
+            { id: "in_2", title: `2 ${conv.quickBtnDomes || "Domes"}` },
+            { id: "in_4", title: `4 ${conv.quickBtnDomes || "Domes"}` },
+            { id: "in_0", title: conv.quickBtnNone || "0 (None)" }
+          ],
+          conv.numberReplyHint
         ));
         break;
       }
@@ -1629,19 +1689,29 @@ async function processIncomingMessageInternal(
         }
 
         if (isOutOfBounds) {
-          replies.push(buildQuantityListMessage(
-            from, "in", "Indoor Dome", "Indoor Domes", 1,
-            `⚠️ *You entered ${requestedCount} Indoor Cameras.*\n\nOur automated quotation engine supports packages up to *32 cameras*.\n• For sites requiring 32+ cameras, our enterprise team prepares custom multi-NVR architectural blueprints.\n\n👉 Please select a quantity between *0 and 32* from the list below, or reply *CALL* for custom design:`,
-            "Select Indoor (0-7)"
+          replies.push(MessageBuilder.buttons(
+            from,
+            `⚠️ *You entered ${requestedCount} Indoor Cameras.*\n\nOur instant quotation engine automates systems up to *32 cameras*.\n• For sites requiring 32+ cameras, our commercial engineering team prepares custom multi-NVR architectural blueprints.\n\n👉 Please select a quantity (0 to 32) below, or request a specialist callback:`,
+            [
+              { id: "in_16", title: "16 Domes" },
+              { id: "in_32", title: "32 Domes" },
+              { id: "addon_free_callback", title: "📞 Call Specialist" }
+            ]
           ));
           break;
         }
 
         if (indoorCount === null || isNaN(indoorCount)) {
-          replies.push(buildQuantityListMessage(
-            from, "in", "Indoor Dome", "Indoor Domes", 1,
-            `⚠️ *We couldn't recognize "${text.slice(0, 30)}" as a camera quantity.*\n\n*Step 2 of 6: Indoor Cameras* 🏠\nPlease select a quantity (0 to 32) from the list below or type any number in chat:`,
-            "Select Indoor (0-7)"
+          const outCountPrev = session.wizard_answers.outdoor_camera_count || 0;
+          replies.push(buildQuantityButtonsMessage(
+            from, "in",
+            `⚠️ *We couldn't recognize "${text.slice(0, 30)}" as a camera quantity.*\n\n✓ Outdoor Cameras: *${outCountPrev}*\n\n*${conv.indoorHeader}*\n\n${conv.indoorQuestion}`,
+            [
+              { id: "in_2", title: `2 ${conv.quickBtnDomes || "Domes"}` },
+              { id: "in_4", title: `4 ${conv.quickBtnDomes || "Domes"}` },
+              { id: "in_0", title: conv.quickBtnNone || "0 (None)" }
+            ],
+            conv.numberReplyHint
           ));
           break;
         }
@@ -1653,8 +1723,8 @@ async function processIncomingMessageInternal(
             `⚠️ *0 Cameras Selected.*\nA CCTV setup requires at least 1 camera to generate a quotation.\n\nWould you like to install Smart Wireless cameras or add cameras?`,
             [
               { id: "ins_wireless", title: "📶 Smart Wireless Setup" },
-              { id: "out_page_1", title: "🌧️ Add Outdoor Cameras" },
-              { id: "in_page_1", title: "🏠 Add Indoor Domes" }
+              { id: "out_2", title: "🌧️ Add 2 Outdoor Bullets" },
+              { id: "in_2", title: "🏠 Add 2 Indoor Domes" }
             ]
           ));
           break;
@@ -1747,10 +1817,15 @@ async function processIncomingMessageInternal(
           };
           const vInfo = variantTitles[variant] || { single: "Smart Wireless Camera", plural: "Smart Wireless Cameras" };
 
-          replies.push(buildQuantityListMessage(
-            from, "wfq", vInfo.single, vInfo.plural, 1,
-            `How many *${vInfo.single}* cameras do you need (0 to 32)?`,
-            "Select Quantity (0-7)"
+          replies.push(buildQuantityButtonsMessage(
+            from, "wfq",
+            `How many *${vInfo.single}* cameras do you need mounted at your site?`,
+            [
+              { id: "wfq_1", title: "1 Camera" },
+              { id: "wfq_2", title: "2 Cameras" },
+              { id: "wfq_0", title: conv.quickBtnNone || "0 (None)" }
+            ],
+            conv.numberReplyHint
           ));
           break;
         }
@@ -1880,9 +1955,11 @@ async function processIncomingMessageInternal(
         let wCount = 1;
         if (text.startsWith("wfq_") && !text.includes("page") && !text.includes("custom")) {
           wCount = parseInt(text.replace("wfq_", ""), 10);
+        } else if (text.includes("none") || text.includes("zero") || text.includes("nahi")) {
+          wCount = 0;
         } else {
-          const match = text.match(/\d+/);
-          wCount = match ? Math.min(32, Math.max(1, parseInt(match[0], 10))) : 1;
+          const match = text.match(/\b\d+\b/);
+          wCount = match ? Math.min(32, Math.max(0, parseInt(match[0], 10))) : 1;
         }
 
         if (currentVType === "wf_in_ptz") session.wizard_answers.wifi_indoor_ptz_count = wCount;
@@ -1918,18 +1995,20 @@ async function processIncomingMessageInternal(
         if (sim4g > 0) wifiItems.push(`• ${sim4g}x 4G SIM / Solar Standalone Camera`);
 
         nextState = "ASK_HYBRID_WIRELESS";
-        replies.push(MessageBuilder.list(
+        const statusHeader = wCount > 0 
+          ? `✓ *Added to Setup:* ${wCount}x ${curVInfo.single}`
+          : `✓ *Skipped:* ${curVInfo.single}`;
+        const wifiSummary = wifiItems.length > 0 
+          ? `\n\n📡 *Smart Wireless Cameras in Setup (${totalWireless} Added):*\n${wifiItems.join("\n")}`
+          : "";
+        const bodyText = `${statusHeader}${wifiSummary}\n\n⚡ *Total Cameras:* ${grandTotal} (${isPureWireless ? `${totalWireless} Smart Wireless` : `⚡ Hybrid Setup: ${outWired + inWired} Wired + ${totalWireless} Smart Wireless`})\n\nWould you like to add another wireless camera variant, or proceed to Step 3?`;
+
+        replies.push(MessageBuilder.buttons(
           from,
-          `✓ *Added to Setup:* ${wCount}x ${curVInfo.single}\n\n📡 *Smart Wireless Cameras in Setup (${totalWireless} Added):*\n${wifiItems.join("\n")}\n\n⚡ *Total Cameras:* ${grandTotal} (${isPureWireless ? `${totalWireless} Smart Wireless` : `⚡ Hybrid Setup: ${outWired + inWired} Wired + ${totalWireless} Smart Wireless`})\n\nWould you like to add another wireless camera variant, or proceed to Step 3?`,
-          "Choose Action",
+          bodyText,
           [
-            {
-              title: "Wireless Setup",
-              rows: [
-                { id: "wf_add_another", title: "➕ Add Another Wireless", description: "Add outdoor bullet, PTZ, or 4G SIM camera" },
-                { id: "wf_done_proceed", title: "✅ Done (Proceed)", description: "Lock camera counts and proceed to Step 3" }
-              ]
-            }
+            { id: "wf_done_proceed", title: "✅ Done (Proceed)" },
+            { id: "wf_add_another", title: "➕ Add Wireless" }
           ]
         ));
         break;

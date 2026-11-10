@@ -33,8 +33,6 @@ interface ParsedRow {
   base_cost?: string | number;
   margin_percentage?: string | number;
   unit_price?: string | number;
-  unit_price_budget?: string | number;
-  unit_price_premium?: string | number;
   resolution_mp?: string | number;
   channels?: string | number;
   max_cameras?: string | number;
