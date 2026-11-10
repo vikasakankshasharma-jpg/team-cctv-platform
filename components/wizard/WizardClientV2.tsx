@@ -459,7 +459,12 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
           verified_via: isPreVerified ? "whatsapp_omnichannel" : "whatsapp_otp"
         },
         property_type: req.property_type || "home",
-        technology_choice: (Number(req.wifi_camera_count) > 0 && (Number(req.outdoor_camera_count) > 0 || Number(req.indoor_camera_count) > 0)) ? "Hybrid" : (req.technology_preference || "HD"),
+        technology_choice: (() => {
+          const wifiCount = Number(req.wifi_camera_count) || 0;
+          const splitTotal = (Number(req.outdoor_camera_count) || 0) + (Number(req.indoor_camera_count) || 0);
+          const wiredCount = splitTotal > wifiCount ? (splitTotal - wifiCount) : 0;
+          return (wifiCount > 0 && wiredCount > 0) ? "Hybrid" : (req.technology_preference || "HD");
+        })(),
         cabling_done: req.cabling_done || false,
         camera_count: (() => {
           const calcWired = (Number(req.outdoor_camera_count) || 0) + (Number(req.indoor_camera_count) || 0);

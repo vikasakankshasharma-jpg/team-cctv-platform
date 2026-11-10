@@ -7,6 +7,8 @@ export interface Address {
   landmark1: string;
   landmark2: string;
   full_address: string;
+  city?: string;
+  state?: string;
   coordinates?: {
     lat: number;
     lng: number;

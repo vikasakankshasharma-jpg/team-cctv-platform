@@ -266,7 +266,8 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         if (data.success && data.payment_url) {
           return data.payment_url;
         }
-        toast.error(data.error || "Failed to generate payment link");
+        const errLink = data.error?.message || (typeof data.error === "string" ? data.error : null) || "Failed to generate payment link";
+        toast.error(errLink);
         return null;
       }
 
@@ -284,7 +285,8 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        toast.error(data.error || "Failed to initialize payment", { id: toastId });
+        const errInit = data.error?.message || (typeof data.error === "string" ? data.error : null) || "Failed to initialize payment";
+        toast.error(errInit, { id: toastId });
         return;
       }
 
@@ -429,7 +431,8 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to initiate payment");
+        const errPay = data.error?.message || (typeof data.error === "string" ? data.error : null) || "Failed to initiate payment";
+        throw new Error(errPay);
       }
 
       const options = {
@@ -465,7 +468,10 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
       });
       rzp.open();
     } catch (err: any) {
-      toast.error(err.message || "Payment initiation failed");
+      const msg = typeof err?.message === "string" && err.message !== "[object Object]"
+        ? err.message
+        : "Payment initiation failed";
+      toast.error(msg);
       console.error(err);
     } finally {
       setIsPayingEMI(false);

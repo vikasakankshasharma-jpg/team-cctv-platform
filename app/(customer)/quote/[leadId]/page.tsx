@@ -150,6 +150,10 @@ export default async function QuoteResultPage({
       hubs = results[5].value.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
     }
 
+    if (results[6].status === "fulfilled" && results[6].value) {
+      geo_pricing_rules = results[6].value.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+    }
+
     if (lead?.promoter_id) {
       const promoterSnap = await adminDb.collection("promoters").doc(lead.promoter_id).get().catch(() => null);
       if (promoterSnap && promoterSnap.exists) {
@@ -228,7 +232,8 @@ export default async function QuoteResultPage({
     addon_rules,
     settings: finalSettings,
     recommendation_rules,
-    card_layouts
+    card_layouts,
+    geoRules: geo_pricing_rules
   };
 
   const leadPincode = String(

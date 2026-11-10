@@ -248,7 +248,9 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     const wifiCountVal = Number(lead.wizard_answers?.["wifi_camera_count"]) || 0;
     const outdoorCountVal = Number(lead.wizard_answers?.["outdoor_camera_count"]) || 0;
     const indoorCountVal = Number(lead.wizard_answers?.["indoor_camera_count"]) || 0;
-    const isHybridSetup = (wifiCountVal > 0 && (outdoorCountVal > 0 || indoorCountVal > 0)) || String(rawTech).toLowerCase() === "hybrid";
+    const totalSplitCount = outdoorCountVal + indoorCountVal;
+    const wiredCountVal = totalSplitCount > wifiCountVal ? (totalSplitCount - wifiCountVal) : 0;
+    const isHybridSetup = (wifiCountVal > 0 && wiredCountVal > 0) || String(rawTech).toLowerCase() === "hybrid";
 
     const normalizedTech: "HD" | "IP" | "Wireless" = 
       isHybridSetup ? (String(rawTech).toLowerCase().includes("ip") ? "IP" : "HD")
@@ -477,29 +479,58 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
       const isWireless = (cT === "Wireless" || cT === "wireless" || cT === "WIFI" || cT === "WiFi");
       const normalizedTech: "HD" | "IP" | "Wireless" = isWireless ? "Wireless" : (cT as "HD" | "IP");
+      const effectivePlanType = (typeof cO === "string" && ["budget", "recommended", "premium"].includes(cO))
+        ? (cO as any)
+        : (selection.plan_type || "recommended");
+      const effectiveDays = active_checkout_option?.storage_days ?? selection.recording_days;
+      const effectivePincode = selection.lead_pincode || currentLead.address?.pincode || (currentLead.wizard_answers?.lead_pincode as string) || (currentLead.wizard_answers?.customer_pincode as string) || (currentLead.wizard_answers?.pincode as string) || "";
+
+      // Extract resolved mixed camera IDs from activePricing if present
+      const resolvedMixedIds: Record<string, string> = { ...(selection.selected_mixed_camera_ids || {}) };
+      if (activePricing.items && selection.mixed_camera_requirements) {
+        for (const req of selection.mixed_camera_requirements) {
+          if (!resolvedMixedIds[req.type]) {
+            const foundItem = activePricing.items.find((i: any) => i.display_name?.startsWith(`${req.type}:`));
+            if (foundItem?.product_id) {
+              resolvedMixedIds[req.type] = foundItem.product_id;
+            }
+          }
+        }
+      }
+
+      let effectiveQuality = selection.picture_quality || "good";
+      let effectiveResPref = selection.resolution_preference;
+      if (effectivePlanType === "budget" || cO === 1) {
+        effectiveQuality = "good";
+        effectiveResPref = "2MP";
+      } else if (effectivePlanType === "premium" || cO === 3) {
+        effectiveQuality = "crystal_clear";
+        effectiveResPref = undefined;
+      }
 
       const payload = {
         lead_id: currentLead.id,
         selection: {
           ...selection,
           lead_id: currentLead.id,
-          plan_type: selection.plan_type || "recommended",
+          plan_type: effectivePlanType,
           technology: normalizedTech,
           camera_count: selection.camera_count,
           indoor_camera_count: selection.indoor_camera_count ?? (lead.wizard_answers?.indoor_camera_count !== undefined ? Number(lead.wizard_answers.indoor_camera_count) : undefined),
           outdoor_camera_count: selection.outdoor_camera_count ?? (lead.wizard_answers?.outdoor_camera_count !== undefined ? Number(lead.wizard_answers.outdoor_camera_count) : undefined),
           mixed_camera_requirements: selection.mixed_camera_requirements,
-          picture_quality: selection.picture_quality || "good",
-          recording_days: selection.recording_days,
+          selected_mixed_camera_ids: Object.keys(resolvedMixedIds).length > 0 ? resolvedMixedIds : undefined,
+          picture_quality: effectiveQuality,
+          recording_days: effectiveDays,
           selected_addons: selection.selected_addons || [],
           selected_camera_option: typeof cO === "number" ? cO : undefined,
-          selected_camera_id: selection.selected_camera_id || (typeof cO === "string" && !["budget", "recommended", "premium"].includes(cO) ? cO : undefined),
-          selected_recorder_id: selection.selected_recorder_id,
-          selected_storage_id: selection.selected_storage_id,
-          selected_power_id: selection.selected_power_id,
+          selected_camera_id: selection.selected_camera_id || (typeof cO === "string" && !["budget", "recommended", "premium"].includes(cO) ? cO : undefined) || activePricing.camera_device?.id,
+          selected_recorder_id: selection.selected_recorder_id || activePricing.recorder_device?.id,
+          selected_storage_id: selection.selected_storage_id || activePricing.storage_device?.id,
+          selected_power_id: selection.selected_power_id || activePricing.power_device?.id,
           expected_total_payable: activePricing.total_payable,
           brand_preference: selection.brand_preference,
-          resolution_preference: selection.resolution_preference,
+          resolution_preference: effectiveResPref,
           property_type: selection.property_type,
           requested_features: selection.requested_features,
           max_budget: selection.max_budget,
@@ -510,6 +541,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           power_cable_meters: selection.power_cable_meters ?? (typeof lead.wizard_answers?.["power_cable_meters"] === "number" ? lead.wizard_answers["power_cable_meters"] : undefined),
           total_power_cable_meters: selection.total_power_cable_meters ?? (typeof lead.wizard_answers?.["total_power_cable_meters"] === "number" ? lead.wizard_answers["total_power_cable_meters"] : undefined),
           broadband_status: selection.broadband_status || (lead.wizard_answers?.["broadband_status"] as any) || (lead.wizard_answers?.["q_broadband"] as any) || "yes",
+          lead_pincode: effectivePincode,
         },
         address: currentLead.address,
         firebase_uid: currentLead.firebase_uid,
@@ -521,7 +553,11 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);
         console.error("Quote save failed:", errorData);
-        throw new Error(errorData?.message || errorData?.error || "Failed to save quote");
+        const errMsg = errorData?.error?.message 
+          || errorData?.message 
+          || (typeof errorData?.error === "string" ? errorData.error : null) 
+          || "Failed to save quote";
+        throw new Error(errMsg);
       }
       const resData = await res.json();
       setSavedQuoteId(resData.data.id);
@@ -532,7 +568,10 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       router.push(`/quote/${currentLead.id}/review/${resData.data.id}`);
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.message || "Error saving your quote. Please try again.");
+      const msg = typeof err?.message === "string" && err.message !== "[object Object]"
+        ? err.message
+        : "Error saving your quote. Please try again.";
+      toast.error(msg);
     } finally {
       setIsSaving(false);
     }

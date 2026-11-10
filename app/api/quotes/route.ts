@@ -105,6 +105,10 @@ export async function POST(request: NextRequest) {
       selection.broadband_status = (wizardAnswers.broadband_status as any) || (wizardAnswers.q_broadband as any) || "yes";
     }
 
+    if (!selection.lead_pincode) {
+      selection.lead_pincode = (leadData.address?.pincode || (wizardAnswers.lead_pincode as string) || (wizardAnswers.customer_pincode as string) || (wizardAnswers.pincode as string) || "") as string;
+    }
+
     // Normalize technology to match pricing engine expectations
     const rawTech = String(selection.technology || "HD").toLowerCase();
     if (rawTech === "wireless" || rawTech === "wifi" || rawTech === "4g") {
@@ -196,7 +200,9 @@ export async function POST(request: NextRequest) {
       activeOffer: leadData.active_offer,
       geoRules,
       locationParams: {
-        pincode: leadData.address?.pincode
+        pincode: (selection as any).lead_pincode || leadData.address?.pincode,
+        city: leadData.address?.city || (wizardAnswers.city as string),
+        state: leadData.address?.state || (wizardAnswers.state as string)
       }
     });
 

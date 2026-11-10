@@ -38,7 +38,8 @@ export function SupportPanel({ customerInfo, warranties, activeTickets }: { cust
         setIssueDesc("");
         // In a real app, you'd trigger a router refresh or local state update here
       } else {
-        toast.error(data.error);
+        const errSupport = data.error?.message || (typeof data.error === "string" ? data.error : null) || "Failed to create support ticket";
+        toast.error(errSupport);
       }
     } catch (e) {
       toast.error("An error occurred");

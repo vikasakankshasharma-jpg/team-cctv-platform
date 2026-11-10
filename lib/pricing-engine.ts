@@ -109,9 +109,10 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   }
   
   // PINCODE based travel fee logic if explicitly provided in wizard/address
-  if (selection.lead_pincode && settings.visit_charge) {
+  const effectivePincode = selection.lead_pincode || locationParams?.pincode;
+  if (effectivePincode && settings.visit_charge) {
     const affordablePincodes = settings.affordable_pincodes || ["302001", "302002", "302003", "302004", "302005", "302006", "302015", "302016"];
-    if (affordablePincodes.includes(selection.lead_pincode)) {
+    if (affordablePincodes.includes(effectivePincode)) {
       effectiveTravelFee = 0;
     } else {
       effectiveTravelFee = settings.visit_charge;

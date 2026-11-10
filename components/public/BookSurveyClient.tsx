@@ -60,7 +60,8 @@ export function BookSurveyClient() {
       if (data.success) {
         setIsSuccess(true);
       } else {
-        toast.error(data.error);
+        const errBook = data.error?.message || (typeof data.error === "string" ? data.error : null) || "Failed to book survey.";
+        toast.error(errBook);
       }
     } catch (e) {
       toast.error("An error occurred. Please try again.");

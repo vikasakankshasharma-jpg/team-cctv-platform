@@ -9,6 +9,7 @@ import { adminDb } from "../firebase-admin";
 import { COLLECTIONS } from "../constants";
 import { WhatsAppBotState, WhatsAppSession } from "../../types/whatsapp";
 import { MessageBuilder, WhatsAppMessagePayload } from "./message-builder";
+import { addLeadActivity } from "@/app/actions/leads";
 import { 
   generateAndSendPriceRanges, 
   sendBrandVariations, 
@@ -111,6 +112,311 @@ export function buildQuantityListMessage(
       }
     ]
   );
+}
+
+/**
+ * Returns the exact interactive message payload(s) for the customer's current conversation state.
+ * Used for seamless journey retention when off-topic messages or images/documents are received.
+ */
+export function getStepPrompt(
+  session: WhatsAppSession, 
+  state: WhatsAppBotState, 
+  from: string
+): WhatsAppMessagePayload[] {
+  const replies: WhatsAppMessagePayload[] = [];
+  const cleanPhone = from.replace(/\D/g, "");
+  const partnerRef = session.partner_id ? `&ref=${session.partner_id}` : "";
+  const nameParam = session.customer_name && session.customer_name !== "WhatsApp Customer" ? `&name=${encodeURIComponent(session.customer_name)}` : "";
+  const propParam = session.wizard_answers?.property_type ? `&property=${session.wizard_answers.property_type}` : "";
+  const pinParam = session.wizard_answers?.lead_pincode ? `&pincode=${session.wizard_answers.lead_pincode}` : "";
+  const webWizardUrl = `https://cctvquotation.com/wizard?phone=${cleanPhone}${partnerRef}${nameParam}${propParam}${pinParam}&source=wa_prompt_resume`;
+
+  switch (state) {
+    case "IDLE":
+    case "GREETING":
+    case "ASK_PROP": {
+      replies.push(MessageBuilder.buttons(
+        from,
+        `*Step 1 of 6: Property Type*\nWhat type of property are you securing?`,
+        [
+          { id: "prop_home", title: "🏠 Home / Flat" },
+          { id: "prop_office", title: "🏢 Office / Shop" },
+          { id: "prop_factory", title: "🏭 Factory / Farm" }
+        ]
+      ));
+      break;
+    }
+
+    case "ASK_INSTALL_TYPE": {
+      const propTitle = session.wizard_answers?.property_type === "home" ? "Home / Flat" : session.wizard_answers?.property_type === "office" ? "Office / Shop" : "Factory / Farm";
+      replies.push(MessageBuilder.list(
+        from,
+        `✓ Property: *${propTitle}*\n\n*Step 1 of 6: Installation Type*\nWhat kind of installation do you require? Please choose from the list below:`,
+        "Choose Install Type",
+        [
+          {
+            title: "Installation Types",
+            rows: [
+              { id: "ins_new_wired", title: "✨ New Wired Setup", description: "Central DVR/NVR with dedicated copper cabling. Zero signal drop." },
+              { id: "ins_wireless", title: "📶 Smart Wireless CCTV", description: "Zero video cabling. 360° Pan-Tilt & live mobile phone viewing." },
+              { id: "ins_4g_solar", title: "📡 4G SIM / Solar Cam", description: "No Wi-Fi needed. Ideal for farmhouses, empty plots & remote gates." },
+              { id: "ins_addon", title: "⬆️ Add Existing System", description: "Expansion / upgrade with compatibility guarantee." }
+            ]
+          }
+        ]
+      ));
+      break;
+    }
+
+    case "ASK_CAMERA_OUTDOOR": {
+      replies.push(buildQuantityListMessage(
+        from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
+        `*Step 2 of 6: Outdoor Cameras* 🌧️\n\nHow many *Weatherproof Bullet Cameras* do you need mounted outside for your main gate, driveway, parking, or boundary walls?`,
+        "Select Outdoor (0-7)"
+      ));
+      break;
+    }
+
+    case "ASK_CAMERA_INDOOR": {
+      const outCount = session.wizard_answers?.outdoor_camera_count || 0;
+      replies.push(buildQuantityListMessage(
+        from, "in", "Indoor Dome", "Indoor Domes", 1,
+        `✓ Outdoor Cameras: *${outCount} Weatherproof Bullets*\n\n*Step 2 of 6: Indoor Cameras* 🏠\n\nHow many *Compact Ceiling Dome Cameras* do you need mounted inside for your living room, corridors, office, or cashier counters?`,
+        "Select Indoor (0-7)"
+      ));
+      break;
+    }
+
+    case "ASK_HYBRID_WIRELESS": {
+      const totalWired = (session.wizard_answers?.outdoor_camera_count || 0) + (session.wizard_answers?.indoor_camera_count || 0);
+      replies.push(MessageBuilder.list(
+        from,
+        `✓ *Wired Cameras Configured:* ${totalWired} Cameras (${session.wizard_answers?.outdoor_camera_count || 0} Out + ${session.wizard_answers?.indoor_camera_count || 0} In)\n\n📡 *Step 2 of 6: Smart Wireless Add-ons (Wi-Fi / 4G SIM)*\n_Optional • Mix wired DVR + wireless cameras in one system_\n\nDo you want to add wireless cameras for remote gate, terrace, baby room, or farm corners without video cables?`,
+        "Wireless Options",
+        [
+          {
+            title: "Smart Wireless Add-on Options",
+            rows: [
+              { id: "wf_none", title: "❌ None (Proceed to Step 3)", description: "Proceed with standard wired DVR setup only" },
+              { id: "wf_in_ptz", title: "🏠 Indoor 360° Pan-Tilt (Wi-Fi)", description: "Living room, counter, baby room with 2-way talk" },
+              { id: "wf_in_fixed", title: "🏢 Indoor Fixed Dome / Cube (Wi-Fi)", description: "Hallways, reception, cashier desk" },
+              { id: "wf_out_bullet", title: "🌧️ Outdoor Fixed Weatherproof (Wi-Fi)", description: "Main gate, porch, driveway, perimeter" },
+              { id: "wf_out_ptz", title: "🔄 Outdoor 360° Pan-Tilt PTZ (Wi-Fi)", description: "Open courtyard, terrace, front garden" },
+              { id: "wf_4g_solar", title: "🛰️ 4G SIM / Solar Standalone Camera", description: "Farmhouse, empty plot, remote gate (No Wi-Fi needed)" },
+            ]
+          }
+        ]
+      ));
+      break;
+    }
+
+    case "ASK_WIRELESS_QTY": {
+      const variant = session.wizard_answers?.selected_wireless_variant || "wf_in_ptz";
+      const variantTitles: Record<string, { single: string; plural: string }> = {
+        wf_in_ptz: { single: "Indoor 360° Pan-Tilt (Wi-Fi)", plural: "Indoor 360° Pan-Tilt Cameras" },
+        wf_in_fixed: { single: "Indoor Fixed Dome / Cube (Wi-Fi)", plural: "Indoor Fixed Cameras" },
+        wf_out_bullet: { single: "Outdoor Fixed Weatherproof Bullet (Wi-Fi)", plural: "Outdoor Wi-Fi Bullets" },
+        wf_out_ptz: { single: "Outdoor 360° Pan-Tilt PTZ (Wi-Fi)", plural: "Outdoor 360° PTZ Cameras" },
+        wf_4g_solar: { single: "4G SIM / Solar Standalone Camera", plural: "4G SIM Cameras" }
+      };
+      const vInfo = variantTitles[variant] || { single: "Smart Wireless Camera", plural: "Smart Wireless Cameras" };
+      replies.push(buildQuantityListMessage(
+        from, "wfq", vInfo.single, vInfo.plural, 1,
+        `How many *${vInfo.single}* cameras do you need (0 to 32)?`,
+        "Select Quantity (0-7)"
+      ));
+      break;
+    }
+
+    case "ASK_TIMELINE": {
+      replies.push(MessageBuilder.list(
+        from,
+        `⏱️ *WHEN DO YOU WANT WORK DONE ON YOUR SITE?*\nPriority Dispatch Scheduler (Step 2 of 6)\n\nHelps us schedule certified technician availability & prioritize your site survey:`,
+        "Select Timeline",
+        [
+          {
+            title: "Priority Dispatch Scheduler",
+            rows: [
+              { id: "time_asap", title: "⚡ ASAP (1-2 Days)", description: "Ready for instant site survey & work" },
+              { id: "time_week", title: "📅 Within a Week", description: "Finalizing quotation & setup" },
+              { id: "time_month", title: "🗓️ This Month", description: "Site currently under construction" },
+              { id: "time_research", title: "🔍 Just Planning", description: "Comparing prices & options" }
+            ]
+          }
+        ]
+      ));
+      break;
+    }
+
+    case "ASK_STORAGE_DAYS": {
+      replies.push(MessageBuilder.list(
+        from,
+        `💾 *Step 3 of 6: Recording & Storage Backup*\n\nHow long do you want to keep recorded video stored?`,
+        "Select Storage Days",
+        [
+          {
+            title: "Recording Retention",
+            rows: [
+              { id: "storage_7", title: "7 Days Backup", description: "Standard week buffer (Included)" },
+              { id: "storage_15", title: "15 Days Backup", description: "Recommended (1TB surveillance drive)" },
+              { id: "storage_30", title: "30 Days Backup", description: "Full month peace-of-mind (2TB drive)" },
+              { id: "storage_60", title: "60 Days Backup", description: "Maximum commercial compliance" },
+              { id: "storage_0", title: "0 Days (No Recording)", description: "Live mobile viewing only. Zero storage cost." }
+            ]
+          }
+        ]
+      ));
+      break;
+    }
+
+    case "ASK_RECORDING_MODE": {
+      const days = session.wizard_answers?.recording_days ?? 7;
+      replies.push(MessageBuilder.buttons(
+        from,
+        `✓ Storage Retention: *${days} Days*\n\n🎥 *Step 3 of 6: Recording Mode*\n\nHow would you like your system to record?`,
+        [
+          { id: "mode_continuous", title: "⏺️ 24x7 Continuous" },
+          { id: "mode_motion", title: "⚡ Smart Motion" }
+        ]
+      ));
+      break;
+    }
+
+    case "ASK_MOUNTING_CONDITIONS": {
+      replies.push(MessageBuilder.buttons(
+        from,
+        `🏗️ *Step 4 of 6: Approximate Mounting Height*\n\nWhat is the approximate ceiling / mounting height at your site?`,
+        [
+          { id: "mount_standard", title: "Standard (<10ft)" },
+          { id: "mount_high", title: "High (10-15ft)" },
+          { id: "mount_very_high", title: "Very High (15ft+)" }
+        ]
+      ));
+      break;
+    }
+
+    case "ASK_SURFACE_TYPE": {
+      replies.push(MessageBuilder.buttons(
+        from,
+        `🧱 *Step 4 of 6: Surface Type*\n\nWhat surface will the cameras be mounted on?`,
+        [
+          { id: "surf_brick", title: "🧱 Concrete / Brick" },
+          { id: "surf_ceiling", title: "🏢 False Ceiling" }
+        ]
+      ));
+      break;
+    }
+
+    case "ASK_CABLING_OR_POWER": {
+      const isWireless = session.wizard_answers?.technology === "Wireless" || 
+                         session.wizard_answers?.technology_preference === "Wireless";
+      if (isWireless) {
+        replies.push(MessageBuilder.buttons(
+          from,
+          `*Step 4 of 6: Camera Power Point Availability* 🔌\n\nCameras connect wirelessly, but each requires electrical power. Select site power condition:`,
+          [
+            { id: "pwr_socket", title: "🔌 Socket Nearby" },
+            { id: "pwr_wire", title: "⚡ Need Power Wire" },
+            { id: "pwr_survey", title: "📋 Decide on Visit" }
+          ]
+        ));
+      } else {
+        const wiredCams = Math.max(1, (session.wizard_answers?.outdoor_camera_count || 0) + (session.wizard_answers?.indoor_camera_count || 0));
+        const freeAllowance = wiredCams * 15;
+        replies.push(MessageBuilder.buttons(
+          from,
+          `*Step 4 of 6: Cabling & Wire Routing* 🔌\n\nIs your site pre-wired or do we need fresh cables routed?\n\n• *Complimentary:* ~15m wire/camera included free (*${freeAllowance}m total* for your ${wiredCams} cameras).`,
+          [
+            { id: "cab_new", title: "📦 Need New Cabling" },
+            { id: "cab_prewired", title: "🔌 Site Pre-Wired" },
+            { id: "cab_custom", title: "📏 Custom Cable Run" }
+          ]
+        ));
+      }
+      break;
+    }
+
+    case "ASK_CUSTOM_CABLE_METERS": {
+      replies.push(MessageBuilder.text(
+        from,
+        `📏 *Custom Cable Length:*\n\nPlease reply with your estimated total cable run in meters (e.g. 70, 90, 120, 150):`
+      ));
+      break;
+    }
+
+    case "ASK_HYBRID_POWER": {
+      const wifiCount = session.wizard_answers?.wifi_camera_count || 1;
+      replies.push(MessageBuilder.buttons(
+        from,
+        `⚡ *Power for ${wifiCount} Smart Wi-Fi Camera${wifiCount > 1 ? 's' : ''}:*\nYour wired cameras connect to the DVR, but Wi-Fi cameras need electrical power. Select power setup:`,
+        [
+          { id: "pwr_socket", title: "🔌 Socket Nearby" },
+          { id: "pwr_wire", title: "⚡ Need Power Wire" },
+          { id: "pwr_survey", title: "📋 Decide on Visit" }
+        ]
+      ));
+      break;
+    }
+
+    case "ASK_INTERNET": {
+      replies.push(MessageBuilder.buttons(
+        from,
+        `📱 *Step 5 of 6: Remote Mobile Viewing & Internet*\n\nChoose how you want to watch live camera video on your smartphone:`,
+        [
+          { id: "net_wifi", title: "📶 Have Wi-Fi Router" },
+          { id: "net_4g", title: "🌐 Add 4G SIM Router" },
+          { id: "net_offline", title: "📺 Offline / TV Only" }
+        ]
+      ));
+      break;
+    }
+
+    case "ASK_PINCODE": {
+      replies.push(MessageBuilder.text(
+        from,
+        `📍 *Step 6 of 6: Site Location & Pincode Dispatch*\n\nPlease enter your *6-digit Indian Pincode* (e.g. 302012) or tap the clip 📎 icon to share your Location Pin so we can calculate exact local delivery and certified installation rates for your area.`
+      ));
+      break;
+    }
+
+    case "ASK_NAME": {
+      const knownName = session.customer_name && session.customer_name !== "WhatsApp Customer" && !/^\+?\d+$/.test(session.customer_name)
+        ? session.customer_name
+        : "";
+      const namePrompt = knownName
+        ? `👤 *Final Step: What is your full name?*\n\nPlease reply with your name (or type *1* or *Yes* to use *${knownName}*).\n\n_This will appear on your official GST quotation PDF, 7-day price lock, and 1-year on-site warranty certificate._`
+        : `👤 *Final Step: What is your full name?*\n\nPlease reply with your full name (e.g. *Rahul Kumar*).\n\n_This will appear on your official GST quotation PDF, 7-day price lock, and 1-year on-site warranty certificate._`;
+      replies.push(MessageBuilder.text(from, namePrompt));
+      break;
+    }
+
+    case "SHOW_PRICE_RANGES": {
+      replies.push(MessageBuilder.buttons(
+        from,
+        `📊 *Your Quotation Packages Are Ready!*\n\nTap below to inspect brand packages and locked trade prices:`,
+        [
+          { id: "back_to_brands", title: "📦 View Brand Packages" },
+          { id: "open_web_studio", title: "🌐 Open 3D Web Studio" }
+        ]
+      ));
+      break;
+    }
+
+    default: {
+      replies.push(MessageBuilder.buttons(
+        from,
+        `*Step 1 of 6: Property Type*\nWhat type of property are you securing?`,
+        [
+          { id: "prop_home", title: "🏠 Home / Flat" },
+          { id: "prop_office", title: "🏢 Office / Shop" },
+          { id: "prop_factory", title: "🏭 Factory / Farm" }
+        ]
+      ));
+      break;
+    }
+  }
+
+  return replies;
 }
 
 export function cleanInboundText(content: any): string {
@@ -315,22 +621,35 @@ async function processIncomingMessageInternal(
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 3. IN-CHAT COMPETITOR QUOTE UPLOADER (Images & PDF Documents)
+  // 3. INBOUND MEDIA HANDLER (Site Photos, Blueprints & Competitor Quotations)
+  // Preserves active customer journey, attaches media to CRM lead, and re-prompts the active step
   // ──────────────────────────────────────────────────────────────────────────
   if (incomingType === "image" || incomingType === "document") {
-    await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
-      competitor_quote_received: true,
-      competitor_quote_media_id: context?.mediaId || null,
-      competitor_quote_received_at: new Date(),
-      status: "price_match_requested",
-      updated_at: new Date(),
-    });
+    if (leadId) {
+      await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
+        competitor_quote_received: true,
+        competitor_quote_media_id: context?.mediaId || null,
+        competitor_quote_received_at: new Date(),
+        has_media_attachments: true,
+        updated_at: new Date(),
+      }).catch(console.error);
 
-    const replyMsg = MessageBuilder.text(
-      from,
-      `✅ *We received your competitor's quote!*\n\nOur pricing team is analyzing it to guarantee a 5%–10% lower price match. We will send you your customized discounted quote shortly.\n\nIn the meantime, feel free to continue configuring your options below.`
-    );
-    await sendWhatsAppMessages([replyMsg]);
+      await addLeadActivity(
+        leadId,
+        "customer_media_uploaded",
+        `Received ${incomingType} from customer via WhatsApp. Preserved active step: ${session.state}`
+      ).catch(console.error);
+    }
+
+    const ackText = 
+      `📸 *Photo / Document Received & Saved to Your Project File!* 📁\n\n` +
+      `• *Competitor Quotation:* If this is an offline quote, our desk will analyze it for our *5%–10% Price Match Guarantee*.\n` +
+      `• *Site Photo:* If this is your gate, walls, ceiling, or DVR, our certified technician will review it for your *Free On-Site Survey*.\n\n` +
+      `👇 *Let's continue customizing your CCTV setup:*`;
+
+    const ackMsg = MessageBuilder.text(from, ackText);
+    const stepPrompts = getStepPrompt(session, session.state, from);
+    await sendWhatsAppMessages([ackMsg, ...stepPrompts]);
     return;
   }
 
@@ -423,13 +742,13 @@ async function processIncomingMessageInternal(
   }
 
   // Handle explicit request for website / web wizard at any point
-  const rawInbound = typeof content === "string" ? content.toLowerCase().trim() : "";
+  const rawInbound = typeof content === "string" ? cleanInboundText(content).toLowerCase().trim() : "";
   if (rawInbound === "website" || rawInbound === "web" || rawInbound === "link" || rawInbound === "web wizard" || rawInbound === "studio") {
     const cleanPhone = from.replace(/\D/g, "");
     const partnerRef = session.partner_id ? `&ref=${session.partner_id}` : "";
     const nameParam = session.customer_name && session.customer_name !== "WhatsApp Customer" ? `&name=${encodeURIComponent(session.customer_name)}` : "";
     const propParam = session.wizard_answers?.property_type ? `&property=${session.wizard_answers.property_type}` : "";
-    const pinParam = session.wizard_answers?.pincode ? `&pincode=${session.wizard_answers.pincode}` : "";
+    const pinParam = session.wizard_answers?.lead_pincode || session.wizard_answers?.pincode ? `&pincode=${session.wizard_answers?.lead_pincode || session.wizard_answers?.pincode}` : "";
     const webWizardUrl = `https://cctvquotation.com/wizard?phone=${cleanPhone}${partnerRef}${nameParam}${propParam}${pinParam}&source=wa_chat_help`;
     await sendWhatsAppMessages([
       MessageBuilder.text(
@@ -438,6 +757,106 @@ async function processIncomingMessageInternal(
       )
     ]);
     return;
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // CONTEXTUAL OFF-TOPIC FAQ & ASSISTANCE INTENT CLASSIFIER
+  // Intercepts general queries (callbacks, pricing, warranty, locations)
+  // without breaking the customer journey or polluting form data.
+  // ──────────────────────────────────────────────────────────────────────────
+  if (incomingType === "text" && session.state !== "IDLE" && session.state !== "GREETING" && session.state !== "SHOW_PRICE_RANGES") {
+    const textLower = rawInbound;
+
+    // 1. Human Specialist / Phone Callback Request
+    const isCallRequest = 
+      /\b(call|calling|phone|contact|baat|specialist|executive|agent|talk|dial|karo|batao|phone pe|call me)\b/i.test(textLower) &&
+      !/^\d+$/.test(textLower) &&
+      !textLower.startsWith("out_") &&
+      !textLower.startsWith("in_") &&
+      !textLower.startsWith("wf_") &&
+      !textLower.startsWith("storage_");
+
+    if (isCallRequest) {
+      if (leadId) {
+        await addLeadActivity(
+          leadId,
+          "urgent_callback_requested",
+          `Customer requested human specialist call via WhatsApp during state: ${session.state}. Query: "${rawInbound}"`
+        ).catch(console.error);
+        await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
+          priority: "URGENT",
+          callback_requested: true,
+          callback_requested_at: new Date(),
+          updated_at: new Date()
+        }).catch(console.error);
+      }
+
+      const callAck = MessageBuilder.text(
+        from,
+        `📞 *A certified CCTV specialist has been notified to call you on this number shortly!* 🤝\n\n` +
+        `_In the meantime, please complete your equipment options below so we have your specifications and trade discounts ready:_`
+      );
+      const stepPrompts = getStepPrompt(session, session.state, from);
+      await sendWhatsAppMessages([callAck, ...stepPrompts]);
+      return;
+    }
+
+    // 2. Price / Discount / Negotiation Query (only if not an exact quantity/choice input)
+    const isPriceQuery = 
+      /\b(rate|price|cost|kitna|kitne|discount|offer|offers|sasta|cheapest|budget|kam|bhav|paisa|paise)\b/i.test(textLower) &&
+      !/^\d+$/.test(textLower) &&
+      !textLower.startsWith("out_") &&
+      !textLower.startsWith("in_") &&
+      !textLower.startsWith("wf_") &&
+      !textLower.startsWith("storage_");
+
+    if (isPriceQuery) {
+      const priceAck = MessageBuilder.text(
+        from,
+        `💰 *Wholesale Direct Rates with 100% Price Match Guarantee!* 🏷️\n\n` +
+        `• Bullet & Dome Cameras start from *₹1,409/camera + 18% GST* with 1-Year Doorstep On-Site Warranty.\n` +
+        `• All packages include DVR/NVR, hard drive storage, wiring, connectors, and professional installation.\n\n` +
+        `_Your exact package total depends on your camera count and cable length. Please answer below to see your instant multi-brand quote:_`
+      );
+      const stepPrompts = getStepPrompt(session, session.state, from);
+      await sendWhatsAppMessages([priceAck, ...stepPrompts]);
+      return;
+    }
+
+    // 3. Warranty / Guarantee / Repair Query
+    const isWarrantyQuery = 
+      /\b(warranty|guarantee|kharab|damage|repair|replace|replacement|service charge|complaint)\b/i.test(textLower) &&
+      !/^\d+$/.test(textLower);
+
+    if (isWarrantyQuery) {
+      const warrantyAck = MessageBuilder.text(
+        from,
+        `🛡️ *1-Year Free Doorstep On-Site Warranty + Brand Replacement Guarantee!*\n\n` +
+        `Every installation by TEAM CCTV includes 12 months of free on-site service. If any camera, cable, or power supply malfunctions, a certified technician visits your doorstep at *₹0 charge*.\n\n` +
+        `_Please choose an option below to continue building your quote:_`
+      );
+      const stepPrompts = getStepPrompt(session, session.state, from);
+      await sendWhatsAppMessages([warrantyAck, ...stepPrompts]);
+      return;
+    }
+
+    // 4. Service Area / Availability Query (only if NOT in ASK_PINCODE where city names are pincode shortcuts)
+    const isLocationQuery = 
+      session.state !== "ASK_PINCODE" && 
+      /\b(service area|locations|coverage|kahan|where|office address|head office)\b/i.test(textLower) &&
+      !/^\d+$/.test(textLower);
+
+    if (isLocationQuery) {
+      const locationAck = MessageBuilder.text(
+        from,
+        `🚚 *Complete Doorstep Coverage across Rajasthan, NCR & Major Hubs!*\n\n` +
+        `We dispatch certified local technicians directly from our nearest Sub-Post Office micro-hubs with same-day/next-day inventory.\n\n` +
+        `_Please answer the question below to match your nearest local hub:_`
+      );
+      const stepPrompts = getStepPrompt(session, session.state, from);
+      await sendWhatsAppMessages([locationAck, ...stepPrompts]);
+      return;
+    }
   }
 
   let replies: WhatsAppMessagePayload[] = [];
@@ -1889,26 +2308,40 @@ async function processIncomingMessageInternal(
           }
         }
 
-        // Otherwise parse typed text as customer name
-        if (!finalName) {
+        // Check if input is an off-topic phrase or question rather than a person's name
+        const nameStopWords = [
+          "price", "rate", "cost", "call", "phone", "karo", "discount", "offer", "cctv", 
+          "camera", "wifi", "warranty", "help", "bhai", "sir", "ji", "hello", "hi", 
+          "testing", "photo", "image", "quote", "quotation", "kya", "hai", "mujhe", 
+          "chahiye", "nahi", "batana", "no", "yes", "ok", "pincode", "details", "bolo"
+        ];
+        const isOffTopicInName = nameStopWords.some(sw => lower.includes(sw));
+
+        // Otherwise parse typed text as customer name if valid human name
+        if (!finalName && !isOffTopicInName) {
           const cleaned = text.replace(/[^a-zA-Z\s\.]/g, "").trim();
           const words = cleaned.split(/\s+/).filter(w => w.length > 0);
-          if (words.length >= 1 && cleaned.length >= 2) {
+          if (words.length >= 1 && cleaned.length >= 2 && words.length <= 4) {
             finalName = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
           }
         }
 
         // If user typed skip or unable to parse, fallback gracefully
-        if (!finalName && (lower.includes("skip") || lower.includes("no") || lower.includes("later"))) {
+        if (!finalName && (lower.includes("skip") || lower.includes("no name") || lower.includes("later"))) {
           finalName = (session.customer_name && session.customer_name !== "WhatsApp Customer") 
             ? session.customer_name 
             : "Valued Customer";
         }
 
         if (!finalName) {
+          const knownName = session.customer_name && session.customer_name !== "WhatsApp Customer" && !/^\+?\d+$/.test(session.customer_name)
+            ? session.customer_name
+            : "";
           replies.push(MessageBuilder.text(
             from,
-            `👤 *Please enter your full name (e.g. Rahul Kumar):*\n\nThis personalizes your official CCTV quotation PDF and activates your warranty certificate.`
+            `👤 *Please enter your full name (e.g. Rahul Kumar):*\n\n` +
+            `This personalizes your official CCTV quotation PDF and activates your 1-Year Free Doorstep Warranty Certificate.` +
+            (knownName ? `\n\n_Or reply *1* or *Yes* to use *${knownName}*._` : "")
           ));
           break;
         }
