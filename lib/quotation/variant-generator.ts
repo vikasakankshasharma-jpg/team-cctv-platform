@@ -94,20 +94,39 @@ export function generateAllCatalogVariations(params: {
     }
   });
 
+  const defaultBrandOrder = ["all", "aproducts", "budget", "cpplus", "hikvision", "dahua", "prama", "trueview", "secureye"];
   const orderedBrandKeys = (settings?.brand_tabs_order && settings.brand_tabs_order.length > 0) 
     ? settings.brand_tabs_order 
-    : ["all", "budget", "cpplus", "hikvision", "dahua", "prama", "trueview", "secureye"];
+    : defaultBrandOrder;
 
   const targetBrands: { brandKey: string; brandName: string }[] = [];
-  orderedBrandKeys.forEach(k => {
-    if (k !== "all" && brandSet.has(k)) {
-      targetBrands.push({ brandKey: k, brandName: getCanonicalBrandName(k) || k.toUpperCase() });
+  const seenBrandKeys = new Set<string>();
+
+  const addTargetBrand = (k: string) => {
+    if (!k || k === "all") return;
+    let canonicalKey = k;
+    if (!brandSet.has(canonicalKey)) {
+      if (canonicalKey === "budget" && brandSet.has("aproducts")) canonicalKey = "aproducts";
+      else if (canonicalKey === "aproducts" && brandSet.has("budget")) canonicalKey = "budget";
     }
+    if (brandSet.has(canonicalKey) && !seenBrandKeys.has(canonicalKey)) {
+      seenBrandKeys.add(canonicalKey);
+      const displayName = getCanonicalBrandName(canonicalKey) || (canonicalKey === "aproducts" ? "A+ Products (Budget)" : canonicalKey.toUpperCase());
+      targetBrands.push({ brandKey: canonicalKey, brandName: displayName });
+    }
+  };
+
+  // Add according to preferred order first
+  orderedBrandKeys.forEach(addTargetBrand);
+
+  // Guarantee any remaining brand in brandSet (e.g. Dahua, Secureye, A+ Products) is never omitted
+  brandSet.forEach(k => {
+    addTargetBrand(k);
   });
 
   // Fallback if none matched
   if (targetBrands.length === 0) {
-    targetBrands.push({ brandKey: "budget", brandName: "Budget Brand" });
+    targetBrands.push({ brandKey: "aproducts", brandName: "A+ Products (Budget)" });
   }
 
   const allVariants: PricingResult[] = [];
@@ -124,6 +143,13 @@ export function generateAllCatalogVariations(params: {
   targetBrands.forEach(b => {
     const brandVariations: PricingResult[] = [];
 
+    // Check if customer explicitly chose 7-day Economy Storage (500GB HDD match)
+    const isEconomyRequested = selection.recording_days === 7 || (selection as any).is_economy_storage === true;
+    const targetStorageTB = isEconomyRequested ? 0.5 
+      : (selection.recording_days === 15 ? 1.0 
+      : (selection.recording_days === 30 ? 2.0 
+      : (selection.recording_days === 60 ? 4.0 : 1.0)));
+
     // 1. Standard Quote
     const standardSel: ConfiguratorSelection = {
       ...selection,
@@ -132,6 +158,8 @@ export function generateAllCatalogVariations(params: {
       outdoor_camera_count: outCount,
       indoor_camera_count: inCount,
       camera_count: totalCams,
+      is_economy_storage: isEconomyRequested as any,
+      target_storage_tb: targetStorageTB,
     };
 
     const rawStandardPricing = calculatePricing({
@@ -150,7 +178,7 @@ export function generateAllCatalogVariations(params: {
     if (!rawStandardPricing.error) {
       (rawStandardPricing as any).brandKey = b.brandKey;
       (rawStandardPricing as any).brandName = b.brandName;
-      (rawStandardPricing as any).is_economy_storage = false;
+      (rawStandardPricing as any).is_economy_storage = isEconomyRequested;
       brandVariations.push(rawStandardPricing);
       allVariants.push(rawStandardPricing);
     }
@@ -185,14 +213,16 @@ export function generateAllCatalogVariations(params: {
       allVariants.push(rawColorNightPricing);
     }
 
-    // 3. Economy Storage Match Quote (if requested > 3 days)
-    const reqDays = selection.recording_days ?? 15;
+    // 3. Economy Storage Match Quote (500GB HDD / 64GB SD)
+    // If standard was calculated with 1TB+ HDD (e.g. 15 or 30 days), compute the 500GB Economy Match savings
     let economyPricing: PricingResult | undefined = undefined;
 
-    if (reqDays > 3) {
+    if (!isEconomyRequested) {
       const economySel: ConfiguratorSelection = {
         ...standardSel,
-        recording_days: 3, // Forces 500GB HDD / 64GB SD
+        recording_days: 7, // 7 Days Economy Match
+        is_economy_storage: true as any,
+        target_storage_tb: 0.5 as any,
       };
 
       const rawEconomyPricing = calculatePricing({
@@ -217,6 +247,9 @@ export function generateAllCatalogVariations(params: {
         brandVariations.push(rawEconomyPricing);
         allVariants.push(rawEconomyPricing);
       }
+    } else {
+      // If 7 days was requested, standard IS already the economy package!
+      economyPricing = rawStandardPricing;
     }
 
     if (brandVariations.length > 0) {

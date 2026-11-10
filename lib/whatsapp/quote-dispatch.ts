@@ -28,8 +28,16 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
     const selection = (session.wizard_answers || {}) as ConfiguratorSelection;
     const cablingDone = session.wizard_answers?.cabling_done === true || session.wizard_answers?.cabling_status === "done";
     const totalCams = selection.camera_count || 4;
-    const tech = selection.technology || "IP";
-    const storageDays = selection.recording_days !== undefined ? selection.recording_days : 15;
+    
+    // Explicit technology resolution:
+    // Pure wireless setups (Wi-Fi only, 4G solar) stay Wireless.
+    // Standard wired/hybrid setups default to "HD" (Standard HD Analog / DVR - Lowest Price Guarantee) to match the website.
+    // If the customer specifically chose "IP", we respect "IP".
+    const isPureWireless = selection.technology === "Wireless" || selection.technology === "4G_Solar" || (selection as any).installation_type === "wireless";
+    const rawTech = String(selection.technology || "").toUpperCase();
+    const tech = isPureWireless ? "Wireless" : (rawTech === "IP" ? "IP" : "HD");
+    selection.technology = tech as any;
+    const storageDays = selection.recording_days !== undefined ? selection.recording_days : 7;
 
     // Evaluate site prep surcharge flags (ladder fee for high ceilings)
     if (!selection.site_surcharge_flags && (selection.ceiling_height === "high" || selection.ceiling_height === "very_high")) {
@@ -75,6 +83,26 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
       return;
     }
 
+    // Also calculate Digital IP alternative if currently in HD mode to present transparent dual-spectrum choices
+    let proIpLowestPrice: number | null = null;
+    if (tech === "HD") {
+      try {
+        const ipCatalogResult = generateAllCatalogVariations({
+          selection: { ...selection, technology: "IP" },
+          products,
+          addons,
+          settings,
+          cablingDone,
+          promoterDiscount,
+        });
+        if (ipCatalogResult.lowestOverallQuote) {
+          proIpLowestPrice = ipCatalogResult.lowestOverallQuote.total_payable;
+        }
+      } catch (err) {
+        console.warn("Could not compute IP alternative pricing:", err);
+      }
+    }
+
     // Cache the generated quotes into the session document for rapid selection
     const sessionRef = adminDb.collection(COLLECTIONS.WHATSAPP_SESSIONS).doc(phone);
     await sessionRef.update({
@@ -95,7 +123,7 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
     let summaryText = `📷 *COMPLETE CCTV PRICE SUMMARY${customerDisplayName}*\n`;
     summaryText += `━━━━━━━━━━━━━━━━━━━━━\n`;
     summaryText += `📍 *Site Setup:* ${totalCams} Cameras (${formatCameraBreakdown(selection)})\n`;
-    summaryText += `⚡ *Technology:* ${tech === "IP" ? "Digital IP (Best Quality)" : tech === "HD" ? "HD Analog (Lowest Cost)" : "Smart Wireless"}\n`;
+    summaryText += `⚡ *Technology:* ${tech === "IP" ? "Digital IP (Best Quality)" : tech === "HD" ? "HD Analog (Lowest Price Guarantee)" : "Smart Wireless"}\n`;
     summaryText += `💾 *Storage:* ${storageDays === 0 ? "Live Viewing Only (No HDD)" : `${storageDays} Days Retention (${selection.recording_mode === "motion" ? "Motion" : "24x7"})`}\n`;
     summaryText += `🔌 *Cabling:* ${cablingDone ? "Pre-Wired Site (Fitting only)" : "Need New Cabling (~15m wire/cam incl)"}\n`;
     if (selection.broadband_status === "sim_router") {
@@ -105,15 +133,23 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
       summaryText += `🎁 *Partner Discount Applied:* Code ${partnerId} (${promoterDiscount.percent ? `${promoterDiscount.percent}% Off` : `₹${promoterDiscount.flat} Flat Off`})\n`;
     }
     summaryText += `✅ *All prices include:* Cameras, DVR/NVR, Storage, Cables, Connectors, Installation Labor & 18% GST (Zero Hidden Costs!)\n\n`;
-    summaryText += `🏆 *ALL-INCLUSIVE BRAND PRICE SPECTRUM:*\n\n`;
+
+    if (tech === "HD" && proIpLowestPrice) {
+      summaryText += `💡 *DUAL SETUP CHOICES:*\n`;
+      summaryText += `🏷️ *Value Tier (HD Analog DVR):* From *₹${lowestOverallQuote.total_payable.toLocaleString('en-IN')}* (Best for Price-Conscious)\n`;
+      summaryText += `💎 *Pro Tier (Digital IP NVR):* From *₹${proIpLowestPrice.toLocaleString('en-IN')}* (Best for 4K / Commercial)\n\n`;
+    }
+
+    summaryText += `🏆 *ALL-INCLUSIVE BRAND PRICE SPECTRUM (${tech === "HD" ? "Value Tier - HD Analog" : tech === "IP" ? "Pro Tier - Digital IP" : "Smart Wireless"}):*\n\n`;
 
     brandSummaries.forEach((b, idx) => {
-      summaryText += `${idx + 1}️⃣ *${b.brandName.toUpperCase()}*\n`;
+      const isLowest = b.minPrice === lowestOverallQuote.total_payable;
+      summaryText += `${idx + 1}️⃣ *${b.brandName.toUpperCase()}*${isLowest ? " ⚡ *Lowest Entry Package*" : ""}\n`;
       summaryText += `   💰 *₹${b.minPrice.toLocaleString('en-IN')} to ₹${b.maxPrice.toLocaleString('en-IN')}*\n`;
-      if (b.economyQuote) {
+      if (b.economyQuote && b.economyQuote.total_payable < (b.standardQuote.total_payable || Infinity)) {
         summaryText += `   • Economy 500GB: ₹${b.economyQuote.total_payable.toLocaleString('en-IN')} (Save ₹${((b.standardQuote.total_payable || 0) - b.economyQuote.total_payable).toLocaleString('en-IN')})\n`;
       }
-      summaryText += `   • Standard ${storageDays} Days (1TB+): ₹${b.standardQuote.total_payable.toLocaleString('en-IN')}\n\n`;
+      summaryText += `   • Standard ${storageDays} Days: ₹${b.standardQuote.total_payable.toLocaleString('en-IN')}\n\n`;
     });
 
     const webStudioUrl = session.lead_id 
@@ -128,20 +164,30 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
 
     await sendMsg(MessageBuilder.text(phone, summaryText));
 
-    // 2. Interactive List Menu: Explore Brand Options
-    const brandRows = brandSummaries.slice(0, 7).map(b => ({
-      id: `view_brand_${b.brandKey}`,
-      title: `${b.brandName} (₹${Math.round(b.minPrice / 1000)}k-₹${Math.round(b.maxPrice / 1000)}k)`.slice(0, 24),
-      description: `₹${b.minPrice.toLocaleString('en-IN')} - ₹${b.maxPrice.toLocaleString('en-IN')} (${b.variations.length} packages)`.slice(0, 72)
-    }));
-
     // Add Special Quick Action Rows
-    const specialRows = [
+    const specialRows: any[] = [
       {
         id: "select_lowest_quote",
         title: "⚡ Best Value Quote",
-        description: `Lowest price package: ₹${lowestOverallQuote.total_payable.toLocaleString('en-IN')} (${lowestOverallQuote.camera_device?.brand || "Budget"})`.slice(0, 72)
-      },
+        description: `Lowest price package: ₹${lowestOverallQuote.total_payable.toLocaleString('en-IN')} (${lowestOverallQuote.camera_device?.brand || "A+ Products"})`.slice(0, 72)
+      }
+    ];
+
+    if (tech === "HD" && proIpLowestPrice) {
+      specialRows.push({
+        id: "toggle_tech_ip",
+        title: "💎 View Pro IP Packages",
+        description: `Switch to Digital IP / NVR setups (from ₹${proIpLowestPrice.toLocaleString('en-IN')})`.slice(0, 72)
+      });
+    } else if (tech === "IP") {
+      specialRows.push({
+        id: "toggle_tech_hd",
+        title: "🏷️ View Value HD Analog",
+        description: "Switch to HD Analog / DVR packages (lowest price guarantee)".slice(0, 72)
+      });
+    }
+
+    specialRows.push(
       {
         id: "upload_competitor_quote",
         title: "📸 Upload Offline Quote",
@@ -152,7 +198,15 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
         title: "🎨 Open 3D Web Studio",
         description: "Inspect 3D camera angles and compare in browser".slice(0, 72)
       }
-    ];
+    );
+
+    // Limit brandRows so total rows (brandRows + specialRows) <= 10 (WhatsApp Cloud API maximum)
+    const maxBrandRows = Math.max(1, 10 - specialRows.length);
+    const brandRows = brandSummaries.slice(0, maxBrandRows).map(b => ({
+      id: `view_brand_${b.brandKey}`,
+      title: `${b.brandName} (₹${Math.round(b.minPrice / 1000)}k-₹${Math.round(b.maxPrice / 1000)}k)`.slice(0, 24),
+      description: `₹${b.minPrice.toLocaleString('en-IN')} - ₹${b.maxPrice.toLocaleString('en-IN')} (${b.variations.length} packages)`.slice(0, 72)
+    }));
 
     await sendMsg(MessageBuilder.list(
       phone,
@@ -184,7 +238,11 @@ export async function sendBrandVariations(phone: string, session: WhatsAppSessio
 
     const selection = (session.wizard_answers || {}) as ConfiguratorSelection;
     const cablingDone = session.wizard_answers?.cabling_done === true || session.wizard_answers?.cabling_status === "done";
-    const reqDays = selection.recording_days !== undefined ? selection.recording_days : 15;
+    const isPureWireless = selection.technology === "Wireless" || selection.technology === "4G_Solar" || (selection as any).installation_type === "wireless";
+    const rawTech = String(selection.technology || "").toUpperCase();
+    const tech = isPureWireless ? "Wireless" : (rawTech === "IP" ? "IP" : "HD");
+    selection.technology = tech as any;
+    const reqDays = selection.recording_days !== undefined ? selection.recording_days : 7;
 
     if (!selection.site_surcharge_flags && (selection.ceiling_height === "high" || selection.ceiling_height === "very_high")) {
       selection.site_surcharge_flags = { requiresLadderFee: true };

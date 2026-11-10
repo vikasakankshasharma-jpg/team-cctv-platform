@@ -316,7 +316,7 @@ export async function processIncomingMessage(
       const storageDays = raw.storage_days !== undefined 
         ? parseInt(String(raw.storage_days), 10) 
         : (session.wizard_answers?.recording_days ?? 15);
-      const techPref = raw.technology || (wifiTotal > 0 && outdoor + indoor === 0 ? "Wireless" : "IP");
+      const techPref = raw.technology || (wifiTotal > 0 && outdoor + indoor === 0 ? "Wireless" : "HD");
       const pincode = raw.lead_pincode || raw.pincode || session.wizard_answers?.lead_pincode;
 
       session.wizard_answers = {
@@ -630,6 +630,7 @@ export async function processIncomingMessage(
         } else if (choice === "new") {
           // New Wired: Matches website WizardClientV2.tsx (Card 1: Outdoor Bullets, Card 2: Indoor Domes, Card 3: Optional Wireless)
           session.wizard_answers.installation_type = "new";
+          session.wizard_answers.technology = "HD";
           session.wizard_answers.technology_preference = "HD";
           nextState = "ASK_CAMERA_OUTDOOR";
 
@@ -1851,6 +1852,24 @@ export async function processIncomingMessage(
               return;
             }
           } else if (content === "back_to_brands") {
+            await generateAndSendPriceRanges(from, session);
+            return;
+          } else if (content === "toggle_tech_ip" || content === "view_pro_ip") {
+            session.wizard_answers.technology = "IP";
+            session.wizard_answers.technology_preference = "IP";
+            await sessionRef.update({
+              "wizard_answers.technology": "IP",
+              "wizard_answers.technology_preference": "IP"
+            });
+            await generateAndSendPriceRanges(from, session);
+            return;
+          } else if (content === "toggle_tech_hd" || content === "view_value_hd") {
+            session.wizard_answers.technology = "HD";
+            session.wizard_answers.technology_preference = "HD";
+            await sessionRef.update({
+              "wizard_answers.technology": "HD",
+              "wizard_answers.technology_preference": "HD"
+            });
             await generateAndSendPriceRanges(from, session);
             return;
           } else if (content.startsWith("action_")) {
