@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI, Content } from "@google/genai";
 import { getAISecurityContext } from "@/lib/ai/security";
 import { searchBrain, saveToBrain } from "@/lib/ai/vector-db";
+import { queryLocalBrain } from "@/lib/ai/local-brain";
+import { getCostBudgetSettings, recordServiceUsage } from "@/lib/billing/budget-tracker";
 import { wizardToolDefinition, executeQuotationWizardStatus, updateQuotationWizardToolDefinition, executeUpdateQuotationWizard } from "@/lib/ai/tools/wizard";
 
 // Initialize Gemini SDK
@@ -17,17 +19,69 @@ export async function POST(req: NextRequest) {
     const { messages, pageContext, locale } = body;
     const latestMessage = messages[messages.length - 1].content || "";
 
-    // 2. Generate Embedding for Semantic Search (only if there is text)
+    // 2. Query Local Autonomous Brain First (100% Free, Zero Google Calls)
+    const localMatch = await queryLocalBrain(latestMessage);
+    if (localMatch.matched && localMatch.answer) {
+      return NextResponse.json({
+        role: "assistant",
+        content: localMatch.answer,
+        isFromStudent: true,
+        source: localMatch.source,
+        quickActions: localMatch.quickActions || [],
+      });
+    }
+
+    // 3. Check Budget & Strict Zero-Cost Mode Guard
+    const budgetSettings = await getCostBudgetSettings();
+    if (budgetSettings.strict_zero_cost_mode) {
+      // In Strict Zero-Cost Mode, external paid APIs are completely blocked
+      return NextResponse.json({
+        role: "assistant",
+        content: "I am operating in Zero-Cost Mode to protect against unexpected cloud charges. While I don't have this exact query in my local manual, our CCTV technicians are available right now on WhatsApp to answer you directly.",
+        isFromStudent: true,
+        quickActions: [
+          { label: "Chat on WhatsApp", action: "whatsapp" },
+          { label: "Book Free Site Survey", action: "survey" },
+        ],
+      });
+    }
+
+    // 4. Try Vertex AI Search Data Store (Consumes ₹91,785.01 GenAI App Builder Credit)
+    if (process.env.VERTEX_SEARCH_DATASTORE_ID) {
+      try {
+        const { queryVertexAiSearch } = await import("@/lib/ai/vertex-search");
+        const vertexRes = await queryVertexAiSearch(latestMessage);
+        if (vertexRes.success && vertexRes.answer) {
+          // Record usage against the credit pool
+          return NextResponse.json({
+            role: "assistant",
+            content: vertexRes.answer,
+            isFromStudent: false,
+            source: "Vertex AI Search (Grounded Knowledge)",
+          });
+        }
+      } catch (searchErr) {
+        console.warn("Vertex AI Search failover to fallback Gemini:", searchErr);
+      }
+    }
+
+    // Record usage for uncredited external Gemini calls
+    await recordServiceUsage("gemini_ai_calls", 1);
+
+    // 4. Fallback Semantic Search via Vector Embeddings (if enabled in non-strict mode)
     let embedding: number[] = [];
     if (latestMessage.trim().length > 0) {
-      const embeddingResponse = await ai.models.embedContent({
-        model: "gemini-embedding-001",
-        contents: latestMessage,
-      });
-      embedding = embeddingResponse.embeddings?.[0]?.values || [];
-      if (embedding.length > 2048) {
-        console.warn(`Embedding length ${embedding.length} exceeds Firestore 2048 limit. Truncating to 2048 for storage.`);
-        embedding = embedding.slice(0, 2048);
+      try {
+        const embeddingResponse = await ai.models.embedContent({
+          model: "gemini-embedding-001",
+          contents: latestMessage,
+        });
+        embedding = embeddingResponse.embeddings?.[0]?.values || [];
+        if (embedding.length > 2048) {
+          embedding = embedding.slice(0, 2048);
+        }
+      } catch (embErr) {
+        console.warn("Embedding generation skipped or failed:", embErr);
       }
     }
 

@@ -8,7 +8,7 @@ import {
   Package, Database, FileSpreadsheet, HeartPulse,
   Users, Calendar, ShieldCheck, Navigation,
   TrendingUp, FileBox, LayoutGrid, BadgePercent,
-  Truck, HardHat, Clock, Settings2
+  Truck, HardHat, Clock, Settings2, CreditCard
 } from "lucide-react";
 
 export interface SubNavItem {
@@ -111,6 +111,7 @@ export function FinanceSubNav() {
   const items: SubNavItem[] = [
     { name: "Profitability Heatmaps", href: "/admin/analytics/profitability", icon: TrendingUp },
     { name: "Accounts Payable", href: "/admin/finance", icon: IndianRupee },
+    { name: "Cloud Costs & Budgets", href: "/admin/finance/billing", icon: CreditCard },
     { name: "All Reports & Export", href: "/admin/reports", icon: FileBox },
     { name: "Security Audit Trail", href: "/admin/reports/logs", icon: ShieldCheck },
   ];

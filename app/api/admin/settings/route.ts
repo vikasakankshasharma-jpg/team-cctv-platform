@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
  * PATCH: Update global settings with audit logging.
  */
 export async function PATCH(req: NextRequest) {
-  const session = await requireRoleApi(["super_admin"]).catch(() => null);
+  const session = await requireRoleApi(["super_admin", "admin"]).catch(() => null);
   if (!session) {
     return NextResponse.json({error: "Unauthorized"}, {status: 403});
   }
@@ -34,10 +34,10 @@ export async function PATCH(req: NextRequest) {
     const { ip, ua } = getRequestMetadata(req);
 
     const docRef = adminDb.collection("settings").doc(SETTINGS_DOC_ID);
-    await docRef.update({
+    await docRef.set({
       ...updates,
       updated_at: new Date()
-    });
+    }, { merge: true });
 
     // Log the action
     await createAuditLog({

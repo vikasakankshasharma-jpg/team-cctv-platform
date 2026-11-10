@@ -86,6 +86,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   amc_2yr_pct: 8,
   amc_3yr_pct: 10,
   quote_validity_days: 7,
+  high_reach_fee: 500,
+  minimum_margin_threshold: 15,
 
   // Hardware Component Margins (%)
   margin_hdd: 5,
@@ -116,6 +118,10 @@ export function mergeAppSettings(raw: Partial<AppSettings> | null | undefined): 
   return {
     ...DEFAULT_APP_SETTINGS,
     ...raw,
+    high_reach_fee: raw.high_reach_fee ?? (raw.site_preparation as any)?.ladderArrangementFee ?? DEFAULT_APP_SETTINGS.high_reach_fee ?? 500,
+    minimum_margin_threshold: raw.minimum_margin_threshold ?? DEFAULT_APP_SETTINGS.minimum_margin_threshold ?? 15,
+    conduit_cost_per_meter: raw.conduit_cost_per_meter ?? DEFAULT_APP_SETTINGS.conduit_cost_per_meter ?? 20,
+    cable_overage_per_mtr: raw.cable_overage_per_mtr ?? DEFAULT_APP_SETTINGS.cable_overage_per_mtr ?? 12,
     site_preparation: {
       ...DEFAULT_APP_SETTINGS.site_preparation,
       ...(raw.site_preparation || {}),

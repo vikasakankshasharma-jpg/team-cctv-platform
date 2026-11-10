@@ -21,7 +21,7 @@ let catalogCache: {
   timestamp: number;
 } | null = null;
 
-async function getBaselineCatalogData() {
+export async function getBaselineCatalogData() {
   const now = Date.now();
   if (catalogCache && now - catalogCache.timestamp < 15 * 60 * 1000 && catalogCache.products.length > 0) {
     return catalogCache;

@@ -13,7 +13,7 @@ import {
   Calendar, IndianRupee, Zap, Link2, Megaphone,
   Grid3x3, PanelLeftClose, PanelLeftOpen, Database, Building2,
   HeartPulse, MapPin, Menu, X, Sparkles, Navigation,
-  FileSpreadsheet, Filter, Search
+  FileSpreadsheet, Filter, Search, CreditCard
 } from "lucide-react";
 
 // ─── REORGANIZED 7-PILLAR NAVIGATION STRUCTURE ────────────────────────────────
@@ -78,6 +78,7 @@ const NAV_GROUPS = [
     items: [
       { name: "Profitability Heatmaps", href: "/admin/analytics/profitability", icon: TrendingUp },
       { name: "Accounts Payable", href: "/admin/finance", icon: IndianRupee },
+      { name: "Cloud Costs & Budgets", href: "/admin/finance/billing", icon: CreditCard },
       { name: "All Reports & Export", href: "/admin/reports", icon: FileBox },
       { name: "Global Settings", href: "/admin/settings", icon: Settings },
       { name: "Staff & Audit Trail", href: "/admin/staff", icon: ShieldCheck },
@@ -120,8 +121,21 @@ export function Sidebar() {
     }
   };
 
-  const isActive = (href: string) =>
-    href === "/admin" ? pathname === href : pathname.startsWith(href);
+  const allNavHrefs = NAV_GROUPS.flatMap((g) => g.items.map((i) => i.href));
+
+  const isActive = (href: string) => {
+    if (pathname === href) return true;
+    if (href === "/admin") return false;
+    if (pathname.startsWith(href + "/")) {
+      const hasBetterMatch = allNavHrefs.some(
+        (other) =>
+          other !== href &&
+          (pathname === other || (pathname.startsWith(other + "/") && other.length > href.length))
+      );
+      return !hasBetterMatch;
+    }
+    return false;
+  };
 
   // Dynamic label for mobile topbar breadcrumb
   const currentNavName = (() => {
