@@ -10,6 +10,9 @@ import { adminDb } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/auth-server";
 import { calculateInactivityAging } from "@/lib/inactivity-tracker";
 import { CrmSubNav } from "@/components/admin/navigation/AdminSubNav";
+import { AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
+import fs from "fs";
+import path from "path";
 
 type LeadListRow = {
   id: string;
@@ -46,104 +49,138 @@ type LeadListRow = {
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ show_test?: string }>;
+  searchParams?: Promise<{ show_test?: string; filter?: string }>;
 }) {
   await requireAdmin();
   const params = searchParams ? await searchParams : {};
   const showTest = params.show_test === "true";
+  const filterParam = params.filter || "";
 
-  // Fetch quotes and leads concurrently
-  const [quotesSnap, leadsSnap] = await Promise.all([
-    adminDb.collection("quotes").get().catch(() => ({ docs: [] })),
-    adminDb.collection("leads").orderBy("created_at", "desc").limit(50).get().catch(() => ({ docs: [] }))
-  ]);
+  let isQuotaFallback = false;
+  let leadsDocs: any[] = [];
+  let quotesDocs: any[] = [];
+
+  // 1. Fetch quotes and leads with strict limit and quota-detection
+  try {
+    const snap = await adminDb.collection("leads").orderBy("created_at", "desc").limit(50).get();
+    leadsDocs = snap.docs;
+  } catch (err: any) {
+    if (err?.code === 8 || err?.message?.includes("Quota exceeded") || err?.message?.includes("RESOURCE_EXHAUSTED")) {
+      isQuotaFallback = true;
+    }
+    try {
+      const snap2 = await adminDb.collection("leads").limit(50).get();
+      leadsDocs = snap2.docs;
+    } catch (err2: any) {
+      if (err2?.code === 8 || err2?.message?.includes("Quota exceeded") || err2?.message?.includes("RESOURCE_EXHAUSTED")) {
+        isQuotaFallback = true;
+      }
+    }
+  }
+
+  try {
+    const snapQ = await adminDb.collection("quotes").orderBy("created_at", "desc").limit(50).get();
+    quotesDocs = snapQ.docs;
+  } catch (err: any) {
+    if (err?.code === 8 || err?.message?.includes("Quota exceeded") || err?.message?.includes("RESOURCE_EXHAUSTED")) {
+      isQuotaFallback = true;
+    }
+    try {
+      const snapQ2 = await adminDb.collection("quotes").limit(50).get();
+      quotesDocs = snapQ2.docs;
+    } catch (_) {}
+  }
 
   // Index quotes by ID for fast lookup
   const quotesMap = new Map<string, FirebaseFirestore.DocumentData>();
-  quotesSnap.docs.forEach((d: any) => quotesMap.set(d.id, d.data()));
+  quotesDocs.forEach((d: any) => quotesMap.set(d.id, d.data()));
 
   const handledQuoteIds = new Set<string>();
 
   // Process leads and link their quotes
-  const resolvedLeads: LeadListRow[] = await Promise.all(leadsSnap.docs.map(async (doc: any) => {
-    const data = doc.data();
-    const qId = data.last_quote_id || data.latest_quote_id || data.won_quote_id || data.quote_id || data.quoteId || doc.id;
-    
-    let quoteData: any = qId ? quotesMap.get(qId) : null;
-    if (!quoteData) {
-      quoteData = quotesMap.get(doc.id);
-    }
-    if (!quoteData && qId) {
-      try {
-        const sub = await adminDb.collection("leads").doc(doc.id).collection("quotes").doc(qId).get();
-        if (sub.exists) quoteData = sub.data();
-      } catch (_) {}
-    }
+  let resolvedLeads: LeadListRow[] = [];
 
-    if (qId) handledQuoteIds.add(qId);
-    handledQuoteIds.add(doc.id);
+  if (leadsDocs.length > 0) {
+    resolvedLeads = await Promise.all(leadsDocs.map(async (doc: any) => {
+      const data = doc.data();
+      const qId = data.last_quote_id || data.latest_quote_id || data.won_quote_id || data.quote_id || data.quoteId || doc.id;
+      
+      let quoteData: any = qId ? quotesMap.get(qId) : null;
+      if (!quoteData) {
+        quoteData = quotesMap.get(doc.id);
+      }
+      if (!quoteData && qId) {
+        try {
+          const sub = await adminDb.collection("leads").doc(doc.id).collection("quotes").doc(qId).get();
+          if (sub.exists) quoteData = sub.data();
+        } catch (_) {}
+      }
 
-    const isPaid = quoteData?.status === "PAID" || quoteData?.status === "BOOKED" || quoteData?.payment_status === "advance_paid" || !!quoteData?.payment_id || !!data.payment_id || !!data.advance_paid;
-    const isSiteVisit = data.status === "site_visit" || quoteData?.status === "site_visit" || !!data.site_visit_date;
+      if (qId) handledQuoteIds.add(qId);
+      handledQuoteIds.add(doc.id);
 
-    let computedLeadStatus = data.status || quoteData?.status || "NEW";
-    if (isPaid) computedLeadStatus = "WON";
-    else if (isSiteVisit && computedLeadStatus === "NEW") computedLeadStatus = "SITE_VISIT";
-    if (typeof computedLeadStatus === "string") computedLeadStatus = computedLeadStatus.toUpperCase();
+      const isPaid = quoteData?.status === "PAID" || quoteData?.status === "BOOKED" || quoteData?.payment_status === "advance_paid" || !!quoteData?.payment_id || !!data.payment_id || !!data.advance_paid;
+      const isSiteVisit = data.status === "site_visit" || quoteData?.status === "site_visit" || !!data.site_visit_date;
 
-    let total_payable = quoteData?.total_payable ?? quoteData?.pricingSnapshot?.total_payable ?? quoteData?.finalPrice ?? data.total_payable ?? 0;
-    if (total_payable <= 0) {
-      try {
-        const { getOrCreateLeadQuote } = await import("@/lib/baseline-quote");
-        const synthesized = await getOrCreateLeadQuote(doc.id);
-        if (synthesized.quoteData?.total_payable) {
-          total_payable = synthesized.quoteData.total_payable;
-          quoteData = synthesized.quoteData;
-        }
-      } catch (_) {}
-    }
-    const selectedPlan = quoteData?.plan_type || quoteData?.selectedPlan || data.selectedPlan || quoteData?.pricingSnapshot?.selectedPlan || "Standard";
-    const customerMobile = data.mobile_number || data.customer_mobile || quoteData?.customer_mobile || quoteData?.billing_details?.phone || "";
+      let computedLeadStatus = data.status || quoteData?.status || "NEW";
+      if (isPaid) computedLeadStatus = "WON";
+      else if (isSiteVisit && computedLeadStatus === "NEW") computedLeadStatus = "SITE_VISIT";
+      if (typeof computedLeadStatus === "string") computedLeadStatus = computedLeadStatus.toUpperCase();
 
-    return {
-      id: doc.id,
-      leadId: doc.id,
-      quoteId: qId,
-      customer_name: data.customer_name || quoteData?.customer_name || data.billing_details?.contact_name || data.billing_details?.company_name || "Unknown",
-      customer_mobile: customerMobile,
-      source: data.source || quoteData?.source || "wizard",
-      total_payable,
-      selectedPlan,
-      status: quoteData?.status || data.status || (isPaid ? "PAID" : "GENERATED"),
-      leadStatus: computedLeadStatus,
-      isPaid,
-      is_business: !!(data.is_b2b || data.billing_details?.is_business || quoteData?.billing_details?.is_business),
-      company_name: data.company_name || data.billing_details?.company_name || quoteData?.billing_details?.company_name || null,
-      gstin: data.gst_number || data.billing_details?.gstin || quoteData?.billing_details?.gstin || null,
-      site_visit_date: toIsoStringSafe(data.site_visit_date),
-      site_visit_slot: data.site_visit_slot || null,
-      cash_approval_requested: Boolean(data.cash_approval_requested || quoteData?.cash_approval_requested),
-      cash_collection_approved: Boolean(data.cash_collection_approved || quoteData?.cash_collection_approved),
-      cash_requested_amount: data.cash_requested_amount || quoteData?.cash_requested_amount || 0,
-      createdAt: toIsoStringSafe(data.created_at || data.createdAt) || new Date().toISOString(),
-      channel: data.channel || quoteData?.channel || "web",
-      partner_id: data.partner_id || quoteData?.partner_id || null,
-      competitor_quote_received: Boolean(data.competitor_quote_received || quoteData?.competitor_quote_received),
-      timeline: data.timeline || data.wizard_answers?.q_timeline || data.wizard_answers?.timeline || quoteData?.timeline || null,
-      priority: data.priority || quoteData?.priority || null,
-      last_visited_at: data.last_visited_at || null,
-      last_called_at: data.last_called_at || null,
-      last_whatsapp_at: data.last_whatsapp_at || null,
-      last_contacted_at: data.last_contacted_at || data.last_visited_at || data.last_called_at || data.last_whatsapp_at || null,
-    };
-  }));
+      let total_payable = quoteData?.total_payable ?? quoteData?.pricingSnapshot?.total_payable ?? quoteData?.finalPrice ?? data.total_payable ?? 0;
+      if (total_payable <= 0) {
+        try {
+          const { getOrCreateLeadQuote } = await import("@/lib/baseline-quote");
+          const synthesized = await getOrCreateLeadQuote(doc.id);
+          if (synthesized.quoteData?.total_payable) {
+            total_payable = synthesized.quoteData.total_payable;
+            quoteData = synthesized.quoteData;
+          }
+        } catch (_) {}
+      }
+      const selectedPlan = quoteData?.plan_type || quoteData?.selectedPlan || data.selectedPlan || quoteData?.pricingSnapshot?.selectedPlan || "Standard";
+      const customerMobile = data.mobile_number || data.customer_mobile || quoteData?.customer_mobile || quoteData?.billing_details?.phone || "";
+
+      return {
+        id: doc.id,
+        leadId: doc.id,
+        quoteId: qId,
+        customer_name: data.customer_name || quoteData?.customer_name || data.billing_details?.contact_name || data.billing_details?.company_name || "Unknown",
+        customer_mobile: customerMobile,
+        source: data.source || quoteData?.source || "wizard",
+        total_payable,
+        selectedPlan,
+        status: quoteData?.status || data.status || (isPaid ? "PAID" : "GENERATED"),
+        leadStatus: computedLeadStatus,
+        isPaid,
+        is_business: !!(data.is_b2b || data.billing_details?.is_business || quoteData?.billing_details?.is_business),
+        company_name: data.company_name || data.billing_details?.company_name || quoteData?.billing_details?.company_name || null,
+        gstin: data.gst_number || data.billing_details?.gstin || quoteData?.billing_details?.gstin || null,
+        site_visit_date: toIsoStringSafe(data.site_visit_date),
+        site_visit_slot: data.site_visit_slot || null,
+        cash_approval_requested: Boolean(data.cash_approval_requested || quoteData?.cash_approval_requested),
+        cash_collection_approved: Boolean(data.cash_collection_approved || quoteData?.cash_collection_approved),
+        cash_requested_amount: data.cash_requested_amount || quoteData?.cash_requested_amount || 0,
+        createdAt: toIsoStringSafe(data.created_at || data.createdAt) || new Date().toISOString(),
+        channel: data.channel || quoteData?.channel || "web",
+        partner_id: data.partner_id || quoteData?.partner_id || null,
+        competitor_quote_received: Boolean(data.competitor_quote_received || quoteData?.competitor_quote_received),
+        timeline: data.timeline || data.wizard_answers?.q_timeline || data.wizard_answers?.timeline || quoteData?.timeline || null,
+        priority: data.priority || quoteData?.priority || null,
+        last_visited_at: data.last_visited_at || null,
+        last_called_at: data.last_called_at || null,
+        last_whatsapp_at: data.last_whatsapp_at || null,
+        last_contacted_at: data.last_contacted_at || data.last_visited_at || data.last_called_at || data.last_whatsapp_at || null,
+      };
+    }));
+  }
 
   // Append any standalone quotes (e.g. manual quotes) that were not already linked to a lead
   const standaloneQuotes: LeadListRow[] = [];
-  quotesSnap.docs.forEach((qDoc: any) => {
+  quotesDocs.forEach((qDoc: any) => {
     if (handledQuoteIds.has(qDoc.id)) return;
     const qData = qDoc.data();
-    if (qData.lead_id && leadsSnap.docs.some((l: any) => l.id === qData.lead_id)) return;
+    if (qData.lead_id && leadsDocs.some((l: any) => l.id === qData.lead_id)) return;
 
     const isPaid = qData.status === "PAID" || qData.status === "BOOKED" || !!qData.payment_id || !!qData.advance_paid;
     let computedLeadStatus = qData.leadStatus || qData.status || "NEW";
@@ -173,7 +210,22 @@ export default async function LeadsPage({
     });
   });
 
-  const leads = [...resolvedLeads, ...standaloneQuotes];
+  let leads = [...resolvedLeads, ...standaloneQuotes];
+
+  // If live leads returned empty (e.g. quota exhausted or clean database), load cached leads fallback
+  if (leads.length === 0) {
+    try {
+      const cachePath = path.resolve(process.cwd(), "lib/leads-cache.json");
+      if (fs.existsSync(cachePath)) {
+        const cached = JSON.parse(fs.readFileSync(cachePath, "utf8"));
+        if (Array.isArray(cached) && cached.length > 0) {
+          leads = cached;
+          isQuotaFallback = true;
+        }
+      }
+    } catch (_) {}
+  }
+
   leads.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const isTestLead = (l: LeadListRow) => {
@@ -186,6 +238,7 @@ export default async function LeadsPage({
       qId.startsWith("QT-CRM-") ||
       qId.startsWith("TEST-") ||
       qId.startsWith("LEAD-CRM-") ||
+      qId.startsWith("LEAD-TEST-") ||
       qId.includes("CAPSTONE") ||
       name.includes("test user") ||
       name.includes("e2e test") ||
@@ -205,9 +258,30 @@ export default async function LeadsPage({
   };
 
   const totalAllLeads = leads.length;
-  const filteredNonTest = showTest ? leads : leads.filter((l) => !isTestLead(l));
-  const displayLeads = filteredNonTest.filter((l) => l.leadStatus !== "ARCHIVED" && l.status !== "ARCHIVED");
-  const hiddenTestCount = totalAllLeads - filteredNonTest.length;
+  const testLeads = leads.filter(isTestLead);
+  const genuineLeads = leads.filter((l) => !isTestLead(l));
+  const wonLeads = leads.filter((l) => l.isPaid || l.leadStatus === "WON");
+  const surveyLeads = leads.filter((l) => !!l.site_visit_date || l.leadStatus === "SITE_VISIT");
+
+  // Determine current active filter
+  let currentFilter = filterParam;
+  if (!currentFilter) {
+    if (showTest) currentFilter = "all";
+    else if (genuineLeads.length > 0) currentFilter = "genuine";
+    else currentFilter = "all";
+  }
+
+  let displayLeads = leads;
+  if (currentFilter === "genuine") {
+    displayLeads = genuineLeads;
+  } else if (currentFilter === "won") {
+    displayLeads = wonLeads;
+  } else if (currentFilter === "survey") {
+    displayLeads = surveyLeads;
+  } else if (currentFilter === "test") {
+    displayLeads = testLeads;
+  }
+  displayLeads = displayLeads.filter((l) => l.leadStatus !== "ARCHIVED" && l.status !== "ARCHIVED");
 
   const getStatusBadge = (status: string, isPaid?: boolean) => {
     if (isPaid || status === "WON" || status === "PAID" || status === "BOOKED") {
@@ -228,37 +302,119 @@ export default async function LeadsPage({
   return (
     <div className="space-y-6">
       <CrmSubNav />
-      <div className="flex justify-between items-center">
+      
+      {/* ── Quota Alert or Live Badge ── */}
+      {isQuotaFallback ? (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-3 animate-in fade-in">
+          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-semibold text-sm">Firestore Spark Free Quota Limit Reached (50,000 reads/day)</p>
+            <p className="text-xs text-amber-800 dark:text-amber-300 mt-1">
+              Google Cloud Firestore free tier daily read quota has been exceeded for project <code className="font-mono font-bold">team-cctv-live-8294</code>.
+              Showing persistent cached pipeline records so your workflow and quotations remain fully accessible.
+              Firestore automatically resets at Midnight PST. To enable permanent unmetered real-time sync, upgrade to the Firebase Blaze (Pay-as-you-go) plan in the Firebase Console.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg w-fit">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+          <span className="font-medium">Live Firestore Pipeline Synchronized</span>
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Lead Management</h1>
           <p className="text-muted-foreground mt-1">Track quotations, site survey bookings, and B2B GST tax invoices</p>
         </div>
         <Link href="/admin/wizard">
-          <Button>+ Create Manual Quote</Button>
+          <Button className="w-full sm:w-auto">+ Create Manual Quote</Button>
         </Link>
+      </div>
+
+      {/* ── 1-Click Interactive Pipeline Tabs (Mobile Scrollable) ── */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+        <Link href="/admin/leads?filter=genuine">
+          <Button 
+            variant={currentFilter === "genuine" ? "default" : "outline"} 
+            size="sm" 
+            className="h-9 px-3.5 text-xs font-semibold whitespace-nowrap"
+          >
+            Genuine Clients ({genuineLeads.length})
+          </Button>
+        </Link>
+        <Link href="/admin/leads?filter=all">
+          <Button 
+            variant={currentFilter === "all" ? "default" : "outline"} 
+            size="sm" 
+            className="h-9 px-3.5 text-xs font-semibold whitespace-nowrap"
+          >
+            All Pipeline ({totalAllLeads})
+          </Button>
+        </Link>
+        <Link href="/admin/leads?filter=won">
+          <Button 
+            variant={currentFilter === "won" ? "default" : "outline"} 
+            size="sm" 
+            className="h-9 px-3.5 text-xs font-semibold whitespace-nowrap"
+          >
+            Won / Paid ({wonLeads.length})
+          </Button>
+        </Link>
+        <Link href="/admin/leads?filter=survey">
+          <Button 
+            variant={currentFilter === "survey" ? "default" : "outline"} 
+            size="sm" 
+            className="h-9 px-3.5 text-xs font-semibold whitespace-nowrap"
+          >
+            Site Surveys ({surveyLeads.length})
+          </Button>
+        </Link>
+        {testLeads.length > 0 && (
+          <Link href="/admin/leads?filter=test">
+            <Button 
+              variant={currentFilter === "test" ? "default" : "outline"} 
+              size="sm" 
+              className="h-9 px-3.5 text-xs font-semibold whitespace-nowrap border-dashed"
+            >
+              Test Records ({testLeads.length})
+            </Button>
+          </Link>
+        )}
       </div>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div>
-            <CardTitle>Recent Leads & Inquiries ({displayLeads.length})</CardTitle>
-            {hiddenTestCount > 0 && !showTest && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {hiddenTestCount} synthetic test record{hiddenTestCount > 1 ? "s" : ""} hidden by default.
-              </p>
-            )}
+            <CardTitle>
+              {currentFilter === "genuine" ? "Genuine Client Inquiries" : 
+               currentFilter === "won" ? "Won / Paid Deals" :
+               currentFilter === "survey" ? "Site Survey Bookings" :
+               currentFilter === "test" ? "Test & Synthetic Records" : "All Leads & Inquiries"} 
+              {" "}({displayLeads.length})
+            </CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              {currentFilter === "genuine" && testLeads.length > 0 ? (
+                <span>Filtering out {testLeads.length} test record{testLeads.length > 1 ? "s" : ""}. Click the &ldquo;Test Records&rdquo; or &ldquo;All Pipeline&rdquo; tab above to view them.</span>
+              ) : currentFilter === "test" ? (
+                <span>Displaying synthetic and verification test records.</span>
+              ) : (
+                <span>Showing {displayLeads.length} lead record{displayLeads.length > 1 ? "s" : ""}.</span>
+              )}
+            </p>
           </div>
-          {hiddenTestCount > 0 && (
-            <Link href={showTest ? "/admin/leads" : "/admin/leads?show_test=true"}>
-              <Button variant="outline" size="sm" className="text-xs">
-                {showTest ? "Hide Test Records" : `Show Test Records (${hiddenTestCount})`}
-              </Button>
-            </Link>
-          )}
         </CardHeader>
         <CardContent>
           {displayLeads.length === 0 ? (
-            <p className="text-muted-foreground py-4 md:py-8 text-center">No genuine leads found.</p>
+            <div className="text-center py-12 px-4">
+              <p className="text-muted-foreground text-sm">No leads found for this filter tab.</p>
+              <div className="mt-4">
+                <Link href="/admin/leads?filter=all">
+                  <Button variant="outline" size="sm">Show All Pipeline Leads</Button>
+                </Link>
+              </div>
+            </div>
           ) : (
             <div className="rounded-md border overflow-x-auto">
               <Table>

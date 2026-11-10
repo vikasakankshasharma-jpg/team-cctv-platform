@@ -19,38 +19,44 @@ export async function GET() {
       pendingCashSnap
     ] = await Promise.all([
       // 1. Finance: Offline Verifications
-      adminDb.collection("offline_verifications").where("status", "==", "pending").get(),
+      adminDb.collection("offline_verifications").where("status", "==", "pending").limit(20).get().catch(() => ({ docs: [] })),
       
       // 2. Finance: Pending Commissions
-      adminDb.collection("commission_records").where("status", "==", "pending").get(),
+      adminDb.collection("commission_records").where("status", "==", "pending").limit(20).get().catch(() => ({ docs: [] })),
       
       // 3. Operations: Inventory
-      adminDb.collection("inventory").get(), // We have to filter low stock in memory if minStockLevel is dynamic
+      adminDb.collection("inventory").limit(50).get().catch(() => ({ docs: [] })),
       
       // 4. Operations: Stalled Dispatches (Paid but not dispatched)
       adminDb.collection("quotes")
         .where("status", "in", ["PAID", "BOOKED"])
         .where("delivery_status", "==", "PENDING")
-        .get(),
+        .limit(20)
+        .get()
+        .catch(() => ({ docs: [] })),
         
       // 5. Sales: Price Matches
-      adminDb.collection("price_match_requests").where("status", "==", "pending").get(),
+      adminDb.collection("price_match_requests").where("status", "==", "pending").limit(20).get().catch(() => ({ docs: [] })),
       
-      // 6. Sales: Stale Leads (fetch all 'new', filter in memory to avoid index errors)
+      // 6. Sales: Stale Leads (fetch 'new', limit 30)
       adminDb.collection("leads")
         .where("status", "==", "new")
-        .get(),
+        .limit(30)
+        .get()
+        .catch(() => ({ docs: [] })),
         
       // 7. Sales: Escalated Leads
-      adminDb.collection("leads").where("is_escalated", "==", true).get(),
+      adminDb.collection("leads").where("is_escalated", "==", true).limit(20).get().catch(() => ({ docs: [] })),
 
       // 8. Operations: Pending Deliveries (dispatched but not yet delivered)
       adminDb.collection("quotes")
         .where("delivery_status", "==", "DISPATCHED")
-        .get(),
+        .limit(20)
+        .get()
+        .catch(() => ({ docs: [] })),
 
       // 9. Finance: Pending Cash Settlements (staff collected cash, not yet deposited)
-      adminDb.collection("pending_cash_settlements").where("status", "==", "pending").get()
+      adminDb.collection("pending_cash_settlements").where("status", "==", "pending").limit(20).get().catch(() => ({ docs: [] }))
     ]);
 
     // Helper to safely serialize Firestore data

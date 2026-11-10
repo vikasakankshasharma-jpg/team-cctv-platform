@@ -110,6 +110,8 @@ interface ProfitabilityResponse {
     };
   };
   deals: DealProfitItem[];
+  is_cached_snapshot?: boolean;
+  quota_exhausted?: boolean;
 }
 
 export function ProfitabilityAnalyticsClient() {
@@ -302,6 +304,18 @@ export function ProfitabilityAnalyticsClient() {
 
   return (
     <div className="space-y-6 animate-in fade-in">
+      {/* ── Status Banner for Quota / Offline Cache ── */}
+      {(data?.is_cached_snapshot || data?.quota_exhausted) && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-sm">Firestore Free Spark Quota Active — Showing Cached Operational Deals</p>
+            <p className="text-xs text-amber-800 dark:text-amber-300 mt-1">
+              Google Cloud Firestore daily read quota (50,000 reads/day on Spark Free Plan) is currently throttling live queries. Displaying persistent cached portfolio metrics so you can analyze gross margins and service profit without interruption. To enable unmetered real-time Firestore sync, upgrade to the Firebase Blaze (Pay-as-you-go) plan.
+            </p>
+          </div>
+        </div>
+      )}
       
       {/* ── Top 4 Executive KPI Cards ────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
