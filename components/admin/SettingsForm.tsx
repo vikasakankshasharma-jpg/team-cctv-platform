@@ -65,7 +65,12 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
     company_name: initialSettings.company_name ?? "TEAM CCTV",
     company_legal_name: initialSettings.company_legal_name ?? initialSettings.company_name ?? "TEAM CCTV",
     company_tagline: initialSettings.company_tagline ?? "Premium Security Solutions",
-    company_logo_url: initialSettings.company_logo_url ?? "",
+    company_logo_url: (initialSettings.company_logo_url && !initialSettings.company_logo_url.startsWith("C:") && !initialSettings.company_logo_url.includes("\\"))
+      ? initialSettings.company_logo_url
+      : "/logo-horizontal.jpg",
+    pdf_logo_url: (initialSettings.pdf_logo_url && !initialSettings.pdf_logo_url.startsWith("C:") && !initialSettings.pdf_logo_url.includes("\\"))
+      ? initialSettings.pdf_logo_url
+      : "/logo-horizontal.jpg",
     company_address_line1: initialSettings.company_address_line1 ?? "",
     company_address_line2: initialSettings.company_address_line2 ?? "",
     company_city: initialSettings.company_city ?? "Jaipur",
@@ -374,22 +379,56 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                       className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Brand Logo URL</label>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Brand Logo URL</label>
+                      <span className="text-[10px] text-primary font-semibold">Active across Quotations, Invoices & PDFs</span>
+                    </div>
                     <input
                       type="text"
                       name="company_logo_url"
                       value={formData.company_logo_url || ""}
                       onChange={handleChange}
-                      placeholder="https://your-domain.com/logo.png or /logo.png"
-                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm font-medium shadow-sm"
+                      placeholder="/logo-horizontal.jpg or https://..."
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all text-xs font-mono shadow-sm"
                     />
                     {formData.company_logo_url && (formData.company_logo_url.startsWith("C:") || formData.company_logo_url.includes("\\")) && (
                       <p className="text-[10.5px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1 mt-1">
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                        Local file paths (e.g. C:\...) cannot load on the web. Please upload the logo to public assets or use a web URL (https://...).
+                        Local file paths (e.g. C:\...) cannot load on the web. Click below to select the official logo.
                       </p>
                     )}
+
+                    {/* Quick Select Presets */}
+                    <div className="pt-1 flex flex-wrap items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Select Preset:</span>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, company_logo_url: "/logo-horizontal.jpg", pdf_logo_url: "/logo-horizontal.jpg" }))}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                          formData.company_logo_url === "/logo-horizontal.jpg"
+                            ? "bg-primary text-primary-foreground border-primary shadow-xs font-bold"
+                            : "bg-secondary/60 text-foreground border-border hover:bg-secondary"
+                        }`}
+                      >
+                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                        <span>Horizontal Banner (Recommended for Quotations & Invoices)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, company_logo_url: "/logo-square.jpg", pdf_logo_url: "/logo-square.jpg" }))}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                          formData.company_logo_url === "/logo-square.jpg"
+                            ? "bg-primary text-primary-foreground border-primary shadow-xs font-bold"
+                            : "bg-secondary/60 text-foreground border-border hover:bg-secondary"
+                        }`}
+                      >
+                        <span className="w-2 h-2 rounded-full bg-blue-400" />
+                        <span>Square Emblem Badge (/logo-square.jpg)</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -671,26 +710,46 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
               <div className="bg-background border-2 border-border/80 rounded-2xl p-5 shadow-sm space-y-4 font-sans text-xs">
                 <div className="flex items-start justify-between pb-3 border-b border-border/60">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                    <div className="space-y-1.5">
                       {formData.company_logo_url && !formData.company_logo_url.startsWith("C:") && !formData.company_logo_url.includes("\\") ? (
-                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-secondary border border-border shrink-0">
-                          <Image
-                            src={formData.company_logo_url}
-                            alt="Logo"
-                            width={32}
-                            height={32}
-                            unoptimized
-                            className="w-full h-full object-contain p-1"
-                          />
-                        </div>
+                        formData.company_logo_url.includes("horizontal") || formData.company_logo_url.includes("banner") ? (
+                          <div className="h-10 max-w-[220px] overflow-hidden flex items-center shrink-0">
+                            <Image
+                              src={formData.company_logo_url}
+                              alt="Logo"
+                              width={220}
+                              height={52}
+                              unoptimized
+                              className="h-full w-auto object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-secondary border border-border shrink-0 p-1 flex items-center justify-center">
+                              <Image
+                                src={formData.company_logo_url}
+                                alt="Logo"
+                                width={38}
+                                height={38}
+                                unoptimized
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                            <span className="text-base font-black tracking-tight text-foreground">
+                              {formData.company_legal_name || formData.company_name || "TEAM CCTV"}
+                            </span>
+                          </div>
+                        )
                       ) : (
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 text-primary font-bold text-xs">
-                          <ShieldCheck className="w-4 h-4" />
+                        <div className="flex items-center gap-2">
+                          <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 text-primary font-bold text-xs">
+                            <ShieldCheck className="w-4 h-4" />
+                          </div>
+                          <span className="text-base font-black tracking-tight text-foreground">
+                            {formData.company_legal_name || formData.company_name || "TEAM CCTV"}
+                          </span>
                         </div>
                       )}
-                      <span className="text-base font-black tracking-tight text-foreground">
-                        {formData.company_legal_name || formData.company_name || "TEAM CCTV"}
-                      </span>
                     </div>
                     {formData.company_tagline ? (
                       <p className="text-[11px] text-muted-foreground font-medium">{formData.company_tagline}</p>
@@ -2204,10 +2263,26 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                 name="pdf_logo_url"
                 value={formData.pdf_logo_url || ""}
                 onChange={handleChange}
-                placeholder="Leave blank to use main brand logo"
-                className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm font-medium shadow-sm" 
+                placeholder="/logo-horizontal.jpg (Recommended) or leave blank"
+                className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all text-xs font-mono shadow-sm" 
               />
-              <p className="text-[10px] font-medium text-muted-foreground italic">Use a clean, high-resolution logo for PDFs</p>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, pdf_logo_url: "/logo-horizontal.jpg" }))}
+                  className="px-2.5 py-1 rounded-lg bg-background border border-border text-[10px] font-semibold text-primary hover:bg-primary/10 transition-all cursor-pointer"
+                >
+                  Set Horizontal Banner
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, pdf_logo_url: "/logo-square.jpg" }))}
+                  className="px-2.5 py-1 rounded-lg bg-background border border-border text-[10px] font-semibold text-foreground hover:bg-secondary transition-all cursor-pointer"
+                >
+                  Set Square Logo
+                </button>
+              </div>
+              <p className="text-[10px] font-medium text-muted-foreground italic">Prints at top-left of every generated PDF Quotation & Invoice.</p>
             </div>
           </div>
 

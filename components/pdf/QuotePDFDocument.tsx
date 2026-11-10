@@ -33,10 +33,12 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   logoContainer: {
-    width: 150,
+    width: 170,
   },
   logoImage: {
-    width: 120,
+    width: 140,
+    height: 34,
+    objectFit: 'contain',
     marginBottom: 8,
   },
   logoText: {
@@ -248,7 +250,19 @@ export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilD
     settings?.company_state ? `${settings.company_state}${settings.company_pincode ? ` - ${settings.company_pincode}` : ''}` : settings?.company_pincode
   ].filter(Boolean);
   const addressDisplay = addressParts.length > 0 ? `\n${addressParts.join(", ")}` : "";
-  const logoUrl = settings?.pdf_logo_url || settings?.company_logo_url;
+  const rawLogo = settings?.pdf_logo_url || settings?.company_logo_url || "/logo-horizontal.jpg";
+  const logoUrl = (rawLogo && !rawLogo.startsWith("C:") && !rawLogo.includes("\\")) ? rawLogo : "/logo-horizontal.jpg";
+  let resolvedLogo = logoUrl;
+  if (typeof window === "undefined" && logoUrl.startsWith("/")) {
+    try {
+      const pathMod = require("path");
+      const fsMod = require("fs");
+      const localPath = pathMod.join(process.cwd(), "public", logoUrl.replace(/^\/+/, ""));
+      if (fsMod.existsSync(localPath)) {
+        resolvedLogo = localPath;
+      }
+    } catch (_) {}
+  }
   
   // Default terms tailored for CCTV quotation
   const defaultTerms = "1. Prices are valid for " + (settings?.quote_validity_days || 7) + " days from the date of this quotation.\n2. Standard 1-Year Warranty on all hardware items unless specified otherwise.\n3. 1-Year Free AMC (Annual Maintenance Contract) included covering 2 free service visits.\n4. Additional cabling beyond the estimated requirement will be charged at ₹" + (settings?.wire_cost_per_meter || 20) + "/meter.\n5. 50% advance payment required for order confirmation, balance on completion of installation.";
@@ -263,9 +277,9 @@ export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilD
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            {logoUrl ? (
+            {resolvedLogo ? (
               // eslint-disable-next-line jsx-a11y/alt-text
-              <Image src={logoUrl} style={styles.logoImage} />
+              <Image src={resolvedLogo} style={styles.logoImage} />
             ) : (
               <Text style={styles.logoText}>{companyName}</Text>
             )}

@@ -137,6 +137,11 @@ const s = StyleSheet.create({
     marginBottom: 16,
   },
   brandRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  brandLogoHorizontal: {
+    width: 140,
+    height: 34,
+    objectFit: "contain",
+  },
   brandIconBox: {
     width: 48,
     height: 48,
@@ -500,22 +505,49 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
         {/* ── HEADER ──────────────────────────────────────────────────── */}
         <View style={s.header}>
           <View style={s.headerTop}>
-            <View style={s.brandRow}>
-              <View style={s.brandIconBox}>
-                {settings?.pdf_logo_url || settings?.company_logo_url ? (
-                  <>
+            {(() => {
+              const rawLogo = settings?.pdf_logo_url || settings?.company_logo_url || "/logo-horizontal.jpg";
+              const logoUrl = (rawLogo && !rawLogo.startsWith("C:") && !rawLogo.includes("\\")) ? rawLogo : "/logo-horizontal.jpg";
+              let resolvedLogo = logoUrl;
+              if (typeof window === "undefined" && logoUrl.startsWith("/")) {
+                try {
+                  const pathMod = require("path");
+                  const fsMod = require("fs");
+                  const localPath = pathMod.join(process.cwd(), "public", logoUrl.replace(/^\/+/, ""));
+                  if (fsMod.existsSync(localPath)) {
+                    resolvedLogo = localPath;
+                  }
+                } catch (_) {}
+              }
+
+              const isHorizontal = logoUrl.includes("horizontal") || logoUrl.includes("banner");
+
+              if (resolvedLogo && isHorizontal) {
+                return (
+                  <View style={s.brandRow}>
                     {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                    <Image src={settings.pdf_logo_url || settings.company_logo_url} style={s.brandIconImage} />
-                  </>
-                ) : (
-                  <Text style={s.brandIconText}>T</Text>
-                )}
-              </View>
-              <View>
-                <Text style={s.brandName}>{companyName}</Text>
-                <Text style={s.brandTagline}>{tagline}</Text>
-              </View>
-            </View>
+                    <Image src={resolvedLogo} style={s.brandLogoHorizontal} />
+                  </View>
+                );
+              }
+
+              return (
+                <View style={s.brandRow}>
+                  <View style={s.brandIconBox}>
+                    {resolvedLogo ? (
+                      // eslint-disable-next-line jsx-a11y/alt-text
+                      <Image src={resolvedLogo} style={s.brandIconImage} />
+                    ) : (
+                      <Text style={s.brandIconText}>T</Text>
+                    )}
+                  </View>
+                  <View>
+                    <Text style={s.brandName}>{companyName}</Text>
+                    <Text style={s.brandTagline}>{tagline}</Text>
+                  </View>
+                </View>
+              );
+            })()}
             <View style={s.quoteLabel}>
               <Text style={s.quoteLabelText}>{docTitle}</Text>
               <Text style={s.quoteNumber}>#{quote.quoteNumber}</Text>

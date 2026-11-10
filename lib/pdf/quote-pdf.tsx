@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { QuoteSnapshot, PricingResult, QuoteLineItem, AppSettings } from '@/types';
 
 // Create styles optimized for professional single-page layout
@@ -22,6 +22,12 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: 'column',
     maxWidth: '56%',
+  },
+  headerLogo: {
+    width: 140,
+    height: 34,
+    objectFit: 'contain',
+    marginBottom: 4,
   },
   logoText: {
     fontSize: 18,
@@ -303,6 +309,20 @@ export const QuotePDFDocument = ({ quote, settings }: { quote: QuoteSnapshot; se
 
   const formatCurrency = (amount: number) => `Rs. ${amount.toLocaleString('en-IN')}`;
 
+  const rawLogo = settings?.pdf_logo_url || settings?.company_logo_url || "/logo-horizontal.jpg";
+  const logoUrl = (rawLogo && !rawLogo.startsWith("C:") && !rawLogo.includes("\\")) ? rawLogo : "/logo-horizontal.jpg";
+  let resolvedLogo = logoUrl;
+  if (typeof window === "undefined" && logoUrl.startsWith("/")) {
+    try {
+      const pathMod = require("path");
+      const fsMod = require("fs");
+      const localPath = pathMod.join(process.cwd(), "public", logoUrl.replace(/^\/+/, ""));
+      if (fsMod.existsSync(localPath)) {
+        resolvedLogo = localPath;
+      }
+    } catch (_) {}
+  }
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -311,7 +331,11 @@ export const QuotePDFDocument = ({ quote, settings }: { quote: QuoteSnapshot; se
         {/* Header */}
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
-            <Text style={styles.logoText}>{companyName}</Text>
+            {resolvedLogo ? (
+              <Image src={resolvedLogo} style={styles.headerLogo} />
+            ) : (
+              <Text style={styles.logoText}>{companyName}</Text>
+            )}
             {tagline ? <Text style={styles.companyInfo}>{tagline}</Text> : null}
             {addressDisplay ? <Text style={styles.companyInfo}>{addressDisplay}</Text> : null}
             <Text style={styles.companyInfo}>{gstinDisplay}</Text>
