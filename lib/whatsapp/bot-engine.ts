@@ -346,7 +346,10 @@ export async function processIncomingMessage(
   if (rawInbound === "website" || rawInbound === "web" || rawInbound === "link" || rawInbound === "web wizard" || rawInbound === "studio") {
     const cleanPhone = from.replace(/\D/g, "");
     const partnerRef = session.partner_id ? `&ref=${session.partner_id}` : "";
-    const webWizardUrl = `https://cctvquotation.com/wizard?phone=${cleanPhone}${partnerRef}&source=wa_chat_help`;
+    const nameParam = session.customer_name && session.customer_name !== "WhatsApp Customer" ? `&name=${encodeURIComponent(session.customer_name)}` : "";
+    const propParam = session.wizard_answers?.property_type ? `&property=${session.wizard_answers.property_type}` : "";
+    const pinParam = session.wizard_answers?.pincode ? `&pincode=${session.wizard_answers.pincode}` : "";
+    const webWizardUrl = `https://cctvquotation.com/wizard?phone=${cleanPhone}${partnerRef}${nameParam}${propParam}${pinParam}&source=wa_chat_help`;
     await sendWhatsAppMessages([
       MessageBuilder.text(
         from,
@@ -366,7 +369,10 @@ export async function processIncomingMessage(
         nextState = "ASK_PROP";
         const cleanPhone = from.replace(/\D/g, "");
         const partnerRef = session.partner_id ? `&ref=${session.partner_id}` : "";
-        const webWizardUrl = `https://cctvquotation.com/wizard?phone=${cleanPhone}${partnerRef}&source=wa_welcome`;
+        const nameParam = session.customer_name && session.customer_name !== "WhatsApp Customer" ? `&name=${encodeURIComponent(session.customer_name)}` : "";
+        const propParam = session.wizard_answers?.property_type ? `&property=${session.wizard_answers.property_type}` : "";
+        const pinParam = session.wizard_answers?.pincode ? `&pincode=${session.wizard_answers.pincode}` : "";
+        const webWizardUrl = `https://cctvquotation.com/wizard?phone=${cleanPhone}${partnerRef}${nameParam}${propParam}${pinParam}&source=wa_welcome`;
 
         const partnerGreeting = session.partner_id
           ? `Welcome to *TEAM CCTV*! 🛡️\n\n🎁 *Store Partner Verified:* Referral Code *${session.partner_id}* applied! Priority survey dispatch & partner discount unlocked.\n\n✨ *Prefer an interactive visual experience?*\nDesign your system on our visual website wizard with 3D views & custom sliders:\n👉 ${webWizardUrl}\n\n💬 *Or build your quote right here in 4 quick questions on WhatsApp!*\n\n*Step 1 of 6: Property Type*\nWhat type of property are you securing?`

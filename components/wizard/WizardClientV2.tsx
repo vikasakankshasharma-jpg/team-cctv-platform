@@ -41,6 +41,8 @@ export function WizardClientV2() {
   const [otpSent, setOtpSent] = useState(false);
   const [otpMethod, setOtpMethod] = useState<"sms" | "whatsapp">("whatsapp");
   const [otp, setOtp] = useState(["", "", "", ""]);
+  const [isPhonePreVerified, setIsPhonePreVerified] = useState(false);
+  const [preVerifiedPhone, setPreVerifiedPhone] = useState<string | null>(null);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [mapCenter, setMapCenter] = useState(() => {
@@ -260,6 +262,22 @@ export function WizardClientV2() {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
       const ref = urlParams.get("ref") || urlParams.get("partner_id") || urlParams.get("promo");
+      // Pre-capture verified mobile from WhatsApp redirect
+      const rawPhone = urlParams.get("phone") || urlParams.get("mobile");
+      if (rawPhone) {
+        const digits = rawPhone.replace(/\D/g, "");
+        const cleanPhone = digits.length === 12 && digits.startsWith("91") ? digits.slice(2) : digits;
+        if (cleanPhone.length === 10 && /^[6-9]\d{9}$/.test(cleanPhone)) {
+          setReq(prev => ({ ...prev, customer_mobile: cleanPhone }));
+          setIsPhonePreVerified(true);
+          setPreVerifiedPhone(cleanPhone);
+        }
+      }
+
+      const nameParam = urlParams.get("name") || urlParams.get("customer_name");
+      if (nameParam) {
+        setReq(prev => ({ ...prev, customer_name: prev.customer_name || nameParam }));
+      }
       if (ref) {
         setReq(prev => ({ ...prev, partner_id: ref.toUpperCase() }));
       }
@@ -375,6 +393,78 @@ export function WizardClientV2() {
     setLoading(false);
   };
 
+  const submitLeadAndNavigate = async (cleanMobile: string, isPreVerified = false) => {
+    setLoading(true);
+    try {
+      let city = "";
+      let pincode = "";
+      let sourceTag = isPreVerified ? "whatsapp_verified" : "website_wizard";
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        city = urlParams.get("city") || "";
+        pincode = req.customer_pincode || urlParams.get("pincode") || "";
+        const paramSource = urlParams.get("source") || urlParams.get("utm_source");
+        if (paramSource) sourceTag = paramSource;
+      }
+
+      const payload = {
+        customer_name: req.customer_name || "",
+        mobile_number: cleanMobile,
+        email: req.customer_email || undefined,
+        timeline: req.installation_timeline || "asap",
+        source: req.partner_id ? "partner_referral" : sourceTag,
+        wizard_answers: { 
+          ...req, 
+          q_timeline: req.installation_timeline || "asap",
+          timeline: req.installation_timeline || "asap",
+          installation_timeline: req.installation_timeline || "asap",
+          broadband_status: req.broadband_status, 
+          q_broadband: req.broadband_status, 
+          pincode, 
+          city,
+          verified_via: isPreVerified ? "whatsapp_omnichannel" : "whatsapp_otp"
+        },
+        property_type: req.property_type || "home",
+        technology_choice: (Number(req.wifi_camera_count) > 0 && (Number(req.outdoor_camera_count) > 0 || Number(req.indoor_camera_count) > 0)) ? "Hybrid" : (req.technology_preference || "HD"),
+        cabling_done: req.cabling_done || false,
+        camera_count: req.camera_count,
+        detected_city: city,
+        firebase_uid: auth.currentUser?.uid || (isPreVerified ? `wa_${cleanMobile}` : "anonymous")
+      };
+      
+      const isCallbackScenario = req.installation_type === "addon" && req.existing_system_known === false;
+      const newLeadId = await createLeadAction({
+        ...payload,
+        wizard_answers: {
+          ...payload.wizard_answers,
+          callback_requested: isCallbackScenario,
+          callback_reason: isCallbackScenario ? "addon_compatibility_check" : undefined
+        }
+      } as any);
+      if (newLeadId && 'success' in newLeadId && newLeadId.success && newLeadId.id) {
+        setLeadId(newLeadId.id);
+        setCreatedCallbackLeadId(newLeadId.id);
+
+        if (isCallbackScenario) {
+          setCallbackSubmitted(true);
+          setLoading(false);
+          return;
+        }
+
+        if (isProBuilderFlow) { router.push(`/pro-builder?leadId=${newLeadId.id}`); } else { router.push(`/quote/${newLeadId.id}`); }
+        return;
+      } else {
+        console.error("Failed to save lead: ", (newLeadId as any)?.error, (newLeadId as any)?.details);
+        toast.error("Failed to save lead. Please try again.");
+      }
+    } catch (error: any) {
+      console.error("Lead submission error:", error);
+      toast.error(error.message || "Failed to generate quotation. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleFinishWizard = async () => {
     if (!req.customer_mobile || req.customer_mobile.length < 10) {
       toast.error(t("err_invalid_mobile", "Please enter a valid 10-digit mobile number."));
@@ -384,6 +474,12 @@ export function WizardClientV2() {
     setLoading(true);
     try {
       const cleanMobile = req.customer_mobile.replace(/\s/g, "");
+
+      // Fast-track: If mobile was verified via WhatsApp omnichannel referral, bypass OTP!
+      if (isPhonePreVerified && cleanMobile === preVerifiedPhone) {
+        await submitLeadAndNavigate(cleanMobile, true);
+        return;
+      }
 
       if (false) {
         setConfirmationResult({
@@ -451,65 +547,8 @@ export function WizardClientV2() {
       }
       
       toast.success("Verification successful!");
-      
-      let city = "";
-      let pincode = "";
-      if (typeof window !== "undefined") {
-        const urlParams = new URLSearchParams(window.location.search);
-        city = urlParams.get("city") || "";
-        pincode = req.customer_pincode || urlParams.get("pincode") || "";
-      }
-
-      const payload = {
-        customer_name: req.customer_name || "",
-        mobile_number: cleanMobile,
-        email: req.customer_email || undefined,
-        timeline: req.installation_timeline || "asap",
-        wizard_answers: { 
-          ...req, 
-          q_timeline: req.installation_timeline || "asap",
-          timeline: req.installation_timeline || "asap",
-          installation_timeline: req.installation_timeline || "asap",
-          broadband_status: req.broadband_status, 
-          q_broadband: req.broadband_status, 
-          pincode, 
-          city 
-        },
-        property_type: req.property_type || "home",
-        technology_choice: (Number(req.wifi_camera_count) > 0 && (Number(req.outdoor_camera_count) > 0 || Number(req.indoor_camera_count) > 0)) ? "Hybrid" : (req.technology_preference || "HD"),
-        cabling_done: req.cabling_done || false,
-        camera_count: req.camera_count,
-        detected_city: city,
-        firebase_uid: auth.currentUser?.uid || "anonymous"
-      };
-      
-      const isCallbackScenario = req.installation_type === "addon" && req.existing_system_known === false;
-      const newLeadId = await createLeadAction({
-        ...payload,
-        wizard_answers: {
-          ...payload.wizard_answers,
-          callback_requested: isCallbackScenario,
-          callback_reason: isCallbackScenario ? "addon_compatibility_check" : undefined
-        }
-      } as any);
-      if (newLeadId && 'success' in newLeadId && newLeadId.success && newLeadId.id) {
-        setLeadId(newLeadId.id);
-        setCreatedCallbackLeadId(newLeadId.id);
-
-        if (isCallbackScenario) {
-          setCallbackSubmitted(true);
-          setLoading(false);
-          return;
-        }
-
-        if (isProBuilderFlow) { router.push(`/pro-builder?leadId=${newLeadId.id}`); } else { router.push(`/quote/${newLeadId.id}`); }
-        return;
-      } else {
-        console.error("Failed to save lead: ", (newLeadId as any)?.error, (newLeadId as any)?.details);
-        toast.error("Failed to save lead. Please try again.");
-      }
-      
       setOtpSent(false);
+      await submitLeadAndNavigate(cleanMobile, false);
     } catch (error: any) {
       console.error("OTP verification error:", error);
       toast.error(error.message || "Please check the code and try again.");
@@ -1052,6 +1091,7 @@ export function WizardClientV2() {
                      <input
                        type="tel"
                        placeholder={t("wz_mobile_placeholder")}
+                        readOnly={isPhonePreVerified}
                        value={req.customer_mobile || ''}
                        onChange={(e) => setReq(prev => ({ ...prev, customer_mobile: e.target.value.replace(/\D/g, '') }))}
                        className="w-full p-3 sm:p-3.5 border rounded-xl bg-slate-50 dark:bg-zinc-800 dark:border-zinc-700 text-slate-900 dark:text-white"
@@ -1061,14 +1101,16 @@ export function WizardClientV2() {
                    <Button
                      onClick={handleFinishWizard}
                      disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10}
-                     className="w-full h-12 rounded-xl text-base font-bold bg-blue-600 hover:bg-blue-700 text-white"
+                     className={`w-full h-12 rounded-xl text-base font-bold text-white transition-all ${
+                        isPhonePreVerified ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20" : "bg-blue-600 hover:bg-blue-700"
+                      }`}
                    >
                      {loading ? (
                        <span className="flex items-center gap-2 justify-center">
-                         <Loader2 className="w-4 h-4 animate-spin" /> Sending OTP...
+                         <Loader2 className="w-4 h-4 animate-spin" /> {isPhonePreVerified ? "Submitting Request..." : "Sending OTP..."}
                        </span>
                      ) : (
-                       t("wz_request_a_free_callback")
+                       isPhonePreVerified ? "⚡ Request Free Callback (Instant)" : t("wz_request_a_free_callback")
                      )}
                    </Button>
                    <div className="mt-5 p-4 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900">
@@ -2982,16 +3024,57 @@ export function WizardClientV2() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">{t("wz_mobile_number_")}</label>
-                  <input 
-                    type="tel" 
-                    required
-                    placeholder="10-digit mobile number" 
-                    maxLength={10}
-                    value={req.customer_mobile || ''} 
-                    onChange={(e) => setReq(prev => ({ ...prev, customer_mobile: e.target.value.replace(/\D/g, '') }))} 
-                    className="w-full py-2.5 px-3.5 sm:p-3.5 text-sm border border-gray-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300">
+                      {t("wz_mobile_number_")}
+                    </label>
+                    {isPhonePreVerified && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800 animate-in fade-in">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        Verified via WhatsApp
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <input 
+                      type="tel" 
+                      required
+                      placeholder="10-digit mobile number" 
+                      maxLength={10}
+                      value={req.customer_mobile || ''} 
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        setReq(prev => ({ ...prev, customer_mobile: val }));
+                        if (val !== preVerifiedPhone) {
+                          setIsPhonePreVerified(false);
+                        } else {
+                          setIsPhonePreVerified(true);
+                        }
+                      }} 
+                      className={`w-full py-2.5 px-3.5 sm:p-3.5 text-sm border rounded-xl focus:ring-2 outline-none transition-all bg-white dark:bg-zinc-800 text-gray-900 dark:text-white ${
+                        isPhonePreVerified 
+                          ? "border-emerald-400 dark:border-emerald-700 focus:ring-emerald-500 focus:border-emerald-500 pr-20" 
+                          : "border-gray-200 dark:border-zinc-700 focus:ring-blue-500 focus:border-blue-500"
+                      }`}
+                    />
+                    {isPhonePreVerified && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsPhonePreVerified(false);
+                          setReq(prev => ({ ...prev, customer_mobile: '' }));
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
+                      >
+                        Change
+                      </button>
+                    )}
+                  </div>
+                  {isPhonePreVerified && (
+                    <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <span>✓ Mobile pre-verified from WhatsApp — instant quotation unlock (no OTP SMS needed).</span>
+                    </p>
+                  )}
                 </div>
                 <div>
                   <SmartAddressInput
@@ -3056,14 +3139,20 @@ export function WizardClientV2() {
                   onClick={handleFinishWizard} 
                   disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10} 
                   size="lg" 
-                  className="flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md shadow-blue-500/20 whitespace-nowrap overflow-hidden text-ellipsis px-2"
+                  className={`flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white rounded-xl shadow-md whitespace-nowrap overflow-hidden text-ellipsis px-2 transition-all ${
+                    isPhonePreVerified
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/20"
+                      : "bg-blue-600 hover:bg-blue-700 shadow-blue-500/20"
+                  }`}
                 >
                   {loading ? (
                     <span className="flex items-center gap-2 justify-center">
-                      <Loader2 className="w-4 h-4 animate-spin" /> {t("wz_sending_otp")}
+                      <Loader2 className="w-4 h-4 animate-spin" /> {isPhonePreVerified ? "Unlocking Quotation..." : t("wz_sending_otp")}
                     </span>
                   ) : (
-                    isProBuilderFlow ? "Access Pro Builder" : t("wz_view_cctv_options")
+                    isPhonePreVerified
+                      ? (isProBuilderFlow ? "⚡ Access Pro Builder (Instant) →" : "⚡ View My CCTV Options (Instant) →")
+                      : (isProBuilderFlow ? "Access Pro Builder" : t("wz_view_cctv_options"))
                   )}
                 </Button>
               </div>
