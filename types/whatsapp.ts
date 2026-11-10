@@ -46,4 +46,6 @@ export interface WhatsAppSession {
   utm_source?: string;
   utm_campaign?: string;
   nearest_hub?: string;
+  last_processed_message_id?: string;
+  last_inbound_text?: string;
 }

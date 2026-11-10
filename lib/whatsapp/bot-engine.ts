@@ -119,12 +119,15 @@ export function cleanInboundText(content: any): string {
   const unquoted = lines.filter(line => {
     const t = line.trim();
     if (t.startsWith(">")) return false;
-    if (t.startsWith("✓ Added to Setup")) return false;
-    if (t.startsWith("✓ Camera Setup Confirmed")) return false;
+    if (t.startsWith("✓")) return false;
+    if (t.startsWith("•")) return false;
+    if (t.startsWith("⚡")) return false;
     if (t.startsWith("Welcome to TEAM CCTV")) return false;
+    if (t.startsWith("Step ")) return false;
     return true;
   });
-  return unquoted.join(" ").trim().toLowerCase();
+  const cleaned = unquoted.join(" ").trim();
+  return cleaned || content.trim();
 }
 
 export async function processIncomingMessage(
@@ -138,6 +141,11 @@ export async function processIncomingMessage(
     mediaId?: string;
   }
 ) {
+  // If content is string, clean out any WhatsApp quote replies or message echoes
+  if (typeof content === "string") {
+    content = cleanInboundText(content);
+  }
+
   const sessionRef = adminDb.collection(COLLECTIONS.WHATSAPP_SESSIONS).doc(from);
   const doc = await sessionRef.get();
   
@@ -158,6 +166,39 @@ export async function processIncomingMessage(
       session.customer_name = context.profileName;
     }
   }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 0. SESSION-LEVEL RAPID-FIRE & DUPLICATE DEBOUNCE
+  // ──────────────────────────────────────────────────────────────────────────
+  const nowMs = Date.now();
+  const normalizedIncomingText = typeof content === "string" 
+    ? content.trim().toLowerCase() 
+    : (content?.id || content?.title || JSON.stringify(content || "")).slice(0, 100);
+
+  const lastMsgTime = session.last_message_at 
+    ? (typeof (session.last_message_at as any).toDate === "function" 
+        ? (session.last_message_at as any).toDate().getTime() 
+        : new Date(session.last_message_at as any).getTime())
+    : 0;
+
+  const isSameContent = Boolean(
+    session.last_inbound_text && 
+    session.last_inbound_text === normalizedIncomingText
+  );
+
+  // If the exact same message arrives within 3.5 seconds from the same user, suppress duplicate execution
+  if (isSameContent && (nowMs - lastMsgTime < 3500)) {
+    console.warn(`[BotEngine] Suppressing duplicate rapid-fire message for ${from}: "${normalizedIncomingText}" (${nowMs - lastMsgTime}ms ago)`);
+    return;
+  }
+
+  // Update session tracking and persist timestamp immediately to prevent concurrent duplicate runs
+  session.last_inbound_text = normalizedIncomingText;
+  session.last_message_at = new Date();
+  await sessionRef.set({
+    last_inbound_text: normalizedIncomingText,
+    last_message_at: session.last_message_at,
+  }, { merge: true });
 
   // ──────────────────────────────────────────────────────────────────────────
   // 1. ZERO-LOSS INSTANT LEAD CAPTURE ON MESSAGE #1

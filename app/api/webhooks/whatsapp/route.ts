@@ -1,5 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { processIncomingMessage } from "@/lib/whatsapp/bot-engine";
+import { isDuplicateMessage, buildDedupeKey } from "@/lib/whatsapp/deduplication";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -21,15 +24,22 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // Validate the event structure
+    // 1. Validate the event structure & ignore status receipts (sent, delivered, read)
     if (body.object !== "whatsapp_business_account") {
       return NextResponse.json({ success: true }, { status: 404 });
     }
 
     const entry = body.entry?.[0];
     const changes = entry?.changes?.[0];
-    const message = changes?.value?.messages?.[0];
-    const contact = changes?.value?.contacts?.[0];
+    const value = changes?.value;
+
+    // Ignore delivery status callbacks to prevent ghost triggers
+    if (value?.statuses && Array.isArray(value.statuses)) {
+      return NextResponse.json({ success: true, message: "Ignored delivery status callback" });
+    }
+
+    const message = value?.messages?.[0];
+    const contact = value?.contacts?.[0];
     
     // Check if it's a valid incoming message
     if (!message) {
@@ -37,6 +47,15 @@ export async function POST(request: Request) {
     }
 
     const from = message.from; // Customer's verified mobile number
+    const messageId = message.id; // Unique Meta message ID (e.g. wamid.HBgL...)
+
+    // 2. Deduplication check using unique Meta message ID or payload fingerprint
+    const dedupeKey = buildDedupeKey(from, messageId, message.type, message.text?.body || message.interactive);
+    if (isDuplicateMessage(dedupeKey)) {
+      console.warn(`[Meta WhatsApp Webhook] Duplicate inbound message detected and suppressed: ${dedupeKey}`);
+      return NextResponse.json({ success: true, message: "Ignored duplicate message" });
+    }
+
     const profileName = contact?.profile?.name || "WhatsApp Customer";
     const referral = message.referral; // CTWA referral object
 
@@ -50,38 +69,48 @@ export async function POST(request: Request) {
       mediaId: message.image?.id || message.document?.id,
     };
 
-    if (message.type === "text") {
-      const textBody = message.text.body as string;
-      await processIncomingMessage(from, "text", textBody, context);
+    let incomingType: "text" | "interactive" | "nfm_reply" | "location" | "image" | "document" = "text";
+    let content: any = "";
 
+    if (message.type === "text") {
+      incomingType = "text";
+      content = message.text?.body as string;
     } else if (message.type === "interactive") {
       const interactive = message.interactive;
-      
       if (interactive.type === "nfm_reply") {
-        // WhatsApp Flow Submission
-        const responseJson = interactive.nfm_reply.response_json;
-        await processIncomingMessage(from, "nfm_reply", responseJson, context);
+        incomingType = "nfm_reply";
+        content = interactive.nfm_reply?.response_json;
       } else {
-        let replyContent = "";
+        incomingType = "interactive";
         if (interactive.type === "button_reply") {
-          replyContent = interactive.button_reply.id;
+          content = interactive.button_reply?.id;
         } else if (interactive.type === "list_reply") {
-          replyContent = interactive.list_reply.id;
-        }
-        
-        if (replyContent) {
-          await processIncomingMessage(from, "interactive", replyContent, context);
+          content = interactive.list_reply?.id;
         }
       }
     } else if (message.type === "location") {
-      await processIncomingMessage(from, "location", message.location, context);
+      incomingType = "location";
+      content = message.location;
     } else if (message.type === "image") {
-      await processIncomingMessage(from, "image", message.image, context);
+      incomingType = "image";
+      content = message.image;
     } else if (message.type === "document") {
-      await processIncomingMessage(from, "document", message.document, context);
+      incomingType = "document";
+      content = message.document;
     }
 
-    // Always return 200 OK to Meta to acknowledge receipt and prevent retries
+    // 3. Process asynchronously via Next.js after() to immediately return HTTP 200 within <15ms
+    after(async () => {
+      try {
+        if (content) {
+          await processIncomingMessage(from, incomingType, content, context);
+        }
+      } catch (err) {
+        console.error("🔥 [WhatsApp Webhook Async Execution Error]:", err);
+      }
+    });
+
+    // Return HTTP 200 immediately so Meta never retries
     return NextResponse.json({ success: true }, { status: 200 });
 
   } catch (error: any) {
