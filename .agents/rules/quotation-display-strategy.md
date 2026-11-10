@@ -70,3 +70,21 @@ Never confuse or revert the quotation presentation strategy for this project. Th
 - **Sticky Technology & Brand Bar:** The Technology Selector (HD Analog, IP Network, Wireless, Hybrid) and Brand Selector pills must remain pinned (sticky top-14 md:top-20 z-30) as customers scroll down to browse and compare Available Packages.
 - **Immediate Context & Zero Friction Switching:** Floating below the site header with ackdrop-blur-md bg-[#f5f5f7]/95 dark:bg-black/95, customers can seamlessly switch technologies or filter by brand anywhere in the catalog without having to scroll all the way back up to the top.
 - **Viewport Height Efficiency:** Designed with compact padding (~75px total height on mobile) to preserve maximum vertical screen space for quotation cards while keeping touch targets comfortably accessible.
+
+
+## 10. WhatsApp Omnichannel Conversational Engine & Resilience Standards
+- **11-Language First-Touch Selection & Layman Phrasing:**
+  - Initial interaction presents bilingual greeting (English & Hindi) with 1 to 11 options for all supported Indian languages (`en`, `hi`, `mr`, `gu`, `ta`, `te`, `kn`, `bn`, `ml`, `pa`, `or`).
+  - Strict colloquial laymen terms without jargon or synthetic words (e.g., "घर / फ्लैट", "दुकान / ऑफिस", "तार वाला", "बिना तार").
+- **Hybrid Quick-Tap & Direct Numeric Reply:**
+  - Customers can tap quick-tap buttons (`[ 2 ]`, `[ 4 ]`, `[ 8 ]`) or directly type an integer (`1` to `32`) for camera counts.
+- **Option A (2-Button Checkpoint):**
+  - Camera setup confirmation uses strictly 2 Meta API compliant buttons ($\le 20$ chars):
+    - `[ ✅ Done (Proceed) ]` (`wf_done_proceed`)
+    - `[ ✏️ Change Qty ]` (`wf_change_qty`)
+- **Non-Destructive Camera Quantity Editor (`ASK_CAMERA_EDIT_CHOICE`):**
+  - Tapping `[ ✏️ Change Qty ]` allows modifying Outdoor Bullet, Indoor Dome, or Wireless counts on-the-fly while strictly preserving customer language, property type, and pincode session data.
+- **Media & Off-Topic Input Resilience:**
+  - Inbound media (images, stickers, audio, documents) or off-topic text never crashes or resets the session. The bot gracefully acknowledges and re-prompts the current step.
+- **Name Protection Filter & Data Normalization:**
+  - Rejects rate/pricing queries in the name prompt; intercepts 10-digit mobile numbers typed into the pincode prompt; standardizes phone numbers to canonical `91XXXXXXXXXX`.

@@ -669,3 +669,58 @@ A **Hybrid CCTV System** combines a central wired CCTV setup (Analog HD with DVR
 - **Zero Blocking Popups on Page Load:** Initial quotation catalog load (`ConfiguratorView.tsx`) must never auto-open blocking or checklist modals. Customers land directly on their quotation catalog.
 - **On-Demand Access:** Feature Guide and Specification Checklist modals are opened exclusively on demand via explicit user click (`💡 Feature Guide` and `⚙️ Checklist`).
 - **Centered Viewport Safety:** Modals are centered on screen (`items-center justify-center max-h-[85vh] rounded-2xl sm:rounded-3xl`) with dedicated internal scrolling and sticky header/footer actions, guaranteeing zero bottom-clipping across all screen sizes.
+
+
+---
+
+## 14. WhatsApp Omnichannel Customer Journey, Resilience Engine & 11-Language Rules
+
+### 14.1 11 Indian Languages & Layman Phrasing Standard
+- **First-Touch Language Selection:** On the customer's very first message, the system sends a bilingual greeting in English and Hindi, asking them to select their preferred language by replying with a number (1 to 11):
+  1. English (`en`)
+  2. Hindi (`hi` - हिन्दी)
+  3. Marathi (`mr` - मराठी)
+  4. Gujarati (`gu` - ગુજરાતી)
+  5. Tamil (`ta` - தமிழ்)
+  6. Telugu (`te` - తెలుగు)
+  7. Kannada (`kn` - ಕನ್ನಡ)
+  8. Bengali (`bn` - বাংলা)
+  9. Malayalam (`ml` - മലയാളം)
+  10. Punjabi (`pa` - ਪੰਜਾਬੀ)
+  11. Odia (`or` - ଓଡ଼ିଆ)
+- **Layman Language Dictionary:** All conversational templates (`conversational-i18n.ts`) strictly use natural, everyday colloquial phrasing rather than robotic translations or bureaucratic terminology:
+  - Use "घर / फ्लैट" instead of synthetic bureaucratic terms.
+  - Use "दुकान / ऑफिस" instead of confusing category codes.
+  - Use "तार वाला (Wired)" and "बिना तार (Wireless)".
+  - Use "कम" / "ज्यादा" instead of artificial words like "अनुशंसित".
+
+### 14.2 Hybrid Quick-Tap Buttons + Direct Numeric Reply
+- **Dual Input Processing:** For all camera quantity prompts (Outdoor Bullets, Indoor Domes, Wireless Cameras), the system provides 3 quick-tap buttons (`[ 2 ]`, `[ 4 ]`, `[ 8 ]`) while simultaneously accepting direct typed integers (`1` to `32`).
+- **Zero-Friction Keystrokes:** If a customer types "4", "6", or "12", the bot immediately parses the integer without forcing a button tap or asking for re-confirmation.
+
+### 14.3 Option A: 2-Button Camera Configuration Summary
+- **Meta Cloud API Compliance:** Meta strictly limits interactive button messages to $\le 3$ buttons with titles $\le 20$ characters.
+- **Two-Button Confirmation:**
+  - `[ ✅ Done (Proceed) ]` (`wf_done_proceed`)
+  - `[ ✏️ Change Qty ]` (`wf_change_qty`)
+- **Elimination of Confusing Loops:** Banned redundant prompts asking "Add Wireless" when a customer has already specified their cameras. Option A gives the customer confidence that their counts are saved while providing an instant edit option.
+
+### 14.4 Non-Destructive Camera Quantity Editor (`ASK_CAMERA_EDIT_CHOICE`)
+- **State Preservation:** Triggering `wf_change_qty` or typing "change qty", "edit qty", or "edit camera" intercepts into an interactive modifier.
+- **Zero Session Loss:** Session state, customer language, property type, and pincode remain completely intact.
+- **Granular Target Selection:**
+  - For wired/hybrid setups: Provides quick buttons for `🌧️ Outdoor Bullets`, `🏠 Indoor Domes`, or `📶 Wireless Cams` showing current counts.
+  - For wireless setups: Directs straight to the wireless model count prompt.
+- **Immediate Recalculation:** Updates the selected quantity and immediately routes back to the 2-button summary.
+
+### 14.5 Media & Off-Topic Input Resilience Engine
+- **Non-Related Media (Images, Videos, Voice Notes, Documents):** When a customer sends media at any point during the conversation, the system MUST NOT break or reset the state. The bot sends a reassuring acknowledgment explaining that photos can be evaluated during the site survey, and re-presents the pending question with its interactive buttons.
+- **Out-of-Flow Text Recovery:** If typed text does not match valid options, the bot politely clarifies what input is expected and re-prompts without resetting the flow.
+
+### 14.6 Name Protection Filter & Normalization Rules
+- **Name Protection Filter:** Filters out price inquiries (e.g. "rate kya hai", "call me please", "discount kitna milega", "cctv price") from being saved as customer names, prompting the customer for their genuine name.
+- **Accidental Mobile in Pincode Step:** If a customer accidentally types a 10-digit mobile number at the pincode prompt, the bot saves the phone number and re-prompts for the 6-digit area pincode.
+- **Universal Phone Normalization:** Standardizes all input formats (`+91`, `91`, `0`-prefix, 10-digit) into canonical `91XXXXXXXXXX`.
+
+### 14.7 Zero `[object Object]` & Sanitized Error Invariant
+- **Sanitized Logging & Output:** All API error handlers, customer notifications, and webhook responses must sanitize object errors (`error?.message || String(error)`), guaranteeing zero `[object Object]` occurrences in UI toasts or customer WhatsApp messages.

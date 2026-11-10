@@ -19,6 +19,15 @@ This version has breaking changes — APIs, conventions, and file structure may 
    - Wholesale costs and customer retail prices are 18% GST inclusive.
    - Taxable Base = Price / 1.18. GST (18%) = Price - Taxable Base. Zero hidden tax at checkout.
 
+4. **WhatsApp Conversational Customer Journey & Resilience Rules:**
+   - **11-Language Layman Phrasing:** Welcome step initiates language selection across 11 Indian languages (`en`, `hi`, `mr`, `gu`, `ta`, `te`, `kn`, `bn`, `ml`, `pa`, `or`) using natural colloquial language (no robotic bureaucratic Hindi like "अनुशंसित").
+   - **Hybrid Direct Numeric Input:** Customer can tap quick buttons (`[ 2 ]`, `[ 4 ]`, `[ 8 ]`) OR directly reply with any typed integer (`1` to `32`).
+   - **Option A (2-Button Checkpoint):** At the camera count checkpoint, provide 2 buttons: `[ ✅ Done (Proceed) ]` and `[ ✏️ Change Qty ]`.
+   - **Non-Destructive Quantity Editing (`ASK_CAMERA_EDIT_CHOICE`):** Tapping `[ ✏️ Change Qty ]` allows modifying camera counts without resetting language, property type, or pincode.
+   - **Media & Off-Topic Input Resilience:** Images, stickers, audio, or off-topic queries never break the journey; the system gracefully reminds the customer of the pending question.
+   - **Sanitized Error Strings:** Zero `[object Object]` across all APIs, webhooks, and UI toasts.
+
+
 ---
 
 ## Cashfree Payments — Integration Skills

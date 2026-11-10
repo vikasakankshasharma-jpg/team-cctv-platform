@@ -140,3 +140,33 @@ flowchart TD
   - Installers: Based on job completion and verified labor.
   - B2B Partners: 2% commission based on partner QR/referral code.
   - B2C Individual Referrers: ₹500 flat incentive per completed referral.
+
+
+### 9. WhatsApp Conversational Quotation Pipeline & Resilience Architecture
+- **Step 1: First-Touch Language Gate:**
+  - Welcomes customer with a bilingual English/Hindi greeting.
+  - Numbered selection menu (1 to 11) supporting English, Hindi, Marathi, Gujarati, Tamil, Telugu, Kannada, Bengali, Malayalam, Punjabi, and Odia.
+  - Customer continues the entire journey in their preferred language with everyday layman terms.
+- **Step 2: Property Type & Pincode Verification:**
+  - Captures property type (Home/Flat, Shop/Office, Factory/Plot).
+  - Validates 6-digit postal pincode against serviceability directory.
+  - Intercepts 10-digit mobile numbers accidentally typed at the pincode prompt.
+- **Step 3: Camera Architecture Selection:**
+  - Wired Standard HD, Wired Digital IP, or Smart Wireless.
+- **Step 4: Camera Counts with Hybrid Input:**
+  - Direct numeric reply: Customer can type any single number (e.g. `4` or `8`) or tap interactive buttons (`[ 2 ]`, `[ 4 ]`, `[ 8 ]`).
+  - Supports separate Outdoor Weatherproof Bullet and Indoor Dome counts.
+- **Step 5: Camera Configuration Summary (Option A):**
+  - Confirms counts using strictly 2 Meta API compliant buttons:
+    - `[ ✅ Done (Proceed) ]` (`wf_done_proceed`)
+    - `[ ✏️ Change Qty ]` (`wf_change_qty`)
+- **Step 6: Non-Destructive Quantity Modifier (`ASK_CAMERA_EDIT_CHOICE`):**
+  - Tapping `[ ✏️ Change Qty ]` allows modifying camera counts without wiping customer session data.
+- **Step 7: Real-Time Omnichannel BOM & Pricing Parity:**
+  - Quotation engine generates real-time hardware Bill of Materials (BOM) strictly matching web calculation rules.
+  - 18% GST inclusive standard with full mathematical reconciliation.
+  - Interactive PDF download and direct web link sent via WhatsApp.
+- **Resilience Engine:**
+  - Any sent images, videos, audio notes, or off-topic questions are handled gracefully without breaking state.
+  - Name protection filter shields customer lead records from price queries.
+  - Canonical phone formatting standardizes leads to `91XXXXXXXXXX`.

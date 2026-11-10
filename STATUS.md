@@ -672,6 +672,43 @@
 
 ---
 
+### Milestone 50: WhatsApp Omnichannel Conversational Engine, 11-Language Localization & Resilience Architecture
+- **11-Language First-Touch Selection**:
+  - Welcomes customer on their very first interaction in both English and Hindi.
+  - Numbered selection menu (1 to 11) for all 11 Indian languages (`en`, `hi`, `mr`, `gu`, `ta`, `te`, `kn`, `bn`, `ml`, `pa`, `or`).
+  - Strict colloquial laymen terms without jargon or synthetic words (e.g. "घर / फ्लैट", "दुकान / ऑफिस", "तार वाला", "बिना तार").
+- **Hybrid Quick-Tap Buttons + Direct Numeric Reply**:
+  - For all camera quantity prompts (Outdoor Bullets, Indoor Domes, Wireless Cameras), provides 3 quick-tap buttons (`[ 2 ]`, `[ 4 ]`, `[ 8 ]`) while simultaneously accepting direct typed integers (`1` to `32`).
+  - Customer can type "4", "6", or "12" and the bot immediately parses the integer without forcing button clicks.
+- **Media & Off-Topic Input Resilience**:
+  - When customer sends non-related media (photos, voice notes, stickers, documents) or off-topic text, the engine prevents journey breakdown. It politely acknowledges the media (explaining site survey verification) and re-prompts the pending step.
+- **Data Protection & Normalization**:
+  - Name protection filter intercepts pricing queries ("rate kya hai", "cctv price") and re-prompts for real customer name.
+  - Accidental 10-digit mobile number typed at pincode step is captured and 6-digit pincode re-prompted.
+  - Universal phone normalization converts all formats to canonical `91XXXXXXXXXX`.
+- **Zero `[object Object]` Invariant**:
+  - Sanitized error extraction across all website portals and webhook responses.
+
+---
+
+### Milestone 51: Option A 2-Button Camera Summary & Non-Destructive Quantity Editor (`ASK_CAMERA_EDIT_CHOICE`)
+- **Option A (2-Button Checkpoint)**:
+  - Replaced legacy `[ ➕ Add Wireless ]` with `[ ✏️ Change Qty ]` (`wf_change_qty`).
+  - Meta API compliance: 2 spacious action buttons complying with $\le 3$ button and $\le 20$ character limits:
+    - `[ ✅ Done (Proceed) ]` (`wf_done_proceed`)
+    - `[ ✏️ Change Qty ]` (`wf_change_qty`)
+  - All 11 languages localized for both buttons.
+- **Non-Destructive Quantity Modifier (`ASK_CAMERA_EDIT_CHOICE`)**:
+  - Tapping `[ ✏️ Change Qty ]` opens an interactive camera editor without wiping customer session data (Language, Property Type, Pincode preserved).
+  - Wired/hybrid systems present a 3-button breakdown showing existing counts (`🌧️ Outdoor Bullets`, `🏠 Indoor Domes`, `📶 Wireless Cams`).
+  - Pure wireless systems jump straight to the wireless model count prompt.
+  - Updates counts dynamically and returns seamlessly to confirmation.
+- **Production Verification**:
+  - 12/12 automated resilience tests passed (`scripts/test-whatsapp-resilience.ts`).
+  - Live deployment verified on `https://cctvquotation.com` via Vercel.
+
+---
+
 ## 4. Operational Maintenance & Ongoing Runbooks
 
 1. **Disaster Recovery & Backup:** [`docs/devops/disaster-recovery.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/devops/disaster-recovery.md) and [`runbooks/BACKUP_RESTORE.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/runbooks/BACKUP_RESTORE.md).

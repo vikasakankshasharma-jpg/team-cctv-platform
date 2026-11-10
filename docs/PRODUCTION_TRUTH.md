@@ -229,3 +229,27 @@
 - **Synchronized Catalog:** 66 active, verified hardware items across 6 camera brands and matching 4ch/8ch/16ch 2MP & 5MP DVRs.
 - **Brand Representation:** Brand filters feature authentic available distributor stock: `All Brands` (Recommended) | `A+ Products (Budget)` | `CP Plus` | `Hikvision` | `Prama` | `Secureye` | `Trueview`.
 - **Zero-Dead-End Guarantee:** If a brand does not stock a specific resolution (e.g. Prama only stocks 2MP in this catalog), switching to that brand auto-adjusts the bucket resolution dropdown to available stock (`2MP`), completely eliminating quotation dead ends or missing product errors.
+
+
+## 20. WhatsApp Omnichannel Production Engine & Resilience Invariants
+- **Webhook Endpoint:** `https://cctvquotation.com/api/webhooks/whatsapp` (Meta Cloud API).
+- **Out-of-Flow & Media Resilience:**
+  - Inbound media (photos, voice notes, stickers, PDFs) never crashes or breaks the conversational state machine. The bot acknowledges media receipt (explaining it can be reviewed during survey) and re-prompts the exact pending question with its quick-tap buttons.
+  - Name protection filter intercepts off-topic pricing queries ("rate kya hai", "cctv price") and politely re-prompts for genuine name.
+  - Accidental 10-digit mobile number typed at the pincode step is captured as telephone and the 6-digit pincode is re-prompted.
+  - Canonical phone formatting standardizes all numbers to `91XXXXXXXXXX`.
+- **Zero `[object Object]` Guarantee:**
+  - All webhook handlers, notification catch blocks, and API responses strictly sanitize error messages to prevent raw JS object leaks.
+
+## 21. 11 Indian Languages Standard & Natural Colloquial Phrasing
+- **Supported Languages:** English (`en`), Hindi (`hi`), Marathi (`mr`), Gujarati (`gu`), Tamil (`ta`), Telugu (`te`), Kannada (`kn`), Bengali (`bn`), Malayalam (`ml`), Punjabi (`pa`), Odia (`or`).
+- **First-Touch Welcome:** Initiates with a bilingual English/Hindi greeting and numbered 1–11 menu.
+- **Layman Colloquial Dictionary:** Strict ban on synthetic bureaucratic translations. Natural everyday terms used across all languages (e.g. "घर / फ्लैट", "दुकान / ऑफिस", "तार वाला", "बिना तार", "कम / ज्यादा").
+
+## 22. Hybrid Numeric Reply & Option A 2-Button Checkpoint
+- **Hybrid Input:** Customers can tap quick-tap buttons (`[ 2 ]`, `[ 4 ]`, `[ 8 ]`) or directly type an integer (`1` to `32`) for camera quantities. Direct typed numbers are immediately parsed.
+- **Option A (2-Button Checkpoint):** Summary confirmation uses 2 Meta API compliant buttons ($\le 20$ chars):
+  - `[ ✅ Done (Proceed) ]` (`wf_done_proceed`)
+  - `[ ✏️ Change Qty ]` (`wf_change_qty`)
+- **Non-Destructive Camera Quantity Editor (`ASK_CAMERA_EDIT_CHOICE`):**
+  - Tapping `[ ✏️ Change Qty ]` allows modifying counts per camera bucket without resetting customer session data (Language, Property Type, Pincode preserved).
