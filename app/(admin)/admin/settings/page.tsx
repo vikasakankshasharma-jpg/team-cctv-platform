@@ -1,7 +1,8 @@
+import { Suspense } from "react";
 import { requireSuperAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { SETTINGS_DOC_ID } from "@/lib/constants";
-import { Settings2 } from "lucide-react";
+import { Settings2, Loader2 } from "lucide-react";
 import type { AppSettings } from "@/types";
 import { SettingsForm } from "@/components/admin/SettingsForm";
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -68,6 +69,16 @@ export default async function SettingsAdminPage() {
     labor_no_cabling_visit_charge: 500,
     labor_no_cabling_small_job_threshold: 2,
     labor_no_cabling_small_job_rate: 500,
+
+    // Technician Labor Payout Costs & Services Margins
+    cost_labor_hd_per_camera: 250,
+    cost_labor_ip_per_camera: 300,
+    cost_labor_wireless_per_camera: 200,
+    cost_labor_hd_fitting_only: 120,
+    cost_labor_ip_fitting_only: 180,
+    cost_labor_visit_charge: 300,
+    cost_labor_small_job_rate: 350,
+    cost_conduit_per_meter: 12,
 
     // Site Preparation & Difficulty Surcharges (0% Margin Pass-Through)
     site_preparation: {
@@ -151,14 +162,21 @@ export default async function SettingsAdminPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       <PageHeader
         icon={Settings2}
         title="Global Configuration"
         description="Configure company branding, GST rates, labor costs, and communication templates."
       />
 
-      <SettingsForm initialSettings={settings} />
+      <Suspense fallback={
+        <div className="p-16 flex flex-col items-center justify-center space-y-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-sm font-semibold text-muted-foreground">Loading configuration hub...</p>
+        </div>
+      }>
+        <SettingsForm initialSettings={settings} />
+      </Suspense>
     </div>
   );
 }

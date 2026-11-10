@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/auth-server";
 import { AdminAmcClient } from "@/components/admin/AdminAmcClient";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { CrmSubNav } from "@/components/admin/navigation/AdminSubNav";
 import { ShieldCheck } from "lucide-react";
 
 export const metadata = {
@@ -13,7 +14,8 @@ export default async function AdminAmcPage() {
   await requireAdmin();
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <CrmSubNav />
       <PageHeader
         title="AMC Contracts"
         description="Manage customer Annual Maintenance Contracts and track renewal revenue."

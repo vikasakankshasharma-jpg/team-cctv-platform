@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth-server";
 import SalespersonsClient from "./SalespersonsClient";
+import { CrmSubNav } from "@/components/admin/navigation/AdminSubNav";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -11,5 +12,10 @@ export default async function SalespersonsPage() {
   // Ensure only authorized admins can access
   await requireAdmin();
   
-  return <SalespersonsClient />;
+  return (
+    <div className="space-y-6">
+      <CrmSubNav />
+      <SalespersonsClient />
+    </div>
+  );
 }

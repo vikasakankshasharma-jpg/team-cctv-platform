@@ -3,6 +3,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import { Calendar } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { BookingsClient } from "@/components/admin/BookingsClient";
+import { CrmSubNav } from "@/components/admin/navigation/AdminSubNav";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -69,7 +70,8 @@ export default async function BookingsPage() {
   });
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <CrmSubNav />
       <PageHeader 
         icon={Calendar} 
         title="Site Visits" 

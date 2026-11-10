@@ -1,4 +1,4 @@
-﻿import { AdminHeader } from "@/components/admin/AdminHeader";
+import { AdminHeader } from "@/components/admin/AdminHeader";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { OmniSearch } from "@/components/admin/OmniSearch";
 import { verifySession } from "@/lib/auth-server";
@@ -70,7 +70,7 @@ export default async function AdminLayout({
           />
         </div>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-5 lg:p-6 pt-18 md:pt-4 lg:pt-6 relative scrollbar-none bg-[var(--bg)]">
+        <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 lg:p-6 pt-16 md:pt-4 lg:pt-6 relative scrollbar-none bg-[var(--bg)]">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>

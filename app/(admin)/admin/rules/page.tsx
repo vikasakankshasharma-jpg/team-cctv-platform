@@ -4,6 +4,7 @@ import type { RecommendationRule } from "@/types";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Zap } from "lucide-react";
 import RulesClient from "@/components/admin/RulesClient";
+import { PricingSubNav } from "@/components/admin/navigation/AdminSubNav";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export default async function AdminRulesPage() {
 
   return (
     <div className="space-y-6">
+      <PricingSubNav />
       <PageHeader 
         icon={Zap} 
         title="Recommendation Logic" 

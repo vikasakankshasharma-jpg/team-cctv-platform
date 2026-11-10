@@ -1,6 +1,7 @@
 import { adminDb } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/auth-server";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { OperationsSubNav } from "@/components/admin/navigation/AdminSubNav";
 import { MapPin } from "lucide-react";
 import ExpansionClient from "@/components/admin/ExpansionClient";
 import { getGeoHierarchyData } from "@/lib/geo/geoHierarchyServer";
@@ -74,7 +75,8 @@ export default async function AdminExpansionPage() {
   });
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
+    <div className="space-y-6 animate-in fade-in duration-700">
+      <OperationsSubNav />
       <PageHeader 
         icon={MapPin} 
         title="Regional Expansion Hub" 

@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth-server";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { LayoutGrid } from "lucide-react";
 import { CardLayoutClient } from "@/components/admin/CardLayoutClient";
+import { PricingSubNav } from "@/components/admin/navigation/AdminSubNav";
 import type { CardLayoutRule, Product } from "@/types";
 import type { Metadata } from "next";
 
@@ -67,6 +68,7 @@ export default async function CardLayoutsPage() {
 
   return (
     <div className="space-y-6">
+      <PricingSubNav />
       <PageHeader
         icon={LayoutGrid}
         title="Card Layout Builder"

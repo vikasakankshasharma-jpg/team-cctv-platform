@@ -10,6 +10,7 @@ import { BackButton } from "@/components/admin/BackButton";
 import { BulkImportExport } from "@/components/admin/BulkImportExport";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { CategoryGroupSelector } from "@/components/admin/CategoryGroupSelector";
+import { CatalogSubNav } from "@/components/admin/navigation/AdminSubNav";
 import Link from "next/link";
 
 export default function AdminProductsPage() {
@@ -440,6 +441,7 @@ export default function AdminProductsPage() {
 
   return (
     <div className="bg-background min-h-screen pb-24 transition-colors duration-500">
+      <CatalogSubNav />
       {/* â”€â”€ Page Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border shadow-sm">
         <div className="max-w-[1600px] mx-auto px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6">

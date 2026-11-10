@@ -243,9 +243,18 @@ export function calculateQuotationProfitBreakup(
       // For surcharges: pass-through 0% margin (cost = price)
       if (id.startsWith("surcharge_") || name.toLowerCase().includes("surcharge") || id === "travel_fee") {
         unitCost = unitPrice;
+      } else if (name.toLowerCase().includes("wireless") || id.includes("wireless")) {
+        unitCost = Number(settings?.cost_labor_wireless_per_camera ?? 200);
+      } else if (name.toLowerCase().includes("ip") || id.includes("ip")) {
+        unitCost = Number(id.includes("fitting") ? (settings?.cost_labor_ip_fitting_only ?? 180) : (settings?.cost_labor_ip_per_camera ?? 300));
+      } else if (name.toLowerCase().includes("fitting") || id.includes("fitting")) {
+        unitCost = Number(settings?.cost_labor_hd_fitting_only ?? 120);
+      } else if (id.includes("conduit") || name.toLowerCase().includes("conduit")) {
+        unitCost = Number(settings?.cost_conduit_per_meter ?? 12);
+      } else if (id.includes("visit") || name.toLowerCase().includes("visit") || name.toLowerCase().includes("mobilization")) {
+        unitCost = Number(settings?.cost_labor_visit_charge ?? 300);
       } else {
-        // Labor cost based on payout ratio
-        unitCost = Math.round(unitPrice * (laborCostMarginPercent / 100));
+        unitCost = Number(settings?.cost_labor_hd_per_camera ?? (laborCostMarginPercent > 0 ? Math.round(unitPrice * (laborCostMarginPercent / 100)) : 250));
       }
     } else {
       // Estimate based on category default markup: price = cost * (1 + margin) => cost = price / (1 + margin)

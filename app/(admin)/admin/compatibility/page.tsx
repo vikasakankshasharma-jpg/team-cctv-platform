@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth-server";
 import { CompatibilityMatrix } from "@/components/admin/CompatibilityMatrix";
+import { PricingSubNav } from "@/components/admin/navigation/AdminSubNav";
 import { adminDb } from "@/lib/firebase-admin";
 import type { Product } from "@/types";
 import type { Metadata } from "next";
@@ -41,7 +42,8 @@ export default async function CompatibilityPage() {
   products.sort((a, b) => a.category.localeCompare(b.category) || a.display_name.localeCompare(b.display_name));
 
   return (
-    <div className="p-4 md:p-8 max-w-screen-2xl mx-auto">
+    <div className="space-y-6">
+      <PricingSubNav />
       <CompatibilityMatrix initialProducts={products} />
     </div>
   );

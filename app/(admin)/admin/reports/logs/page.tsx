@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { FinanceSubNav } from "@/components/admin/navigation/AdminSubNav";
 import { ShieldAlert, Terminal, User, Clock, Globe } from "lucide-react";
 import { format } from "date-fns";
 
@@ -25,7 +26,8 @@ export default async function AuditLogsPage() {
   });
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-6 animate-in fade-in duration-700">
+      <FinanceSubNav />
       <PageHeader 
         icon={ShieldAlert} 
         title="Enterprise Audit Trail" 

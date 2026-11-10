@@ -53,6 +53,17 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   labor_no_cabling_small_job_threshold: 2,
   labor_no_cabling_small_job_rate: 500,
 
+  // Technician Labor Payout Costs & Services Margins
+  cost_labor_hd_per_camera: 250,
+  cost_labor_ip_per_camera: 300,
+  cost_labor_wireless_per_camera: 200,
+  cost_labor_hd_fitting_only: 120,
+  cost_labor_ip_fitting_only: 180,
+  cost_labor_visit_charge: 300,
+  cost_labor_small_job_rate: 350,
+  cost_conduit_per_meter: 12,
+  labor_wireless_pro_per_camera: 349,
+
   // Site Preparation & Difficulty Surcharges (0% Margin Pass-Through)
   site_preparation: {
     ladderArrangementFee: 500,

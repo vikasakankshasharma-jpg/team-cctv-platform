@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import type { Installer, InstallerApplication } from "@/types";
 import { InstallersClient } from "@/components/admin/InstallersClient";
+import { OperationsSubNav } from "@/components/admin/navigation/AdminSubNav";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -58,7 +59,8 @@ export default async function InstallersAdminPage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-6 animate-in fade-in duration-700">
+      <OperationsSubNav />
       <InstallersClient initialInstallers={installers} initialApplications={applications} />
     </div>
   );

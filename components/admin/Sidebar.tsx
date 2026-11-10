@@ -1,99 +1,91 @@
 "use client";
 
 import { useState } from "react";
-import { Truck, FileSpreadsheet, Filter } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase-client";
 import { toast } from "sonner";
+import { useOmniSearchStore } from "@/store/omni-search";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import {
-  LayoutDashboard, Users, Package, Settings, LogOut, Blocks,
+  LayoutDashboard, Users, Package, Settings, LogOut,
   FileBox, BadgeDollarSign, TrendingUp, Workflow, ShieldCheck,
-  ChevronRight, Calendar, IndianRupee, Zap, Link2, Megaphone,
+  Calendar, IndianRupee, Zap, Link2, Megaphone,
   Grid3x3, PanelLeftClose, PanelLeftOpen, Database, Building2,
-  HeartPulse, MapPin, Bell, Menu, X, Sparkles, FileEdit, Navigation,
-  } from "lucide-react";
+  HeartPulse, MapPin, Menu, X, Sparkles, Navigation,
+  FileSpreadsheet, Filter, Search
+} from "lucide-react";
 
-// ─── NAVIGATION STRUCTURE ─────────────────────────────────────────────────────
-
+// ─── REORGANIZED 7-PILLAR NAVIGATION STRUCTURE ────────────────────────────────
 const NAV_GROUPS = [
   {
-    label: "Overview",
+    label: "Overview & Pipeline",
     items: [
-      { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-      { name: "Analytics", href: "/admin/analytics", icon: TrendingUp }, 
+      { name: "Executive Dashboard", href: "/admin", icon: LayoutDashboard },
       { name: "Quote Funnel", href: "/admin/analytics/funnel", icon: Filter },
+      { name: "Analytics Trends", href: "/admin/analytics", icon: TrendingUp },
     ],
   },
   {
     label: "Sales & CRM",
     items: [
-      { name: "Leads Pipeline", href: "/admin/leads",        icon: Users },
-      { name: "Beat Plans & Routes", href: "/admin/beat-plans", icon: Navigation },
-      { name: "Site Visits",    href: "/admin/bookings",     icon: Calendar }, { name: "AMC Contracts", href: "/admin/amc", icon: ShieldCheck },
-      { name: "Salespersons",   href: "/admin/salespersons", icon: ShieldCheck },
+      { name: "Leads Pipeline", href: "/admin/leads", icon: Users },
+      { name: "Site Visits & Surveys", href: "/admin/bookings", icon: Calendar },
+      { name: "AMC Contracts", href: "/admin/amc", icon: ShieldCheck },
+      { name: "Sales Representatives", href: "/admin/salespersons", icon: Navigation },
     ],
   },
   {
-    label: "Pricing & Logic",
+    label: "Pricing & Margins",
     items: [
-      { name: "Live Pricing",        href: "/admin/pricing",            icon: IndianRupee },
-      { name: "Geo-Pricing Rules",   href: "/admin/pricing/geo-rules",  icon: MapPin },
-      { name: "Quotation Matrices",  href: "/admin/pricing/matrices",   icon: Grid3x3 },
-      { name: "Rules & Add-ons",     href: "/admin/rules",              icon: Zap },
-      { name: "Compatibility",       href: "/admin/compatibility",      icon: Link2 },
-      { name: "UI Card Layouts",     href: "/admin/card-layouts",       icon: Workflow },
+      { name: "Quotation Matrices", href: "/admin/pricing/matrices", icon: Grid3x3 },
+      { name: "Geo-Surge & Pincodes", href: "/admin/pricing/geo-rules", icon: MapPin },
+      { name: "Add-ons & Options", href: "/admin/addons", icon: Zap },
+      { name: "Recommendation Logic", href: "/admin/rules", icon: Workflow },
+      { name: "Compatibility Matrix", href: "/admin/compatibility", icon: Link2 },
+      { name: "Live Pricing Engine", href: "/admin/pricing", icon: IndianRupee },
     ],
   },
   {
     label: "Hardware Catalog",
     items: [
-      { name: "Product Inventory",  href: "/admin/products",           icon: Package },
-      { name: "Vendor Import",      href: "/admin/vendor-import",      icon: Package },
-      { name: "Bulk Management",    href: "/admin/products/bulk",      icon: Database },
-      { name: "AI Spec Enrichment", href: "/admin/products/enrich",    icon: Sparkles },
-      { name: "Manual Spec Editor", href: "/admin/products/manual-enrich", icon: FileEdit },
-      { name: "Catalog Health",     href: "/admin/products/health",    icon: HeartPulse },
+      { name: "Product Master", href: "/admin/products", icon: Package },
+      { name: "Warehouse Stock & POs", href: "/admin/inventory", icon: Database },
+      { name: "Vendor Price Import", href: "/admin/vendor-import", icon: FileSpreadsheet },
+      { name: "Catalog Quality Health", href: "/admin/products/health", icon: HeartPulse },
     ],
   },
   {
-    label: "Operations & Expansion",
+    label: "Field Operations",
     items: [
-      { name: "Dispatch Center",     href: "/admin/dispatch",    icon: Workflow },
-      { name: "City Hubs",           href: "/admin/hubs",        icon: Building2 },
-      { name: "Expansion Hub",       href: "/admin/expansion",    icon: MapPin },
-      { name: "Verified Installers", href: "/admin/installers",  icon: ShieldCheck },
+      { name: "Dispatch & Live Jobs", href: "/admin/dispatch", icon: Workflow },
+      { name: "Verified Technicians", href: "/admin/installers", icon: ShieldCheck },
+      { name: "City Inventory Hubs", href: "/admin/hubs", icon: Building2 },
+      { name: "Territory Beat Plans", href: "/admin/beat-plans", icon: Navigation },
     ],
   },
   {
-    label: "Marketing & Promoters",
+    label: "Promoters & Growth",
     items: [
-      { name: "Marketing Hub",       href: "/admin/marketing",    icon: Megaphone },
-      { name: "Marketing QR Codes",  href: "/admin/marketing-qr", icon: Megaphone },
-      { name: "Follow-Up Rules",     href: "/admin/campaigns",    icon: Sparkles },
-      { name: "Promoter Network",    href: "/admin/promoters",    icon: BadgeDollarSign },
+      { name: "Promoter Network", href: "/admin/promoters", icon: BadgeDollarSign },
+      { name: "Follow-Up Campaigns", href: "/admin/campaigns", icon: Sparkles },
+      { name: "Marketing Collaterals", href: "/admin/marketing", icon: Megaphone },
+      { name: "Regional Expansion", href: "/admin/expansion", icon: MapPin },
     ],
   },
   {
-    label: "Finance & Accounts",
+    label: "Finance & System",
     items: [
-      { name: "Accounts Payable",    href: "/admin/finance",      icon: IndianRupee },
-      { name: "Profitability",       href: "/admin/analytics/profitability", icon: TrendingUp },
-      { name: "All Reports",         href: "/admin/reports",      icon: FileBox },
-    ],
-  },
-  {
-    label: "System",
-      items: [
-        { name: "Staff & Roles", href: "/admin/staff", icon: ShieldCheck },
-      { name: "Settings",   href: "/admin/settings",     icon: Settings },
-      { name: "Audit Logs", href: "/admin/reports/logs", icon: ShieldCheck },
+      { name: "Profitability Heatmaps", href: "/admin/analytics/profitability", icon: TrendingUp },
+      { name: "Accounts Payable", href: "/admin/finance", icon: IndianRupee },
+      { name: "All Reports & Export", href: "/admin/reports", icon: FileBox },
+      { name: "Global Settings", href: "/admin/settings", icon: Settings },
+      { name: "Staff & Audit Trail", href: "/admin/staff", icon: ShieldCheck },
     ],
   },
 ];
 
 // ─── TOOLTIP WRAPPER ──────────────────────────────────────────────────────────
-
 function NavTooltip({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="relative group/tooltip">
@@ -106,13 +98,13 @@ function NavTooltip({ label, children }: { label: string; children: React.ReactN
 }
 
 // ─── SIDEBAR COMPONENT ────────────────────────────────────────────────────────
-
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { setIsOpen: setOmniSearchOpen } = useOmniSearchStore();
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -123,7 +115,7 @@ export function Sidebar() {
       router.refresh();
     } catch (error) {
       console.error("Logout failed", error);
-      toast.error('Logout failed. Please try again.');
+      toast.error("Logout failed. Please try again.");
       setLoggingOut(false);
     }
   };
@@ -131,10 +123,23 @@ export function Sidebar() {
   const isActive = (href: string) =>
     href === "/admin" ? pathname === href : pathname.startsWith(href);
 
-  const sidebarContent = (
-    <div className={`sidebar ${isCollapsed ? "w-[72px]" : "w-[220px]"} transition-all duration-300 admin-theme`} style={isCollapsed ? { width: '72px' } : {}}>
+  // Dynamic label for mobile topbar breadcrumb
+  const currentNavName = (() => {
+    for (const grp of NAV_GROUPS) {
+      for (const itm of grp.items) {
+        if (isActive(itm.href)) return itm.name;
+      }
+    }
+    return "Admin";
+  })();
+
+  const desktopSidebarContent = (
+    <div
+      className={`sidebar ${isCollapsed ? "w-[72px]" : "w-[230px]"} transition-all duration-300 admin-theme h-screen flex flex-col`}
+      style={isCollapsed ? { width: "72px" } : {}}
+    >
       {/* ── BRAND HEADER ──────────────────────────────────────────────────── */}
-      <div className="sb-logo flex items-center justify-between">
+      <div className="sb-logo flex items-center justify-between shrink-0">
         {!isCollapsed ? (
           <>
             <div className="sb-brand">
@@ -143,7 +148,7 @@ export function Sidebar() {
               </div>
               <div className="min-w-0">
                 <div className="sb-name truncate">CCTVQuotation</div>
-                <div className="sb-sub truncate">Admin Panel</div>
+                <div className="sb-sub truncate">Admin Console</div>
               </div>
             </div>
             <button
@@ -168,16 +173,16 @@ export function Sidebar() {
       </div>
 
       {/* ── NAVIGATION GROUPS ─────────────────────────────────────────────── */}
-      <nav className="flex-1 min-h-0 overflow-y-auto py-2 scrollbar-none">
+      <nav className="flex-1 min-h-0 overflow-y-auto py-2 scrollbar-none space-y-4">
         {NAV_GROUPS.map((group) => (
-          <div key={group.label}>
+          <div key={group.label} className="space-y-1">
             {!isCollapsed ? (
-              <div className="sb-section">
+              <div className="sb-section px-3 text-[10px] uppercase font-bold tracking-wider text-[var(--muted)]">
                 {group.label}
               </div>
             ) : (
-              group.label !== "Overview" && (
-                <div className="h-px bg-[var(--border)] my-3 mx-2" />
+              group.label !== "Overview & Pipeline" && (
+                <div className="h-px bg-[var(--border)] my-2 mx-3" />
               )
             )}
 
@@ -190,14 +195,16 @@ export function Sidebar() {
                   <Link
                     key={item.name}
                     href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={`sb-item ${active ? 'active' : ''} ${isCollapsed ? 'justify-center px-0 mx-2' : ''}`}
+                    className={`sb-item ${active ? "active font-semibold" : ""} ${
+                      isCollapsed ? "justify-center px-0 mx-2" : ""
+                    }`}
                   >
-                    <Icon className={`w-[15px] h-[15px] transition-transform duration-200 ${active ? "scale-105" : ""}`} />
+                    <Icon
+                      className={`w-[15px] h-[15px] shrink-0 transition-transform duration-200 ${
+                        active ? "scale-105 text-primary" : ""
+                      }`}
+                    />
                     {!isCollapsed && <span className="truncate flex-1">{item.name}</span>}
-                    {!isCollapsed && (item as any).badge && (
-                       <span className={`sb-badge ${(item as any).badgeNew ? 'new' : ''}`}>{(item as any).badge}</span>
-                    )}
                   </Link>
                 );
 
@@ -215,57 +222,175 @@ export function Sidebar() {
       </nav>
 
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
-      
-      {isCollapsed ? (
-        <NavTooltip label="Secure Logout">
-          <div className="sb-user justify-center" onClick={handleLogout}>
-             <LogOut className={`w-[15px] h-[15px] text-[var(--dim)] hover:text-[var(--red)] ${loggingOut ? "animate-spin" : ""}`} />
+      <div className="shrink-0 border-t border-[var(--border)] pt-2 pb-2">
+        {isCollapsed ? (
+          <NavTooltip label="Secure Logout">
+            <div
+              className="sb-user justify-center cursor-pointer"
+              onClick={handleLogout}
+            >
+              <LogOut
+                className={`w-[15px] h-[15px] text-[var(--dim)] hover:text-[var(--red)] ${
+                  loggingOut ? "animate-spin" : ""
+                }`}
+              />
+            </div>
+          </NavTooltip>
+        ) : (
+          <div
+            className="sb-user cursor-pointer hover:bg-[var(--surface2)] transition-colors"
+            onClick={handleLogout}
+          >
+            <div className="sb-avatar">A</div>
+            <div className="flex-1 min-w-0">
+              <div className="sb-user-name truncate">Admin User</div>
+              <div className="sb-user-role truncate">
+                {loggingOut ? "Signing out..." : "Secure Logout"}
+              </div>
+            </div>
+            <LogOut className="w-[14px] h-[14px] text-[var(--dim)]" />
           </div>
-        </NavTooltip>
-      ) : (
-        <div className="sb-user" onClick={handleLogout}>
-          <div className="sb-avatar">A</div>
-          <div className="flex-1 min-w-0">
-            <div className="sb-user-name truncate">Admin User</div>
-            <div className="sb-user-role truncate">{loggingOut ? "Signing out..." : "Secure Logout"}</div>
-          </div>
-          <LogOut className="w-[14px] h-[14px] text-[var(--dim)]" />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 
   return (
     <>
-      {/* Mobile header bar with hamburger */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center justify-between px-4" style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'var(--gold-dim)' }}>
-            <ShieldCheck className="w-4 h-4" style={{ color: 'var(--gold)' }} />
-          </div>
-          <span className="text-sm font-black" style={{ color: 'var(--text)' }}>Admin</span>
+      {/* ── MOBILE TOPBAR (TOUCH OPTIMIZED FOR ALL DISPLAY SIZES) ─────────── */}
+      <div
+        className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center justify-between px-3 sm:px-4 shadow-sm"
+        style={{
+          background: "var(--surface)",
+          borderBottom: "1px solid var(--border)",
+        }}
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-[var(--surface2)] active:scale-95 transition-all text-foreground"
+            aria-label="Open Navigation Menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
+          <Link href="/admin" className="flex items-center gap-2 min-w-0">
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: "var(--gold-dim)" }}
+            >
+              <ShieldCheck className="w-4 h-4" style={{ color: "var(--gold)" }} />
+            </div>
+            <span className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[130px] sm:max-w-[200px]">
+              {currentNavName}
+            </span>
+          </Link>
         </div>
-        <button onClick={() => setMobileOpen(true)} className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--surface2)', color: 'var(--muted)' }}>
-          <Menu className="w-5 h-5" />
-        </button>
+
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Quick Search on Mobile */}
+          <button
+            onClick={() => setOmniSearchOpen(true)}
+            className="h-8 px-2.5 rounded-lg flex items-center gap-1 text-xs bg-[var(--surface2)] text-muted-foreground hover:text-foreground active:scale-95 transition-all"
+            title="Search Leads, Quotes & Products"
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span className="hidden xs:inline text-[11px] font-medium">Search</span>
+          </button>
+
+          {/* Theme switcher */}
+          <div className="scale-90">
+            <ThemeToggle />
+          </div>
+        </div>
       </div>
 
-      {/* Desktop sidebar */}
-      <div className="hidden md:block">
-        {sidebarContent}
-      </div>
+      {/* ── DESKTOP SIDEBAR ───────────────────────────────────────────────── */}
+      <div className="hidden md:block">{desktopSidebarContent}</div>
 
-      {/* Mobile drawer overlay */}
+      {/* ── MOBILE FULL-SCREEN DRAWER ─────────────────────────────────────── */}
       {mobileOpen && (
         <>
-          <div className="md:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="md:hidden fixed inset-y-0 left-0 z-50 w-72 shadow-2xl animate-in slide-in-from-left duration-200" style={{ background: 'var(--surface)' }}>
-            <div className="absolute top-4 right-4 z-10">
-              <button onClick={() => setMobileOpen(false)} className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'var(--surface2)', color: 'var(--muted)' }}>
-                <X className="w-4 h-4" />
+          <div
+            className="md:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => setMobileOpen(false)}
+          />
+          <div
+            className="md:hidden fixed inset-y-0 left-0 z-50 w-[82vw] max-w-xs shadow-2xl flex flex-col animate-in slide-in-from-left duration-200 bg-[var(--surface)] text-[var(--text)] border-r border-[var(--border)]"
+          >
+            {/* Drawer Header */}
+            <div className="h-14 px-4 flex items-center justify-between border-b border-[var(--border)] shrink-0 bg-[var(--surface)]">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="w-8 h-8 rounded-xl flex items-center justify-center"
+                  style={{ background: "var(--gold-dim)" }}
+                >
+                  <ShieldCheck className="w-4 h-4" style={{ color: "var(--gold)" }} />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-foreground">CCTVQuotation</div>
+                  <div className="text-[10px] text-muted-foreground">Admin Console</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-[var(--surface2)] active:scale-95 transition-all text-muted-foreground hover:text-foreground"
+                aria-label="Close navigation"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
-            {sidebarContent}
+
+            {/* Drawer Navigation List */}
+            <nav className="flex-1 overflow-y-auto p-3 space-y-4">
+              {NAV_GROUPS.map((group) => (
+                <div key={group.label} className="space-y-1">
+                  <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    {group.label}
+                  </div>
+                  <div className="space-y-0.5">
+                    {group.items.map((item) => {
+                      const active = isActive(item.href);
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          onClick={() => setMobileOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all active:scale-[0.98] ${
+                            active
+                              ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+                              : "text-foreground hover:bg-[var(--surface2)]"
+                          }`}
+                        >
+                          <Icon className={`w-4 h-4 shrink-0 ${active ? "text-primary-foreground" : "text-muted-foreground"}`} />
+                          <span className="truncate flex-1">{item.name}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </nav>
+
+            {/* Drawer Footer */}
+            <div className="p-3 border-t border-[var(--border)] shrink-0 bg-[var(--surface)]">
+              <div
+                onClick={handleLogout}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-destructive/10 text-foreground hover:text-destructive cursor-pointer transition-colors active:scale-95"
+              >
+                <div className="w-7 h-7 rounded-lg bg-[var(--surface2)] flex items-center justify-center font-bold text-xs">
+                  A
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold truncate">Admin User</div>
+                  <div className="text-[10px] text-muted-foreground truncate">
+                    {loggingOut ? "Signing out..." : "Tap to Secure Logout"}
+                  </div>
+                </div>
+                <LogOut className="w-4 h-4 text-muted-foreground" />
+              </div>
+            </div>
           </div>
         </>
       )}

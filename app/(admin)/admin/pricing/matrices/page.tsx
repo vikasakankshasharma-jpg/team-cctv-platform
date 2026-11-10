@@ -6,6 +6,7 @@ import { Grid3x3 } from "lucide-react";
 import { SETTINGS_DOC_ID } from "@/lib/firebase-client";
 import { mergeAppSettings } from "@/lib/cached-settings";
 import { MatricesClient } from "./MatricesClient";
+import { PricingSubNav } from "@/components/admin/navigation/AdminSubNav";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,7 @@ export default async function MatricesPage() {
 
   return (
     <div className="space-y-6">
+      <PricingSubNav />
       <PageHeader 
         icon={Grid3x3} 
         title="Quotation Matrices" 

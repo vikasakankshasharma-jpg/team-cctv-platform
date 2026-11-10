@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import type { Addon } from "@/types";
 import { AddonsClient } from "@/components/admin/AddonsClient";
+import { PricingSubNav } from "@/components/admin/navigation/AdminSubNav";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -31,6 +32,7 @@ export default async function AddonsAdminPage() {
 
   return (
     <div className="space-y-6">
+      <PricingSubNav />
       <AddonsClient initialAddons={addons} />
     </div>
   );

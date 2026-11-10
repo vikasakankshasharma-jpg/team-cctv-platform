@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { CatalogSubNav } from "@/components/admin/navigation/AdminSubNav";
 import { HeartPulse, AlertCircle, CheckCircle2, ShieldAlert, Package, Database, Sparkles, ChevronRight } from "lucide-react";
 import { CatalogRepairButton } from "@/components/admin/CatalogRepairButton";
 import Link from "next/link";
@@ -102,7 +103,8 @@ export default async function CatalogHealthPage() {
   const healthScore = Math.max(0, 100 - (totalIssues / (products.length || 1) * 20));
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <CatalogSubNav />
       <PageHeader 
         icon={HeartPulse} 
         title="Catalog Health Audit" 

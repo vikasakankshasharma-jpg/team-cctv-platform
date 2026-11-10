@@ -4,6 +4,7 @@ import { TrendingUp } from "lucide-react";
 import type { Lead, PricingResult } from "@/types";
 import { ReportsClient } from "@/components/admin/ReportsClient";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { FinanceSubNav } from "@/components/admin/navigation/AdminSubNav";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -97,7 +98,8 @@ export default async function ReportsAdminPage() {
   });
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
+    <div className="space-y-6 animate-in fade-in duration-700">
+      <FinanceSubNav />
       <ReportsClient 
         data={reportEntries} 
         products={allProducts as any[]}

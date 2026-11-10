@@ -3,6 +3,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import type { GeoPricingRule } from "@/types";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { GeoRulesClient } from "@/components/admin/GeoRulesClient";
+import { PricingSubNav } from "@/components/admin/navigation/AdminSubNav";
 import { MapPin } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -23,7 +24,8 @@ export default async function GeoRulesPage() {
   })) as GeoPricingRule[];
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <PricingSubNav />
       <PageHeader
         title="Geo-Pricing Rules Engine"
         description="Manage the deterministic pricing matrix. Rules are evaluated in priority order: Surge > Pincode > City > State."

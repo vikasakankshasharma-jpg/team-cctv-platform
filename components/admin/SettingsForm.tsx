@@ -1,11 +1,59 @@
 "use client";
 
 import { useState } from "react";
-import { Save, Settings2, Image as ImageIcon, Loader2, CheckCircle2, BadgePercent, Ruler, HardHat, MessageSquare, Zap, Building2, MapPin, Receipt, Phone, Globe, Landmark, ShieldCheck, Eye, Wifi } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Save, Settings2, Image as ImageIcon, Loader2, CheckCircle2, BadgePercent, Ruler, HardHat, MessageSquare, Zap, Building2, MapPin, Receipt, Phone, Globe, Landmark, ShieldCheck, Eye, Wifi, Wrench, Sparkles, TrendingUp, AlertTriangle, Clock, Package, ChevronDown } from "lucide-react";
 import type { AppSettings } from "@/types";
 import { updateSettings } from "@/app/actions/settings";
 import Image from "next/image";
 import { toast } from "sonner";
+
+export const SETTINGS_TABS = [
+  { id: "company", label: "Company & Invoicing", icon: Building2, desc: "Branding, Address, GSTIN, Bank Settlement" },
+  { id: "pricing", label: "Pricing & Margins", icon: BadgePercent, desc: "GST, Wire, Labor Rates, Component Markups %" },
+  { id: "catalog", label: "Catalog & Brands", icon: Package, desc: "Brand Tabs Order, Tiers & Wireless Wi-Fi" },
+  { id: "sla", label: "Operations & SLA", icon: Clock, desc: "Operating Hours, Days Off, Emergency Killswitch" },
+  { id: "pdf", label: "Quotation & PDF", icon: Receipt, desc: "High-Fidelity PDF Alignment & Validity Rules" },
+  { id: "communications", label: "Templates", icon: MessageSquare, desc: "WhatsApp Quotation Message & Alerts" },
+  { id: "system", label: "System & AI Keys", icon: Settings2, desc: "Cache TTL, Primary OTP, Gemini AI Keys" },
+];
+
+function ServiceMarginBadge({ price, cost }: { price: number; cost: number }) {
+  const p = Number(price) || 0;
+  const c = Number(cost) || 0;
+  const profit = p - c;
+  const pct = p > 0 ? (profit / p) * 100 : 0;
+  
+  if (p === 0 && c === 0) {
+    return <span className="text-[10px] text-muted-foreground font-mono">₹0 (0%)</span>;
+  }
+  if (profit < 0) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 font-mono whitespace-nowrap">
+        -₹{Math.abs(profit).toFixed(0)} ({pct.toFixed(0)}%)
+      </span>
+    );
+  }
+  if (pct >= 30) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-mono whitespace-nowrap">
+        +₹{profit.toFixed(0)} ({pct.toFixed(0)}%)
+      </span>
+    );
+  }
+  if (pct >= 15) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 font-mono whitespace-nowrap">
+        +₹{profit.toFixed(0)} ({pct.toFixed(0)}%)
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20 font-mono whitespace-nowrap">
+      +₹{profit.toFixed(0)} ({pct.toFixed(0)}%)
+    </span>
+  );
+}
 
 interface SettingsFormProps {
   initialSettings: AppSettings;
@@ -47,11 +95,24 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
     margin_hdmi_cable: initialSettings.margin_hdmi_cable ?? 20,
     margin_rack: initialSettings.margin_rack ?? 30,
     margin_power_supply: initialSettings.margin_power_supply ?? 25,
+    labor_hd_per_camera: initialSettings.labor_hd_per_camera ?? initialSettings.labor_full_installation_rate ?? 400,
+    labor_full_installation_rate: initialSettings.labor_full_installation_rate ?? initialSettings.labor_hd_per_camera ?? 400,
+    labor_ip_per_camera: initialSettings.labor_ip_per_camera ?? 500,
+    labor_wireless_pro_per_camera: initialSettings.labor_wireless_pro_per_camera ?? 349,
+    conduit_cost_per_meter: initialSettings.conduit_cost_per_meter ?? 20,
     labor_hd_fitting_only: initialSettings.labor_hd_fitting_only ?? 200,
     labor_ip_fitting_only: initialSettings.labor_ip_fitting_only ?? 300,
     labor_no_cabling_visit_charge: initialSettings.labor_no_cabling_visit_charge ?? 500,
     labor_no_cabling_small_job_threshold: initialSettings.labor_no_cabling_small_job_threshold ?? 2,
     labor_no_cabling_small_job_rate: initialSettings.labor_no_cabling_small_job_rate ?? 500,
+    cost_labor_hd_per_camera: initialSettings.cost_labor_hd_per_camera ?? 250,
+    cost_labor_ip_per_camera: initialSettings.cost_labor_ip_per_camera ?? 300,
+    cost_labor_wireless_per_camera: initialSettings.cost_labor_wireless_per_camera ?? 200,
+    cost_labor_hd_fitting_only: initialSettings.cost_labor_hd_fitting_only ?? 120,
+    cost_labor_ip_fitting_only: initialSettings.cost_labor_ip_fitting_only ?? 180,
+    cost_labor_visit_charge: initialSettings.cost_labor_visit_charge ?? 300,
+    cost_labor_small_job_rate: initialSettings.cost_labor_small_job_rate ?? 350,
+    cost_conduit_per_meter: initialSettings.cost_conduit_per_meter ?? 12,
     site_preparation: {
       ladderArrangementFee: initialSettings.site_preparation?.ladderArrangementFee ?? 500,
       marbleLaborSurcharge: initialSettings.site_preparation?.marbleLaborSurcharge ?? 400,
@@ -83,6 +144,21 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  const searchParams = useSearchParams();
+  const paramTab = searchParams.get("tab");
+  const validTabIds = SETTINGS_TABS.map(t => t.id);
+  const initialTab = paramTab && validTabIds.includes(paramTab) ? paramTab : "company";
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", tabId);
+      window.history.replaceState({}, "", url.toString());
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,10 +197,23 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: (name === 'company_gstin' || name === 'company_pan' || name === 'bank_ifsc') ? value.toUpperCase() : (type === 'number' ? Number(value) : value)
-    }));
+    const parsedVal = (name === 'company_gstin' || name === 'company_pan' || name === 'bank_ifsc')
+      ? value.toUpperCase() 
+      : (type === 'number' ? Number(value) : value);
+
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        [name]: parsedVal
+      };
+      // Synchronize HD full wiring rate across both keys
+      if (name === 'labor_hd_per_camera') {
+        updated.labor_full_installation_rate = Number(value);
+      } else if (name === 'labor_full_installation_rate') {
+        updated.labor_hd_per_camera = Number(value);
+      }
+      return updated;
+    });
   };
 
   const handleSlaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,12 +257,58 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in duration-700">
+    <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in duration-700 pb-28">
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-                {/* Section: Company Profile & Invoicing Authority */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm group hover:border-primary/20 transition-all space-y-8">
+      {/* ── Settings Category Navigation Bar ── */}
+      <div className="bg-card/90 backdrop-blur-md border border-border rounded-2xl p-2 sticky top-16 md:top-4 z-20 shadow-xs">
+        {/* Mobile Dropdown Selector (visible on small mobile screens < 640px) */}
+        <div className="sm:hidden mb-2 px-1">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+            Configuration Category
+          </label>
+          <div className="relative">
+            <select
+              value={activeTab}
+              onChange={(e) => handleTabChange(e.target.value)}
+              className="w-full bg-background border border-border text-foreground font-semibold text-xs rounded-xl px-3 py-2.5 outline-none cursor-pointer appearance-none pr-8"
+            >
+              {SETTINGS_TABS.map((tab) => (
+                <option key={tab.id} value={tab.id}>
+                  {tab.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-4 h-4 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        </div>
+
+        {/* Horizontal Tab Pills (touch-scrollable, responsive) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-1">
+          {SETTINGS_TABS.map((tab) => {
+            const isActive = activeTab === tab.id;
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabChange(tab.id)}
+                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer min-h-[42px] ${
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm font-bold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/70"
+                }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Tab 1: Company Profile & Invoicing Authority ── */}
+      {activeTab === "company" && (
+        <div className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm group hover:border-primary/20 transition-all space-y-8 animate-in fade-in duration-300">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border/80">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
@@ -246,9 +381,15 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                       name="company_logo_url"
                       value={formData.company_logo_url || ""}
                       onChange={handleChange}
-                      placeholder="https://your-domain.com/logo.png"
+                      placeholder="https://your-domain.com/logo.png or /logo.png"
                       className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm font-medium shadow-sm"
                     />
+                    {formData.company_logo_url && (formData.company_logo_url.startsWith("C:") || formData.company_logo_url.includes("\\")) && (
+                      <p className="text-[10.5px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1 mt-1">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                        Local file paths (e.g. C:\...) cannot load on the web. Please upload the logo to public assets or use a web URL (https://...).
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -531,7 +672,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                 <div className="flex items-start justify-between pb-3 border-b border-border/60">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      {formData.company_logo_url ? (
+                      {formData.company_logo_url && !formData.company_logo_url.startsWith("C:") && !formData.company_logo_url.includes("\\") ? (
                         <div className="w-8 h-8 rounded-lg overflow-hidden bg-secondary border border-border shrink-0">
                           <Image
                             src={formData.company_logo_url}
@@ -542,7 +683,11 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                             className="w-full h-full object-contain p-1"
                           />
                         </div>
-                      ) : null}
+                      ) : (
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 text-primary font-bold text-xs">
+                          <ShieldCheck className="w-4 h-4" />
+                        </div>
+                      )}
                       <span className="text-base font-black tracking-tight text-foreground">
                         {formData.company_legal_name || formData.company_name || "TEAM CCTV"}
                       </span>
@@ -610,10 +755,13 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
           </div>
         </div>
+      )}
 
-
-        {/* Section: Pricing & Taxes */}
-        <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-success/20 transition-all">
+      {/* ── Tab 2: Pricing Engine & Component Margins ── */}
+      {activeTab === "pricing" && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          {/* Section: Pricing & Taxes */}
+          <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-success/20 transition-all">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success border border-success/20">
               <BadgePercent className="w-5 h-5" />
@@ -624,7 +772,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="space-y-2">
               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">GST Compliance (%)</label>
               <div className="relative">
@@ -657,22 +805,6 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Conduit Pipe Rate</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">₹</span>
-                <input 
-                  required
-                  type="number" 
-                  name="conduit_cost_per_meter"
-                  value={formData.conduit_cost_per_meter || 20}
-                  onChange={handleChange}
-                  className="w-full bg-background border border-border text-foreground rounded-xl pl-8 pr-4 py-2.5 focus:ring-2 focus:ring-success/20 outline-none transition-all font-semibold text-base shadow-sm" 
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-[10px] font-medium uppercase tracking-wider">/ m</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Def. Cable / Cam</label>
               <div className="relative">
                 <input 
@@ -687,225 +819,636 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Labor: Fitting Only</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">₹</span>
-                <input 
-                  required
-                  type="number" 
-                  name="labor_fitting_only_rate"
-                  value={formData.labor_fitting_only_rate}
-                  onChange={handleChange}
-                  className="w-full bg-background border border-border text-foreground rounded-xl pl-8 pr-4 py-2.5 focus:ring-2 focus:ring-success/20 outline-none transition-all font-medium shadow-sm" 
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">/ Cam</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Labor: Full Wiring</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">₹</span>
-                <input 
-                 required
-                  type="number" 
-                  name="labor_full_installation_rate"
-                  value={formData.labor_full_installation_rate}
-                  onChange={handleChange}
-                  className="w-full bg-background border border-border text-foreground rounded-xl pl-8 pr-4 py-2.5 focus:ring-2 focus:ring-success/20 outline-none transition-all font-medium shadow-sm" 
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">/ Cam</span>
-              </div>
-            </div>
-
-            {/* Fitting-Only (No Cabling Required) Labor Rules */}
-            <div className="sm:col-span-2 mt-2 pt-4 border-t border-border/60">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="w-2 h-2 rounded-full bg-primary" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
-                  Fitting-Only Labor Rules (Site Already Cabled / No Cabling Required)
-                </h3>
-              </div>
-              <p className="text-[11px] text-muted-foreground mb-4">
-                Configures installer charges when customer has existing cabling. If camera count is ≤ small job threshold, flat rate applies per camera. When camera count exceeds threshold, per-camera rate plus site visit mobilization charge applies.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">HD Fitting Rate</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
-                    <input 
-                      required
-                      type="number" 
-                      name="labor_hd_fitting_only"
-                      value={formData.labor_hd_fitting_only ?? 200}
-                      onChange={handleChange}
-                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold shadow-sm" 
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">/ Cam</span>
+            {/* SERVICES PRICING, COST & MARGIN MATRIX */}
+            <div className="sm:col-span-2 lg:col-span-3 mt-2 pt-6 border-t border-border/70 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent p-4 rounded-xl border border-emerald-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold shadow-sm">
+                    <Wrench className="w-5 h-5" />
                   </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">IP Fitting Rate</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
-                    <input 
-                      required
-                      type="number" 
-                      name="labor_ip_fitting_only"
-                      value={formData.labor_ip_fitting_only ?? 300}
-                      onChange={handleChange}
-                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold shadow-sm" 
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">/ Cam</span>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Visit / Mobilization Fee</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
-                    <input 
-                      required
-                      type="number" 
-                      name="labor_no_cabling_visit_charge"
-                      value={formData.labor_no_cabling_visit_charge ?? 500}
-                      onChange={handleChange}
-                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold shadow-sm" 
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">Flat</span>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Small Job Threshold</label>
-                  <div className="relative">
-                    <input 
-                      required
-                      type="number" 
-                      name="labor_no_cabling_small_job_threshold"
-                      value={formData.labor_no_cabling_small_job_threshold ?? 2}
-                      onChange={handleChange}
-                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold shadow-sm" 
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">Cams</span>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Small Job Flat Rate</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
-                    <input 
-                      required
-                      type="number" 
-                      name="labor_no_cabling_small_job_rate"
-                      value={formData.labor_no_cabling_small_job_rate ?? 500}
-                      onChange={handleChange}
-                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold shadow-sm" 
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">/ Cam</span>
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground tracking-tight flex items-center gap-2">
+                      Services Pricing, Cost & Margin Matrix
+                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                        Live Margin Engine
+                      </span>
+                    </h3>
+                    <p className="text-[11px] text-muted-foreground">
+                      Configure Customer Selling Rates and Technician Payouts. Real-time Gross Margin (%) and Profit (₹) automatically feed Quotation Analytics & Deal Desks.
+                    </p>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Site Preparation Difficulty Surcharges (0% Margin Pass-Through) */}
-            <div className="sm:col-span-2 mt-2 pt-4 border-t border-border/60">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-amber-500" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
-                    Site Preparation & Difficulty Surcharges (0% Margin Pass-Through)
-                  </h3>
+              {/* Group 1: Turnkey Installation Services */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                      1. Turnkey CCTV Installation (Wiring + Termination + Mounting + Testing)
+                    </h4>
+                  </div>
+                  <span className="text-[10px] font-medium text-muted-foreground hidden sm:inline">
+                    End-to-end full cabling installation
+                  </span>
                 </div>
-                <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                  32 Bitmask Permutations (Exact Cost Pass-Through)
-                </span>
+
+                <div className="border border-border/80 rounded-xl overflow-hidden bg-card divide-y divide-border/60">
+                  {/* Row: HD Turnkey */}
+                  <div className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-muted/20 transition-colors">
+                    <div className="space-y-0.5 min-w-[220px]">
+                      <div className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        HD Camera Turnkey Installation
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Coaxial cabling, BNC/DC crimping, camera mounting, DVR angle focusing
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Customer:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="labor_hd_per_camera"
+                            value={formData.labor_hd_per_camera ?? formData.labor_full_installation_rate ?? 400}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">/ cam</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Tech Cost:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="cost_labor_hd_per_camera"
+                            value={formData.cost_labor_hd_per_camera ?? 250}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">/ cam</span>
+                      </div>
+
+                      <div className="min-w-[130px] flex justify-end">
+                        <ServiceMarginBadge 
+                          price={formData.labor_hd_per_camera ?? formData.labor_full_installation_rate ?? 400} 
+                          cost={formData.cost_labor_hd_per_camera ?? 250} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Row: IP Turnkey */}
+                  <div className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-muted/20 transition-colors">
+                    <div className="space-y-0.5 min-w-[220px]">
+                      <div className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        IP Camera Turnkey Installation
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Cat6 network cabling, RJ45 crimping, PoE testing, IP configuration & NVR bind
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Customer:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="labor_ip_per_camera"
+                            value={formData.labor_ip_per_camera ?? 500}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">/ cam</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Tech Cost:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="cost_labor_ip_per_camera"
+                            value={formData.cost_labor_ip_per_camera ?? 300}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">/ cam</span>
+                      </div>
+
+                      <div className="min-w-[130px] flex justify-end">
+                        <ServiceMarginBadge 
+                          price={formData.labor_ip_per_camera ?? 500} 
+                          cost={formData.cost_labor_ip_per_camera ?? 300} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Row: Wireless Setup */}
+                  <div className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-muted/20 transition-colors">
+                    <div className="space-y-0.5 min-w-[220px]">
+                      <div className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        Wireless / Wi-Fi Smart Camera Setup
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Doorstep bracket mounting, power cord routing, Wi-Fi pairing & mobile app setup
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Customer:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="labor_wireless_pro_per_camera"
+                            value={formData.labor_wireless_pro_per_camera ?? 349}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">/ cam</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Tech Cost:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="cost_labor_wireless_per_camera"
+                            value={formData.cost_labor_wireless_per_camera ?? 200}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">/ cam</span>
+                      </div>
+
+                      <div className="min-w-[130px] flex justify-end">
+                        <ServiceMarginBadge 
+                          price={formData.labor_wireless_pro_per_camera ?? 349} 
+                          cost={formData.cost_labor_wireless_per_camera ?? 200} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Row: Conduit Laying */}
+                  <div className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-muted/20 transition-colors">
+                    <div className="space-y-0.5 min-w-[220px]">
+                      <div className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        PVC Conduit / Casing-Capping Laying
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Surface pipe fixing, bends, saddles, fasteners & wire enclosure per running meter
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Customer:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="conduit_cost_per_meter"
+                            value={formData.conduit_cost_per_meter ?? 20}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">/ mtr</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Tech Cost:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="cost_conduit_per_meter"
+                            value={formData.cost_conduit_per_meter ?? 12}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">/ mtr</span>
+                      </div>
+
+                      <div className="min-w-[130px] flex justify-end">
+                        <ServiceMarginBadge 
+                          price={formData.conduit_cost_per_meter ?? 20} 
+                          cost={formData.cost_conduit_per_meter ?? 12} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <p className="text-[11px] text-muted-foreground mb-4">
-                Master rates for physical site preparation challenges identified by Installer or Salesperson. Mandated by BUSINESS_RULES.md with ₹0 margin markup (100% reimbursed to technician/logistics).
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Ladder / Scaffolding Fee</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
-                    <input 
-                      required
-                      type="number" 
-                      name="ladderArrangementFee"
-                      value={formData.site_preparation?.ladderArrangementFee ?? 500}
-                      onChange={handleSitePrepChange}
-                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-amber-500/20 outline-none text-sm font-semibold shadow-sm" 
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">Flat</span>
+
+              {/* Group 2: Fitting-Only Services */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                      2. Fitting-Only Services (Site Already Cabled / No Cabling Required)
+                    </h4>
                   </div>
+                  <span className="text-[10px] font-medium text-muted-foreground hidden sm:inline">
+                    Applies when cables pre-exist; small job threshold guarantees technician earnings
+                  </span>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Marble / Stone Drilling</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
-                    <input 
-                      required
-                      type="number" 
-                      name="marbleLaborSurcharge"
-                      value={formData.site_preparation?.marbleLaborSurcharge ?? 400}
-                      onChange={handleSitePrepChange}
-                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-amber-500/20 outline-none text-sm font-semibold shadow-sm" 
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">Flat</span>
+                <div className="border border-border/80 rounded-xl overflow-hidden bg-card divide-y divide-border/60">
+                  {/* Row: HD Fitting */}
+                  <div className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-muted/20 transition-colors">
+                    <div className="space-y-0.5 min-w-[220px]">
+                      <div className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        HD Camera Fitting Only
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Mounting & connector termination on existing cables (camera count &gt; threshold)
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Customer:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="labor_hd_fitting_only"
+                            value={formData.labor_hd_fitting_only ?? 200}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-sky-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">/ cam</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Tech Cost:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="cost_labor_hd_fitting_only"
+                            value={formData.cost_labor_hd_fitting_only ?? 120}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-sky-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">/ cam</span>
+                      </div>
+
+                      <div className="min-w-[130px] flex justify-end">
+                        <ServiceMarginBadge 
+                          price={formData.labor_hd_fitting_only ?? 200} 
+                          cost={formData.cost_labor_hd_fitting_only ?? 120} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Row: IP Fitting */}
+                  <div className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-muted/20 transition-colors">
+                    <div className="space-y-0.5 min-w-[220px]">
+                      <div className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        IP Camera Fitting & Crimping Only
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Mounting, RJ45 re-crimping & PoE connection on existing Cat6 wiring
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Customer:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="labor_ip_fitting_only"
+                            value={formData.labor_ip_fitting_only ?? 300}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-sky-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">/ cam</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Tech Cost:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="cost_labor_ip_fitting_only"
+                            value={formData.cost_labor_ip_fitting_only ?? 180}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-sky-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">/ cam</span>
+                      </div>
+
+                      <div className="min-w-[130px] flex justify-end">
+                        <ServiceMarginBadge 
+                          price={formData.labor_ip_fitting_only ?? 300} 
+                          cost={formData.cost_labor_ip_fitting_only ?? 180} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Row: Visit / Mobilization Charge */}
+                  <div className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-muted/20 transition-colors">
+                    <div className="space-y-0.5 min-w-[220px]">
+                      <div className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        Site Visit & Mobilization Fee
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Covers travel, fuel & technician dispatch for fitting-only site visits
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Customer:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="labor_no_cabling_visit_charge"
+                            value={formData.labor_no_cabling_visit_charge ?? 500}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-sky-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">Flat</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Tech Cost:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="cost_labor_visit_charge"
+                            value={formData.cost_labor_visit_charge ?? 300}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-sky-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">Flat</span>
+                      </div>
+
+                      <div className="min-w-[130px] flex justify-end">
+                        <ServiceMarginBadge 
+                          price={formData.labor_no_cabling_visit_charge ?? 500} 
+                          cost={formData.cost_labor_visit_charge ?? 300} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Row: Small Job Flat Rate */}
+                  <div className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-muted/20 transition-colors">
+                    <div className="space-y-0.5 min-w-[220px]">
+                      <div className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        Small Job Minimum Guarantee Rate
+                        <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          ≤ {formData.labor_no_cabling_small_job_threshold ?? 2} Cams
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-muted-foreground flex items-center gap-2">
+                        <span>Threshold:</span>
+                        <input
+                          type="number"
+                          name="labor_no_cabling_small_job_threshold"
+                          value={formData.labor_no_cabling_small_job_threshold ?? 2}
+                          onChange={handleChange}
+                          className="w-14 bg-background border border-border text-foreground rounded px-1.5 py-0.5 text-[11px] font-semibold text-center"
+                        />
+                        <span>cams (replaces visit fee with flat per-camera minimum)</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Customer:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="labor_no_cabling_small_job_rate"
+                            value={formData.labor_no_cabling_small_job_rate ?? 500}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-sky-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">/ cam</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Tech Cost:</span>
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                          <input 
+                            type="number"
+                            name="cost_labor_small_job_rate"
+                            value={formData.cost_labor_small_job_rate ?? 350}
+                            onChange={handleChange}
+                            className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-sky-500/20 outline-none text-xs font-semibold shadow-sm font-mono"
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">/ cam</span>
+                      </div>
+
+                      <div className="min-w-[130px] flex justify-end">
+                        <ServiceMarginBadge 
+                          price={formData.labor_no_cabling_small_job_rate ?? 500} 
+                          cost={formData.cost_labor_small_job_rate ?? 350} 
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Metal / Pole Installation</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
-                    <input 
-                      required
-                      type="number" 
-                      name="metalInstallationSurcharge"
-                      value={formData.site_preparation?.metalInstallationSurcharge ?? 200}
-                      onChange={handleSitePrepChange}
-                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-amber-500/20 outline-none text-sm font-semibold shadow-sm" 
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">Flat</span>
+              {/* Group 3: Site Difficulty Surcharges (0% Margin Pass-Through) */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                      3. Site Preparation & Difficulty Surcharges (0% Margin Pass-Through)
+                    </h4>
                   </div>
+                  <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                    Mandated ₹0 Margin Markup (100% Reimbursed to Field Technician)
+                  </span>
                 </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Master rates for physical site preparation challenges identified by installer/surveyor. 100% of collected surcharge is disbursed as technician payout.
+                </p>
 
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Furnished Site Care</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
-                    <input 
-                      required
-                      type="number" 
-                      name="furnishedSiteSurcharge"
-                      value={formData.site_preparation?.furnishedSiteSurcharge ?? 300}
-                      onChange={handleSitePrepChange}
-                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-amber-500/20 outline-none text-sm font-semibold shadow-sm" 
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">Flat</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {/* Ladder / Scaffolding */}
+                  <div className="p-3 bg-muted/20 border border-border/80 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-foreground">Ladder / Scaffolding Fee</span>
+                      <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                        0% Pass-Through
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                        <input 
+                          required
+                          type="number" 
+                          name="ladderArrangementFee"
+                          value={formData.site_preparation?.ladderArrangementFee ?? 500}
+                          onChange={handleSitePrepChange}
+                          className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-amber-500/20 outline-none text-xs font-semibold shadow-sm font-mono" 
+                        />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-medium">Flat / Site</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground flex justify-between">
+                      <span>Tech Payout:</span>
+                      <span className="font-mono font-semibold text-foreground">₹{formData.site_preparation?.ladderArrangementFee ?? 500}</span>
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Heavy Wall Drilling</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
-                    <input 
-                      required
-                      type="number" 
-                      name="heavyWallDrillingSurcharge"
-                      value={formData.site_preparation?.heavyWallDrillingSurcharge ?? 600}
-                      onChange={handleSitePrepChange}
-                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-amber-500/20 outline-none text-sm font-semibold shadow-sm" 
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">Flat</span>
+                  {/* Marble / Stone Drilling */}
+                  <div className="p-3 bg-muted/20 border border-border/80 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-foreground">Marble / Stone Drilling</span>
+                      <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                        0% Pass-Through
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                        <input 
+                          required
+                          type="number" 
+                          name="marbleLaborSurcharge"
+                          value={formData.site_preparation?.marbleLaborSurcharge ?? 400}
+                          onChange={handleSitePrepChange}
+                          className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-amber-500/20 outline-none text-xs font-semibold shadow-sm font-mono" 
+                        />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-medium">Flat / Site</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground flex justify-between">
+                      <span>Tech Payout:</span>
+                      <span className="font-mono font-semibold text-foreground">₹{formData.site_preparation?.marbleLaborSurcharge ?? 400}</span>
+                    </div>
+                  </div>
+
+                  {/* Metal / Pole Installation */}
+                  <div className="p-3 bg-muted/20 border border-border/80 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-foreground">Metal / Pole Installation</span>
+                      <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                        0% Pass-Through
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                        <input 
+                          required
+                          type="number" 
+                          name="metalInstallationSurcharge"
+                          value={formData.site_preparation?.metalInstallationSurcharge ?? 200}
+                          onChange={handleSitePrepChange}
+                          className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-amber-500/20 outline-none text-xs font-semibold shadow-sm font-mono" 
+                        />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-medium">Flat / Site</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground flex justify-between">
+                      <span>Tech Payout:</span>
+                      <span className="font-mono font-semibold text-foreground">₹{formData.site_preparation?.metalInstallationSurcharge ?? 200}</span>
+                    </div>
+                  </div>
+
+                  {/* Furnished Site Care */}
+                  <div className="p-3 bg-muted/20 border border-border/80 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-foreground">Furnished Site Care</span>
+                      <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                        0% Pass-Through
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                        <input 
+                          required
+                          type="number" 
+                          name="furnishedSiteSurcharge"
+                          value={formData.site_preparation?.furnishedSiteSurcharge ?? 300}
+                          onChange={handleSitePrepChange}
+                          className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-amber-500/20 outline-none text-xs font-semibold shadow-sm font-mono" 
+                        />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-medium">Flat / Site</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground flex justify-between">
+                      <span>Tech Payout:</span>
+                      <span className="font-mono font-semibold text-foreground">₹{formData.site_preparation?.furnishedSiteSurcharge ?? 300}</span>
+                    </div>
+                  </div>
+
+                  {/* Heavy Wall Drilling */}
+                  <div className="p-3 bg-muted/20 border border-border/80 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-foreground">Heavy Wall Drilling</span>
+                      <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                        0% Pass-Through
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                        <input 
+                          required
+                          type="number" 
+                          name="heavyWallDrillingSurcharge"
+                          value={formData.site_preparation?.heavyWallDrillingSurcharge ?? 600}
+                          onChange={handleSitePrepChange}
+                          className="w-full bg-background border border-border text-foreground rounded-lg pl-6 pr-2 py-1.5 focus:ring-2 focus:ring-amber-500/20 outline-none text-xs font-semibold shadow-sm font-mono" 
+                        />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-medium">Flat / Site</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground flex justify-between">
+                      <span>Tech Payout:</span>
+                      <span className="font-mono font-semibold text-foreground">₹{formData.site_preparation?.heavyWallDrillingSurcharge ?? 600}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1175,9 +1718,14 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
           </div>
         </div>
+        </div>
+      )}
 
-        {/* Section: Brand Display Tabs */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all">
+      {/* ── Tab 3: Catalog & Brand Management ── */}
+      {activeTab === "catalog" && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          {/* Section: Brand Display Tabs */}
+          <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
               <Settings2 className="w-5 h-5" />
@@ -1310,9 +1858,14 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
           </div>
         </div>
+        </div>
+      )}
 
-        {/* Section: High-Fidelity Logic (PDF Alignment) */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-warning/20 transition-all">
+      {/* ── Tab 5: Quotation & PDF Alignment ── */}
+      {activeTab === "pdf" && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          {/* Section: High-Fidelity Logic (PDF Alignment) */}
+          <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-warning/20 transition-all">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center text-warning border border-warning/20">
               <Ruler className="w-5 h-5" />
@@ -1436,9 +1989,14 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
           </div>
         </div>
+        </div>
+      )}
 
-        {/* Section: Wireless & Smart Wi-Fi System Controls */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all space-y-6">
+      {/* ── Tab 3 (cont): Wireless & Smart Wi-Fi System Controls ── */}
+      {activeTab === "catalog" && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          {/* Section: Wireless & Smart Wi-Fi System Controls */}
+          <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all space-y-6">
           <div className="flex items-center gap-3 pb-6 border-b border-border/80">
             <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
               <Wifi className="w-5 h-5" />
@@ -1507,9 +2065,14 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
           </div>
         </div>
+        </div>
+      )}
 
-        {/* Section: Service Level Agreements (SLA) */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-destructive/20 transition-all">
+      {/* ── Tab 4: Service Level Agreements (SLA) & Operations ── */}
+      {activeTab === "sla" && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          {/* Section: Service Level Agreements (SLA) */}
+          <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-destructive/20 transition-all">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive border border-destructive/20">
               <Zap className="w-5 h-5" />
@@ -1614,10 +2177,14 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
-      {/* Section: PDF Generation */}
-      <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all mt-6">
+      {/* ── Tab 5 (cont): PDF Generation ── */}
+      {activeTab === "pdf" && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          {/* Section: PDF Generation */}
+          <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
             <Settings2 className="w-5 h-5" />
@@ -1674,10 +2241,15 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+        </div>
+      )}
 
-      {/* Section: Communications */}
-      <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all">
+      {/* ── Tab 6: Communications & Templates ── */}
+      {activeTab === "communications" && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          {/* Section: Communications */}
+          <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
             <MessageSquare className="w-5 h-5" />
@@ -1734,10 +2306,15 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+        </div>
+      )}
 
-      {/* Section: AI & Enrichment */}
-      <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all mt-6">
+      {/* ── Tab 7: System Infrastructure & AI ── */}
+      {activeTab === "system" && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          {/* Section: AI & Enrichment */}
+          <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
             <Zap className="w-5 h-5" />
@@ -1764,56 +2341,83 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         </div>
       </div>
 
-      {/* Footer / Global System Settings */}
-      <div className="sticky bottom-6 z-50 bg-background/80 backdrop-blur-md border border-border rounded-2xl p-6 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 mt-12">
-        <div className="flex flex-wrap gap-6 items-center w-full md:w-auto">
-          <div className="space-y-1">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Cache Performance (TTL)</label>
-            <div className="relative">
-              <input 
-                required
-                type="number" 
-                name="pricing_cache_ttl_seconds"
-                value={formData.pricing_cache_ttl_seconds}
-                onChange={handleChange}
-                className="bg-secondary border border-border text-foreground rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium w-28 text-sm" 
-              />
-              <span className="ml-2 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Seconds</span>
+        {/* Section: System Infrastructure & Caching */}
+        <div className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm group hover:border-primary/20 transition-all space-y-6">
+          <div className="flex items-center gap-3 pb-6 border-b border-border/80">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+              <Settings2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground tracking-tight">System Infrastructure & Caching</h2>
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Performance TTL & Authentication Gateways</p>
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Primary OTP Gateway</label>
-            <select
-              name="otp_provider"
-              value={formData.otp_provider}
-              onChange={handleChange}
-              className="bg-secondary border border-border text-foreground rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium h-[38px] appearance-none cursor-pointer pr-8 text-sm"
-            >
-              <option value="firebase_phone">Firebase Phone Auth</option>
-            </select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Cache Performance (TTL)</label>
+              <div className="relative">
+                <input 
+                  required
+                  type="number" 
+                  name="pricing_cache_ttl_seconds"
+                  value={formData.pricing_cache_ttl_seconds}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm" 
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">Seconds</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Time cached prices remain in memory before re-querying Firestore.</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Primary OTP Gateway</label>
+              <select
+                name="otp_provider"
+                value={formData.otp_provider}
+                onChange={handleChange}
+                className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm cursor-pointer"
+              >
+                <option value="firebase_phone">Firebase Phone Authentication (Default)</option>
+              </select>
+              <p className="text-[10px] text-muted-foreground">Provider used for lead verification and login OTPs.</p>
+            </div>
           </div>
         </div>
+        </div>
+      )}
 
-        <div className="flex items-center gap-4 w-full md:w-auto justify-end">
+      {/* Modern, Non-Intrusive Floating Save Bar */}
+      <div className="sticky bottom-4 z-40 bg-background/95 backdrop-blur-md border border-border rounded-2xl px-5 py-3 shadow-xl flex items-center justify-between gap-4 mt-8">
+        <div className="flex items-center gap-2.5 text-xs text-muted-foreground min-w-0">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+          <span className="truncate">
+            <strong className="text-foreground font-semibold">
+              {SETTINGS_TABS.find(t => t.id === activeTab)?.label}
+            </strong>
+            <span className="hidden sm:inline"> — Real-time synchronization active</span>
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
           {showSuccess && (
-            <div className="flex items-center gap-2 text-success text-xs font-semibold uppercase tracking-wider bg-success/10 px-4 py-2 rounded-full border border-success/20 animate-in fade-in slide-in-from-right-4">
+            <div className="flex items-center gap-1.5 text-success text-xs font-semibold uppercase tracking-wider bg-success/10 px-3 py-1.5 rounded-full border border-success/20 animate-in fade-in">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              Settings Saved
+              <span>Saved</span>
             </div>
           )}
           
           <button 
             type="submit" 
             disabled={isSubmitting}
-            className="group relative flex items-center gap-2 bg-primary hover:bg-primary/90 disabled:bg-secondary disabled:text-muted-foreground text-primary-foreground px-6 py-2.5 rounded-full font-semibold text-sm transition-all shadow-sm active:scale-95 disabled:shadow-none"
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer min-h-[42px]"
           >
             {isSubmitting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Save className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+              <Save className="w-4 h-4" />
             )}
-            {isSubmitting ? "Saving..." : "Save Settings"}
+            <span>{isSubmitting ? "Saving..." : "Save Settings"}</span>
           </button>
         </div>
       </div>

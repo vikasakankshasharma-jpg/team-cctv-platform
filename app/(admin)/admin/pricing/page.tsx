@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import PriceSimulator from "@/components/admin/pricing/PriceSimulator";
 import WaterfallVisualizer from "@/components/admin/pricing/WaterfallVisualizer";
+import { PricingSubNav } from "@/components/admin/navigation/AdminSubNav";
 import { IndianRupee } from "lucide-react";
 
 export default function PricingControlCenter() {
@@ -87,6 +88,7 @@ export default function PricingControlCenter() {
 
   return (
     <div className="space-y-6">
+      <PricingSubNav />
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">

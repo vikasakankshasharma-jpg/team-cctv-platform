@@ -668,6 +668,16 @@ export interface AppSettings {
   labor_no_cabling_visit_charge?: number;
   labor_no_cabling_small_job_threshold?: number;
   labor_no_cabling_small_job_rate?: number;
+
+  // Technician Labor Payout Costs & Services Margins
+  cost_labor_hd_per_camera?: number;        // What company pays technician per HD camera (e.g. 250)
+  cost_labor_ip_per_camera?: number;        // What company pays technician per IP camera (e.g. 300)
+  cost_labor_wireless_per_camera?: number;  // What company pays technician per Wi-Fi camera (e.g. 200)
+  cost_labor_hd_fitting_only?: number;      // Payout for HD fitting only (e.g. 120)
+  cost_labor_ip_fitting_only?: number;      // Payout for IP fitting only (e.g. 180)
+  cost_labor_visit_charge?: number;         // Payout for site survey / visit (e.g. 300)
+  cost_labor_small_job_rate?: number;       // Payout for small jobs (e.g. 350)
+  cost_conduit_per_meter?: number;          // Payout for conduit laying labor per meter (e.g. 12)
   cable_copper_coated_ip: number;
   cable_copper_coated_hd: number;
   cable_pure_copper: number;

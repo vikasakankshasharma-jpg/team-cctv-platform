@@ -3,6 +3,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import type { Job, Hub, Installer } from "@/types";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { DispatchClient } from "@/components/admin/DispatchClient";
+import { OperationsSubNav } from "@/components/admin/navigation/AdminSubNav";
 import { Workflow } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -40,7 +41,8 @@ export default async function DispatchPage() {
   const installers = installersSnap.docs.map(serializeDoc) as Installer[];
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700 h-[calc(100vh-6rem)] flex flex-col">
+    <div className="space-y-6 animate-in fade-in duration-700 h-[calc(100vh-6rem)] flex flex-col">
+      <OperationsSubNav />
       <PageHeader
         title="Dispatch & Operations Center"
         description="Live tracking, SLA routing, and strict state machine management for all surveys, installations, and AMCs."
