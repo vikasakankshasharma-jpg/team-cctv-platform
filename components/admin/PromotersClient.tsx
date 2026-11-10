@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BadgeDollarSign, Plus, UserX, Settings2, Phone, QrCode, Copy, Download, ExternalLink, Check } from "lucide-react";
 import type { Promoter } from "@/types";
 import { PromoterModal } from "./PromoterModal";
+import { PreprintedBatchModal } from "./PreprintedBatchModal";
 import { PageHeader } from "./PageHeader";
 import { createPromoter, updatePromoter, banPromoter } from "@/app/actions/promoters";
 import { toast } from "sonner";
@@ -20,6 +21,7 @@ interface PromotersClientProps {
 export function PromotersClient({ initialPromoters, availableLayouts = [] }: PromotersClientProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPromoter, setEditingPromoter] = useState<Promoter | null>(null);
+  const [batchModalOpen, setBatchModalOpen] = useState(false);
 
   // QR Modal State
   const [qrModalOpen, setQrModalOpen] = useState(false);
@@ -164,13 +166,22 @@ export function PromotersClient({ initialPromoters, availableLayouts = [] }: Pro
         description="Manage referral partners (commission & flat discount), generate trackable WhatsApp QR codes, and monitor leads."
         badge={`${activeCount} Active`}
         action={
-          <button
-            onClick={handleCreateNew}
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-            Add Partner
-          </button>
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <button
+              onClick={() => setBatchModalOpen(true)}
+              className="inline-flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-amber-400 border border-amber-500/30 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-sm active:scale-95"
+            >
+              <QrCode className="w-4 h-4 text-amber-500" />
+              Pre-Printed QR Batches
+            </button>
+            <button
+              onClick={handleCreateNew}
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-95"
+            >
+              <Plus className="w-4 h-4" />
+              Add Partner
+            </button>
+          </div>
         }
       />
 
@@ -227,19 +238,36 @@ export function PromotersClient({ initialPromoters, availableLayouts = [] }: Pro
                       )}
                     </td>
                     <td className="px-4 md:px-8 py-6 text-center">
-                      <span className="bg-amber-50 dark:bg-amber-500/5 text-amber-700 dark:text-amber-500 px-5 py-2 rounded-2xl font-mono font-black text-xs tracking-[0.3em] border border-amber-100 dark:border-amber-500/10 shadow-inner group-hover/row:bg-amber-100 dark:group-hover/row:bg-amber-500/10 transition-colors">
-                        {agent.referral_code}
-                      </span>
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="bg-amber-50 dark:bg-amber-500/5 text-amber-700 dark:text-amber-500 px-4 py-1.5 rounded-2xl font-mono font-black text-xs tracking-[0.2em] border border-amber-100 dark:border-amber-500/10 shadow-inner group-hover/row:bg-amber-100 dark:group-hover/row:bg-amber-500/10 transition-colors">
+                          {agent.referral_code}
+                        </span>
+                        {agent.is_preprinted && (
+                          <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                            Pre-Printed Card
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 md:px-8 py-6 text-center text-xs">
-                      {agent.discount_type === "percent" ? (
-                        <span className="font-semibold text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-lg">
-                          {agent.discount_value || 3}% Discount + Comm
-                        </span>
+                      {agent.partner_type === "flat" || agent.discount_type === "flat" ? (
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-200/50">
+                            Type 2: Flat ₹{agent.promoter_incentive_value ?? agent.discount_value ?? 500} Partner
+                          </span>
+                          <span className="text-[10px] text-zinc-500">
+                            Client: ₹{agent.discount_value ?? 500} off {agent.min_order_value ? `(Min ₹${agent.min_order_value})` : ""}
+                          </span>
+                        </div>
                       ) : (
-                        <span className="font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-lg">
-                          ₹{agent.discount_value || 500} Flat Reward / Disc
-                        </span>
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-lg border border-blue-200/50">
+                            Type 1: {agent.promoter_incentive_value ?? agent.discount_value ?? 3}% Partner
+                          </span>
+                          <span className="text-[10px] text-zinc-500">
+                            Client: {agent.discount_value ?? 3}% Discount
+                          </span>
+                        </div>
                       )}
                     </td>
                     <td className="px-4 md:px-8 py-6 text-right">
@@ -384,6 +412,11 @@ export function PromotersClient({ initialPromoters, availableLayouts = [] }: Pro
         promoter={editingPromoter}
         onSave={handleSave}
         availableLayouts={availableLayouts}
+      />
+      <PreprintedBatchModal
+        isOpen={batchModalOpen}
+        onClose={() => setBatchModalOpen(false)}
+        onBatchCreated={() => {}}
       />
     </>
   );

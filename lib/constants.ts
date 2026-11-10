@@ -28,6 +28,8 @@ export const COLLECTIONS = {
   LEDGER_TRANSACTIONS: "ledger_transactions",
   WHATSAPP_SESSIONS: "whatsapp_sessions",
   MARKETING_CAMPAIGNS: "marketing_campaigns",
+  PREPRINTED_BATCHES: "preprinted_batches",
+  PREPRINTED_TOKENS: "preprinted_tokens",
 } as const;
 
 

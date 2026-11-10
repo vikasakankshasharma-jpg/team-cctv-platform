@@ -37,9 +37,13 @@ export async function GET(req: NextRequest) {
       valid: true,
       partner_name: promoter.name || "Partner",
       partner_business: promoter.business_name || "",
+      partner_type: promoter.partner_type || (discountType === "flat" ? "flat" : "percent"),
       discount_type: discountType,
       discount_value: discountValue,
-      message: "Referral code applied successfully!"
+      min_order_value: promoter.min_order_value || 0,
+      message: discountType === "flat" && promoter.min_order_value
+        ? `Referral code applied! Flat ₹${discountValue} discount on minimum purchase of ₹${promoter.min_order_value}.`
+        : "Referral code applied successfully!"
     });
   } catch (error) {
     console.error("[Validate Referral Error]", error);

@@ -63,9 +63,22 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
               
               let commissionAmount = 0;
               if (userType === "promoter") {
-                  // Promoters use the global commission percent
+                const p = user as any;
+                if (p.promoter_incentive_type === "flat") {
+                  // Type 2: Flat Incentive (₹)
+                  commissionAmount = Number(p.promoter_incentive_value) || 0;
+                } else if (p.promoter_incentive_type === "percent") {
+                  // Type 1: % Incentive
+                  commissionAmount = netTaxable * ((Number(p.promoter_incentive_value) || 0) / 100);
+                } else if (p.partner_type === "flat" && p.discount_value) {
+                  commissionAmount = Number(p.discount_value) || 0;
+                } else if (p.discount_type === "percent" && p.discount_value) {
+                  commissionAmount = netTaxable * ((Number(p.discount_value) || 0) / 100);
+                } else {
+                  // Fallback: global setting
                   const commissionPercent = settings?.promoter_commission_percent ?? 2;
                   commissionAmount = netTaxable * (commissionPercent / 100);
+                }
               } else if (user.use_global_commission && user.commission_slabs) {
                 const slab = user.commission_slabs.find((s: any) => 
                   netTaxable >= s.from && (s.to === null || netTaxable <= s.to)

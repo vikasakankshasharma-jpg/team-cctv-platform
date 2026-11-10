@@ -760,6 +760,8 @@ export interface AppSettings {
   };
 }
 
+export type PartnerType = "percent" | "flat" | "campaign";
+
 export interface Promoter {
   id?: string;
   name: string;
@@ -773,8 +775,19 @@ export interface Promoter {
   commission_slabs?: CommissionSlab[];
   total_won_leads: number;
   total_ex_tax_business: number;
+
+  // Partnership & Incentive Configuration (Sequential Bulk QR & Partner Types)
+  partner_type?: PartnerType;
+  promoter_incentive_type?: "percent" | "flat";
+  promoter_incentive_value?: number;
   discount_type?: "flat" | "percent";
   discount_value?: number;
+  min_order_value?: number;
+
+  // Pre-printed batch assignment attribution
+  is_preprinted?: boolean;
+  batch_id?: string;
+
   custom_layout_id?: string | null;
   bank_details?: {
     account_number: string;
@@ -786,6 +799,29 @@ export interface Promoter {
 
   created_at?: unknown;
   updated_at?: unknown;
+}
+
+export interface PreprintedBatch {
+  id: string;
+  batch_name: string;
+  prefix: string;
+  start_number: number;
+  end_number: number;
+  total_cards: number;
+  assigned_cards: number;
+  created_at: string;
+}
+
+export interface PreprintedToken {
+  id: string;
+  code: string;
+  batch_id: string;
+  sequence_num: number;
+  status: "unassigned" | "assigned" | "revoked";
+  assigned_to_promoter_id?: string | null;
+  assigned_to_promoter_name?: string | null;
+  assigned_at?: string | null;
+  created_at: string;
 }
 
 export interface PartnerSession {

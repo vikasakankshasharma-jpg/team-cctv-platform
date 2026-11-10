@@ -286,6 +286,22 @@ export function getStepPrompt(
       break;
     }
 
+    case "ASK_CAMERA_EDIT_CHOICE": {
+      const outCount = session.wizard_answers?.outdoor_camera_count || 0;
+      const inCount = session.wizard_answers?.indoor_camera_count || 0;
+      const wifiCount = session.wizard_answers?.wifi_camera_count || 0;
+      replies.push(MessageBuilder.buttons(
+        from,
+        `✏️ *Edit Camera Quantities*\n\nWhich camera quantity would you like to update?\n• Outdoor Weatherproof Bullets: *${outCount}*\n• Indoor Ceiling Domes: *${inCount}*${wifiCount > 0 ? `\n• Smart Wireless Cameras: *${wifiCount}*` : ""}`,
+        [
+          { id: "edit_qty_outdoor", title: "🌧️ Outdoor Bullets" },
+          { id: "edit_qty_indoor", title: "🏠 Indoor Domes" },
+          ...(wifiCount > 0 ? [{ id: "edit_qty_wireless", title: "📶 Wireless Cams" }] : [{ id: "edit_qty_all", title: "🔄 Change All" }])
+        ]
+      ));
+      break;
+    }
+
     case "ASK_TIMELINE": {
       replies.push(MessageBuilder.list(
         from,
@@ -1764,6 +1780,48 @@ async function processIncomingMessageInternal(
           return;
         }
 
+        // 0. Check if user clicked "Change Qty"
+        if (
+          text.includes("wf_change_qty") ||
+          text.includes("change_qty") ||
+          text.includes("change qty") ||
+          text.includes("edit qty") ||
+          text.includes("reset qty") ||
+          text.includes("change camera") ||
+          text.includes("edit camera")
+        ) {
+          const outWired = session.wizard_answers.outdoor_camera_count || 0;
+          const inWired = session.wizard_answers.indoor_camera_count || 0;
+          const wifiCount = session.wizard_answers.wifi_camera_count || 0;
+
+          if (outWired > 0 || inWired > 0) {
+            nextState = "ASK_CAMERA_EDIT_CHOICE";
+            replies.push(MessageBuilder.buttons(
+              from,
+              `✏️ *Edit Camera Quantities*\n\nWhich camera quantity would you like to update?\n• Outdoor Weatherproof Bullets: *${outWired}*\n• Indoor Ceiling Domes: *${inWired}*${wifiCount > 0 ? `\n• Smart Wireless Cameras: *${wifiCount}*` : ""}\n\n_Your property type and details are safely preserved._`,
+              [
+                { id: "edit_qty_outdoor", title: "🌧️ Outdoor Bullets" },
+                { id: "edit_qty_indoor", title: "🏠 Indoor Domes" },
+                ...(wifiCount > 0 ? [{ id: "edit_qty_wireless", title: "📶 Wireless Cams" }] : [{ id: "edit_qty_all", title: "🔄 Change All" }])
+              ]
+            ));
+            break;
+          } else {
+            nextState = "ASK_WIRELESS_QTY";
+            replies.push(buildQuantityButtonsMessage(
+              from, "wfq",
+              `*Edit Smart Wireless Quantity:*\nHow many wireless cameras do you need mounted?`,
+              [
+                { id: "wfq_1", title: "1 Camera" },
+                { id: "wfq_2", title: "2 Cameras" },
+                { id: "wfq_4", title: "4 Cameras" }
+              ],
+              conv.numberReplyHint
+            ));
+            break;
+          }
+        }
+
         // 1. Check if user wants to add another wireless camera variant FIRST
         if (
           text.includes("wf_add_another") ||
@@ -2001,16 +2059,80 @@ async function processIncomingMessageInternal(
         const wifiSummary = wifiItems.length > 0 
           ? `\n\n📡 *Smart Wireless Cameras in Setup (${totalWireless} Added):*\n${wifiItems.join("\n")}`
           : "";
-        const bodyText = `${statusHeader}${wifiSummary}\n\n⚡ *Total Cameras:* ${grandTotal} (${isPureWireless ? `${totalWireless} Smart Wireless` : `⚡ Hybrid Setup: ${outWired + inWired} Wired + ${totalWireless} Smart Wireless`})\n\nWould you like to add another wireless camera variant, or proceed to Step 3?`;
+        const bodyText = `${statusHeader}${wifiSummary}\n\n⚡ *Total Cameras:* ${grandTotal} (${isPureWireless ? `${totalWireless} Smart Wireless` : `⚡ Hybrid Setup: ${outWired + inWired} Wired + ${totalWireless} Smart Wireless`})\n\nWould you like to lock your camera setup and proceed to Step 3, or edit quantities?`;
 
         replies.push(MessageBuilder.buttons(
           from,
           bodyText,
           [
-            { id: "wf_done_proceed", title: "✅ Done (Proceed)" },
-            { id: "wf_add_another", title: "➕ Add Wireless" }
+            { id: "wf_done_proceed", title: conv.quickBtnDoneProceed || "✅ Done (Proceed)" },
+            { id: "wf_change_qty", title: conv.quickBtnChangeQty || "✏️ Change Qty" }
           ]
         ));
+        break;
+      }
+
+      case "ASK_CAMERA_EDIT_CHOICE": {
+        const text = String(content || "").toLowerCase().trim();
+        if (text.includes("outdoor") || text.includes("bullet") || text.includes("out_") || text === "1") {
+          nextState = "ASK_CAMERA_OUTDOOR";
+          const currentOut = session.wizard_answers?.outdoor_camera_count || 0;
+          replies.push(buildQuantityButtonsMessage(
+            from, "out",
+            `*Edit Outdoor Cameras* 🌧️\n(Current: *${currentOut} Bullets*)\n\n${conv.outdoorQuestion}`,
+            [
+              { id: "out_2", title: `2 ${conv.quickBtnBullets || "Bullets"}` },
+              { id: "out_4", title: `4 ${conv.quickBtnBullets || "Bullets"}` },
+              { id: "out_0", title: conv.quickBtnNone || "0 (None)" }
+            ],
+            conv.numberReplyHint
+          ));
+        } else if (text.includes("indoor") || text.includes("dome") || text.includes("in_") || text === "2") {
+          nextState = "ASK_CAMERA_INDOOR";
+          const currentIn = session.wizard_answers?.indoor_camera_count || 0;
+          replies.push(buildQuantityButtonsMessage(
+            from, "in",
+            `*Edit Indoor Cameras* 🏠\n(Current: *${currentIn} Domes*)\n\n${conv.indoorQuestion}`,
+            [
+              { id: "in_2", title: `2 ${conv.quickBtnDomes || "Domes"}` },
+              { id: "in_4", title: `4 ${conv.quickBtnDomes || "Domes"}` },
+              { id: "in_0", title: conv.quickBtnNone || "0 (None)" }
+            ],
+            conv.numberReplyHint
+          ));
+        } else if (text.includes("wireless") || text.includes("wifi") || text.includes("wfq_") || text === "3") {
+          nextState = "ASK_HYBRID_WIRELESS";
+          replies.push(MessageBuilder.list(
+            from,
+            `📡 *Smart Wireless Add-ons (Wi-Fi / 4G SIM)*\nSelect a wireless camera to add or update:`,
+            "Wireless Options",
+            [
+              {
+                title: "Wireless Add-on Options",
+                rows: [
+                  { id: "wf_none", title: "➡️ Skip / Keep Current", description: "Keep existing setup and proceed" },
+                  { id: "wf_in_ptz", title: "🏠 Indoor 360° PTZ", description: "Living room, counter, baby room" },
+                  { id: "wf_in_fixed", title: "🏢 Indoor Fixed Dome", description: "Hallways, reception, cashier desk" },
+                  { id: "wf_out_bullet", title: "🌧️ Outdoor Bullet", description: "Main gate, porch, driveway" },
+                  { id: "wf_out_ptz", title: "🔄 Outdoor 360° PTZ", description: "Open courtyard, terrace, front garden" },
+                  { id: "wf_4g_solar", title: "🛰️ 4G SIM / Solar", description: "Farmhouse, empty plot, remote gate" }
+                ]
+              }
+            ]
+          ));
+        } else {
+          nextState = "ASK_CAMERA_OUTDOOR";
+          replies.push(buildQuantityButtonsMessage(
+            from, "out",
+            `*${conv.outdoorHeader}*\n\n${conv.outdoorQuestion}`,
+            [
+              { id: "out_2", title: `2 ${conv.quickBtnBullets || "Bullets"}` },
+              { id: "out_4", title: `4 ${conv.quickBtnBullets || "Bullets"}` },
+              { id: "out_0", title: conv.quickBtnNone || "0 (None)" }
+            ],
+            conv.numberReplyHint
+          ));
+        }
         break;
       }
 
