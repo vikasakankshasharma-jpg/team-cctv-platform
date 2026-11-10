@@ -113,8 +113,14 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
       summaryText += `   • Standard ${storageDays} Days (1TB+): ₹${b.standardQuote.total_payable.toLocaleString('en-IN')}\n\n`;
     });
 
+    const webStudioUrl = session.lead_id 
+      ? `https://cctvquotation.com/quote/${session.lead_id}` 
+      : `https://cctvquotation.com/wizard?phone=${phone}`;
+
     summaryText += `━━━━━━━━━━━━━━━━━━━━━\n`;
-    summaryText += `🛡 *100% Price Match Guarantee:*\n`;
+    summaryText += `🌐 *Interactive Web Studio & 3D Viewer:*\n`;
+    summaryText += `Inspect camera models, toggle hard drives, and download your official PDF quote:\n👉 ${webStudioUrl}\n\n`;
+    summaryText += `🛡️ *100% Price Match Guarantee:*\n`;
     summaryText += `Already have a quote from another vendor? Reply with a PHOTO or PDF right here to beat their price by 5%-10%!`;
 
     await sendMsg(MessageBuilder.text(phone, summaryText));

@@ -19,6 +19,7 @@ export type WhatsAppBotState =
   | "ASK_SURFACE_TYPE"
   | "ASK_CUSTOM_CABLE_METERS"
   | "ASK_CABLING_OR_POWER"
+  | "ASK_HYBRID_POWER"
   | "ASK_INTERNET"
   | "ASK_TIMELINE"
   | "ASK_PINCODE"

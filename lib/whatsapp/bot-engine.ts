@@ -341,17 +341,36 @@ export async function processIncomingMessage(
     }
   }
 
+  // Handle explicit request for website / web wizard at any point
+  const rawInbound = typeof content === "string" ? content.toLowerCase().trim() : "";
+  if (rawInbound === "website" || rawInbound === "web" || rawInbound === "link" || rawInbound === "web wizard" || rawInbound === "studio") {
+    const cleanPhone = from.replace(/\D/g, "");
+    const partnerRef = session.partner_id ? `&ref=${session.partner_id}` : "";
+    const webWizardUrl = `https://cctvquotation.com/wizard?phone=${cleanPhone}${partnerRef}&source=wa_chat_help`;
+    await sendWhatsAppMessages([
+      MessageBuilder.text(
+        from,
+        `🌐 *TEAM CCTV Interactive Web Studio*\n\nExplore 3D camera angles, compare hardware specs, and customize your quote in your browser:\n👉 ${webWizardUrl}\n\n_Your phone number and referral discount are pre-applied! You can return to WhatsApp anytime._`
+      )
+    ]);
+    return;
+  }
+
   let replies: WhatsAppMessagePayload[] = [];
   let nextState: WhatsAppBotState = session.state;
 
   try {
     switch (session.state) {
       case "IDLE":
-      case "GREETING":
+      case "GREETING": {
         nextState = "ASK_PROP";
+        const cleanPhone = from.replace(/\D/g, "");
+        const partnerRef = session.partner_id ? `&ref=${session.partner_id}` : "";
+        const webWizardUrl = `https://cctvquotation.com/wizard?phone=${cleanPhone}${partnerRef}&source=wa_welcome`;
+
         const partnerGreeting = session.partner_id
-          ? `Welcome to *TEAM CCTV*! 📷\n\n🎁 *Store Partner Verified:* Referral Code *${session.partner_id}* applied!\nSpecial partner-tier discount & priority survey dispatch are unlocked for you.\n\n*Step 1 of 6: Property Type*\nWhat type of property are you securing?`
-          : `Welcome to *TEAM CCTV*! 📷\n\nLet's build your exact, transparent CCTV quotation matching our website customer journey.\n\n*Step 1 of 6: Property Type*\nWhat type of property are you securing?`;
+          ? `Welcome to *TEAM CCTV*! 🛡️\n\n🎁 *Store Partner Verified:* Referral Code *${session.partner_id}* applied! Priority survey dispatch & partner discount unlocked.\n\n✨ *Prefer an interactive visual experience?*\nDesign your system on our visual website wizard with 3D views & custom sliders:\n👉 ${webWizardUrl}\n\n💬 *Or build your quote right here in 4 quick questions on WhatsApp!*\n\n*Step 1 of 6: Property Type*\nWhat type of property are you securing?`
+          : `Welcome to *TEAM CCTV*! 🛡️\n\nGet your 100% transparent CCTV quotation in 60 seconds with zero hidden costs.\n\n✨ *Prefer an interactive visual experience?*\nDesign your system on our visual website wizard with 3D views & custom sliders:\n👉 ${webWizardUrl}\n\n💬 *Or build your quote right here in 4 quick questions on WhatsApp!*\n\n*Step 1 of 6: Property Type*\nWhat type of property are you securing?`;
 
         replies.push(MessageBuilder.buttons(
           from,
@@ -363,6 +382,7 @@ export async function processIncomingMessage(
           ]
         ));
         break;
+      }
 
       case "ASK_PROP": {
         const text = String(content || "").toLowerCase().trim();
@@ -993,42 +1013,24 @@ export async function processIncomingMessage(
             ? `⚡ Hybrid Setup (${outCount + inCount} Wired + ${wCount} Smart Wireless = ${outCount + inCount + wCount} Cameras)`
             : `${outCount + inCount} Wired Cameras (${outCount} Outdoor Bullets + ${inCount} Indoor Domes)`;
 
-          const isPureWireless = session.wizard_answers.technology === "Wireless" || 
-                                 session.wizard_answers.technology === "4G_Solar" ||
-                                 session.wizard_answers.installation_type === "wireless" ||
-                                 session.wizard_answers.installation_type === "solar_4g";
-
-          if (isPureWireless) {
-            nextState = "ASK_STORAGE_DAYS";
-            replies.push(MessageBuilder.list(
-              from,
-              `✓ *Camera Setup Confirmed:* ${setupBadge}\n\n*Step 3 of 6: Storage Retention History* 💾\n\nHow many days of recording retention do you require?`,
-              "Select Storage Days",
-              [
-                {
-                  title: "Recording Retention",
-                  rows: [
-                    { id: "storage_0", title: "0 Days (No Recording)", description: "Live mobile viewing only. Zero storage cost." },
-                    { id: "storage_7", title: "7 Days (Basic)", description: "Standard week buffer" },
-                    { id: "storage_15", title: "15 Days (Recommended)", description: "Optimal commercial/home standard" },
-                    { id: "storage_30", title: "30 Days (Extended)", description: "Full month peace-of-mind" },
-                    { id: "storage_45", title: "45 Days (High Security)", description: "Extended commercial compliance" },
-                    { id: "storage_60", title: "60 Days (Maximum)", description: "Highest statutory retention" }
-                  ]
-                }
-              ]
-            ));
-          } else {
-            nextState = "ASK_TECH";
-            replies.push(MessageBuilder.buttons(
-              from,
-              `✓ *Camera Setup Confirmed:* ${setupBadge}\n\n*Step 3 of 6: Camera Technology* ⚡\n\nWhich camera technology level do you prefer?`,
-              [
-                { id: "tech_HD", title: "📹 HD Analog (Value)" },
-                { id: "tech_IP", title: "🌐 Digital IP (4K)" }
-              ]
-            ));
-          }
+          // Step 2 Completion: Advance straight to Priority Dispatch Scheduler (Timeline)
+          nextState = "ASK_TIMELINE";
+          replies.push(MessageBuilder.list(
+            from,
+            `✓ *Camera Setup Confirmed:* ${setupBadge}\n\n⏱️ *WHEN DO YOU WANT WORK DONE ON YOUR SITE?*\nPriority Dispatch Scheduler (Step 2 of 6)\n\nHelps us schedule certified technician availability & prioritize your site survey:`,
+            "Select Timeline",
+            [
+              {
+                title: "Priority Dispatch Scheduler",
+                rows: [
+                  { id: "time_asap", title: "⚡ ASAP (1-2 Days)", description: "Ready for instant site survey & work" },
+                  { id: "time_week", title: "📅 Within a Week", description: "Finalizing quotation & setup" },
+                  { id: "time_month", title: "🗓️ This Month", description: "Site currently under construction" },
+                  { id: "time_research", title: "🔍 Just Planning", description: "Comparing prices & options" }
+                ]
+              }
+            ]
+          ));
           break;
         }
 
@@ -1041,12 +1043,12 @@ export async function processIncomingMessage(
             {
               title: "Wireless Add-on Options",
               rows: [
-                { id: "wf_none", title: "❌ None (Pure Wired)", description: "Proceed with standard wired DVR setup only" },
-                { id: "wf_in_ptz", title: "🏠 Indoor 360° Pan-Tilt", description: "Living room, counter, baby room with 2-way talk" },
+                { id: "wf_none", title: "➡️ Skip (Wired Only)", description: "Proceed with standard wired DVR setup only" },
+                { id: "wf_in_ptz", title: "🏠 Indoor 360° PTZ", description: "Living room, counter, baby room with 2-way talk" },
                 { id: "wf_in_fixed", title: "🏢 Indoor Fixed Dome", description: "Hallways, reception, cashier desk" },
-                { id: "wf_out_bullet", title: "🌧️ Outdoor Fixed Bullet", description: "Main gate, porch, driveway, perimeter" },
-                { id: "wf_out_ptz", title: "🔄 Outdoor 360° Pan-Tilt", description: "Open courtyard, terrace, front garden" },
-                { id: "wf_4g_solar", title: "🛰️ 4G SIM / Solar Cam", description: "Farmhouse, empty plot, remote gate (No Wi-Fi needed)" },
+                { id: "wf_out_bullet", title: "🌧️ Outdoor Bullet", description: "Main gate, porch, driveway, perimeter" },
+                { id: "wf_out_ptz", title: "🔄 Outdoor 360° PTZ", description: "Open courtyard, terrace, front garden" },
+                { id: "wf_4g_solar", title: "🛰️ 4G SIM / Solar", description: "Farmhouse, empty plot, remote gate (No Wi-Fi needed)" }
               ]
             }
           ]
@@ -1163,43 +1165,102 @@ export async function processIncomingMessage(
 
       case "ASK_TECH": {
         const text = String(content || "").toLowerCase().trim();
-        let techChoice = "";
-        if (text.includes("tech_ip") || text.includes("ip") || text.includes("digital") || text.includes("cat6") || text.includes("best") || text.includes("network") || text === "1") {
+        let techChoice = "HD";
+        if (text.includes("tech_ip") || text.includes("ip") || text.includes("digital") || text.includes("cat6") || text.includes("network") || text === "1") {
           techChoice = "IP";
-        } else if (text.includes("tech_hd") || text.includes("hd") || text.includes("analog") || text.includes("bnc") || text.includes("lowest") || text.includes("budget") || text.includes("coaxial") || text === "2") {
-          techChoice = "HD";
         }
-
-        if (!techChoice) {
-          replies.push(MessageBuilder.buttons(
-            from,
-            `*Step 3 of 6: Camera Technology* ⚡\n\nWhich camera technology level do you prefer?`,
-            [
-              { id: "tech_HD", title: "📹 HD Analog (Value)" },
-              { id: "tech_IP", title: "🌐 Digital IP (4K)" }
-            ]
-          ));
-          break;
-        }
-
         session.wizard_answers.technology = techChoice;
         nextState = "ASK_STORAGE_DAYS";
-        const techName = techChoice === "IP" ? "Digital IP (4K)" : "HD Analog (Value)";
-
         replies.push(MessageBuilder.list(
           from,
-          `✓ Camera Technology: *${techName}*\n\n*Step 3 of 6: Storage Retention History* 💾\n\nHow many days of recording retention do you require?`,
+          `💾 *Step 3 of 6: Recording & Storage Backup*\n\nHow long do you want to keep recorded video stored?`,
           "Select Storage Days",
           [
             {
               title: "Recording Retention",
               rows: [
-                { id: "storage_0", title: "0 Days (No Recording)", description: "Live mobile viewing only. Zero storage cost." },
-                { id: "storage_7", title: "7 Days (Basic)", description: "Standard week buffer" },
-                { id: "storage_15", title: "15 Days (Recommended)", description: "Optimal commercial/home standard" },
-                { id: "storage_30", title: "30 Days (Extended)", description: "Full month peace-of-mind" },
-                { id: "storage_45", title: "45 Days (High Security)", description: "Extended commercial compliance" },
-                { id: "storage_60", title: "60 Days (Maximum)", description: "Highest statutory retention" }
+                { id: "storage_7", title: "7 Days Backup", description: "Standard week buffer" },
+                { id: "storage_15", title: "15 Days Backup", description: "Recommended (1TB surveillance drive)" },
+                { id: "storage_30", title: "30 Days Backup", description: "Full month peace-of-mind (2TB drive)" },
+                { id: "storage_60", title: "60 Days Backup", description: "Maximum commercial compliance" },
+                { id: "storage_0", title: "0 Days (No Recording)", description: "Live mobile viewing only. Zero storage cost." }
+              ]
+            }
+          ]
+        ));
+        break;
+      }
+
+      case "ASK_TIMELINE": {
+        const text = String(content || "").toLowerCase().trim();
+        let timeChoice = "";
+        let rawCode = "";
+
+        if (text.includes("time_asap") || text.includes("asap") || text.includes("urgent") || text.includes("immediate") || text.includes("today") || text.includes("tomorrow") || text.includes("1-2") || text === "1") {
+          timeChoice = "Immediately (1-2 Days)";
+          rawCode = "asap";
+        } else if (text.includes("time_week") || text.includes("week") || text.includes("7 days") || text === "2") {
+          timeChoice = "Within a Week";
+          rawCode = "week";
+        } else if (text.includes("time_month") || text.includes("month") || text.includes("construction") || text === "3") {
+          timeChoice = "This Month";
+          rawCode = "month";
+        } else if (text.includes("time_research") || text.includes("plan") || text.includes("research") || text.includes("compare") || text === "4") {
+          timeChoice = "Just Planning";
+          rawCode = "research";
+        }
+
+        if (!rawCode) {
+          replies.push(MessageBuilder.list(
+            from,
+            `⏱️ *WHEN DO YOU WANT WORK DONE ON YOUR SITE?*\nPriority Dispatch Scheduler (Step 2 of 6)\n\nHelps us schedule certified technician availability & prioritize your site survey:`,
+            "Select Timeline",
+            [
+              {
+                title: "Priority Dispatch Scheduler",
+                rows: [
+                  { id: "time_asap", title: "⚡ ASAP (1-2 Days)", description: "Ready for instant site survey & work" },
+                  { id: "time_week", title: "📅 Within a Week", description: "Finalizing quotation & setup" },
+                  { id: "time_month", title: "🗓️ This Month", description: "Site currently under construction" },
+                  { id: "time_research", title: "🔍 Just Planning", description: "Comparing prices & options" }
+                ]
+              }
+            ]
+          ));
+          break;
+        }
+
+        session.wizard_answers.timeline = timeChoice;
+        session.wizard_answers.q_timeline = rawCode;
+        session.wizard_answers.installation_timeline = rawCode;
+        
+        const priority = (rawCode === "asap" || rawCode === "week") ? "HOT" : "WARM";
+        if (leadId) {
+          await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
+            timeline: timeChoice,
+            priority,
+            is_hot_lead: priority === "HOT",
+            "wizard_answers.timeline": timeChoice,
+            "wizard_answers.q_timeline": rawCode,
+            "wizard_answers.installation_timeline": rawCode,
+            updated_at: new Date()
+          }).catch(console.error);
+        }
+
+        nextState = "ASK_STORAGE_DAYS";
+        replies.push(MessageBuilder.list(
+          from,
+          `✓ Priority Dispatch: *${timeChoice}*\n\n💾 *Step 3 of 6: Recording & Storage Backup*\n\nHow long do you want to keep recorded video stored?`,
+          "Select Storage Days",
+          [
+            {
+              title: "Recording Retention",
+              rows: [
+                { id: "storage_7", title: "7 Days Backup", description: "Standard week buffer" },
+                { id: "storage_15", title: "15 Days Backup", description: "Recommended (1TB surveillance drive)" },
+                { id: "storage_30", title: "30 Days Backup", description: "Full month peace-of-mind (2TB drive)" },
+                { id: "storage_60", title: "60 Days Backup", description: "Maximum commercial compliance" },
+                { id: "storage_0", title: "0 Days (No Recording)", description: "Live mobile viewing only. Zero storage cost." }
               ]
             }
           ]
@@ -1235,18 +1296,17 @@ export async function processIncomingMessage(
         if (days === null) {
           replies.push(MessageBuilder.list(
             from,
-            `*Step 3 of 6: Storage Retention History* 💾\n\nPlease select how many days of recording retention you require:`,
+            `*Step 3 of 6: Recording & Storage Backup* 💾\n\nPlease select how many days of recording retention you require:`,
             "Select Storage Days",
             [
               {
                 title: "Recording Retention",
                 rows: [
-                  { id: "storage_0", title: "0 Days (No Recording)", description: "Live mobile viewing only. Zero storage cost." },
-                  { id: "storage_7", title: "7 Days (Basic)", description: "Standard week buffer" },
-                  { id: "storage_15", title: "15 Days (Recommended)", description: "Optimal commercial/home standard" },
-                  { id: "storage_30", title: "30 Days (Extended)", description: "Full month peace-of-mind" },
-                  { id: "storage_45", title: "45 Days (High Security)", description: "Extended commercial compliance" },
-                  { id: "storage_60", title: "60 Days (Maximum)", description: "Highest statutory retention" }
+                  { id: "storage_7", title: "7 Days Backup", description: "Standard week buffer" },
+                  { id: "storage_15", title: "15 Days Backup", description: "Recommended (1TB surveillance drive)" },
+                  { id: "storage_30", title: "30 Days Backup", description: "Full month peace-of-mind (2TB drive)" },
+                  { id: "storage_60", title: "60 Days Backup", description: "Maximum commercial compliance" },
+                  { id: "storage_0", title: "0 Days (No Recording)", description: "Live mobile viewing only. Zero storage cost." }
                 ]
               }
             ]
@@ -1262,11 +1322,11 @@ export async function processIncomingMessage(
 
           replies.push(MessageBuilder.buttons(
             from,
-            `✓ Storage: *0 Days (Live Only)*\n\n*Step 4 of 6: Approximate Mounting Height* 📐\n\nWhat is the approximate ceiling / mounting height at your site?`,
+            `✓ Storage: *0 Days (Live Only)*\n\n🏗️ *Step 4 of 6: Approximate Mounting Height*\n\nWhat is the approximate ceiling / mounting height at your site?`,
             [
-              { id: "mount_standard", title: "Standard (< 10 ft)" },
-              { id: "mount_high", title: "High (10-15 ft)" },
-              { id: "mount_very_high", title: "Very High (15 ft+)" }
+              { id: "mount_standard", title: "Standard (<10ft)" },
+              { id: "mount_high", title: "High (10-15ft)" },
+              { id: "mount_very_high", title: "Very High (15ft+)" }
             ]
           ));
         } else {
@@ -1274,10 +1334,10 @@ export async function processIncomingMessage(
 
           replies.push(MessageBuilder.buttons(
             from,
-            `✓ Storage Retention: *${days} Days*\n\n*Step 3 of 6: Recording Mode* ⏺️\n\nHow would you like your system to record?`,
+            `✓ Storage Retention: *${days} Days*\n\n🎥 *Step 3 of 6: Recording Mode*\n\nHow would you like your system to record?`,
             [
               { id: "mode_continuous", title: "⏺️ 24x7 Continuous" },
-              { id: "mode_motion", title: "🏃 Smart Motion" }
+              { id: "mode_motion", title: "⚡ Smart Motion" }
             ]
           ));
         }
@@ -1286,36 +1346,24 @@ export async function processIncomingMessage(
 
       case "ASK_RECORDING_MODE": {
         const text = String(content || "").toLowerCase().trim();
-        let mode: "motion" | "continuous" | null = null;
+        let mode: "motion" | "continuous" = "continuous";
         if (text.includes("mode_motion") || text.includes("motion") || text.includes("smart") || text.includes("save") || text === "2") {
           mode = "motion";
-        } else if (text.includes("mode_continuous") || text.includes("continuous") || text.includes("24x7") || text.includes("24/7") || text.includes("always") || text === "1") {
+        } else {
           mode = "continuous";
-        }
-
-        if (!mode) {
-          replies.push(MessageBuilder.buttons(
-            from,
-            `*Step 3 of 6: Recording Mode* ⏺️\n\nHow would you like your system to record?`,
-            [
-              { id: "mode_continuous", title: "⏺️ 24x7 Continuous" },
-              { id: "mode_motion", title: "🏃 Smart Motion" }
-            ]
-          ));
-          break;
         }
 
         session.wizard_answers.recording_mode = mode;
         nextState = "ASK_MOUNTING_CONDITIONS";
-        const recModeName = mode === "motion" ? "Smart Motion Detection" : "24x7 Continuous Recording";
+        const recModeName = mode === "motion" ? "Smart Motion (50% Storage Save)" : "24x7 Continuous Recording";
 
         replies.push(MessageBuilder.buttons(
           from,
-          `✓ Recording Mode: *${recModeName}*\n\n*Step 4 of 6: Approximate Mounting Height* 📐\n\nWhat is the approximate ceiling / mounting height at your site?`,
+          `✓ Recording Mode: *${recModeName}*\n\n🏗️ *Step 4 of 6: Approximate Mounting Height*\n\nWhat is the approximate ceiling / mounting height at your site?`,
           [
-            { id: "mount_standard", title: "Standard (< 10 ft)" },
-            { id: "mount_high", title: "High (10-15 ft)" },
-            { id: "mount_very_high", title: "Very High (15 ft+)" }
+            { id: "mount_standard", title: "Standard (<10ft)" },
+            { id: "mount_high", title: "High (10-15ft)" },
+            { id: "mount_very_high", title: "Very High (15ft+)" }
           ]
         ));
         break;
@@ -1323,39 +1371,25 @@ export async function processIncomingMessage(
 
       case "ASK_MOUNTING_CONDITIONS": {
         const text = String(content || "").toLowerCase().trim();
-        let height: "standard" | "high" | "very_high" | null = null;
+        let height: "standard" | "high" | "very_high" = "standard";
         if (text.includes("very_high") || text.includes("15+") || text.includes("tall") || text === "3") {
           height = "very_high";
         } else if (text.includes("mount_high") || text.includes("10-15") || text.includes("12") || text.includes("high") || text === "2") {
           height = "high";
-        } else if (text.includes("standard") || text.includes("< 10") || text.includes("normal") || text.includes("10") || text === "1") {
+        } else {
           height = "standard";
-        }
-
-        if (!height) {
-          replies.push(MessageBuilder.buttons(
-            from,
-            `*Step 4 of 6: Approximate Mounting Height* 📐\n\nWhat is the approximate ceiling / mounting height at your site?`,
-            [
-              { id: "mount_standard", title: "Standard (< 10 ft)" },
-              { id: "mount_high", title: "High (10-15 ft)" },
-              { id: "mount_very_high", title: "Very High (15 ft+)" }
-            ]
-          ));
-          break;
         }
 
         session.wizard_answers.ceiling_height = height;
         nextState = "ASK_SURFACE_TYPE";
-        const heightName = height === "very_high" ? "Very High (15 ft+)" : height === "high" ? "High (10-15 ft)" : "Standard (< 10 ft)";
+        const heightName = height === "very_high" ? "Very High (15ft+)" : height === "high" ? "High (10-15ft)" : "Standard (<10ft)";
 
         replies.push(MessageBuilder.buttons(
           from,
-          `✓ Mounting Height: *${heightName}*\n\n*Step 4 of 6: Mounting Surface & Wall Type* 🧱\n\nWhat surface will the cameras be mounted on?\n_(Helps our technician pack the right mounting anchors & drilling bits)_`,
+          `✓ Mounting Height: *${heightName}*\n\n🧱 *Step 4 of 6: Surface Type*\n\nWhat surface will the cameras be mounted on?`,
           [
             { id: "surf_brick", title: "🧱 Concrete / Brick" },
-            { id: "surf_ceiling", title: "🏗️ False Ceiling" },
-            { id: "surf_mixed", title: "🏢 Mixed Mounting" }
+            { id: "surf_ceiling", title: "🏢 False Ceiling" }
           ]
         ));
         break;
@@ -1363,26 +1397,11 @@ export async function processIncomingMessage(
 
       case "ASK_SURFACE_TYPE": {
         const text = String(content || "").toLowerCase().trim();
-        let surface: string[] | null = null;
+        let surface: string[] = ["brick"];
         if (text.includes("ceiling") || text.includes("false") || text.includes("pop") || text.includes("gypsum") || text === "2") {
           surface = ["false_ceiling"];
-        } else if (text.includes("mixed") || text.includes("both") || text.includes("all") || text === "3") {
-          surface = ["brick", "false_ceiling"];
-        } else if (text.includes("brick") || text.includes("concrete") || text.includes("wall") || text.includes("cement") || text === "1") {
+        } else {
           surface = ["brick"];
-        }
-
-        if (!surface) {
-          replies.push(MessageBuilder.buttons(
-            from,
-            `*Step 4 of 6: Mounting Surface & Wall Type* 🧱\n\nWhat surface will the cameras be mounted on?\n_(Helps our technician pack the right mounting anchors & drilling bits)_`,
-            [
-              { id: "surf_brick", title: "🧱 Concrete / Brick" },
-              { id: "surf_ceiling", title: "🏗️ False Ceiling" },
-              { id: "surf_mixed", title: "🏢 Mixed Mounting" }
-            ]
-          ));
-          break;
         }
 
         session.wizard_answers.surface_types = surface;
@@ -1396,9 +1415,9 @@ export async function processIncomingMessage(
             from,
             `*Step 4 of 6: Camera Power Point Availability* 🔌\n\nCameras connect wirelessly, but each requires electrical power. Select site power condition:`,
             [
-              { id: "pwr_socket", title: "🔌 Socket Nearby (<1.5m)" },
+              { id: "pwr_socket", title: "🔌 Socket Nearby" },
               { id: "pwr_wire", title: "⚡ Need Power Wire" },
-              { id: "pwr_survey", title: "📋 Decide on Site Visit" }
+              { id: "pwr_survey", title: "📋 Decide on Visit" }
             ]
           ));
         } else {
@@ -1406,7 +1425,7 @@ export async function processIncomingMessage(
           const freeAllowance = wiredCams * 15;
           replies.push(MessageBuilder.buttons(
             from,
-            `*Step 4 of 6: Cabling & Wire Routing* 🔌\n\nIs your site pre-wired or do we need fresh cables routed?\n\n• *Complimentary:* ~15m wire/camera included free (*${freeAllowance}m total* for your ${wiredCams} cameras).\n• Excess cable charged on actuals (₹15/m for HD, ₹18/m for IP).`,
+            `*Step 4 of 6: Cabling & Wire Routing* 🔌\n\nIs your site pre-wired or do we need fresh cables routed?\n\n• *Complimentary:* ~15m wire/camera included free (*${freeAllowance}m total* for your ${wiredCams} cameras).`,
             [
               { id: "cab_new", title: "📦 Need New Cabling" },
               { id: "cab_prewired", title: "🔌 Site Pre-Wired" },
@@ -1429,16 +1448,34 @@ export async function processIncomingMessage(
         session.wizard_answers.total_cable_length_meters = customMeters;
         session.wizard_answers.cable_length_meters = Math.ceil(customMeters / (session.wizard_answers.camera_count || 4));
 
-        nextState = "ASK_INTERNET";
-        replies.push(MessageBuilder.buttons(
-          from,
-          `✓ *Custom Cable Length Saved:* ${customMeters} meters total\n\n*Step 5 of 6: Remote Mobile Viewing & Internet* 📱\n\nChoose how you want to watch live camera video on your smartphone:`,
-          [
-            { id: "net_wifi", title: "📶 Have Wi-Fi Router" },
-            { id: "net_4g", title: "🌐 Add 4G SIM Router" },
-            { id: "net_offline", title: "📺 Offline / TV Only" }
-          ]
-        ));
+        const isHybridWithWifi = (session.wizard_answers.wifi_camera_count || 0) > 0 && 
+                                 session.wizard_answers.technology !== "Wireless" &&
+                                 session.wizard_answers.technology_preference !== "Wireless";
+
+        if (isHybridWithWifi) {
+          nextState = "ASK_HYBRID_POWER";
+          const wifiCount = session.wizard_answers.wifi_camera_count || 1;
+          replies.push(MessageBuilder.buttons(
+            from,
+            `✓ *Custom Cable Length Saved:* ${customMeters}m total\n\n⚡ *Power for ${wifiCount} Smart Wi-Fi Camera${wifiCount > 1 ? 's' : ''}:*\nYour wired cameras connect to the DVR, but Wi-Fi cameras need electrical power. Select power setup:`,
+            [
+              { id: "pwr_socket", title: "🔌 Socket Nearby" },
+              { id: "pwr_wire", title: "⚡ Need Power Wire" },
+              { id: "pwr_survey", title: "📋 Decide on Visit" }
+            ]
+          ));
+        } else {
+          nextState = "ASK_INTERNET";
+          replies.push(MessageBuilder.buttons(
+            from,
+            `✓ *Custom Cable Length Saved:* ${customMeters}m total\n\n📱 *Step 5 of 6: Remote Mobile Viewing & Internet*\n\nChoose how you want to watch live camera video on your smartphone:`,
+            [
+              { id: "net_wifi", title: "📶 Have Wi-Fi Router" },
+              { id: "net_4g", title: "🌐 Add 4G SIM Router" },
+              { id: "net_offline", title: "📺 Offline / TV Only" }
+            ]
+          ));
+        }
         break;
       }
 
@@ -1453,86 +1490,78 @@ export async function processIncomingMessage(
           break;
         }
 
+        let cablingChoice = "new";
         if (text.includes("cab_prewired") || text.includes("prewired") || text.includes("done") || text.includes("already") || text.includes("fitting only") || text === "2") {
           session.wizard_answers.cabling_status = "done";
           session.wizard_answers.cabling_done = true;
           session.wizard_answers.total_cable_length_meters = 0;
-        } else if (text.includes("cab_new") || text.includes("new") || text.includes("fresh") || text.includes("need") || text === "1") {
-          session.wizard_answers.cabling_status = "needed";
-          session.wizard_answers.cabling_done = false;
-          session.wizard_answers.total_cable_length_meters = (session.wizard_answers.camera_count || 4) * 15;
+          cablingChoice = "prewired";
         } else if (text.includes("pwr_socket") || text.includes("socket")) {
           session.wizard_answers.power_wiring_option = "socket_available";
           session.wizard_answers.total_power_cable_meters = 0;
+          cablingChoice = "power_socket";
         } else if (text.includes("pwr_wire") || text.includes("wire")) {
           session.wizard_answers.power_wiring_option = "wire_needed";
           session.wizard_answers.total_power_cable_meters = (session.wizard_answers.wifi_camera_count || 2) * 10;
+          cablingChoice = "power_wire";
         } else if (text.includes("pwr_survey") || text.includes("survey") || text.includes("visit")) {
           session.wizard_answers.power_wiring_option = "site_survey";
           session.wizard_answers.total_power_cable_meters = 0;
+          cablingChoice = "power_survey";
         } else {
-          const isWireless = session.wizard_answers.technology === "Wireless" || 
-                             session.wizard_answers.technology_preference === "Wireless";
-          if (isWireless) {
-            replies.push(MessageBuilder.buttons(
-              from,
-              `*Step 4 of 6: Camera Power Point Availability* 🔌\n\nCameras connect wirelessly, but each requires electrical power. Select site power condition:`,
-              [
-                { id: "pwr_socket", title: "🔌 Socket Nearby" },
-                { id: "pwr_wire", title: "⚡ Need Power Cable" },
-                { id: "pwr_survey", title: "📋 Decide on Visit" }
-              ]
-            ));
-          } else {
-            const wiredCams = Math.max(1, (session.wizard_answers.outdoor_camera_count || 0) + (session.wizard_answers.indoor_camera_count || 0));
-            const freeAllowance = wiredCams * 15;
-            replies.push(MessageBuilder.buttons(
-              from,
-              `*Step 4 of 6: Cabling & Wire Routing* 🔌\n\nIs your site pre-wired or do we need fresh cables routed?\n\n• *Complimentary:* ~15m wire/camera included free (*${freeAllowance}m total* for your ${wiredCams} cameras).\n• Excess cable charged on actuals (₹15/m for HD, ₹18/m for IP).`,
-              [
-                { id: "cab_new", title: "📦 Need New Cabling" },
-                { id: "cab_prewired", title: "🔌 Site Pre-Wired" },
-                { id: "cab_custom", title: "📏 Custom Cable Run" }
-              ]
-            ));
-          }
+          session.wizard_answers.cabling_status = "needed";
+          session.wizard_answers.cabling_done = false;
+          session.wizard_answers.total_cable_length_meters = (session.wizard_answers.camera_count || 4) * 15;
+          cablingChoice = "new";
+        }
+
+        const isHybridWithWifi = (session.wizard_answers.wifi_camera_count || 0) > 0 && 
+                                 session.wizard_answers.technology !== "Wireless" &&
+                                 session.wizard_answers.technology_preference !== "Wireless";
+
+        // IF HYBRID SETUP WITH WI-FI CAMERAS: ASK HYBRID POWER NEXT!
+        if (isHybridWithWifi && (cablingChoice === "new" || cablingChoice === "prewired")) {
+          nextState = "ASK_HYBRID_POWER";
+          const wifiCount = session.wizard_answers.wifi_camera_count || 1;
+          replies.push(MessageBuilder.buttons(
+            from,
+            `✓ Cabling: *${cablingChoice === "prewired" ? "Site Pre-Wired" : "New Cables Routed"}*\n\n⚡ *Power for ${wifiCount} Smart Wi-Fi Camera${wifiCount > 1 ? 's' : ''}:*\nYour wired cameras connect to the DVR, but Wi-Fi cameras need electrical power. Select power setup:`,
+            [
+              { id: "pwr_socket", title: "🔌 Socket Nearby" },
+              { id: "pwr_wire", title: "⚡ Need Power Wire" },
+              { id: "pwr_survey", title: "📋 Decide on Visit" }
+            ]
+          ));
           break;
         }
 
-        if (session.wizard_answers.is_4g || session.wizard_answers.broadband_status === "independent_4g") {
-          nextState = "ASK_TIMELINE";
+        // OTHERWISE PROCEED STRAIGHT TO STEP 5: INTERNET!
+        nextState = "ASK_INTERNET";
+        const hasWireless = session.wizard_answers.technology === "Wireless" || 
+                            session.wizard_answers.technology_preference === "Wireless" || 
+                            (session.wizard_answers.wifi_camera_count || 0) > 0;
+
+        if (hasWireless) {
           replies.push(MessageBuilder.list(
             from,
-            `⏱️ *Step 6 of 6: Priority Dispatch Scheduler*\n\nWhen do you want work done on your site?\n_Helps us schedule certified technician availability & prioritize your site survey:_`,
-            "Select Timeline",
+            `📱 *Step 5 of 6: Mobile App & Internet Connection*\n\nAll packages include free lifetime mobile app setup (Android & iOS). Choose your site internet condition:`,
+            "Choose Internet",
             [
               {
-                title: "Installation Timeline",
+                title: "Internet & Wi-Fi Options",
                 rows: [
-                  { id: "time_asap", title: "⚡ ASAP (1-2 Days)", description: "Ready for instant site survey & work" },
-                  { id: "time_week", title: "📅 Within a Week", description: "Finalizing quotation & setup" },
-                  { id: "time_month", title: "🗓️ This Month", description: "Site currently under construction" },
-                  { id: "time_research", title: "🔍 Just Planning", description: "Comparing prices & options" }
+                  { id: "net_wifi_full", title: "📶 Have Wi-Fi (Full)", description: "Wi-Fi reaches all camera spots clearly" },
+                  { id: "net_wifi_extender", title: "📡 Wi-Fi, Far Spots", description: "Weak signal at gate; includes Wi-Fi Range Extender" },
+                  { id: "net_4g_router", title: "🌐 No Wi-Fi (<20m Spots)", description: "Central 4G SIM Wi-Fi router included" },
+                  { id: "net_independent_4g", title: "🛰️ No Wi-Fi (Farm/Dist)", description: "Independent 4G SIM per camera (50m+ apart)" }
                 ]
               }
             ]
           ));
-        } else if (session.wizard_answers.technology === "Wireless" || session.wizard_answers.technology_preference === "Wireless") {
-          nextState = "ASK_INTERNET";
-          replies.push(MessageBuilder.buttons(
-            from,
-            `*Step 5 of 6: Wi-Fi at Site* 📶\n\nSelect Wi-Fi condition for live mobile app viewing:`,
-            [
-              { id: "net_wifi_full", title: "📶 Strong Wi-Fi" },
-              { id: "net_wifi_extender", title: "📡 Need Wi-Fi Boost" },
-              { id: "net_4g_router", title: "🌐 Need 4G Router" }
-            ]
-          ));
         } else {
-          nextState = "ASK_INTERNET";
           replies.push(MessageBuilder.buttons(
             from,
-            `*Step 5 of 6: Remote Mobile Viewing & Internet* 📱\n\nChoose how you want to watch live camera video on your smartphone:`,
+            `📱 *Step 5 of 6: Remote Mobile Viewing & Internet*\n\nChoose how you want to watch live camera video on your smartphone:`,
             [
               { id: "net_wifi", title: "📶 Have Wi-Fi Router" },
               { id: "net_4g", title: "🌐 Add 4G SIM Router" },
@@ -1543,51 +1572,32 @@ export async function processIncomingMessage(
         break;
       }
 
-      case "ASK_INTERNET": {
+      case "ASK_HYBRID_POWER": {
         const text = String(content || "").toLowerCase().trim();
-        let netTitle = "Wi-Fi Router";
-        if (text.includes("offline") || text.includes("tv") || text.includes("no internet") || text === "3") {
-          session.wizard_answers.broadband_status = "no";
-          session.wizard_answers.wants_remote_viewing = false;
-          netTitle = "Offline / TV Only";
-        } else if (text.includes("4g") || text.includes("sim") || text.includes("router") || text === "2") {
-          session.wizard_answers.broadband_status = "sim_router";
-          session.wizard_answers.wants_remote_viewing = true;
-          netTitle = "4G SIM Router";
-        } else if (text.includes("extender")) {
-          session.wizard_answers.broadband_status = "wifi_extender";
-          session.wizard_answers.wants_remote_viewing = true;
-          netTitle = "Wi-Fi Extender";
-        } else if (text.includes("wifi") || text.includes("router") || text.includes("fiber") || text.includes("broadband") || text === "1") {
-          session.wizard_answers.broadband_status = "yes";
-          session.wizard_answers.wants_remote_viewing = true;
-          netTitle = "Wi-Fi Router";
+        if (text.includes("pwr_wire") || text.includes("wire")) {
+          session.wizard_answers.power_wiring_option = "wire_needed";
+          session.wizard_answers.total_power_cable_meters = (session.wizard_answers.wifi_camera_count || 1) * 10;
+        } else if (text.includes("pwr_survey") || text.includes("survey") || text.includes("visit")) {
+          session.wizard_answers.power_wiring_option = "site_survey";
+          session.wizard_answers.total_power_cable_meters = 0;
         } else {
-          replies.push(MessageBuilder.buttons(
-            from,
-            `*Step 5 of 6: Remote Mobile Viewing & Internet* 📱\n\nChoose how you want to watch live camera video on your smartphone:`,
-            [
-              { id: "net_wifi", title: "📶 Have Wi-Fi Router" },
-              { id: "net_4g", title: "🌐 Add 4G SIM Router" },
-              { id: "net_offline", title: "📺 Offline / TV Only" }
-            ]
-          ));
-          break;
+          session.wizard_answers.power_wiring_option = "socket_available";
+          session.wizard_answers.total_power_cable_meters = 0;
         }
 
-        nextState = "ASK_TIMELINE";
+        nextState = "ASK_INTERNET";
         replies.push(MessageBuilder.list(
           from,
-          `✓ Internet Setup: *${netTitle}*\n\n⏱️ *Step 6 of 6: Priority Dispatch Scheduler*\n\nWhen do you want work done on your site?\n_Helps us schedule certified technician availability & prioritize your site survey:_`,
-          "Select Timeline",
+          `✓ Power Setup Saved\n\n📱 *Step 5 of 6: Mobile App & Internet Connection*\n\nAll packages include free lifetime mobile app setup (Android & iOS). Choose your site internet condition:`,
+          "Choose Internet",
           [
             {
-              title: "Installation Timeline",
+              title: "Internet & Wi-Fi Options",
               rows: [
-                { id: "time_asap", title: "⚡ ASAP (1-2 Days)", description: "Ready for instant site survey & work" },
-                { id: "time_week", title: "📅 Within a Week", description: "Finalizing quotation & setup" },
-                { id: "time_month", title: "🗓️ This Month", description: "Site currently under construction" },
-                { id: "time_research", title: "🔍 Just Planning", description: "Comparing prices & options" }
+                { id: "net_wifi_full", title: "📶 Have Wi-Fi (Full)", description: "Wi-Fi reaches all camera spots clearly" },
+                { id: "net_wifi_extender", title: "📡 Wi-Fi, Far Spots", description: "Weak signal at gate; includes Wi-Fi Range Extender" },
+                { id: "net_4g_router", title: "🌐 No Wi-Fi (<20m Spots)", description: "Central 4G SIM Wi-Fi router included" },
+                { id: "net_independent_4g", title: "🛰️ No Wi-Fi (Farm/Dist)", description: "Independent 4G SIM per camera (50m+ apart)" }
               ]
             }
           ]
@@ -1595,66 +1605,35 @@ export async function processIncomingMessage(
         break;
       }
 
-      case "ASK_TIMELINE": {
+      case "ASK_INTERNET": {
         const text = String(content || "").toLowerCase().trim();
-        let timeChoice = "";
-        let rawCode = "";
-
-        if (text.includes("time_asap") || text.includes("asap") || text.includes("urgent") || text.includes("immediate") || text.includes("today") || text.includes("tomorrow") || text.includes("1-2") || text === "1") {
-          timeChoice = "Immediately";
-          rawCode = "asap";
-        } else if (text.includes("time_week") || text.includes("week") || text.includes("7 days") || text === "2") {
-          timeChoice = "This week";
-          rawCode = "week";
-        } else if (text.includes("time_month") || text.includes("month") || text.includes("construction") || text === "3") {
-          timeChoice = "This month";
-          rawCode = "month";
-        } else if (text.includes("time_research") || text.includes("plan") || text.includes("research") || text.includes("compare") || text === "4") {
-          timeChoice = "Planning";
-          rawCode = "research";
-        }
-
-        if (!rawCode) {
-          replies.push(MessageBuilder.list(
-            from,
-            `⏱️ *Step 6 of 6: Priority Dispatch Scheduler*\n\nWhen do you want work done on your site?\n_Helps us schedule certified technician availability & prioritize your site survey:_`,
-            "Select Timeline",
-            [
-              {
-                title: "Installation Timeline",
-                rows: [
-                  { id: "time_asap", title: "⚡ ASAP (1-2 Days)", description: "Ready for instant site survey & work" },
-                  { id: "time_week", title: "📅 Within a Week", description: "Finalizing quotation & setup" },
-                  { id: "time_month", title: "🗓️ This Month", description: "Site currently under construction" },
-                  { id: "time_research", title: "🔍 Just Planning", description: "Comparing prices & options" }
-                ]
-              }
-            ]
-          ));
-          break;
-        }
-
-        session.wizard_answers.timeline = timeChoice;
-        session.wizard_answers.q_timeline = rawCode;
-        session.wizard_answers.installation_timeline = rawCode;
-        
-        const priority = (rawCode === "asap" || rawCode === "week") ? "HOT" : "WARM";
-        if (leadId) {
-          await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
-            timeline: timeChoice,
-            priority,
-            is_hot_lead: priority === "HOT",
-            "wizard_answers.timeline": timeChoice,
-            "wizard_answers.q_timeline": rawCode,
-            "wizard_answers.installation_timeline": rawCode,
-            updated_at: new Date()
-          }).catch(console.error);
+        let netChoice = "Wi-Fi Connected";
+        if (text.includes("extender")) {
+          session.wizard_answers.broadband_status = "wifi_extender";
+          session.wizard_answers.wants_remote_viewing = true;
+          netChoice = "Wi-Fi + Extender Included";
+        } else if (text.includes("independent") || text.includes("farm") || text.includes("distant")) {
+          session.wizard_answers.broadband_status = "independent_4g";
+          session.wizard_answers.wants_remote_viewing = true;
+          netChoice = "Independent 4G SIM Cameras";
+        } else if (text.includes("4g") || text.includes("sim") || text.includes("router")) {
+          session.wizard_answers.broadband_status = "sim_router";
+          session.wizard_answers.wants_remote_viewing = true;
+          netChoice = "4G SIM Wi-Fi Router Included";
+        } else if (text.includes("offline") || text.includes("tv")) {
+          session.wizard_answers.broadband_status = "no";
+          session.wizard_answers.wants_remote_viewing = false;
+          netChoice = "Offline / TV Only";
+        } else {
+          session.wizard_answers.broadband_status = "yes";
+          session.wizard_answers.wants_remote_viewing = true;
+          netChoice = "Have Wi-Fi (Full Coverage)";
         }
 
         nextState = "ASK_PINCODE";
         replies.push(MessageBuilder.text(
           from,
-          `✓ *Priority Dispatch Saved:* ${timeChoice} (${rawCode.toUpperCase()})\n\n📍 *Step 6 of 6: Site Location & Pincode Dispatch*\n\nPlease enter your *6-digit Indian Pincode* (e.g. 302012) or tap the clip icon to share your *Location Pin*.\n\nThis matches our nearest Sub-Post Office micro-hub, inventory warehouse, and certified local installer.`
+          `✓ Internet: *${netChoice}*\n\n📍 *Step 6 of 6: Site Location & Pincode Dispatch*\n\nPlease enter your *6-digit Indian Pincode* (e.g. 302012) or tap the clip 📎 icon to share your *Location Pin*.\n\nThis matches our nearest Sub-Post Office micro-hub, inventory warehouse, and certified local installer.`
         ));
         break;
       }
