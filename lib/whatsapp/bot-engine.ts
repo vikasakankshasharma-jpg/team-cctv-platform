@@ -213,8 +213,8 @@ async function processIncomingMessageInternal(
     session.last_inbound_text === normalizedIncomingText
   );
 
-  // If the exact same message arrives within 3.5 seconds from the same user, suppress duplicate execution
-  if (isSameContent && (nowMs - lastMsgTime < 3500)) {
+  // If the exact same message arrives within 15 seconds from the same user, suppress duplicate execution
+  if (isSameContent && (nowMs - lastMsgTime < 15000)) {
     console.warn(`[BotEngine] Suppressing duplicate rapid-fire message for ${from}: "${normalizedIncomingText}" (${nowMs - lastMsgTime}ms ago)`);
     return;
   }
@@ -274,8 +274,21 @@ async function processIncomingMessageInternal(
   // ──────────────────────────────────────────────────────────────────────────
   if (incomingType === "text" && typeof content === "string") {
     const textLower = content.toLowerCase().trim();
-    if (textLower.startsWith("hi") || textLower.startsWith("hello")) {
+    if (
+      textLower.startsWith("hi") || 
+      textLower.startsWith("hello") || 
+      textLower === "start" || 
+      textLower === "restart" || 
+      textLower === "reset" || 
+      textLower === "menu"
+    ) {
       session.state = "GREETING";
+      session.wizard_answers = {}; // Reset for fresh customer journey with zero state leakage
+      await sessionRef.update({
+        state: "GREETING",
+        wizard_answers: {},
+        updated_at: new Date()
+      }).catch(() => {});
       const parts = textLower.split(" ");
       if (parts.length > 1) {
         const keyword = parts[1].toUpperCase();
@@ -523,6 +536,11 @@ async function processIncomingMessageInternal(
             ]
           ));
         } else {
+          // If input is a duplicate/stale greeting, silently drop so customer never receives duplicate welcome menus
+          if (text.startsWith("hi") || text.startsWith("hello") || text.startsWith("welcome")) {
+            console.log(`[BotEngine] Suppressing duplicate greeting in ASK_PROP for ${from}`);
+            return;
+          }
           // Re-send fresh clickable buttons so the user is never stuck with disabled buttons!
           replies.push(MessageBuilder.buttons(
             from,
@@ -539,6 +557,11 @@ async function processIncomingMessageInternal(
 
       case "ASK_INSTALL_TYPE": {
         const text = String(content || "").toLowerCase().trim();
+        // Stale duplicate guard from previous step
+        if (text.startsWith("prop_") || text.startsWith("hi") || text.startsWith("hello")) {
+          console.log(`[BotEngine] Suppressing stale Step 1 replay in ASK_INSTALL_TYPE for ${from}`);
+          return;
+        }
         let choice: "new" | "wireless" | "4g_solar" | "addon" | null = null;
 
         if (
@@ -839,6 +862,11 @@ async function processIncomingMessageInternal(
 
       case "ASK_CAMERA_OUTDOOR": {
         const text = String(content || "").toLowerCase().trim();
+        // Stale duplicate guard from previous step (prevents re-sending Step 2 menu!)
+        if (text.startsWith("ins_") || text.startsWith("prop_") || text.startsWith("hi")) {
+          console.log(`[BotEngine] Suppressing stale Step 1 replay in ASK_CAMERA_OUTDOOR for ${from}`);
+          return;
+        }
         if (text === "out_page_1" || text.includes("0 to 7")) {
           replies.push(buildQuantityListMessage(
             from, "out", "Outdoor Bullet", "Outdoor Bullets", 1,
@@ -910,6 +938,11 @@ async function processIncomingMessageInternal(
 
       case "ASK_CAMERA_INDOOR": {
         const text = String(content || "").toLowerCase().trim();
+        // Stale duplicate guard from previous outdoor step
+        if ((text.startsWith("out_") && !text.includes("in_")) || text.startsWith("ins_") || text.startsWith("prop_")) {
+          console.log(`[BotEngine] Suppressing stale outdoor replay in ASK_CAMERA_INDOOR for ${from}`);
+          return;
+        }
         if (text === "in_page_1" || text.includes("0 to 7")) {
           replies.push(buildQuantityListMessage(
             from, "in", "Indoor Dome", "Indoor Domes", 1,
@@ -996,6 +1029,11 @@ async function processIncomingMessageInternal(
 
       case "ASK_HYBRID_WIRELESS": {
         const text = String(content || "").toLowerCase().trim();
+        // Stale duplicate guard from previous indoor step
+        if (text.startsWith("in_") && !text.includes("wf_")) {
+          console.log(`[BotEngine] Suppressing stale indoor replay in ASK_HYBRID_WIRELESS for ${from}`);
+          return;
+        }
 
         // 1. Check if user wants to add another wireless camera variant FIRST
         if (
@@ -1268,6 +1306,11 @@ async function processIncomingMessageInternal(
 
       case "ASK_TIMELINE": {
         const text = String(content || "").toLowerCase().trim();
+        // Stale duplicate guard from previous camera steps
+        if (text.startsWith("wf_") || text.startsWith("in_") || text.startsWith("out_") || text.startsWith("ins_")) {
+          console.log(`[BotEngine] Suppressing stale camera replay in ASK_TIMELINE for ${from}`);
+          return;
+        }
         let timeChoice = "";
         let rawCode = "";
 
@@ -1345,6 +1388,11 @@ async function processIncomingMessageInternal(
 
       case "ASK_STORAGE_DAYS": {
         const text = String(content || "").toLowerCase().trim();
+        // Stale duplicate guard from previous timeline step
+        if (text.startsWith("time_") || text.startsWith("wf_")) {
+          console.log(`[BotEngine] Suppressing stale timeline replay in ASK_STORAGE_DAYS for ${from}`);
+          return;
+        }
         let days: number | null = null;
 
         if (text.includes("storage_0") || text.includes("no recording") || text.includes("live only") || text === "0") {
@@ -1421,6 +1469,11 @@ async function processIncomingMessageInternal(
 
       case "ASK_RECORDING_MODE": {
         const text = String(content || "").toLowerCase().trim();
+        // Stale duplicate guard from previous storage step
+        if (text.startsWith("storage_") || text.startsWith("time_")) {
+          console.log(`[BotEngine] Suppressing stale storage replay in ASK_RECORDING_MODE for ${from}`);
+          return;
+        }
         let mode: "motion" | "continuous" = "continuous";
         if (text.includes("mode_motion") || text.includes("motion") || text.includes("smart") || text.includes("save") || text === "2") {
           mode = "motion";
@@ -1446,6 +1499,11 @@ async function processIncomingMessageInternal(
 
       case "ASK_MOUNTING_CONDITIONS": {
         const text = String(content || "").toLowerCase().trim();
+        // Stale duplicate guard from previous recording mode step
+        if (text.startsWith("mode_") || text.startsWith("storage_")) {
+          console.log(`[BotEngine] Suppressing stale mode replay in ASK_MOUNTING_CONDITIONS for ${from}`);
+          return;
+        }
         let height: "standard" | "high" | "very_high" = "standard";
         if (text.includes("very_high") || text.includes("15+") || text.includes("tall") || text === "3") {
           height = "very_high";
@@ -1472,6 +1530,11 @@ async function processIncomingMessageInternal(
 
       case "ASK_SURFACE_TYPE": {
         const text = String(content || "").toLowerCase().trim();
+        // Stale duplicate guard from previous mounting step
+        if (text.startsWith("mount_") || text.startsWith("mode_")) {
+          console.log(`[BotEngine] Suppressing stale mount replay in ASK_SURFACE_TYPE for ${from}`);
+          return;
+        }
         let surface: string[] = ["brick"];
         if (text.includes("ceiling") || text.includes("false") || text.includes("pop") || text.includes("gypsum") || text === "2") {
           surface = ["false_ceiling"];
@@ -1556,6 +1619,11 @@ async function processIncomingMessageInternal(
 
       case "ASK_CABLING_OR_POWER": {
         const text = String(content || "").toLowerCase().trim();
+        // Stale duplicate guard from previous surface step
+        if (text.startsWith("surf_") || text.startsWith("mount_")) {
+          console.log(`[BotEngine] Suppressing stale surface replay in ASK_CABLING_OR_POWER for ${from}`);
+          return;
+        }
         if (text.includes("cab_custom") || text.includes("custom") || text.includes("meters")) {
           nextState = "ASK_CUSTOM_CABLE_METERS";
           replies.push(MessageBuilder.text(
@@ -1682,6 +1750,11 @@ async function processIncomingMessageInternal(
 
       case "ASK_INTERNET": {
         const text = String(content || "").toLowerCase().trim();
+        // Stale duplicate guard from previous cable/power step
+        if (text.startsWith("cab_") || text.startsWith("pwr_") || text.startsWith("surf_")) {
+          console.log(`[BotEngine] Suppressing stale cable replay in ASK_INTERNET for ${from}`);
+          return;
+        }
         let netChoice = "Wi-Fi Connected";
         if (text.includes("extender")) {
           session.wizard_answers.broadband_status = "wifi_extender";
@@ -1714,6 +1787,11 @@ async function processIncomingMessageInternal(
       }
 
       case "ASK_PINCODE": {
+        // Stale duplicate guard from previous internet/cabling step
+        if (typeof content === "string" && (content.toLowerCase().startsWith("net_") || content.toLowerCase().startsWith("cab_") || content.toLowerCase().startsWith("pwr_"))) {
+          console.log(`[BotEngine] Suppressing stale internet/cable replay in ASK_PINCODE for ${from}`);
+          return;
+        }
         let pincode = "";
         let autoDetectedName = "";
 
@@ -1788,6 +1866,11 @@ async function processIncomingMessageInternal(
 
       case "ASK_NAME": {
         const text = String(content || "").trim();
+        // Stale duplicate guard from previous pincode/internet step
+        if (/^\d{6}$/.test(text) || text.toLowerCase().startsWith("net_")) {
+          console.log(`[BotEngine] Suppressing stale pincode/net replay in ASK_NAME for ${from}`);
+          return;
+        }
         const lower = text.toLowerCase();
         let finalName = "";
 
