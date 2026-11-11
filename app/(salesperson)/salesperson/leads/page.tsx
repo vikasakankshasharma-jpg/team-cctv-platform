@@ -5,6 +5,7 @@ import { Users } from "lucide-react";
 import type { Lead } from "@/types";
 import { LeadsClient } from "@/components/admin/LeadsClient";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -57,9 +58,9 @@ export default async function SalespersonLeadsPage() {
         <div className="space-y-10 animate-in fade-in duration-700">
           <PageHeader
             icon={Users}
-            title="My Leads"
-            description="Leads assigned to you for processing."
-            badge={`${leads.length} Total`}
+            title={<TranslatedText tKey="sls_nav_my_leads" defaultText="My Leads" />}
+            description={<TranslatedText tKey="sls_leads_desc" defaultText="Leads assigned to you for processing." />}
+            badge={<TranslatedText tKey="sls_total_badge" defaultText="{count} Total" params={{ count: String(leads.length) }} />}
           />
           
           <div className="pb-20">
@@ -80,9 +81,9 @@ export default async function SalespersonLeadsPage() {
     <div className="space-y-10 animate-in fade-in duration-700">
       <PageHeader
         icon={Users}
-        title="My Leads"
-        description="Leads assigned to you for processing."
-        badge="0 Total"
+        title={<TranslatedText tKey="sls_nav_my_leads" defaultText="My Leads" />}
+        description={<TranslatedText tKey="sls_leads_desc" defaultText="Leads assigned to you for processing." />}
+        badge={<TranslatedText tKey="sls_total_badge" defaultText="{count} Total" params={{ count: "0" }} />}
       />
       <div className="pb-20">
         <LeadsClient 

@@ -21,8 +21,10 @@ import { auth } from "@/lib/firebase-client";
 import { signInWithCustomToken } from "firebase/auth";
 import { toast } from "sonner";
 import { extractErrorMessage } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function ReferAndEarnClient() {
+  const { t } = useTranslation();
   const router = useRouter();
 
   const [step, setStep] = useState<"details" | "otp">("details");
@@ -50,12 +52,12 @@ export default function ReferAndEarnClient() {
 
     const cleanMobile = mobileNumber.replace(/\D/g, "");
     if (cleanMobile.length !== 10 || !/^[6-9]/.test(cleanMobile)) {
-      setError("Please enter a valid 10-digit Indian mobile number.");
+      setError(t("cl_err_mob", "Please enter a valid 10-digit Indian mobile number."));
       return;
     }
 
     if (fullName.trim().length < 2) {
-      setError("Please enter your full name (at least 2 characters).");
+      setError(t("refp_err_name", "Please enter your full name (at least 2 characters)."));
       return;
     }
 
@@ -71,13 +73,13 @@ export default function ReferAndEarnClient() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to send verification code."));
+      if (!res.ok) throw new Error(extractErrorMessage(data, t("refp_err_send_code", "Failed to send verification code.")));
 
       setStep("otp");
       setTimeLeft(60);
-      toast.success("Verification code sent to your WhatsApp/SMS!");
+      toast.success(t("refp_sent_otp", "Verification code sent to your WhatsApp/SMS!"));
     } catch (err: any) {
-      setError(extractErrorMessage(err, "Failed to send OTP."));
+      setError(extractErrorMessage(err, t("refp_err_send_otp", "Failed to send OTP.")));
     } finally {
       setLoading(false);
     }
@@ -121,7 +123,7 @@ export default function ReferAndEarnClient() {
   const handleVerifyOtp = async (codeOverride?: string) => {
     const code = codeOverride || otp.join("");
     if (code.length !== 4) {
-      setError("Please enter the complete 4-digit code.");
+      setError(t("refp_err_code4", "Please enter the complete 4-digit code."));
       return;
     }
 
@@ -141,7 +143,7 @@ export default function ReferAndEarnClient() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(extractErrorMessage(data, "Invalid verification code."));
+      if (!res.ok) throw new Error(extractErrorMessage(data, t("refp_err_code_inv", "Invalid verification code.")));
 
       // Sign in client Firebase SDK
       if (data.customToken) {
@@ -156,15 +158,15 @@ export default function ReferAndEarnClient() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idToken }),
         });
-        if (!sessionRes.ok) throw new Error("Failed to initialize partner session.");
+        if (!sessionRes.ok) throw new Error(t("refp_err_init_sess", "Failed to initialize partner session."));
       }
 
-      toast.success("Welcome aboard! Your referral account is ready.");
+      toast.success(t("refp_ok_ready", "Welcome aboard! Your referral account is ready."));
       router.push("/partner/dashboard");
       router.refresh();
     } catch (err: any) {
       console.error("[Refer & Earn Verify Error]", err);
-      setError(extractErrorMessage(err, "Verification failed. Please try again."));
+      setError(extractErrorMessage(err, t("refp_err_verify", "Verification failed. Please try again.")));
     } finally {
       setLoading(false);
     }
@@ -186,16 +188,16 @@ export default function ReferAndEarnClient() {
               TEAM CCTV
             </span>
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
-              Partner Network
+              {t("refp_partner_net", "Partner Network")}
             </span>
           </div>
         </Link>
 
         <Link
           href="/partner/login"
-          className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1"
+          className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1 whitespace-normal text-right leading-snug"
         >
-          Already a partner? Log in <ChevronRight className="w-3.5 h-3.5" />
+          {t("refp_already_login", "Already a partner? Log in")} <ChevronRight className="w-3.5 h-3.5 shrink-0" />
         </Link>
       </header>
 
@@ -206,16 +208,16 @@ export default function ReferAndEarnClient() {
           {/* Left Hero & Value Proposition */}
           <div className="lg:col-span-7 space-y-8">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-black uppercase tracking-widest animate-in fade-in">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              Direct Cash Rewards Program
+              <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              {t("refp_badge", "Direct Cash Rewards Program")}
             </div>
 
             <div className="space-y-4">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.08]">
-                Earn Flat <span className="text-emerald-600 dark:text-emerald-400">₹500 Cash</span> for Every CCTV Refer!
+                {t("refp_h1_pre", "Earn Flat")} <span className="text-emerald-600 dark:text-emerald-400">{t("refp_h1_hi", "₹500 Cash")}</span> {t("refp_h1_post", "for Every CCTV Refer!")}
               </h1>
               <p className="text-base sm:text-lg text-slate-600 dark:text-zinc-400 font-medium max-w-xl leading-relaxed">
-                Recommend TEAM CCTV to friends, neighbors, or business owners. When their cameras are installed, you get <strong>₹500 cash directly to your bank account</strong>, and they get an instant <strong>₹500 discount</strong>.
+                {t("refp_p_1", "Recommend TEAM CCTV to friends, neighbors, or business owners. When their cameras are installed, you get")} <strong>{t("refp_p_b1", "₹500 cash directly to your bank account")}</strong>{t("refp_p_2", ", and they get an instant")} <strong>{t("refp_p_b2", "₹500 discount")}</strong>.
               </p>
             </div>
 
@@ -227,13 +229,13 @@ export default function ReferAndEarnClient() {
                 </div>
                 <div>
                   <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                    Your Reward
+                    {t("refp_your_reward", "Your Reward")}
                   </span>
                   <p className="text-xl font-black text-slate-900 dark:text-white">
-                    ₹500 Per Deal
+                    {t("refp_per_deal", "₹500 Per Deal")}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                    No limits. 10 referrals = ₹5,000 take-home.
+                    {t("refp_no_limits", "No limits. 10 referrals = ₹5,000 take-home.")}
                   </p>
                 </div>
               </div>
@@ -244,13 +246,13 @@ export default function ReferAndEarnClient() {
                 </div>
                 <div>
                   <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                    Your Friend's Benefit
+                    {t("refp_friend_ben", "Your Friend's Benefit")}
                   </span>
                   <p className="text-xl font-black text-slate-900 dark:text-white">
-                    ₹500 Off Quote
+                    {t("refp_off_quote", "₹500 Off Quote")}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                    Instant discount applied at quotation checkout.
+                    {t("refp_inst_disc", "Instant discount applied at quotation checkout.")}
                   </p>
                 </div>
               </div>
@@ -259,26 +261,26 @@ export default function ReferAndEarnClient() {
             {/* How It Works 3-Step Strip */}
             <div className="pt-4 border-t border-slate-200 dark:border-zinc-800 space-y-4">
               <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500">
-                Simple 3-Step Process
+                {t("refp_3step", "Simple 3-Step Process")}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm font-semibold">
                 <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center text-xs font-black">
+                  <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center text-xs font-black shrink-0">
                     1
                   </div>
-                  <span>Get Your Referral Code</span>
+                  <span>{t("refp_step1", "Get Your Referral Code")}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center text-xs font-black">
+                  <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center text-xs font-black shrink-0">
                     2
                   </div>
-                  <span>Share on WhatsApp</span>
+                  <span>{t("refp_step2", "Share on WhatsApp")}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center text-xs font-black">
+                  <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center text-xs font-black shrink-0">
                     3
                   </div>
-                  <span>Receive ₹500 Payout</span>
+                  <span>{t("refp_step3", "Receive ₹500 Payout")}</span>
                 </div>
               </div>
             </div>
@@ -289,15 +291,15 @@ export default function ReferAndEarnClient() {
             <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none relative">
               
               {/* Badge */}
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between gap-2 mb-6">
                 <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                   <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400">
-                    Instant Activation
+                    {t("refp_inst_act", "Instant Activation")}
                   </span>
                 </div>
-                <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 uppercase tracking-widest">
-                  Zero Fees
+                <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 uppercase tracking-widest shrink-0">
+                  {t("refp_zero_fees", "Zero Fees")}
                 </span>
               </div>
 
@@ -305,22 +307,22 @@ export default function ReferAndEarnClient() {
                 <form onSubmit={handleSendOtp} className="space-y-5">
                   <div>
                     <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                      Start Earning Today
+                      {t("refp_start_today", "Start Earning Today")}
                     </h2>
                     <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
-                      No business license or documentation required.
+                      {t("refp_no_license", "No business license or documentation required.")}
                     </p>
                   </div>
 
                   <div className="space-y-4 pt-2">
                     <div>
                       <label className="text-[11px] font-black text-slate-600 dark:text-zinc-400 uppercase tracking-wider block mb-1.5">
-                        Your Full Name
+                        {t("ref_lbl_name", "Your Full Name")}
                       </label>
                       <input
                         required
                         type="text"
-                        placeholder="e.g. Rahul Sharma"
+                        placeholder={t("prof_name_ph", "e.g. Rahul Sharma")}
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         className="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:font-normal placeholder:text-slate-400"
@@ -329,7 +331,7 @@ export default function ReferAndEarnClient() {
 
                     <div>
                       <label className="text-[11px] font-black text-slate-600 dark:text-zinc-400 uppercase tracking-wider block mb-1.5">
-                        WhatsApp Mobile Number
+                        {t("refp_wa_num", "WhatsApp Mobile Number")}
                       </label>
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
@@ -346,7 +348,7 @@ export default function ReferAndEarnClient() {
                         />
                       </div>
                       <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1.5">
-                        We will send a 4-digit code to verify your phone.
+                        {t("refp_send_4d", "We will send a 4-digit code to verify your phone.")}
                       </p>
                     </div>
                   </div>
@@ -360,19 +362,19 @@ export default function ReferAndEarnClient() {
                   <button
                     type="submit"
                     disabled={loading || !fullName || mobileNumber.length !== 10}
-                    className="w-full py-4 px-6 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 active:scale-[0.98]"
+                    className="w-full py-4 px-6 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 active:scale-[0.98] whitespace-normal text-center leading-snug"
                   >
                     {loading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <>
-                        Get My Referral Code <ArrowRight className="w-4 h-4" />
+                        {t("ref_get_code", "Get My Referral Code")} <ArrowRight className="w-4 h-4 shrink-0" />
                       </>
                     )}
                   </button>
 
                   <p className="text-center text-[10px] text-slate-400 dark:text-zinc-500">
-                    By continuing, you agree to TEAM CCTV's Partner Terms of Service.
+                    {t("refp_terms_note", "By continuing, you agree to TEAM CCTV's Partner Terms of Service.")}
                   </p>
                 </form>
               ) : (
@@ -383,13 +385,13 @@ export default function ReferAndEarnClient() {
                       onClick={() => setStep("details")}
                       className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-blue-600 transition-colors mb-3"
                     >
-                      <ArrowLeft className="w-3.5 h-3.5" /> Back to details
+                      <ArrowLeft className="w-3.5 h-3.5 shrink-0" /> {t("refp_back_det", "Back to details")}
                     </button>
                     <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                      Verify Your Mobile
+                      {t("refp_verify_mob", "Verify Your Mobile")}
                     </h2>
                     <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
-                      Enter the 4-digit code sent to <strong>+91 {mobileNumber}</strong>
+                      {t("refp_enter_4d", "Enter the 4-digit code sent to")} <strong>+91 {mobileNumber}</strong>
                     </p>
                   </div>
 
@@ -420,21 +422,21 @@ export default function ReferAndEarnClient() {
                     type="button"
                     onClick={() => handleVerifyOtp()}
                     disabled={loading || otp.join("").length !== 4}
-                    className="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 active:scale-[0.98]"
+                    className="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 active:scale-[0.98] whitespace-normal text-center leading-snug"
                   >
                     {loading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <>
-                        <ShieldCheck className="w-4 h-4" /> Verify & Access Dashboard
+                        <ShieldCheck className="w-4 h-4 shrink-0" /> {t("refp_verify_acc", "Verify & Access Dashboard")}
                       </>
                     )}
                   </button>
 
                   <div className="flex items-center justify-between text-xs font-bold pt-2">
                     <span className="text-slate-400 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" />
-                      {timeLeft > 0 ? `00:${timeLeft.toString().padStart(2, "0")}` : "Code expired"}
+                      <Clock className="w-3.5 h-3.5 shrink-0" />
+                      {timeLeft > 0 ? `00:${timeLeft.toString().padStart(2, "0")}` : t("refp_code_exp", "Code expired")}
                     </span>
                     <button
                       type="button"
@@ -442,7 +444,7 @@ export default function ReferAndEarnClient() {
                       onClick={handleSendOtp}
                       className="text-blue-600 disabled:text-slate-400 disabled:cursor-not-allowed hover:underline"
                     >
-                      Resend Code
+                      {t("refp_resend_code", "Resend Code")}
                     </button>
                   </div>
                 </div>
@@ -463,10 +465,10 @@ export default function ReferAndEarnClient() {
             </div>
             <div>
               <h4 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-tight">
-                Verified Direct Payouts
+                {t("refp_t1_t", "Verified Direct Payouts")}
               </h4>
               <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                Funds deposited directly into your bank account as soon as the project is marked won.
+                {t("refp_t1_d", "Funds deposited directly into your bank account as soon as the project is marked won.")}
               </p>
             </div>
           </div>
@@ -477,10 +479,10 @@ export default function ReferAndEarnClient() {
             </div>
             <div>
               <h4 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-tight">
-                WhatsApp Ready Tools
+                {t("refp_t2_t", "WhatsApp Ready Tools")}
               </h4>
               <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                Get pre-built shareable links and QR codes to share directly to contacts or stories.
+                {t("refp_t2_d", "Get pre-built shareable links and QR codes to share directly to contacts or stories.")}
               </p>
             </div>
           </div>
@@ -491,10 +493,10 @@ export default function ReferAndEarnClient() {
             </div>
             <div>
               <h4 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-tight">
-                100% Transparent Tracking
+                {t("refp_t3_t", "100% Transparent Tracking")}
               </h4>
               <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                Track each customer's stage in real-time from survey to installation.
+                {t("refp_t3_d", "Track each customer's stage in real-time from survey to installation.")}
               </p>
             </div>
           </div>

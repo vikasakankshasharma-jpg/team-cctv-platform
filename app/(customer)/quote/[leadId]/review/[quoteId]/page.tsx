@@ -4,6 +4,9 @@ import { QuoteReviewClient, QuoteData } from "./QuoteReviewClient";
 import type { Metadata } from "next";
 import { serializeDoc } from "@/lib/serialize";
 import { getCachedAdminSettings } from "@/lib/cached-settings";
+import { getServerLocale, getServerTranslations } from "@/lib/i18n/server-locale";
+import { getQuoteValidityNote } from "@/lib/pdf/pdf-i18n";
+import { buildQuotePageMetadata } from "@/lib/i18n/seo-metadata";
 
 export const dynamic = "force-dynamic";
 
@@ -13,28 +16,26 @@ export async function generateMetadata({
   params: Promise<{ leadId: string; quoteId: string }>
 }): Promise<Metadata> {
   const { leadId, quoteId } = await params;
+  const locale = await getServerLocale();
   
   if (leadId === "mock-e2e-lead" || leadId === "mock-lead") {
-    return { title: "Quote Review | TEAM CCTV" };
+    return buildQuotePageMetadata(locale, "review_fallback");
   }
 
-  if (!adminDb) return { title: "Quote Review | TEAM CCTV" };
+  if (!adminDb) return buildQuotePageMetadata(locale, "review_fallback");
 
-  let name = "Client";
+  let name: string | undefined;
   const docSnap = await adminDb.collection("leads").doc(leadId).get();
   if (docSnap.exists) {
-    name = docSnap.data()?.customer_name || "Client";
+    name = docSnap.data()?.customer_name;
   } else {
     const qSnap = await adminDb.collection("quotes").doc(quoteId).get();
     if (qSnap.exists) {
-      name = qSnap.data()?.customer_name || qSnap.data()?.billing_details?.customer_name || "Client";
+      name = qSnap.data()?.customer_name || qSnap.data()?.billing_details?.customer_name;
     }
   }
 
-  return {
-    title: `Quotation for ${name} | TEAM CCTV`,
-    description: `Review your personalized security system quotation from TEAM CCTV.`,
-  };
+  return buildQuotePageMetadata(locale, "named", name);
 }
 
 export default async function QuoteReviewPage({
@@ -44,6 +45,8 @@ export default async function QuoteReviewPage({
 }) {
   const { leadId, quoteId } = await params;
   const settings = await getCachedAdminSettings();
+  const locale = await getServerLocale();
+  const { t } = await getServerTranslations();
 
   let quoteData: QuoteData | null = null;
 
@@ -148,7 +151,7 @@ export default async function QuoteReviewPage({
           id: item.product_id || item.id || item.sku || Math.random().toString(36).substr(2, 9),
           name: item.display_name || item.name || item.title || "CCTV Component",
           brand: item.brand || "",
-            description: item.technology ? `Camera type: ${item.technology} | Tier: ${item.resolution_tier || 'standard'}` : (item.description || ""),
+            description: item.technology ? `Camera type: ${item.technology} (${item.resolution_tier || 'standard'})` : (item.description || ""),
           badge: item.technology ? { label: item.technology, color: item.technology === "IP" ? "#2C5F8A" : "#0F1F3D" } : undefined,
           quantity: item.qty || item.quantity || 1,
           unitPrice: item.unit_price || item.unitPrice || item.price || 0,
@@ -198,12 +201,12 @@ export default async function QuoteReviewPage({
         issuedAt: quote?.createdAt || quote?.created_at?.toDate?.().toISOString() || new Date().toISOString(),
         validUntil: quote?.validUntil || quote?.valid_until || new Date(Date.now() + (settings.quote_validity_days || 7) * 24 * 60 * 60 * 1000).toISOString(),
         customer: {
-          name: quote?.billing_details?.customer_name || quote?.customer_name || lead?.customer_name || "Valued Customer",
+          name: quote?.billing_details?.customer_name || quote?.customer_name || lead?.customer_name || t("qrc_valued_customer", "Valued Customer"),
           phone: quote?.billing_details?.phone || quote?.customer_mobile || lead?.mobile_number || "N/A",
           email: quote?.billing_details?.email || quote?.customer_email || lead?.email || "",
         },
         installationAddress: cleanInstallAddress,
-        propertyType: lead?.property_type || quote?.requirementSnapshot?.property_type || "Residential",
+        propertyType: lead?.property_type || quote?.requirementSnapshot?.property_type || t("qrc_prop_residential", "Residential"),
         propertyDetail: lead?.wizard_answers ? JSON.stringify(lead.wizard_answers) : "",
         siteVisitDate: lead?.site_visit_date || "",
         lineItems,
@@ -229,7 +232,7 @@ export default async function QuoteReviewPage({
         version: quote?.version || 1,
         isRevision: !!quote?.is_revision,
         revisionNotes: quote?.revision_notes,
-        notes: `This quotation is valid for ${settings.quote_validity_days || 7} days from the date of issue. Prices are subject to change after expiry.`,
+        notes: getQuoteValidityNote(locale, settings.quote_validity_days || 7),
       };
     }
 

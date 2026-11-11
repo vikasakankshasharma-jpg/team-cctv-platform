@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Calendar, Filter, Download } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface ReportFilterState {
   startDate: string;
@@ -20,6 +21,7 @@ interface ReportFiltersProps {
 }
 
 export function ReportFilters({ initialFilters, onFilterChange, onExport, showBranch, showPersonnel }: ReportFiltersProps) {
+  const { t } = useTranslation();
   // Safe Date Initialization (Timezone consistent YYYY-MM-DD)
   const getLocalDateString = (d: Date) => {
     return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split("T")[0];
@@ -55,7 +57,7 @@ export function ReportFilters({ initialFilters, onFilterChange, onExport, showBr
     <div className="bg-white p-4 rounded-lg shadow-sm border flex flex-wrap gap-4 items-end mb-6">
       
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700">Start Date</label>
+        <label className="text-sm font-medium text-gray-700">{t("rpt_start_date", "Start Date")}</label>
         <div className="relative">
           <Calendar className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
           <input 
@@ -68,7 +70,7 @@ export function ReportFilters({ initialFilters, onFilterChange, onExport, showBr
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700">End Date</label>
+        <label className="text-sm font-medium text-gray-700">{t("rpt_end_date", "End Date")}</label>
         <div className="relative">
           <Calendar className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
           <input 
@@ -82,47 +84,47 @@ export function ReportFilters({ initialFilters, onFilterChange, onExport, showBr
 
       {showBranch && (
          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Branch</label>
+            <label className="text-sm font-medium text-gray-700">{t("rpt_branch", "Branch")}</label>
             <select 
                className="border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none min-w-[150px]"
                value={filters.branchId}
                onChange={(e) => setFilters({...filters, branchId: e.target.value})}
             >
-               <option value="">All Branches</option>
-               <option value="MAIN">Main HQ</option>
+               <option value="">{t("rpt_all_branches", "All Branches")}</option>
+               <option value="MAIN">{t("rpt_main_hq", "Main HQ")}</option>
             </select>
          </div>
       )}
 
       {showPersonnel && (
          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Personnel</label>
+            <label className="text-sm font-medium text-gray-700">{t("rpt_personnel", "Personnel")}</label>
             <select 
                className="border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none min-w-[150px]"
                value={filters.salespersonId || filters.technicianId}
                onChange={(e) => setFilters({...filters, salespersonId: e.target.value})}
             >
-               <option value="">All Personnel</option>
+               <option value="">{t("rpt_all_personnel", "All Personnel")}</option>
             </select>
          </div>
       )}
 
-      <div className="flex gap-2 ml-auto">
+      <div className="flex flex-wrap gap-2 ml-auto">
         <button 
           onClick={handleApply}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition-colors shadow-sm"
+          className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition-colors shadow-sm whitespace-normal text-center leading-snug"
         >
-          <Filter className="h-4 w-4" />
-          Apply Filters
+          <Filter className="h-4 w-4 shrink-0" />
+          {t("rpt_apply_filters", "Apply Filters")}
         </button>
         
         {onExport && (
           <button 
             onClick={() => onExport(filters)}
-            className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-800 px-4 py-2 border rounded-md text-sm transition-colors shadow-sm"
+            className="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-800 px-4 py-2 border rounded-md text-sm transition-colors shadow-sm whitespace-normal text-center leading-snug"
           >
-            <Download className="h-4 w-4" />
-            Export
+            <Download className="h-4 w-4 shrink-0" />
+            {t("rpt_export", "Export")}
           </button>
         )}
       </div>

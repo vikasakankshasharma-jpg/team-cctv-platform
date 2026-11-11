@@ -2,6 +2,8 @@
   "name": "CCTVQuotation Installer Portal",
   "short_name": "CCTV Installer",
   "description": "CCTVQuotation - Installer Dashboard",
+  "lang": "en-IN",
+  "dir": "ltr",
   "start_url": "/installer/dashboard",
   "display": "standalone",
   "background_color": "#ffffff",

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Send, Bot, User, BrainCircuit, ThumbsUp, ThumbsDown, ImagePlus, X, Mic, MicOff, ShieldCheck, Loader2 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { SPEECH_LOCALE_MAP, languageNames } from "@/lib/i18n/mapping";
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 
@@ -44,6 +45,17 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
   const [lastUserMessage, setLastUserMessage] = useState("");
 
   useEffect(() => {
+    if (!initialMessage) {
+      setMessages((prev) => {
+        if (prev.length === 1 && prev[0].role === "assistant") {
+          return [{ role: "assistant", content: t("welcome", "Hello! I am the website AI. How can I help you today?") }];
+        }
+        return prev;
+      });
+    }
+  }, [locale, initialMessage]);
+
+  useEffect(() => {
     return () => {
       if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear();
@@ -59,10 +71,11 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
     }
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in this browser.");
+      alert(t("ai_voice_unsupported"));
       return;
     }
     const recognition = new SpeechRecognition();
+    recognition.lang = SPEECH_LOCALE_MAP[locale] || "en-IN";
     recognition.continuous = false;
     recognition.interimResults = true;
     
@@ -125,7 +138,7 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch response");
+        throw new Error(t("ai_fetch_error", "Failed to fetch response"));
       }
 
       const data = await response.json();
@@ -147,7 +160,7 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
       }
     } catch (error) {
       console.error(error);
-      setMessages(prev => [...prev, { role: "assistant", content: "Sorry, I encountered an error. Please try again." }]);
+      setMessages(prev => [...prev, { role: "assistant", content: t("ai_fetch_error") }]);
     } finally {
       setIsLoading(false);
     }
@@ -191,19 +204,19 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
       console.error("Phone OTP error:", err?.code, err?.message, err);
       // Map common Firebase phone auth errors to friendly messages
       const code: string = err?.code || "";
-      let friendlyMsg = err.message || "Failed to send OTP.";
+      let friendlyMsg = t("ai_otp_fail");
       if (code === "auth/internal-error") {
-        friendlyMsg = "OTP service is currently unavailable. Please try again later or contact support.";
+        friendlyMsg = t("ai_otp_unavailable");
       } else if (code === "auth/invalid-phone-number") {
-        friendlyMsg = "Invalid phone number format. Please enter a valid 10-digit Indian mobile number.";
+        friendlyMsg = t("err_invalid_mobile");
       } else if (code === "auth/too-many-requests") {
-        friendlyMsg = "Too many attempts. Please wait a few minutes and try again.";
+        friendlyMsg = t("ai_otp_too_many");
       } else if (code === "auth/captcha-check-failed") {
-        friendlyMsg = "Security check failed. Please refresh the page and try again.";
+        friendlyMsg = t("ai_otp_captcha");
       } else if (code === "auth/quota-exceeded") {
-        friendlyMsg = "SMS quota exceeded. Please try again later.";
+        friendlyMsg = t("ai_otp_unavailable");
       } else if (code === "auth/missing-phone-number") {
-        friendlyMsg = "Please enter a valid mobile number.";
+        friendlyMsg = t("err_invalid_mobile");
       }
       // Reset recaptcha on failure so next attempt gets a fresh one
       if (window.recaptchaVerifier) {
@@ -222,7 +235,7 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
     e.preventDefault();
     setVerificationError("");
     const fullOtp = otp.join("");
-    if (fullOtp.length < 6) return setVerificationError("Incomplete OTP.");
+    if (fullOtp.length < 6) return setVerificationError(t("ai_incomplete_otp"));
     if (!confirmationResult) return;
     setIsVerifying(true);
     try {
@@ -234,7 +247,7 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
         body: JSON.stringify({ idToken })
       });
       if (!response.ok) {
-        throw new Error("Session creation failed");
+        throw new Error(t("chat_err_session", "Session creation failed"));
       }
       setShowOtpGate(false);
       setOtpSent(false);
@@ -242,7 +255,7 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
       sendMessage(undefined, lastUserMessage);
     } catch (err: any) {
       console.error(err);
-      setVerificationError(err.message || "Invalid OTP.");
+      setVerificationError(t("ai_invalid_otp"));
       setOtp(["", "", "", "", "", ""]);
       otpInputRefs.current[0]?.focus();
     } finally {
@@ -290,7 +303,7 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
       <div className="bg-blue-600 text-white p-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bot className="w-5 h-5" />
-          <h3 className="font-semibold">Website Assistant</h3>
+          <h3 className="font-semibold">{t("ai_website_assistant")}</h3>
         </div>
       </div>
       
@@ -307,18 +320,18 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
                   <User className="w-3 h-3 opacity-70" />
                 ) : (
                   msg.isFromStudent ? (
-                     <span title="Answered from Brain Cache (Student AI)"><BrainCircuit className="w-3 h-3 text-green-500" /></span>
+                     <span title={t("ai_tooltip_brain")}><BrainCircuit className="w-3 h-3 text-green-500" /></span>
                   ) : (
-                     <span title="Generated by Master AI"><Bot className="w-3 h-3 text-blue-500" /></span>
+                     <span title={t("ai_tooltip_master")}><Bot className="w-3 h-3 text-blue-500" /></span>
                   )
                 )}
                 <span className="text-xs opacity-70">
-                  {msg.role === "user" ? "You" : (msg.isFromStudent ? "Student AI" : "Master AI")}
+                  {msg.role === "user" ? t("ai_you") : (msg.isFromStudent ? t("ai_student_label") : t("ai_master_label"))}
                 </span>
               </div>
               <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
               {msg.image && (
-                <img src={msg.image} alt="User upload" className="mt-2 rounded-lg max-w-full h-auto max-h-48 object-cover" />
+                <img src={msg.image} alt={t("chat_alt_upload", "User upload")} className="mt-2 rounded-lg max-w-full h-auto max-h-48 object-cover" />
               )}
               {msg.role === "assistant" && msg.brainId && (
                 <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-gray-100/10">
@@ -326,7 +339,7 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
                     onClick={() => handleFeedback(i, 1)}
                     disabled={!!msg.feedbackGiven}
                     className={`p-1 rounded transition-colors ${msg.feedbackGiven === 1 ? 'text-green-500' : 'text-gray-400 hover:text-green-500 hover:bg-gray-100 disabled:opacity-50'}`}
-                    title="Good answer"
+                    title={t("ai_good_answer")}
                   >
                     <ThumbsUp className="w-3 h-3" />
                   </button>
@@ -334,7 +347,7 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
                     onClick={() => handleFeedback(i, -1)}
                     disabled={!!msg.feedbackGiven}
                     className={`p-1 rounded transition-colors ${msg.feedbackGiven === -1 ? 'text-red-500' : 'text-gray-400 hover:text-red-500 hover:bg-gray-100 disabled:opacity-50'}`}
-                    title="Bad answer"
+                    title={t("ai_bad_answer")}
                   >
                     <ThumbsDown className="w-3 h-3" />
                   </button>
@@ -359,7 +372,7 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
       {selectedImage && (
         <div className="px-3 pt-2 bg-white relative inline-block">
           <div className="relative inline-block">
-            <img src={selectedImage} alt="Preview" className="h-16 w-16 object-cover rounded-lg border border-gray-200" />
+            <img src={selectedImage} alt={t("chat_alt_preview", "Preview")} className="h-16 w-16 object-cover rounded-lg border border-gray-200" />
             <button 
               onClick={() => setSelectedImage(null)}
               className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow hover:bg-red-600"
@@ -376,7 +389,7 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
         <div className="p-4 bg-blue-50 border-t border-blue-100 animate-in slide-in-from-bottom-4">
           <div className="flex items-center gap-2 text-blue-800 font-bold mb-3">
             <ShieldCheck className="w-5 h-5" />
-            {otpSent ? "Verify Number" : "Secure Verification"}
+            {otpSent ? t("ai_verify_number") : t("ai_secure_verify")}
           </div>
           {verificationError && <p className="text-red-500 text-xs mb-3 font-medium bg-red-50 p-2 rounded">{verificationError}</p>}
           
@@ -388,13 +401,13 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
                 required
                 value={mobile}
                 onChange={e => setMobile(e.target.value.replace(/\D/g, ""))}
-                placeholder="Mobile Number"
+                placeholder={t("ai_mobile_placeholder")}
                 className="w-full p-2.5 rounded-lg border border-blue-200 outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
               />
               <div className="flex gap-2">
-                <button type="button" onClick={() => setShowOtpGate(false)} className="flex-1 p-2 text-gray-500 hover:bg-gray-100 rounded-lg text-sm font-medium transition">Cancel</button>
+                <button type="button" onClick={() => setShowOtpGate(false)} className="flex-1 p-2 text-gray-500 hover:bg-gray-100 rounded-lg text-sm font-medium transition">{t("cancel")}</button>
                 <button type="submit" disabled={isVerifying} className="flex-1 p-2 bg-blue-600 text-white rounded-lg text-sm font-medium flex items-center justify-center transition disabled:opacity-50">
-                  {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Code"}
+                  {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : t("ai_send_code")}
                 </button>
               </div>
             </form>
@@ -415,9 +428,9 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
                 ))}
               </div>
               <button type="submit" disabled={isVerifying || otp.join("").length !== 6} className="w-full p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium flex items-center justify-center transition disabled:opacity-50">
-                {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify & Continue"}
+                {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : t("ai_verify_continue")}
               </button>
-              <button type="button" onClick={() => setOtpSent(false)} className="w-full text-xs text-blue-600 hover:underline text-center font-medium">Change Number</button>
+              <button type="button" onClick={() => setOtpSent(false)} className="w-full text-xs text-blue-600 hover:underline text-center font-medium">{t("change_number")}</button>
             </form>
           )}
         </div>
@@ -434,7 +447,7 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-            title="Upload Image"
+            title={t("ai_upload_image")}
           >
             <ImagePlus className="w-5 h-5" />
           </button>
@@ -442,7 +455,7 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
             type="button"
             onClick={toggleListening}
             className={`p-2 rounded-full transition-colors shrink-0 ${isListening ? 'text-red-600 bg-red-50' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'}`}
-            title="Voice Input"
+            title={t("ai_voice_input", undefined, { lang: languageNames[locale] || "English" })}
           >
             {isListening ? <MicOff className="w-5 h-5 animate-pulse" /> : <Mic className="w-5 h-5" />}
           </button>
@@ -450,7 +463,7 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
             type="text" 
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question..."
+            placeholder={t("ai_ask_placeholder")}
             className="flex-1 px-4 py-2 bg-gray-100 border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-black"
           />
           <button 

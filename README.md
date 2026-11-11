@@ -124,7 +124,7 @@
 - **Framework:** Next.js 16.2 (App Router, Server Components, Route Handlers)
 - **State Management:** Zustand (Client Store) & React Hooks
 - **Database & Storage:** Firebase Firestore (Enterprise Security Rules) & Firebase Storage
-- **Authentication:** Firebase Auth (Phone OTP / WhatsApp OTP) with strict portal separation
+- **Authentication & Messaging:** Firebase Auth & Unified MSG91 / Meta WhatsApp OTP (`Msg91WhatsAppProvider.sendOtpTemplate`, CRLF-safe `lib/env-utils.ts`, cross-device `whatsapp://send?phone=...` app launcher in `lib/whatsapp.ts` & `WhatsAppOtpNotice.tsx`) with strict portal isolation
 - **Payments:** Razorpay & Cashfree (Webhooks + Server-Side Fallback Verification)
 - **Maps & Geocoding:** Mappls (MapmyIndia) SDK with Google Maps & OpenStreetMap fallbacks
 - **Styling:** Tailwind CSS 4.0 (Fully responsive from narrow mobile to 4K displays)
@@ -138,6 +138,7 @@
 - **Zero-Trust Pricing:** Client prices are strictly ignored; server-side recalculation protects against parameter tampering.
 - **Network Security:** HSTS, strict Content Security Policy (whitelisting Mappls, Razorpay, Firebase), and session token validation.
 - **Audit Logging:** Administrative events logged in Firestore `audit_logs` with actor details, timestamps, and diffs.
+- **Error & Environment Hygiene:** Universal client error extraction (`extractErrorMessage()` in `lib/utils.ts`) eliminates `[object Object]` alerts across flows, while `cleanEnvVar()` / `cleanPhoneEnvVar()` (`lib/env-utils.ts`) strip trailing CRLF/newline artifacts across server and public env reads.
 
 ---
 

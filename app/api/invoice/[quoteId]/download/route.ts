@@ -3,6 +3,8 @@ import { adminDb } from "@/lib/firebase-admin";
 import { renderToStream } from "@react-pdf/renderer";
 import { InvoicePDFDocument } from "@/lib/pdf/invoice-pdf";
 import { getCachedAdminSettings } from "@/lib/cached-settings";
+import { resolveRequestLocale } from "@/lib/i18n/api-messages";
+import { resolveCustomerLocale } from "@/lib/whatsapp/customer-notifications-i18n";
 import React from "react";
 
 export const dynamic = "force-dynamic";
@@ -83,8 +85,17 @@ export async function GET(
     };
 
     const settings = await getCachedAdminSettings();
+    const reqLocale = resolveRequestLocale(request);
+    const pdfLocale =
+      reqLocale !== "en"
+        ? reqLocale
+        : await resolveCustomerLocale({
+            quoteData,
+            leadData,
+            phone: quote.customer_mobile,
+          });
 
-    const pdfStream = await renderToStream(React.createElement(InvoicePDFDocument, { quote, settings }) as any);
+    const pdfStream = await renderToStream(React.createElement(InvoicePDFDocument, { quote, settings, locale: pdfLocale }) as any);
     
     const readableStream = new ReadableStream({
       start(controller) {

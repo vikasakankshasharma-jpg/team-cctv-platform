@@ -67,11 +67,14 @@ export async function POST(req: Request) {
     }
 
     const { sendCustomerWhatsApp } = await import("@/lib/notification-service");
-    
+    const { resolveCustomerLocale, getCustomerNotifications } = await import("@/lib/whatsapp/customer-notifications-i18n");
+    const custLocale = await resolveCustomerLocale({ quoteData, phone: quoteData.customer_mobile });
+    const notif = getCustomerNotifications(custLocale);
+
     // Notify Customer Handover & provide Start OTP
     await sendCustomerWhatsApp(
       quoteData.customer_mobile || "",
-      `✅ Material delivery confirmed! Your installation will be scheduled soon. An installer will contact you shortly.\n\nWhen the installer arrives, please share your Installation Start OTP: *${installStartOtp}* to begin the work.`
+      notif.deliveryConfirmedStartOtp({ otp: String(installStartOtp) })
     );
 
     // Notify Installer (if assigned)

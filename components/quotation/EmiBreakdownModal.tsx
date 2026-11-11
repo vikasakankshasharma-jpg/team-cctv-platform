@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Check, CreditCard, ShieldCheck, Lock, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface EmiBreakdownModalProps {
   isOpen: boolean;
@@ -17,9 +18,11 @@ export function EmiBreakdownModal({
   isOpen,
   onClose,
   totalAmount,
-  packageName = "CCTV Security Package",
+  packageName,
   onProceed,
 }: EmiBreakdownModalProps) {
+  const { t } = useTranslation();
+  const displayPackageName = packageName || t("emi_pkg_default", "CCTV Security Package");
   const [selectedTenure, setSelectedTenure] = useState<number>(3);
   const [mounted, setMounted] = useState(false);
 
@@ -45,43 +48,43 @@ export function EmiBreakdownModal({
   const plans = [
     {
       months: 3,
-      title: "3 Months",
+      title: t("emi_m3", "3 Months"),
       monthly: Math.round(totalAmount / 3),
       totalCost: totalAmount,
       interest: 0,
-      badge: "0% Interest • Recommended",
+      badge: t("emi_b3", "0% Interest • No Cost"),
       isNoCost: true,
-      description: "Pay in 3 equal monthly installments with zero extra interest charges.",
+      description: t("emi_d3", "Pay in 3 equal monthly installments with zero extra interest charges."),
     },
     {
       months: 6,
-      title: "6 Months",
+      title: t("emi_m6", "6 Months"),
       monthly: Math.round(totalAmount / 6),
       totalCost: totalAmount,
       interest: 0,
-      badge: "Popular Choice",
+      badge: t("emi_b6", "No-Cost Option"),
       isNoCost: true,
-      description: "Available as No Cost EMI on select credit & debit cards (HDFC, ICICI, Axis).",
+      description: t("emi_d6", "Available as No Cost EMI on select credit & debit cards (HDFC, ICICI, Axis)."),
     },
     {
       months: 9,
-      title: "9 Months",
+      title: t("emi_m9", "9 Months"),
       monthly: Math.round((totalAmount * 1.045) / 9),
       totalCost: Math.round(totalAmount * 1.045),
       interest: Math.round(totalAmount * 0.045),
-      badge: "Balanced Outflow",
+      badge: t("emi_b9", "Balanced Outflow"),
       isNoCost: false,
-      description: "Lower monthly commitment at standard bank rate (~13-14% p.a.).",
+      description: t("emi_d9", "Lower monthly commitment at standard bank rate (~13-14% p.a.)."),
     },
     {
       months: 12,
-      title: "12 Months",
+      title: t("emi_m12", "12 Months"),
       monthly: Math.round((totalAmount * 1.06) / 12),
       totalCost: Math.round(totalAmount * 1.06),
       interest: Math.round(totalAmount * 0.06),
-      badge: "Lowest Monthly Cost",
+      badge: t("emi_b12", "Lowest Monthly Cost"),
       isNoCost: false,
-      description: "Minimum monthly outflow to secure your home or business premises today.",
+      description: t("emi_d12", "Minimum monthly outflow to secure your home or business premises today."),
     },
   ];
 
@@ -113,7 +116,7 @@ export function EmiBreakdownModal({
           <button
             onClick={onClose}
             className="absolute top-3.5 right-3.5 text-white/70 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
-            aria-label="Close EMI details"
+            aria-label={t("emi_close_aria", "Close EMI details")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -123,24 +126,24 @@ export function EmiBreakdownModal({
               <CreditCard className="w-4 h-4" />
             </span>
             <span className="text-[11px] font-black uppercase tracking-wider text-amber-300">
-              Affordable Payment Plans
+              {t("emi_badge", "Affordable Payment Plans")}
             </span>
           </div>
 
           <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-            Flexible EMI Options
+            {t("emi_title", "Flexible EMI Options")}
           </h3>
-          <p className="text-xs text-blue-200/90 mt-0.5 truncate">
-            {packageName} • Total: <strong className="text-white font-bold">₹{totalAmount.toLocaleString("en-IN")}</strong>
+          <p className="text-xs text-blue-200/90 mt-0.5 leading-snug">
+            {displayPackageName} • {t("emi_total_lbl", "Total:")} <strong className="text-white font-bold">₹{totalAmount.toLocaleString("en-IN")}</strong>
           </p>
         </div>
 
         {/* Scrollable Content */}
         <div className="p-3.5 sm:p-5 space-y-3 overflow-y-auto">
           {/* Plan Selection Header */}
-          <div className="flex items-center justify-between text-xs font-bold text-zinc-700 dark:text-zinc-300">
-            <span>Select EMI Tenure</span>
-            <span className="text-[11px] font-normal text-zinc-500">Hardware + Wiring + GST Included</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-zinc-700 dark:text-zinc-300">
+            <span>{t("emi_select_tenure", "Select EMI Tenure")}</span>
+            <span className="text-[11px] font-normal text-zinc-500">{t("emi_gst_incl", "Hardware + Wiring + GST Included")}</span>
           </div>
 
           {/* All 4 Plans - Compact & High-Contrast */}
@@ -167,7 +170,7 @@ export function EmiBreakdownModal({
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-xs sm:text-sm font-black text-zinc-900 dark:text-white">
-                            {p.months} Months
+                            {t("emi_months_n", "{n} Months", { n: String(p.months) })}
                           </span>
                           <span className={`text-[9px] sm:text-[10px] font-black uppercase px-2 py-0.5 rounded-full shrink-0 ${
                             p.isNoCost
@@ -182,15 +185,15 @@ export function EmiBreakdownModal({
 
                     <div className="text-right shrink-0">
                       <div className="text-sm sm:text-base font-black text-blue-700 dark:text-blue-400">
-                        ₹{p.monthly.toLocaleString("en-IN")}<span className="text-[10px] font-medium text-zinc-500">/mo</span>
+                        ₹{p.monthly.toLocaleString("en-IN")}<span className="text-[10px] font-medium text-zinc-500">{t("emi_mo_suffix", "/mo")}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-1.5 pt-1.5 border-t border-zinc-200/60 dark:border-zinc-800 flex items-center justify-between text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">
-                    <span className="truncate">{p.description}</span>
+                  <div className="mt-1.5 pt-1.5 border-t border-zinc-200/60 dark:border-zinc-800 flex items-start justify-between gap-2 text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <span className="leading-snug">{p.description}</span>
                     <span className="font-semibold text-zinc-700 dark:text-zinc-300 shrink-0 ml-2">
-                      Total: ₹{p.totalCost.toLocaleString("en-IN")}
+                      {t("emi_total_lbl", "Total:")} ₹{p.totalCost.toLocaleString("en-IN")}
                     </span>
                   </div>
                 </div>
@@ -201,7 +204,7 @@ export function EmiBreakdownModal({
           {/* Supported Banks */}
           <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl p-2.5 sm:p-3 border border-zinc-200/80 dark:border-zinc-800">
             <span className="text-[10px] sm:text-[11px] font-bold text-zinc-700 dark:text-zinc-300 block mb-1.5">
-              Supported Banks & Cards (Credit & Debit Card EMI):
+              {t("emi_banks_lbl", "Supported Banks & Cards (Credit & Debit Card EMI):")}
             </span>
             <div className="flex flex-wrap gap-1">
               {banks.map((b) => (
@@ -213,7 +216,7 @@ export function EmiBreakdownModal({
                 </span>
               ))}
               <span className="text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                + Cardless EMI & Pay Later
+                {t("emi_cardless", "+ Cardless EMI & Pay Later")}
               </span>
             </div>
           </div>
@@ -222,17 +225,19 @@ export function EmiBreakdownModal({
           <div className="rounded-2xl p-2.5 sm:p-3 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 flex items-start gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
             <div className="text-[11px] text-emerald-950 dark:text-emerald-200 leading-snug">
-              <span className="font-bold">Zero Paperwork, Instant Setup:</span>{" "}
-              Select EMI at checkout via Razorpay. You can also reserve your installation for just <strong>₹500 token advance</strong> and pay the rest after testing!
+              <span className="font-bold">{t("emi_zero_title", "Zero Paperwork, Instant Setup:")}</span>{" "}
+              {t("emi_zero_desc_pre", "Select EMI at checkout via Razorpay. You can also reserve your installation for just")}{" "}
+              <strong>{t("emi_token_bold", "₹500 token advance")}</strong>{" "}
+              {t("emi_zero_desc_post", "and pay the rest after testing!")}
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2 shrink-0">
+        <div className="p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 shrink-0">
           <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">
             <Lock className="w-3.5 h-3.5 text-zinc-400" />
-            <span>Secured by <strong>Razorpay</strong></span>
+            <span>{t("emi_secured_by", "Secured by")} <strong>Razorpay</strong></span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -240,9 +245,9 @@ export function EmiBreakdownModal({
               variant="outline"
               size="sm"
               onClick={onClose}
-              className="rounded-full text-xs font-semibold px-3 py-1 h-8"
+              className="rounded-full text-xs font-semibold px-3 py-1.5 min-h-[32px] h-auto whitespace-normal leading-tight"
             >
-              Close
+              {t("emi_close", "Close")}
             </Button>
             {onProceed && (
               <Button
@@ -251,10 +256,10 @@ export function EmiBreakdownModal({
                   onClose();
                   onProceed();
                 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold shadow-md flex items-center gap-1 px-4 py-1 h-8 cursor-pointer"
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold shadow-md flex items-center gap-1 px-4 py-1.5 min-h-[32px] h-auto whitespace-normal leading-tight cursor-pointer"
               >
-                <span>Proceed with EMI</span>
-                <ChevronRight className="w-3.5 h-3.5" />
+                <span>{t("emi_proceed", "Proceed with EMI")}</span>
+                <ChevronRight className="w-3.5 h-3.5 shrink-0" />
               </Button>
             )}
           </div>

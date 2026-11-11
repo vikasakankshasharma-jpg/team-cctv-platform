@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ShieldAlert, RefreshCw, FileQuestion, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function QuoteError({
   error,
@@ -11,6 +12,7 @@ export default function QuoteError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useTranslation();
   const [autoSyncing, setAutoSyncing] = useState(true);
 
   useEffect(() => {
@@ -43,11 +45,11 @@ export default function QuoteError({
         </div>
         
         <h2 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter mb-4 animate-pulse">
-          Auto-Syncing Data...
+          {t("qerr_syncing", "Auto-Syncing Data...")}
         </h2>
         
         <p className="text-zinc-500 dark:text-zinc-400 max-w-sm font-medium leading-relaxed">
-          Retrieving the latest quotation securely. Please wait a moment.
+          {t("qerr_syncing_desc", "Retrieving the latest quotation securely. Please wait a moment.")}
         </p>
       </div>
     );
@@ -60,11 +62,11 @@ export default function QuoteError({
       </div>
       
       <h2 className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter mb-6">
-        Manifest Loading Failure
+        {t("qerr_fail_title", "Could Not Load Quotation")}
       </h2>
       
       <p className="text-zinc-500 dark:text-zinc-400 max-w-lg mb-16 font-medium leading-relaxed">
-        Our system failed to retrieve your specific quotation manifest. This usually happens if the link is expired or the database is under maintenance.
+        {t("qerr_fail_desc", "We couldn't fetch this quotation right now. The link may have expired or the server is temporarily busy.")}
       </p>
 
       <div className="flex flex-col sm:flex-row gap-6 w-full max-w-md">
@@ -73,18 +75,18 @@ export default function QuoteError({
             sessionStorage.removeItem("quote_error_retries"); // Reset counter for manual retry
             reset();
           }}
-          className="flex-1 flex items-center justify-center gap-4 bg-blue-600 hover:bg-blue-500 text-white px-4 md:px-10 py-5 rounded-[24px] font-black uppercase text-sm tracking-widest shadow-xl shadow-blue-500/20 transition-all active:scale-95"
+          className="flex-1 flex items-center justify-center gap-4 bg-blue-600 hover:bg-blue-500 text-white px-4 md:px-10 py-5 rounded-[24px] font-black uppercase text-sm tracking-wider whitespace-normal text-center leading-snug shadow-xl shadow-blue-500/20 transition-all active:scale-95"
         >
-          <RefreshCw className="w-5 h-5" />
-          Re-Sync Data
+          <RefreshCw className="w-5 h-5 shrink-0" />
+          {t("qerr_resync", "Re-Sync Data")}
         </button>
         
         <Link
           href="/wizard"
-          className="flex-1 flex items-center justify-center gap-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white px-4 md:px-10 py-5 rounded-[24px] font-black uppercase text-sm tracking-widest shadow-lg transition-all active:scale-95"
+          className="flex-1 flex items-center justify-center gap-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white px-4 md:px-10 py-5 rounded-[24px] font-black uppercase text-sm tracking-wider whitespace-normal text-center leading-snug shadow-lg transition-all active:scale-95"
         >
-          <FileQuestion className="w-5 h-5" />
-          New Quote
+          <FileQuestion className="w-5 h-5 shrink-0" />
+          {t("qerr_new_quote", "New Quote")}
         </Link>
       </div>
       

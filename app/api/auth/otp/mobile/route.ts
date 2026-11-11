@@ -4,26 +4,30 @@ import { COLLECTIONS } from "@/lib/constants";
 import { generateOtp, otpExpiresAt } from "@/lib/auth-partner";
 import { FieldValue } from "firebase-admin/firestore";
 import { rateLimit } from "@/lib/rate-limit";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 
 /**
  * ENTERPRISE AUTHENTICATION: MOBILE LOOKUP
  * Migrated from hardcoded whitelist to dynamic Firestore-backed RBAC.
  */
 export async function POST(req: Request) {
+  let locale = resolveRequestLocale(req);
   try {
     // 1. Rate Limiting (Prevent Brute-Force Discovery)
     const limit = await rateLimit(req, 3, 60_000);
     if (!limit.success) {
-      return NextResponse.json({ error: "Too many attempts. Please wait a minute." }, { status: 429 });
+      return NextResponse.json({ error: getApiMessage(locale, "too_many_attempts") }, { status: 429 });
     }
 
-    const { mobile } = await req.json();
+    const body = await req.json();
+    locale = resolveRequestLocale(req, body);
+    const { mobile } = body;
 
     // 2. Normalization
     const normalized = mobile?.toString().replace(/^\+?91/, "").replace(/\D/g, "").trim();
 
     if (!normalized || normalized.length !== 10) {
-      return NextResponse.json({ error: "Please enter a valid 10-digit Indian mobile number." }, { status: 400 });
+      return NextResponse.json({ error: getApiMessage(locale, "phone_invalid") }, { status: 400 });
     }
 
     let role: "super_admin" | "sales_staff" | "partner" | "installer" | null = null;
@@ -87,7 +91,7 @@ export async function POST(req: Request) {
     // 4. Security Gate
     if (!role) {
       return NextResponse.json(
-        { error: "Unauthorized. This mobile number is not registered in the system." },
+        { error: getApiMessage(locale, "account_not_registered") },
         { status: 403 }
       );
     }
@@ -118,11 +122,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ 
       success: true, 
       e164Mobile,
-      message: "Verification code sent."
+      message: getApiMessage(locale, "otp_sent_sms")
     });
 
   } catch (error) {
     console.error("🔥 [Admin Auth Mobile] Critical Error:", error);
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    return NextResponse.json({ error: getApiMessage(locale, "internal_error") }, { status: 500 });
   }
 }

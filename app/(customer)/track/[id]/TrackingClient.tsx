@@ -72,7 +72,7 @@ export default function TrackingClient({ lead, job, quote, invoice }: TrackingCl
             {t("track_installation", "Track Your Installation")}
           </h1>
           <p className="text-zinc-500 dark:text-zinc-400 font-mono text-xs sm:text-sm font-bold">
-            Order Reference: #{lead.id?.substring(0, 10).toUpperCase()}
+            {t("track_order_ref", "Order Reference: #{id}", { id: lead.id?.substring(0, 10).toUpperCase() || "" })}
           </p>
         </div>
 
@@ -80,7 +80,7 @@ export default function TrackingClient({ lead, job, quote, invoice }: TrackingCl
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Total Setup Cost</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{t("track_total_cost", "Total Setup Cost")}</p>
               <p className="text-2xl font-black text-zinc-900 dark:text-zinc-100">
                 ₹{totalAmount.toLocaleString("en-IN")}
               </p>
@@ -89,12 +89,15 @@ export default function TrackingClient({ lead, job, quote, invoice }: TrackingCl
             <div className="flex flex-wrap items-center gap-2">
               {isAdvancePaid && !isFullyPaid && (
                 <div className="px-3 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-400 text-xs font-bold">
-                  ₹{amountPaid.toLocaleString("en-IN")} Advance Paid • Balance Due: ₹{amountDue.toLocaleString("en-IN")}
+                  {t("track_adv_due", "₹{paid} Advance Paid • Balance Due: ₹{due}", {
+                    paid: amountPaid.toLocaleString("en-IN"),
+                    due: amountDue.toLocaleString("en-IN")
+                  })}
                 </div>
               )}
               {isFullyPaid && (
                 <div className="px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Fully Paid
+                  <CheckCircle2 className="w-3.5 h-3.5" /> {t("track_fully_paid", "Fully Paid")}
                 </div>
               )}
             </div>
@@ -108,10 +111,10 @@ export default function TrackingClient({ lead, job, quote, invoice }: TrackingCl
                 href={`/api/invoice/${targetQuoteId}/download`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-xs transition-all active:scale-98"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-xs transition-all active:scale-98 whitespace-normal text-center leading-snug"
               >
-                <Download className="w-4 h-4" />
-                <span>{isFullyPaid ? "Download Tax Invoice" : "Download Advance Receipt"}</span>
+                <Download className="w-4 h-4 shrink-0" />
+                <span>{isFullyPaid ? t("track_dl_inv", "Download Tax Invoice") : t("track_dl_rec", "Download Advance Receipt")}</span>
               </a>
             )}
 
@@ -119,10 +122,10 @@ export default function TrackingClient({ lead, job, quote, invoice }: TrackingCl
             {targetQuoteId && (
               <Link
                 href={`/quote/${lead.id}/review/${targetQuoteId}`}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold transition-all"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold transition-all whitespace-normal text-center leading-snug"
               >
-                <FileText className="w-4 h-4 text-zinc-400" />
-                <span>View Full Quotation</span>
+                <FileText className="w-4 h-4 text-zinc-400 shrink-0" />
+                <span>{t("track_view_q", "View Full Quotation")}</span>
               </Link>
             )}
 
@@ -132,10 +135,10 @@ export default function TrackingClient({ lead, job, quote, invoice }: TrackingCl
                 href={`/api/quote/${targetQuoteId}/download`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold transition-all"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold transition-all whitespace-normal text-center leading-snug"
               >
-                <Download className="w-4 h-4 text-zinc-400" />
-                <span>Quote PDF</span>
+                <Download className="w-4 h-4 text-zinc-400 shrink-0" />
+                <span>{t("track_q_pdf", "Quote PDF")}</span>
               </a>
             )}
           </div>
@@ -163,11 +166,11 @@ export default function TrackingClient({ lead, job, quote, invoice }: TrackingCl
             </div>
             <button
               onClick={() => { setPinRevealed(!pinRevealed); if (!pinRevealed) setTimeout(() => setPinRevealed(false), 10000); }}
-              className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold border transition-all bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
+              className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold border transition-all bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 whitespace-normal text-center leading-snug"
             >
-              {pinRevealed ? <><EyeOff className="w-4 h-4" /> Hide PIN</> : <><Eye className="w-4 h-4" /> Tap to Reveal PIN</>}
+              {pinRevealed ? <><EyeOff className="w-4 h-4 shrink-0" /> {t("track_hide_pin", "Hide PIN")}</> : <><Eye className="w-4 h-4 shrink-0" /> {t("track_show_pin", "Tap to Reveal PIN")}</>}
             </button>
-            {pinRevealed && <p className="text-xs text-zinc-400 mt-2">PIN will auto-hide in 10 seconds</p>}
+            {pinRevealed && <p className="text-xs text-zinc-400 mt-2">{t("track_pin_auto", "PIN will auto-hide in 10 seconds")}</p>}
             
             {lead.assigned_installer_name && (
               <div className="mt-8 flex items-center justify-center gap-2 text-sm font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 py-3 px-6 rounded-full w-fit mx-auto border border-emerald-200 dark:border-emerald-500/20">
@@ -226,9 +229,9 @@ export default function TrackingClient({ lead, job, quote, invoice }: TrackingCl
         
         {/* Help */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-          <a href="https://wa.me/917357612865?text=Hi!%20I%20need%20help%20with%20my%20installation%20or%20need%20to%20reschedule." target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold text-sm hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all">
-            <Phone className="w-4 h-4" />
-            Reschedule / Cancel Booking
+          <a href="https://wa.me/917357612865?text=Hi!%20I%20need%20help%20with%20my%20installation%20or%20need%20to%20reschedule." target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold text-sm hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all whitespace-normal text-center leading-snug">
+            <Phone className="w-4 h-4 shrink-0" />
+            {t("track_reschedule", "Reschedule / Cancel Booking")}
           </a>
           <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
             {t("track_need_help", "Need help? Contact support at")} <a href="tel:18001234567" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 font-bold hover:underline transition-all">1800-123-4567</a>

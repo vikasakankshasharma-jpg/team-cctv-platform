@@ -2,17 +2,19 @@ import { adminDb } from "@/lib/firebase-admin";
 import { notFound } from "next/navigation";
 import TrackingClient from "./TrackingClient";
 import type { Metadata } from "next";
+import { getServerLocale, getServerTranslations } from "@/lib/i18n/server-locale";
+import { buildPageMetadata } from "@/lib/i18n/seo-metadata";
 
-export const metadata: Metadata = {
-  title: "Track Installation & Quotation | TEAM CCTV",
-  description: "Track your CCTV quotation, installation progress, and download invoices securely.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata("track", await getServerLocale());
+}
 
 export const dynamic = "force-dynamic";
 
 export default async function CustomerTrackingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!id) notFound();
+  const { t } = await getServerTranslations();
 
   let lead: any = null;
   let quote: any = null;
@@ -47,7 +49,7 @@ export default async function CustomerTrackingPage({ params }: { params: Promise
       if (!lead) {
         lead = {
           id: quote.id,
-          customer_name: quote.customer_name || quote.billing_details?.customer_name || "Valued Customer",
+          customer_name: quote.customer_name || quote.billing_details?.customer_name || t("qrc_valued_customer", "Valued Customer"),
           mobile_number: quote.customer_mobile || quote.billing_details?.phone || "",
           status: quote.status === "BOOKED" || quote.status === "PAID" ? "booked" : (quote.status?.toLowerCase() || "quoted"),
           payment_status: quote.payment_status || (quote.status === "BOOKED" ? "advance_paid" : quote.status === "PAID" ? "paid" : "pending"),
@@ -57,7 +59,7 @@ export default async function CustomerTrackingPage({ params }: { params: Promise
           total_payable: quote.total_payable || quote.pricingSnapshot?.total_payable || 0,
           address: quote.address || {
             street: quote.billing_details?.address_line1 || "",
-            city: quote.billing_details?.city || "Jaipur",
+            city: quote.billing_details?.city || t("bo_city_ph", "Jaipur"),
             pincode: quote.billing_details?.pincode || "",
             full_address: quote.billing_details?.address_line1 ? `${quote.billing_details.address_line1}, ${quote.billing_details.city || ''}` : "",
           },

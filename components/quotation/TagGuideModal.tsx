@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Check, ShieldCheck, Sparkles, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface TagGuideItem {
   id: string;
@@ -87,7 +88,17 @@ interface TagGuideModalProps {
 }
 
 export function TagGuideModal({ isOpen, onClose }: TagGuideModalProps) {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
+
+  const itemI18nMap: Record<string, { t: string; b: string; e: string; rl: string; bf: string }> = {
+    weatherproof: { t: "tg_i1_t", b: "tg_i1_b", e: "tg_i1_e", rl: "tg_i1_rl", bf: "tg_i1_bf" },
+    color: { t: "tg_i2_t", b: "tg_i2_b", e: "tg_i2_e", rl: "tg_i2_rl", bf: "tg_i2_bf" },
+    mic: { t: "tg_i3_t", b: "tg_i2_b", e: "tg_i3_e", rl: "tg_i3_rl", bf: "tg_i3_bf" },
+    two_way: { t: "tg_i4_t", b: "tg_i4_b", e: "tg_i4_e", rl: "tg_i4_rl", bf: "tg_i4_bf" },
+    ptz: { t: "tg_i5_t", b: "tg_i5_b", e: "tg_i5_e", rl: "tg_i5_rl", bf: "tg_i5_bf" },
+    four_g: { t: "tg_i6_t", b: "tg_i6_b", e: "tg_i6_e", rl: "tg_i6_rl", bf: "tg_i6_bf" },
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -119,21 +130,21 @@ export function TagGuideModal({ isOpen, onClose }: TagGuideModalProps) {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 flex items-center gap-1">
-                <HelpCircle className="w-3 h-3" />
-                Feature Education Guide
+                <HelpCircle className="w-3 h-3 shrink-0" />
+                {t("tg_badge", "Feature Education Guide")}
               </span>
             </div>
             <h3 className="text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
-              CCTV Specifications & Real-Life Guide
+              {t("tg_title", "CCTV Specifications & Real-Life Guide")}
             </h3>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              Learn what each technical feature actually means in daily practical use so you choose what fits your property.
+              {t("tg_sub", "Learn what each technical feature actually means in daily practical use so you choose what fits your property.")}
             </p>
           </div>
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-zinc-200/60 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
-            aria-label="Close"
+            aria-label={t("pcm_close_aria", "Close modal")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -141,7 +152,9 @@ export function TagGuideModal({ isOpen, onClose }: TagGuideModalProps) {
 
         {/* Content list */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-4 divide-y divide-zinc-100 dark:divide-zinc-800/60">
-          {TAG_GUIDE_ITEMS.map((item) => (
+          {TAG_GUIDE_ITEMS.map((item) => {
+            const keys = itemI18nMap[item.id];
+            return (
             <div key={item.id} className="pt-4 first:pt-0">
               <div className="flex items-start gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl bg-zinc-50/60 dark:bg-zinc-800/40 border border-zinc-200/60 dark:border-zinc-800/70">
                 <div className="text-2xl sm:text-3xl shrink-0 mt-0.5">
@@ -150,37 +163,38 @@ export function TagGuideModal({ isOpen, onClose }: TagGuideModalProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <h4 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">
-                      {item.title}
+                      {keys ? t(keys.t, item.title) : item.title}
                     </h4>
                     <span className={`text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-md ${
                       item.standardIncluded 
                         ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
                         : "bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300"
                     }`}>
-                      {item.badge}
+                      {keys ? t(keys.b, item.badge) : item.badge}
                     </span>
                   </div>
 
                   {/* Simple Explanation */}
                   <p className="text-xs sm:text-[13px] text-zinc-700 dark:text-zinc-300 leading-relaxed mt-1">
-                    {item.simpleExplanation}
+                    {keys ? t(keys.e, item.simpleExplanation) : item.simpleExplanation}
                   </p>
 
                   {/* Real Life Example Box */}
                   <div className="mt-2.5 p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800 flex items-start gap-2 text-xs text-zinc-600 dark:text-zinc-400">
-                    <span className="font-bold text-blue-600 dark:text-blue-400 shrink-0">💡 Real Life:</span>
-                    <span className="leading-snug">{item.realLifeExample}</span>
+                    <span className="font-bold text-blue-600 dark:text-blue-400 shrink-0">{t("tg_real_life", "💡 Real Life:")}</span>
+                    <span className="leading-snug">{keys ? t(keys.rl, item.realLifeExample) : item.realLifeExample}</span>
                   </div>
 
-                  {/* Best recommended location */}
-                  <div className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
-                    <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                    <span>Recommended for: {item.bestFor}</span>
+                  {/* Best location */}
+                  <div className="mt-2 flex items-start gap-1.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                    <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <span>{t("tg_best_for", "Best suited for:")} {keys ? t(keys.bf, item.bestFor) : item.bestFor}</span>
                   </div>
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
 
           {/* Dedicated Camera Resolution Guide */}
           <div className="pt-5 border-t border-zinc-200 dark:border-zinc-800">
@@ -189,55 +203,55 @@ export function TagGuideModal({ isOpen, onClose }: TagGuideModalProps) {
                 <span className="text-xl sm:text-2xl">🔍</span>
                 <div>
                   <h4 className="text-sm sm:text-base font-extrabold text-zinc-900 dark:text-white">
-                    Camera Resolution & Image Clarity Guide
+                    {t("tg_res_title", "Camera Resolution & Image Clarity Guide")}
                   </h4>
                   <p className="text-[11px] text-blue-700 dark:text-blue-300 font-semibold">
-                    Configured via the RESOLUTION dropdown on each camera card
+                    {t("tg_res_sub", "Configured via the RESOLUTION dropdown on each camera card")}
                   </p>
                 </div>
               </div>
               <p className="text-xs sm:text-[13px] text-zinc-700 dark:text-zinc-300 leading-relaxed mb-3.5">
-                Resolution determines how sharply you can pinch-and-zoom into faces and car number plates. You can choose different resolutions for outdoor vs indoor cameras in your setup:
+                {t("tg_res_desc", "Resolution determines how sharply you can pinch-and-zoom into faces and car number plates. You can choose different resolutions for outdoor vs indoor cameras in your setup:")}
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-xs text-zinc-900 dark:text-white">2MP (1080p Full HD)</span>
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">Standard</span>
+                  <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                    <span className="font-bold text-xs text-zinc-900 dark:text-white">{t("tg_2mp_t", "2MP (1080p Full HD)")}</span>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">{t("tg_2mp_b", "Standard")}</span>
                   </div>
                   <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
-                    Standard high-definition clarity. Perfect for indoor rooms, halls, and general monitoring up to 15-20 feet.
+                    {t("tg_2mp_d", "Standard high-definition clarity. Perfect for indoor rooms, halls, and general monitoring up to 15-20 feet.")}
                   </p>
                 </div>
 
                 <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-xs text-zinc-900 dark:text-white">3MP (2K Clarity)</span>
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">Wireless Std</span>
+                  <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                    <span className="font-bold text-xs text-zinc-900 dark:text-white">{t("tg_3mp_t", "3MP (2K Clarity)")}</span>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">{t("tg_3mp_b", "Wireless Std")}</span>
                   </div>
                   <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
-                    50% more pixels than 1080p. Standard baseline for smart Wi-Fi & 4G wireless security cameras.
+                    {t("tg_3mp_d", "50% more pixels than 1080p. Standard baseline for smart Wi-Fi & 4G wireless security cameras.")}
                   </p>
                 </div>
 
                 <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-xs text-zinc-900 dark:text-white">4MP (2K Quad HD)</span>
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">High Clarity</span>
+                  <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                    <span className="font-bold text-xs text-zinc-900 dark:text-white">{t("tg_4mp_t", "4MP (2K Quad HD)")}</span>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">{t("tg_4mp_b", "High Clarity")}</span>
                   </div>
                   <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
-                    Sharp perimeter detail for wide driveways, retail storefronts, and medium-distance property gates.
+                    {t("tg_4mp_d", "Sharp perimeter detail for wide driveways, retail storefronts, and medium-distance property gates.")}
                   </p>
                 </div>
 
                 <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-blue-300 dark:border-blue-800/80 bg-blue-50/30 dark:bg-blue-950/20">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-xs text-blue-900 dark:text-blue-200">5MP (3K Pro Clarity)</span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-600 text-white">Recommended for Gates</span>
+                  <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                    <span className="font-bold text-xs text-blue-900 dark:text-blue-200">{t("tg_5mp_t", "5MP (3K Pro Clarity)")}</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-600 text-white">{t("tg_5mp_b", "Ideal for Gates & Parking")}</span>
                   </div>
                   <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-snug">
-                    2.5x standard 1080p pixel density. Lets you pinch-to-zoom into vehicle license plates and recognize unknown faces up to 30 feet away.
+                    {t("tg_5mp_d", "2.5x standard 1080p pixel density. Lets you pinch-to-zoom into vehicle license plates and recognize unknown faces up to 30 feet away.")}
                   </p>
                 </div>
               </div>
@@ -246,15 +260,15 @@ export function TagGuideModal({ isOpen, onClose }: TagGuideModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-5 sm:px-6 py-3.5 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between sticky bottom-0">
-          <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-            You can configure different features for each camera bucket in your setup.
+        <div className="px-5 sm:px-6 py-3.5 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 sticky bottom-0">
+          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 flex-1 min-w-[200px]">
+            {t("tg_foot_note", "You can configure different features for each camera bucket in your setup.")}
           </p>
           <Button
             onClick={onClose}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm px-6 py-2 rounded-full cursor-pointer"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm px-6 py-2.5 h-auto whitespace-normal text-center leading-snug rounded-full cursor-pointer"
           >
-            Got it, Return to Setup
+            {t("tg_got_it", "Got it, Return to Setup")}
           </Button>
         </div>
       </div>

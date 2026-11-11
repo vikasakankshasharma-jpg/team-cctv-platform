@@ -4,21 +4,26 @@ import { COLLECTIONS } from "@/lib/constants";
 import { Resend } from "resend";
 import { rateLimit } from "@/lib/rate-limit";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
+import { cleanEnvVar } from "@/lib/env-utils";
+const resendApiKey = cleanEnvVar(process.env.RESEND_API_KEY);
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 export async function POST(req: Request) {
+  let locale = resolveRequestLocale(req);
   // 1. Rate Limiting
   const { success } = await rateLimit(req);
   if (!success) {
-    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    return NextResponse.json({ error: getApiMessage(locale, "too_many_requests") }, { status: 429 });
   }
 
   try {
     const body = await req.json();
+    locale = resolveRequestLocale(req, body);
     const { email, name } = body;
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json({ error: "Invalid email address." }, { status: 400 });
+      return NextResponse.json({ error: getApiMessage(locale, "email_invalid") }, { status: 400 });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -45,7 +50,7 @@ export async function POST(req: Request) {
           user_agent: ua,
           metadata: { reason: "Email not in authorized admin collection or inactive" }
         });
-        return NextResponse.json({ error: "Unauthorized. This email does not have Admin privileges." }, { status: 403 });
+        return NextResponse.json({ error: getApiMessage(locale, "forbidden") }, { status: 403 });
       }
 
       const adminData = adminSnap.docs[0].data();
@@ -74,7 +79,7 @@ export async function POST(req: Request) {
         const { data, error } = await resend.emails.send({
           from: "TEAM CCTV <onboarding@cctvquotation.com>", 
           to: email,
-          subject: `${otp} is your TEAM Elite Verification Code`,
+          subject: `${otp} is your TEAM Admin Verification Code`,
           html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #f9f9f9; border-radius: 24px;">
               <div style="text-align: center; margin-bottom: 40px;">
@@ -114,9 +119,9 @@ export async function POST(req: Request) {
       console.warn("⚠️ [Resend] API Key missing. Logging OTP to console:", otp);
     }
 
-    return NextResponse.json({ success: true, message: "OTP sent to your email." });
+    return NextResponse.json({ success: true, message: getApiMessage(locale, "otp_sent_email") });
   } catch (error: any) {
     console.error("🔥 Email OTP Error:", error);
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    return NextResponse.json({ error: getApiMessage(locale, "internal_error") }, { status: 500 });
   }
 }

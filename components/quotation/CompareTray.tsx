@@ -3,6 +3,7 @@
 import { PricingResult } from "@/types";
 import { Button } from "@/components/ui/button";
 import { X, ArrowRightLeft, Camera } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface CompareTrayProps {
   selectedItems: PricingResult[];
@@ -11,6 +12,7 @@ interface CompareTrayProps {
 }
 
 export function CompareTray({ selectedItems, onRemove, onCompareNow }: CompareTrayProps) {
+  const { t } = useTranslation();
   if (selectedItems.length === 0) return null;
 
   return (
@@ -19,7 +21,7 @@ export function CompareTray({ selectedItems, onRemove, onCompareNow }: CompareTr
         
         <div className="flex items-center gap-4 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 no-scrollbar">
           <div className="shrink-0 text-sm font-semibold text-slate-500 hidden md:block">
-            Compare ({selectedItems.length}/3):
+            {t("ct_compare_count", "Compare ({count}/3):", { count: String(selectedItems.length) })}
           </div>
           
           {selectedItems.map((item, idx) => (
@@ -52,7 +54,7 @@ export function CompareTray({ selectedItems, onRemove, onCompareNow }: CompareTr
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
-                  Add Item
+                  {t("ct_add_item", "Add Item")}
                 </div>
                 <div className="w-12 h-3 bg-slate-200 dark:bg-zinc-700 rounded mt-1"></div>
               </div>
@@ -66,8 +68,8 @@ export function CompareTray({ selectedItems, onRemove, onCompareNow }: CompareTr
             disabled={selectedItems.length < 2}
             className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 shadow-lg shadow-blue-600/20"
           >
-            <ArrowRightLeft className="w-4 h-4 mr-2" />
-            Compare Now
+            <ArrowRightLeft className="w-4 h-4 mr-2 shrink-0" />
+            <span className="whitespace-normal text-center leading-snug">{t("ct_compare_now", "Compare Now")}</span>
           </Button>
         </div>
 

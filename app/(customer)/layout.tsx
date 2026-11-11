@@ -11,18 +11,28 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export const metadata: Metadata = {
-  title: "Instant Free CCTV Quotation & CCTV Setup on EMI | Compare CP Plus, Hikvision & Prama",
-  description: "Get an instant free CCTV quotation online. Complete CCTV setup with installation on easy EMI starting ₹649/mo. Compare multiple brand variations for your home or business.",
-  keywords: ["Instant free CCTV quotation", "CCTV on EMI", "Lowest Price Guaranteed CCTV", "CCTVQuotation", "CCTV Installation"],
-  openGraph: {
-    title: "Instant Free CCTV Quotation & CCTV Setup on EMI | Compare CP Plus, Hikvision & Prama",
-    description: "Get your custom security blueprint and CCTV installation cost instantly with the lowest price guaranteed.",
-    type: "website",
-    locale: "en_IN",
-    siteName: "CCTVQuotation",
-  },
-};
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { HOME_SEO_METADATA } from "@/lib/i18n/seo-metadata";
+import { SPEECH_LOCALE_MAP } from "@/lib/i18n/mapping";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const seo = HOME_SEO_METADATA[locale] || HOME_SEO_METADATA.en;
+  const ogLocale = (SPEECH_LOCALE_MAP[locale] || "en-IN").replace("-", "_");
+
+  return {
+    title: seo.title,
+    description: seo.description,
+    keywords: ["Instant free CCTV quotation", "CCTV on EMI", "Lowest Price Guaranteed CCTV", "CCTVQuotation", "CCTV Installation"],
+    openGraph: {
+      title: seo.ogTitle,
+      description: seo.ogDescription,
+      type: "website",
+      locale: ogLocale,
+      siteName: "CCTVQuotation",
+    },
+  };
+}
 
 
 import { MobileStickyCtaBar } from "@/components/shared/MobileStickyCtaBar";
@@ -83,7 +93,6 @@ export default async function CustomerLayout({
             <Link
               href="/login"
               className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 transition-all whitespace-nowrap"
-              title="Portal"
             >
               <User className="w-3.5 h-3.5" />
               <span className="inline">
@@ -97,11 +106,10 @@ export default async function CustomerLayout({
             {/* Quick Call Button - Circular touch-friendly pill on mobile, full on desktop */}
             <a
               href="tel:+917357612865"
-              aria-label="Call support"
               className="flex md:hidden items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 hover:bg-blue-100 transition-all shadow-xs"
-              title="Call support"
             >
               <PhoneCall className="w-3.5 h-3.5" />
+              <span className="sr-only"><TranslatedText tKey="call_support_aria" defaultText="Call support" /></span>
             </a>
             <a
               href="tel:+917357612865"

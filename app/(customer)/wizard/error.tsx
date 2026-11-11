@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { AlertCircle, RotateCcw, Home } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function WizardError({
   error,
@@ -11,6 +12,8 @@ export default function WizardError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useTranslation();
+
   useEffect(() => {
     console.error("Wizard Runtime Error:", error);
   }, [error]);
@@ -22,28 +25,28 @@ export default function WizardError({
       </div>
       
       <h2 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter mb-4">
-        Something went wrong
+        {t("werr_title", "Something went wrong")}
       </h2>
       
       <p className="text-zinc-500 dark:text-zinc-400 max-w-md mb-12 font-medium leading-relaxed">
-        We encountered a synchronization error while building your quote. Please try resetting the wizard or returning home.
+        {t("werr_desc", "We encountered a synchronization error while building your quote. Please try resetting the wizard or returning home.")}
       </p>
 
       <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm">
         <button
           onClick={() => reset()}
-          className="flex-1 flex items-center justify-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-4 md:px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all active:scale-95"
+          className="flex-1 flex items-center justify-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-4 md:px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-wider whitespace-normal text-center leading-snug transition-all active:scale-95"
         >
-          <RotateCcw className="w-4 h-4" />
-          Try Again
+          <RotateCcw className="w-4 h-4 shrink-0" />
+          {t("werr_try_again", "Try Again")}
         </button>
         
         <Link
           href="/"
-          className="flex-1 flex items-center justify-center gap-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-4 md:px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all active:scale-95"
+          className="flex-1 flex items-center justify-center gap-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-4 md:px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-wider whitespace-normal text-center leading-snug transition-all active:scale-95"
         >
-          <Home className="w-4 h-4" />
-          Go Home
+          <Home className="w-4 h-4 shrink-0" />
+          {t("werr_go_home", "Go Home")}
         </Link>
       </div>
     </div>

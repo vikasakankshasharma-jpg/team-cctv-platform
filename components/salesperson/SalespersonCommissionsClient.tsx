@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { IndianRupee, Clock, CheckCircle2, Search, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const downloadCSV = (data: any[], filename: string) => {
   const headers = ['Date', 'Lead/Customer', 'Amount (INR)', 'Status', 'Type'];
@@ -36,6 +37,7 @@ interface SalespersonCommissionsClientProps {
 }
 
 export function SalespersonCommissionsClient({ records, summary }: SalespersonCommissionsClientProps) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
 
   const filteredRecords = records.filter(record => 
@@ -47,17 +49,17 @@ export function SalespersonCommissionsClient({ records, summary }: SalespersonCo
     <div className="space-y-6">
       <div className="flex justify-end">
         <button onClick={() => downloadCSV(records, `commissions_${new Date().toISOString().slice(0,7)}.csv`)} className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all">
-          <Download className="w-4 h-4" /> Download Statement
+          <Download className="w-4 h-4 shrink-0" /> {t("prt_dl_stmt", "Download Statement")}
         </button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="bg-zinc-900 border-zinc-800">
           <CardContent className="p-6 flex items-center gap-4">
-            <div className="p-3 bg-blue-500/10 text-blue-500 rounded-lg">
+            <div className="p-3 bg-blue-500/10 text-blue-500 rounded-lg shrink-0">
               <IndianRupee className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-zinc-400">Total Earned</p>
+              <p className="text-sm font-medium text-zinc-400">{t("prt_kpi_earned", "Total Earned")}</p>
               <h3 className="text-2xl font-bold text-white">₹{summary.totalEarned.toLocaleString('en-IN')}</h3>
             </div>
           </CardContent>
@@ -65,11 +67,11 @@ export function SalespersonCommissionsClient({ records, summary }: SalespersonCo
         
         <Card className="bg-zinc-900 border-zinc-800">
           <CardContent className="p-6 flex items-center gap-4">
-            <div className="p-3 bg-amber-500/10 text-amber-500 rounded-lg">
+            <div className="p-3 bg-amber-500/10 text-amber-500 rounded-lg shrink-0">
               <Clock className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-zinc-400">Pending Payout</p>
+              <p className="text-sm font-medium text-zinc-400">{t("prt_kpi_pending", "Pending Payout")}</p>
               <h3 className="text-2xl font-bold text-white">₹{summary.totalPending.toLocaleString('en-IN')}</h3>
             </div>
           </CardContent>
@@ -77,11 +79,11 @@ export function SalespersonCommissionsClient({ records, summary }: SalespersonCo
 
         <Card className="bg-zinc-900 border-zinc-800">
           <CardContent className="p-6 flex items-center gap-4">
-            <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-lg">
+            <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-lg shrink-0">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-zinc-400">Total Paid</p>
+              <p className="text-sm font-medium text-zinc-400">{t("prt_kpi_paid", "Total Paid")}</p>
               <h3 className="text-2xl font-bold text-white">₹{summary.totalPaid.toLocaleString('en-IN')}</h3>
             </div>
           </CardContent>
@@ -90,11 +92,11 @@ export function SalespersonCommissionsClient({ records, summary }: SalespersonCo
 
       <Card className="bg-zinc-900 border-zinc-800 overflow-hidden">
         <div className="p-4 border-b border-zinc-800 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Payout History</h2>
+          <h2 className="text-lg font-semibold text-white">{t("prt_payout_hist", "Payout History")}</h2>
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
             <Input 
-              placeholder="Search customer or lead ID..." 
+              placeholder={t("sls_comm_search_ph", "Search customer or lead ID...")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 bg-zinc-950 border-zinc-800 text-white w-full"
@@ -105,18 +107,18 @@ export function SalespersonCommissionsClient({ records, summary }: SalespersonCo
           <Table>
             <TableHeader className="bg-zinc-950/50">
               <TableRow className="border-zinc-800 hover:bg-transparent">
-                <TableHead className="text-zinc-400">Date</TableHead>
-                <TableHead className="text-zinc-400">Customer</TableHead>
-                <TableHead className="text-zinc-400">Deal Size</TableHead>
-                <TableHead className="text-zinc-400">Commission</TableHead>
-                <TableHead className="text-zinc-400 text-right">Status</TableHead>
+                <TableHead className="text-zinc-400">{t("prt_col_date", "Date")}</TableHead>
+                <TableHead className="text-zinc-400">{t("prt_col_customer", "Customer")}</TableHead>
+                <TableHead className="text-zinc-400">{t("sls_col_deal_size", "Deal Size")}</TableHead>
+                <TableHead className="text-zinc-400">{t("sls_col_commission", "Commission")}</TableHead>
+                <TableHead className="text-zinc-400 text-right">{t("prt_col_status", "Status")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredRecords.length === 0 ? (
                 <TableRow className="border-zinc-800 hover:bg-zinc-800/50">
                   <TableCell colSpan={5} className="text-center py-4 md:py-8 text-zinc-500">
-                    No commission records found.
+                    {t("sls_no_comm_found", "No commission records found.")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -126,7 +128,7 @@ export function SalespersonCommissionsClient({ records, summary }: SalespersonCo
                       {new Date(record.created_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-white font-medium">
-                      {record.customer_name}
+                      {record.customer_name || t("sls_unknown_cust", "Unknown Customer")}
                       <div className="text-xs text-zinc-500 mt-0.5 max-w-[120px] truncate" title={record.lead_id}>
                         {record.lead_id}
                       </div>
@@ -146,7 +148,7 @@ export function SalespersonCommissionsClient({ records, summary }: SalespersonCo
                             : "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20"
                         }
                       >
-                        {record.status === "paid" ? "Paid" : "Pending"}
+                        {record.status === "paid" ? t("prt_status_paid", "Paid") : t("prt_status_pending", "Pending")}
                       </Badge>
                     </TableCell>
                   </TableRow>

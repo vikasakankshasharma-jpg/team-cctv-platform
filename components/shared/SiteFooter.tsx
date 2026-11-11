@@ -44,7 +44,7 @@ export function SiteFooter() {
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-bold transition-all active:scale-95"
             >
               <MessageCircle className="w-4 h-4 text-emerald-600" />
-              <span>Direct WhatsApp Quotation Support</span>
+              <span><TranslatedText tKey="footer_wa_direct" defaultText="Direct WhatsApp Quotation Support" /></span>
             </a>
           </div>
         </div>
@@ -69,7 +69,7 @@ export function SiteFooter() {
           </div>
           
           <p className="text-[11px] sm:text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] mt-2 sm:mt-4">
-            © {new Date().getFullYear()} CCTVQuotation — A TEAM Platform
+            <TranslatedText tKey="footer_copyright" defaultText="© {year} CCTVQuotation — A TEAM Platform" params={{ year: String(new Date().getFullYear()) }} />
           </p>
         </div>
       </div>

@@ -1,7 +1,7 @@
 # TEAM CCTV Platform - Master Operational Handover Guide
 
 > **Author:** Antigravity Engineering Pair  
-> **Date:** November 5, 2026  
+> **Date:** November 11, 2026  
 > **Target Environment:** Production (`https://cctvquotation.com`)  
 > **Repository:** `team-cctv-platform` (`master` branch)  
 
@@ -116,6 +116,11 @@ This document serves as the master engineering and operational handover for the 
 - **Strict Parity Invariant ($\\text{camera\\_count} = \\text{outdoor} + \\text{indoor} + \\text{wireless}$):** Across all wizard summary badges (`WizardClientV2.tsx`), checklist assistant headers (`SpecificationChecklistModal.tsx`), and WhatsApp dispatch messages (`lib/whatsapp/quote-dispatch.ts`), any breakdown displayed inside parentheses MUST strictly sum up to the total camera count.
 - **Hybrid Breakdown Formatting:** In hybrid configurations, the breakdown dynamically interpolates `${wifi} Wireless` (e.g. `📹 74 Cameras (36 Out + 2 In + 36 Wireless)`), eliminating mathematical discrepancies where wireless cameras were previously omitted from parenthetical summaries.
 
+### 2.12 Profit Waterfall, Services Accounting & Operating Overheads Invariant
+- **Item Classification (`classifyItem()` in `lib/quotation-profit.ts`):** Evaluates Services (`service`, `amc`, `commission` via word-boundary regex `/\bcommissions?\b/` and `/\bamc\b/` so `"Installation & Commissioning"` stays inside `service`) before Cables (`cab-`, `3+1`, `cable`, `wire`) and Accessories/Junction Boxes before Cameras, preventing cable runs and PVC/junction boxes from inflating camera counts.
+- **Services Bucket Allocation:** Paid AMC add-ons (`amc_1yr`, `amc_2yr`, `amc_3yr`), deduplicated `amc_subscriptions`/`amc_contracts`, complimentary `promo_free_amc` PM visit fulfillment reserves (`2 * cost_labor_visit_charge`), and referral/partner/salesperson commissions (`resolvePromoterCommission()` in `lib/commission.ts`) all account inside the **Services** bucket without fabricating commissions on manual admin discounts without a referral code.
+- **Operating Overheads & True Net Pocket Profit:** Configurable global reserves (`amc_fulfillment_cost_percent`, `payment_gateway_fee_percent`, `warranty_reserve_percent`, `logistics_consumables_per_job`, `travel_fee_payout_percent` in `lib/cached-settings.ts` & `SettingsForm.tsx`) plus actual Razorpay MDR fees (`payment_history.razorpay_fee`, ₹0 on cash/bank transfer/direct UPI) compute `overheads` (`total_overheads`, `net_profit`, `net_margin_percent`) across CRM deals (`QuotationProfitBreakupCard.tsx`) and `/admin/analytics/profitability` (`ProfitabilityAnalyticsClient.tsx`) without altering customer-facing GST-inclusive `total_payable`.
+
 ---
 
 ## 3. Operational & Deployment Guide
@@ -129,6 +134,11 @@ The following keys must be set in Vercel Project Settings:
 - `RAZORPAY_KEY_ID` & `RAZORPAY_KEY_SECRET`: Razorpay Credentials
 - `RAZORPAY_WEBHOOK_SECRET`: Webhook Signature Verification Secret
 - `NEXT_PUBLIC_APP_URL`: Canonical Application URL (`https://cctvquotation.com`)
+- `MSG91_AUTH_KEY`, `MSG91_WHATSAPP_NUMBER`, `WHATSAPP_PROVIDER`: MSG91 WhatsApp OTP & SMS template dispatch (`cleanEnvVar()` / `cleanPhoneEnvVar()` sanitized at runtime via `lib/env-utils.ts`)
+- `NEXT_PUBLIC_WHATSAPP_NUMBER`: Normalized business support/sender number (`919982549315`) used by `lib/whatsapp.ts` and `WhatsAppOtpNotice.tsx`
+- `RESEND_API_KEY`, `GEMINI_API_KEY`, `NEXT_PUBLIC_META_PIXEL_ID`: Email OTP, AI helpers, and analytics pixels (all sanitized via `cleanEnvVar()`)
+
+> **Vercel CLI Env Hygiene Warning:** When updating secrets via PowerShell/`vercel env add`, never pipe strings containing `\r\n` or trailing newlines—use raw stdin without newlines, and rely on `cleanEnvVar()` / `cleanPhoneEnvVar()` (`lib/env-utils.ts`) at every callsite.
 
 ### Standard Verification Commands
 ```bash
@@ -149,6 +159,9 @@ npx tsx scripts/test-all-counts-matrix.ts
 
 # Storage Physics Parity & Multi-Tier Verification Suite
 npx tsx scripts/test-storage-physics-parity.ts
+
+# Profit Waterfall, Services Accounting & Commission Verification Suite
+npx tsx scripts/verify-profit-waterfall.ts
 
 # 238-Test Matrix Runner
 npx tsx scripts/execute-all-238-tests.ts

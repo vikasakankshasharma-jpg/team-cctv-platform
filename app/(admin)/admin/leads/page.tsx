@@ -10,6 +10,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/auth-server";
 import { calculateInactivityAging } from "@/lib/inactivity-tracker";
 import { CrmSubNav } from "@/components/admin/navigation/AdminSubNav";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 import { AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
 import fs from "fs";
 import path from "path";
@@ -287,17 +288,17 @@ export default async function LeadsPage({
 
   const getStatusBadge = (status: string, isPaid?: boolean) => {
     if (isPaid || status === "WON" || status === "PAID" || status === "BOOKED") {
-      return <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white">Won / Paid</Badge>;
+      return <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white"><TranslatedText tKey="adm_leads_tab_won" defaultText="Won / Paid" /></Badge>;
     }
     switch (status?.toUpperCase()) {
-      case "NEW": return <Badge variant="secondary">New</Badge>;
-      case "CONTACTED": return <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">Contacted</Badge>;
-      case "SITE_VISIT": return <Badge variant="default" className="bg-purple-600 hover:bg-purple-700 text-white">Site Survey</Badge>;
-      case "QUOTATION_SENT": return <Badge variant="outline" className="border-blue-400 text-blue-700 bg-blue-50">Quote Sent</Badge>;
-      case "NEGOTIATION": return <Badge variant="outline" className="border-amber-400 text-amber-700 bg-amber-50">Negotiation</Badge>;
-      case "LOST": return <Badge variant="destructive">Lost</Badge>;
-      case "ARCHIVED": return <Badge variant="outline" className="border-zinc-400 text-zinc-500 bg-zinc-100 dark:bg-zinc-800">Archived</Badge>;
-      default: return <Badge variant="outline">{status || "New"}</Badge>;
+      case "NEW": return <Badge variant="secondary"><TranslatedText tKey="adm_leads_st_new" defaultText="New" /></Badge>;
+      case "CONTACTED": return <Badge variant="default" className="bg-blue-600 hover:bg-blue-700"><TranslatedText tKey="adm_leads_st_contacted" defaultText="Contacted" /></Badge>;
+      case "SITE_VISIT": return <Badge variant="default" className="bg-purple-600 hover:bg-purple-700 text-white"><TranslatedText tKey="adm_leads_st_survey" defaultText="Site Survey" /></Badge>;
+      case "QUOTATION_SENT": return <Badge variant="outline" className="border-blue-400 text-blue-700 bg-blue-50"><TranslatedText tKey="adm_leads_st_qsent" defaultText="Quote Sent" /></Badge>;
+      case "NEGOTIATION": return <Badge variant="outline" className="border-amber-400 text-amber-700 bg-amber-50"><TranslatedText tKey="adm_leads_st_nego" defaultText="Negotiation" /></Badge>;
+      case "LOST": return <Badge variant="destructive"><TranslatedText tKey="adm_leads_st_lost" defaultText="Lost" /></Badge>;
+      case "ARCHIVED": return <Badge variant="outline" className="border-zinc-400 text-zinc-500 bg-zinc-100 dark:bg-zinc-800"><TranslatedText tKey="adm_leads_st_arch" defaultText="Archived" /></Badge>;
+      default: return <Badge variant="outline">{status || <TranslatedText tKey="adm_leads_st_new" defaultText="New" />}</Badge>;
     }
   };
 
@@ -309,78 +310,76 @@ export default async function LeadsPage({
       {isQuotaFallback ? (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-3 animate-in fade-in">
           <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="font-semibold text-sm">Firestore Spark Free Quota Limit Reached (50,000 reads/day)</p>
-            <p className="text-xs text-amber-800 dark:text-amber-300 mt-1">
-              Google Cloud Firestore free tier daily read quota has been exceeded for project <code className="font-mono font-bold">team-cctv-live-8294</code>.
-              Showing persistent cached pipeline records so your workflow and quotations remain fully accessible.
-              Firestore automatically resets at Midnight PST. To enable permanent unmetered real-time sync, upgrade to the Firebase Blaze (Pay-as-you-go) plan in the Firebase Console.
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm leading-snug"><TranslatedText tKey="adm_dash_quota_t" defaultText="Firestore Free Spark Quota Active — Showing Cached Telemetry" /></p>
+            <p className="text-xs text-amber-800 dark:text-amber-300 mt-1 leading-relaxed">
+              <TranslatedText tKey="adm_dash_quota_d" defaultText="Google Cloud Firestore daily read quota has reached the 50k reads limit on the Spark Plan. Displaying cached operational metrics so you can navigate the system smoothly." />
             </p>
           </div>
         </div>
       ) : (
         <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg w-fit">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-          <span className="font-medium">Live Firestore Pipeline Synchronized</span>
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <span className="font-medium leading-snug"><TranslatedText tKey="adm_leads_live_sync" defaultText="Live Firestore Pipeline Synchronized" /></span>
         </div>
       )}
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Lead Management</h1>
-          <p className="text-muted-foreground mt-1">Track quotations, site survey bookings, and B2B GST tax invoices</p>
+        <div className="min-w-0">
+          <h1 className="text-3xl font-bold tracking-tight leading-snug"><TranslatedText tKey="adm_leads_title" defaultText="Lead Management" /></h1>
+          <p className="text-muted-foreground mt-1 leading-relaxed"><TranslatedText tKey="adm_leads_desc" defaultText="Track quotations, site survey bookings, and B2B GST tax invoices" /></p>
         </div>
-        <Link href="/admin/wizard">
-          <Button className="w-full sm:w-auto">+ Create Manual Quote</Button>
+        <Link href="/admin/wizard" className="shrink-0">
+          <Button className="w-full sm:w-auto h-auto py-2.5 px-4 whitespace-normal leading-snug"><TranslatedText tKey="adm_leads_new_manual" defaultText="+ Create Manual Quote" /></Button>
         </Link>
       </div>
 
       {/* ── 1-Click Interactive Pipeline Tabs (Mobile Scrollable) ── */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-        <Link href="/admin/leads?filter=genuine">
+        <Link href="/admin/leads?filter=genuine" className="shrink-0">
           <Button 
             variant={currentFilter === "genuine" ? "default" : "outline"} 
             size="sm" 
-            className="h-9 px-3.5 text-xs font-semibold whitespace-nowrap"
+            className="h-9 px-3.5 text-xs font-semibold whitespace-nowrap leading-snug"
           >
-            Genuine Clients ({genuineLeads.length})
+            <TranslatedText tKey="adm_leads_tab_genuine" defaultText="Genuine Clients" /> ({genuineLeads.length})
           </Button>
         </Link>
-        <Link href="/admin/leads?filter=all">
+        <Link href="/admin/leads?filter=all" className="shrink-0">
           <Button 
             variant={currentFilter === "all" ? "default" : "outline"} 
             size="sm" 
-            className="h-9 px-3.5 text-xs font-semibold whitespace-nowrap"
+            className="h-9 px-3.5 text-xs font-semibold whitespace-nowrap leading-snug"
           >
-            All Pipeline ({totalAllLeads})
+            <TranslatedText tKey="adm_leads_tab_all" defaultText="All Pipeline" /> ({totalAllLeads})
           </Button>
         </Link>
-        <Link href="/admin/leads?filter=won">
+        <Link href="/admin/leads?filter=won" className="shrink-0">
           <Button 
             variant={currentFilter === "won" ? "default" : "outline"} 
             size="sm" 
-            className="h-9 px-3.5 text-xs font-semibold whitespace-nowrap"
+            className="h-9 px-3.5 text-xs font-semibold whitespace-nowrap leading-snug"
           >
-            Won / Paid ({wonLeads.length})
+            <TranslatedText tKey="adm_leads_tab_won" defaultText="Won / Paid" /> ({wonLeads.length})
           </Button>
         </Link>
-        <Link href="/admin/leads?filter=survey">
+        <Link href="/admin/leads?filter=survey" className="shrink-0">
           <Button 
             variant={currentFilter === "survey" ? "default" : "outline"} 
             size="sm" 
-            className="h-9 px-3.5 text-xs font-semibold whitespace-nowrap"
+            className="h-9 px-3.5 text-xs font-semibold whitespace-nowrap leading-snug"
           >
-            Site Surveys ({surveyLeads.length})
+            <TranslatedText tKey="adm_leads_tab_survey" defaultText="Site Surveys" /> ({surveyLeads.length})
           </Button>
         </Link>
         {testLeads.length > 0 && (
-          <Link href="/admin/leads?filter=test">
+          <Link href="/admin/leads?filter=test" className="shrink-0">
             <Button 
               variant={currentFilter === "test" ? "default" : "outline"} 
               size="sm" 
-              className="h-9 px-3.5 text-xs font-semibold whitespace-nowrap border-dashed"
+              className="h-9 px-3.5 text-xs font-semibold whitespace-nowrap leading-snug border-dashed"
             >
-              Test Records ({testLeads.length})
+              <TranslatedText tKey="adm_leads_tab_test" defaultText="Test Records" /> ({testLeads.length})
             </Button>
           </Link>
         )}
@@ -388,21 +387,21 @@ export default async function LeadsPage({
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <div>
-            <CardTitle>
-              {currentFilter === "genuine" ? "Genuine Client Inquiries" : 
-               currentFilter === "won" ? "Won / Paid Deals" :
-               currentFilter === "survey" ? "Site Survey Bookings" :
-               currentFilter === "test" ? "Test & Synthetic Records" : "All Leads & Inquiries"} 
+          <div className="min-w-0">
+            <CardTitle className="leading-snug">
+              {currentFilter === "genuine" ? <TranslatedText tKey="adm_leads_card_genuine" defaultText="Genuine Client Inquiries" /> : 
+               currentFilter === "won" ? <TranslatedText tKey="adm_leads_card_won" defaultText="Won / Paid Deals" /> :
+               currentFilter === "survey" ? <TranslatedText tKey="adm_leads_card_survey" defaultText="Site Survey Bookings" /> :
+               currentFilter === "test" ? <TranslatedText tKey="adm_leads_card_test" defaultText="Test & Synthetic Records" /> : <TranslatedText tKey="adm_leads_card_all" defaultText="All Leads & Inquiries" />} 
               {" "}({displayLeads.length})
             </CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
               {currentFilter === "genuine" && testLeads.length > 0 ? (
-                <span>Filtering out {testLeads.length} test record{testLeads.length > 1 ? "s" : ""}. Click the &ldquo;Test Records&rdquo; or &ldquo;All Pipeline&rdquo; tab above to view them.</span>
+                <TranslatedText tKey="adm_leads_sub_filter_test" defaultText="Hiding {count} test records. Open Test Records or All Pipeline tab to view them." params={{ count: String(testLeads.length) }} />
               ) : currentFilter === "test" ? (
-                <span>Displaying synthetic and verification test records.</span>
+                <TranslatedText tKey="adm_leads_sub_test_only" defaultText="Displaying synthetic and verification test records." />
               ) : (
-                <span>Showing {displayLeads.length} lead record{displayLeads.length > 1 ? "s" : ""}.</span>
+                <TranslatedText tKey="adm_leads_sub_showing" defaultText="Showing {count} lead records." params={{ count: String(displayLeads.length) }} />
               )}
             </p>
           </div>
@@ -410,10 +409,10 @@ export default async function LeadsPage({
         <CardContent>
           {displayLeads.length === 0 ? (
             <div className="text-center py-12 px-4">
-              <p className="text-muted-foreground text-sm">No leads found for this filter tab.</p>
+              <p className="text-muted-foreground text-sm"><TranslatedText tKey="adm_leads_empty_tab" defaultText="No leads found for this filter tab." /></p>
               <div className="mt-4">
                 <Link href="/admin/leads?filter=all">
-                  <Button variant="outline" size="sm">Show All Pipeline Leads</Button>
+                  <Button variant="outline" size="sm"><TranslatedText tKey="adm_leads_show_all" defaultText="Show All Pipeline Leads" /></Button>
                 </Link>
               </div>
             </div>
@@ -422,14 +421,14 @@ export default async function LeadsPage({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead>Quote ID</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Customer / Firm</TableHead>
-                    <TableHead>Mobile</TableHead>
-                    <TableHead>Type / Entity</TableHead>
-                    <TableHead>Value</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead><TranslatedText tKey="adm_leads_th_qid" defaultText="Quote ID" /></TableHead>
+                    <TableHead><TranslatedText tKey="adm_leads_th_date" defaultText="Date" /></TableHead>
+                    <TableHead><TranslatedText tKey="adm_leads_th_cust_firm" defaultText="Customer / Firm" /></TableHead>
+                    <TableHead><TranslatedText tKey="adm_leads_th_mobile" defaultText="Mobile" /></TableHead>
+                    <TableHead><TranslatedText tKey="adm_leads_th_type" defaultText="Type / Entity" /></TableHead>
+                    <TableHead><TranslatedText tKey="adm_leads_th_value" defaultText="Value" /></TableHead>
+                    <TableHead><TranslatedText tKey="adm_leads_th_status" defaultText="Status" /></TableHead>
+                    <TableHead className="text-right"><TranslatedText tKey="adm_leads_th_actions" defaultText="Actions" /></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -453,9 +452,23 @@ export default async function LeadsPage({
                             {(() => {
                               const lastTouch = lead.last_contacted_at || lead.createdAt;
                               const aging = calculateInactivityAging(lastTouch, 10);
+                              let ageNode: React.ReactNode = aging.badge_text;
+                              if (aging.health === "never" && aging.days_inactive === null) {
+                                ageNode = <TranslatedText tKey="adm_leads_age_never" defaultText="⚠️ Never Contacted" />;
+                              } else if (aging.days_inactive === 0) {
+                                ageNode = <TranslatedText tKey="adm_leads_age_today" defaultText="🟢 Today" />;
+                              } else if (aging.days_inactive === 1) {
+                                ageNode = <TranslatedText tKey="adm_leads_age_yest" defaultText="🟢 Yesterday" />;
+                              } else if (aging.health === "overdue" && aging.days_inactive !== null) {
+                                ageNode = <TranslatedText tKey="adm_leads_age_overdue" defaultText="🔴 {days}d Inactive" params={{ days: String(aging.days_inactive) }} />;
+                              } else if (aging.health === "due" && aging.days_inactive !== null) {
+                                ageNode = <TranslatedText tKey="adm_leads_age_due" defaultText="🟡 Due ({days}d)" params={{ days: String(aging.days_inactive) }} />;
+                              } else if (aging.days_inactive !== null) {
+                                ageNode = <TranslatedText tKey="adm_leads_age_days_ago" defaultText="🟢 {days}d ago" params={{ days: String(aging.days_inactive) }} />;
+                              }
                               return (
-                                <span className={`inline-block text-[9px] font-semibold px-2 py-0.5 rounded-md mt-1 border w-fit ${aging.badge_color}`}>
-                                  {aging.badge_text}
+                                <span className={`inline-block text-[9px] font-semibold px-2 py-0.5 rounded-md mt-1 border w-fit leading-snug ${aging.badge_color}`}>
+                                  {ageNode}
                                 </span>
                               );
                             })()}
@@ -476,40 +489,40 @@ export default async function LeadsPage({
                                 💬 WhatsApp
                               </Badge>
                             ) : (
-                              <span className="text-[10px] text-zinc-400 font-semibold">🌐 Web</span>
+                              <span className="text-[10px] text-zinc-400 font-semibold"><TranslatedText tKey="adm_leads_ch_web" defaultText="🌐 Web" /></span>
                             )}
                             {lead.competitor_quote_received && (
-                              <Badge className="bg-amber-500 text-white text-[9px] font-black uppercase">
-                                📸 Price Match
+                              <Badge className="bg-amber-500 text-white text-[9px] font-black uppercase leading-snug">
+                                <TranslatedText tKey="adm_leads_b_pm" defaultText="📸 Price Match" />
                               </Badge>
                             )}
                             {(() => {
                               const t = (lead.timeline || "").toLowerCase();
                               if (t === "asap" || t.includes("immediately") || lead.priority === "HOT") {
                                 return (
-                                  <Badge className="bg-red-500 hover:bg-red-600 text-white text-[9px] font-black uppercase">
-                                    ⚡ ASAP (1-2 Days)
+                                  <Badge className="bg-red-500 hover:bg-red-600 text-white text-[9px] font-black uppercase whitespace-normal leading-snug">
+                                    <TranslatedText tKey="adm_leads_tl_asap" defaultText="⚡ ASAP (1-2 Days)" />
                                   </Badge>
                                 );
                               }
                               if (t === "week" || t.includes("week")) {
                                 return (
-                                  <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-[9px] font-bold">
-                                    📅 Within a Week
+                                  <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-[9px] font-bold whitespace-normal leading-snug">
+                                    <TranslatedText tKey="adm_leads_tl_week" defaultText="📅 Within a Week" />
                                   </Badge>
                                 );
                               }
                               if (t === "month" || t.includes("month")) {
                                 return (
-                                  <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-[9px] font-bold">
-                                    🗓️ This Month
+                                  <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-[9px] font-bold whitespace-normal leading-snug">
+                                    <TranslatedText tKey="adm_leads_tl_month" defaultText="🗓️ This Month" />
                                   </Badge>
                                 );
                               }
                               if (t === "research" || t.includes("plan")) {
                                 return (
-                                  <Badge variant="outline" className="border-zinc-300 text-zinc-600 text-[9px]">
-                                    🔍 Planning
+                                  <Badge variant="outline" className="border-zinc-300 text-zinc-600 text-[9px] whitespace-normal leading-snug">
+                                    <TranslatedText tKey="adm_leads_tl_plan" defaultText="🔍 Planning" />
                                   </Badge>
                                 );
                               }
@@ -525,11 +538,11 @@ export default async function LeadsPage({
                                 🏢 B2B {lead.gstin ? `(${lead.gstin.slice(0, 2)}...)` : ""}
                               </Badge>
                             ) : (
-                              <span className="text-xs text-muted-foreground">👤 Personal</span>
+                              <span className="text-xs text-muted-foreground"><TranslatedText tKey="adm_leads_ent_personal" defaultText="👤 Personal" /></span>
                             )}
                             {hasSurvey && (
-                              <Badge variant="outline" className="border-purple-300 bg-purple-50 text-purple-800 text-[10px] font-bold">
-                                📅 Survey: {safeFormatDate(lead.site_visit_date, "dd MMM")}
+                              <Badge variant="outline" className="border-purple-300 bg-purple-50 text-purple-800 text-[10px] font-bold leading-snug">
+                                <TranslatedText tKey="adm_leads_survey_tag" defaultText="📅 Survey" />: {safeFormatDate(lead.site_visit_date, "dd MMM")}
                               </Badge>
                             )}
                           </div>
@@ -541,13 +554,13 @@ export default async function LeadsPage({
                           <div className="flex flex-col gap-1 items-start">
                             {getStatusBadge(lead.leadStatus, lead.isPaid)}
                             {lead.cash_approval_requested && !lead.cash_collection_approved && (
-                              <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold whitespace-nowrap">
-                                💵 Cash Req: ₹{lead.cash_requested_amount?.toLocaleString("en-IN")}
+                              <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold whitespace-nowrap leading-snug">
+                                <TranslatedText tKey="adm_leads_cash_req" defaultText="💵 Cash Req" />: ₹{lead.cash_requested_amount?.toLocaleString("en-IN")}
                               </Badge>
                             )}
                             {lead.cash_collection_approved && (
-                              <Badge variant="outline" className="border-emerald-500 text-emerald-700 bg-emerald-50 text-[10px] font-bold whitespace-nowrap">
-                                ✓ Cash Allowed
+                              <Badge variant="outline" className="border-emerald-500 text-emerald-700 bg-emerald-50 text-[10px] font-bold whitespace-nowrap leading-snug">
+                                <TranslatedText tKey="adm_leads_cash_ok" defaultText="✓ Cash Allowed" />
                               </Badge>
                             )}
                           </div>
@@ -555,8 +568,8 @@ export default async function LeadsPage({
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             <Link href={`/admin/leads/${lead.leadId}`}>
-                              <Button variant="ghost" size="sm" className="h-8 text-xs font-semibold">
-                                Details
+                              <Button variant="ghost" size="sm" className="h-8 text-xs font-semibold leading-snug">
+                                <TranslatedText tKey="adm_leads_btn_details" defaultText="Details" />
                               </Button>
                             </Link>
                             {lead.customer_mobile && (
@@ -565,7 +578,7 @@ export default async function LeadsPage({
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex items-center justify-center px-2 py-1 rounded-md text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 transition-colors"
-                                title="Open WhatsApp Chat"
+                                aria-label="WhatsApp"
                               >
                                 💬
                               </a>
@@ -575,14 +588,13 @@ export default async function LeadsPage({
                                 href={`/api/quote/${lead.quoteId || lead.id}/download`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-medium border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                                title="Download Quotation PDF"
+                                className="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-medium border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap leading-snug"
                               >
-                                Quote
+                                <TranslatedText tKey="adm_leads_btn_quote" defaultText="Quote" />
                               </a>
                             ) : (
-                              <Button disabled variant="outline" size="sm" className="h-8 px-2.5 text-xs font-medium opacity-50">
-                                Quote
+                              <Button disabled variant="outline" size="sm" className="h-8 px-2.5 text-xs font-medium opacity-50 whitespace-nowrap leading-snug">
+                                <TranslatedText tKey="adm_leads_btn_quote" defaultText="Quote" />
                               </Button>
                             )}
                             {lead.isPaid && (
@@ -590,10 +602,9 @@ export default async function LeadsPage({
                                 href={`/api/invoice/${lead.quoteId || lead.id}/download`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
-                                title={((lead as any).amount_due ?? 0) > 0 ? "Download Booking Receipt" : "Download GST Tax Invoice"}
+                                className="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors whitespace-nowrap leading-snug"
                               >
-                                {((lead as any).amount_due ?? 0) > 0 ? "Receipt" : "Invoice"}
+                                {((lead as any).amount_due ?? 0) > 0 ? <TranslatedText tKey="adm_leads_btn_receipt" defaultText="Receipt" /> : <TranslatedText tKey="adm_leads_btn_invoice" defaultText="Invoice" />}
                               </a>
                             )}
                           </div>

@@ -50,14 +50,16 @@ This document tracks all API routes, their HTTP methods, the Firestore collectio
 | `/api/analytics/inventory` | GET | serial_assets, stock_ledger, inventory | page.tsx |
 | `/api/analytics/overview` | GET | quotes | *Orphan Route?* |
 | `/api/analytics/products` | GET | quotes | page.tsx<br>analytics.spec.ts |
-| `/api/analytics/profitability` | GET | deals | page.tsx |
+| `/api/analytics/profitability` | GET | deals, quotes, settings, promoters, commissions, commission_records, amc_subscriptions, amc_contracts, payment_history | page.tsx<br>ProfitabilityAnalyticsClient.tsx |
 | `/api/analytics/rejections` | GET | analytics_rejections | page.tsx<br>analytics.spec.ts<br>phase-3b2.spec.ts |
 | `/api/analytics/sales` | GET | quotes, deals, leads | page.tsx |
 | `/api/analytics/service` | GET | jobs, amc_contracts, service_tickets | page.tsx |
 | `/api/analytics/track` | POST | quote_events, quote_sessions | BuilderClient.tsx<br>WizardClientV2.tsx<br>analytics.spec.ts<br>phase-3b2.spec.ts |
 | `/api/auth/otp/email` | POST | admins | LoginForm.tsx |
 | `/api/auth/otp/mobile` | POST | admins, salespeople | LoginForm.tsx<br>e2e-customer-auth-isolation.spec.ts |
+| `/api/auth/otp/sms` | POST | - | ProBuilderClient.tsx (via `Msg91WhatsAppProvider.sendOtpTemplate`) |
 | `/api/auth/otp/verify` | POST | salespeople | LoginForm.tsx<br>e2e-customer-auth-isolation.spec.ts |
+| `/api/auth/otp/whatsapp` | POST | - | WizardClientV2.tsx<br>ProBuilderClient.tsx<br>PhoneCaptureModal.tsx<br>CustomerLoginClient.tsx (via `Msg91WhatsAppProvider.sendOtpTemplate`) |
 | `/api/auth/session` | POST, DELETE | - | LoginForm.tsx<br>page.tsx<br>page.tsx<br>Sidebar.tsx<br>ChatInterface.tsx<br>Sidebar.tsx |
 | `/api/bookings` | POST | leads | ConfiguratorView.tsx |
 | `/api/build/calculate` | POST | analytics_rejections, products | BuilderClient.tsx<br>e2e-builder-flow.spec.ts<br>phase-3b2.spec.ts<br>release-gates.spec.ts |

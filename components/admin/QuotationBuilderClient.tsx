@@ -5,6 +5,7 @@ import { Plus, Trash2, FileText, CheckCircle2, ChevronLeft, Save, FileDown, Shie
 import { toast } from "sonner";
 import { auth } from "@/lib/firebase-client";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface CatalogItem {
   id: string;
@@ -32,6 +33,7 @@ interface QuotationBuilderProps {
 }
 
 export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: QuotationBuilderProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [items, setItems] = useState<BuilderLineItem[]>([]);
   const [gstPercent, setGstPercent] = useState(18);
@@ -52,8 +54,8 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
       ...items,
       {
         id: Math.random().toString(36).substr(2, 9),
-        name: catalogItem?.name || "Custom Item",
-        description: isCustom ? "Custom Details" : catalogItem?.category || "",
+        name: catalogItem?.name || t("adm_qb_custom_item", "Custom Item"),
+        description: isCustom ? t("adm_qb_custom_det", "Custom Details") : catalogItem?.category || "",
         quantity: 1,
         unitPrice: catalogItem?.unitPrice || 0,
         baseCost: catalogItem?.baseCost || 0,
@@ -71,7 +73,7 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
         if (field === "unitPrice" && updated.baseCost > 0) {
           const margin = ((updated.unitPrice - updated.baseCost) / updated.unitPrice) * 100;
           if (margin < MIN_MARGIN && updated.unitPrice > 0) {
-            toast.error(`Minimum margin required is ${MIN_MARGIN}%. Your role is ${userRole.replace('_', ' ')}.`);
+            toast.error(t("adm_qb_toast_min_margin", "Minimum margin required is {min}%. Your role is {role}.", { min: String(MIN_MARGIN), role: userRole.replace('_', ' ') }));
             updated.unitPrice = Math.ceil(updated.baseCost / (1 - (MIN_MARGIN / 100)));
           }
         }
@@ -97,7 +99,7 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
 
   const handleSave = async () => {
     if (items.length === 0) {
-      toast.error("Please add at least one item.");
+      toast.error(t("adm_qb_err_one_item", "Please add at least one item."));
       return;
     }
     
@@ -125,10 +127,10 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
       });
       
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to save custom quote");
+      if (!res.ok) throw new Error(data.error || t("adm_qb_toast_save_err", "Failed to save custom quote"));
       
       setSavedQuoteId(data.data.id);
-      toast.success("Custom Quote Saved!");
+      toast.success(t("adm_qb_toast_saved", "Custom Quote Saved!"));
     } catch (err: any) {
       toast.error(err.message);
       console.error(err);
@@ -140,7 +142,7 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
   const handleDownloadPdf = async () => {
     if (!savedQuoteId) return;
     try {
-      toast.info("Generating PDF...");
+      toast.info(t("adm_qb_toast_pdf", "Generating PDF..."));
       const user = auth.currentUser;
       const token = user ? await user.getIdToken() : "";
       const pdfRes = await fetch(`/api/v1/leads/${leadId}/quotes/${savedQuoteId}/pdf`, {
@@ -158,32 +160,32 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
           if (url) window.open(url, "_blank");
         }
       } else {
-         toast.error("Failed to generate PDF.");
+         toast.error(t("adm_qb_toast_pdf_err", "Failed to generate PDF."));
       }
     } catch (error) {
-      toast.error("Error generating PDF.");
+      toast.error(t("adm_qb_toast_pdf_err", "Failed to generate PDF."));
     }
   };
 
   return (
     <div className="space-y-6">
       
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-          <ChevronLeft className="w-4 h-4" /> Back to Lead
+          <ChevronLeft className="w-4 h-4 shrink-0" /> {t("adm_qb_back_lead", "Back to Lead")}
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {savedQuoteId && (
-            <button onClick={handleDownloadPdf} className="flex items-center gap-2 px-4 py-2 bg-secondary text-foreground rounded-md text-sm font-semibold hover:bg-secondary/80 transition-colors">
-              <FileDown className="w-4 h-4" /> Download PDF
+            <button onClick={handleDownloadPdf} className="flex items-center gap-2 px-4 py-2 bg-secondary text-foreground rounded-md text-sm font-semibold hover:bg-secondary/80 transition-colors whitespace-normal leading-snug">
+              <FileDown className="w-4 h-4 shrink-0" /> {t("adm_qb_dl_pdf", "Download PDF")}
             </button>
           )}
           <button 
             onClick={handleSave} 
             disabled={isSaving || savedQuoteId !== null}
-            className="flex items-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-normal leading-snug"
           >
-            {isSaving ? <span className="animate-pulse">Saving...</span> : savedQuoteId ? <><CheckCircle2 className="w-4 h-4" /> Saved</> : <><Save className="w-4 h-4" /> Save Quote</>}
+            {isSaving ? <span className="animate-pulse">{t("adm_qb_saving", "Saving...")}</span> : savedQuoteId ? <><CheckCircle2 className="w-4 h-4 shrink-0" /> {t("adm_qb_saved", "Saved")}</> : <><Save className="w-4 h-4 shrink-0" /> {t("adm_qb_save_q", "Save Quote")}</>}
           </button>
         </div>
       </div>
@@ -193,10 +195,10 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
         {/* LEFT PANEL: Line Items */}
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-card rounded-xl border border-border overflow-hidden">
-            <div className="p-4 border-b border-border bg-secondary/30 flex justify-between items-center">
-              <h3 className="font-semibold text-foreground">Line Items</h3>
-              <span className="text-xs text-muted-foreground font-mono px-2 py-1 bg-background rounded border border-border">
-                Role: {userRole.toUpperCase()} (Min Margin: {MIN_MARGIN}%)
+                <div className="p-4 border-b border-border bg-secondary/30 flex flex-wrap justify-between items-center gap-2">
+              <h3 className="font-semibold text-foreground">{t("adm_qb_line_items", "Line Items")}</h3>
+              <span className="text-xs text-muted-foreground font-mono px-2.5 py-1 bg-background rounded border border-border leading-snug">
+                {t("adm_qb_min_margin_badge", "Role: {role} (Min Margin: {min}%)", { role: userRole.toUpperCase(), min: String(MIN_MARGIN) })}
               </span>
             </div>
             
@@ -208,20 +210,20 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
                       type="text" 
                       value={item.name} 
                       onChange={e => handleUpdateItem(item.id, "name", e.target.value)}
-                      placeholder="Item Name"
+                      placeholder={t("adm_qb_item_ph", "Item Name")}
                       className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary"
                     />
                     <input 
                       type="text" 
                       value={item.description} 
                       onChange={e => handleUpdateItem(item.id, "description", e.target.value)}
-                      placeholder="Description"
+                      placeholder={t("adm_qb_desc_ph", "Description")}
                       className="w-full bg-transparent border-none px-1 py-1 text-xs text-muted-foreground focus:outline-none mt-1"
                     />
                   </div>
                   
                   <div className="col-span-4 sm:col-span-2">
-                    <label className="text-[10px] uppercase text-muted-foreground font-semibold px-1">Qty</label>
+                    <label className="text-[10px] uppercase text-muted-foreground font-semibold px-1 block leading-snug">{t("adm_qb_qty", "Qty")}</label>
                     <input 
                       type="number" 
                       min="1"
@@ -232,7 +234,7 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
                   </div>
                   
                   <div className="col-span-6 sm:col-span-4">
-                    <label className="text-[10px] uppercase text-muted-foreground font-semibold px-1">Unit Price (₹)</label>
+                    <label className="text-[10px] uppercase text-muted-foreground font-semibold px-1 block leading-snug">{t("adm_qb_unit_price", "Unit Price (₹)")}</label>
                     <div className="relative">
                       <input 
                         type="number" 
@@ -243,10 +245,10 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
                       <span className="absolute left-2.5 top-2.5 text-muted-foreground text-xs font-semibold">₹</span>
                     </div>
                     {item.baseCost > 0 && (
-                      <div className="text-[10px] text-muted-foreground mt-1 px-1 flex justify-between">
-                        <span>Cost: ₹{item.baseCost}</span>
+                      <div className="text-[10px] text-muted-foreground mt-1 px-1 flex flex-wrap justify-between gap-1">
+                        <span>{t("adm_qb_cost", "Cost")}: ₹{item.baseCost}</span>
                         <span className={((item.unitPrice - item.baseCost) / item.unitPrice * 100) < MIN_MARGIN ? "text-destructive font-bold" : "text-success"}>
-                          Margin: {(((item.unitPrice - item.baseCost) / item.unitPrice) * 100).toFixed(1)}%
+                          {t("adm_qb_margin", "Margin")}: {(((item.unitPrice - item.baseCost) / item.unitPrice) * 100).toFixed(1)}%
                         </span>
                       </div>
                     )}
@@ -266,20 +268,20 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
               {items.length === 0 && (
                 <div className="text-center py-4 md:py-10 border border-dashed border-border rounded-xl">
                   <FileText className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">No items added to the quote yet.</p>
+                  <p className="text-sm text-muted-foreground">{t("adm_qb_no_items", "No items added to the quote yet.")}</p>
                 </div>
               )}
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-wrap gap-2 pt-2">
                 <button 
                   onClick={() => handleAddItem(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-md text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-md text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors whitespace-normal leading-snug"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Add Blank Item
+                  <Plus className="w-3.5 h-3.5 shrink-0" /> {t("adm_qb_add_blank", "Add Blank Item")}
                 </button>
                 <div className="relative group">
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-md text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
-                    <Plus className="w-3.5 h-3.5" /> Add from Catalog
+                  <button className="flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-md text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors whitespace-normal leading-snug">
+                    <Plus className="w-3.5 h-3.5 shrink-0" /> {t("adm_qb_add_catalog", "Add from Catalog")}
                   </button>
                   <div className="absolute top-full left-0 mt-1 w-64 max-h-64 overflow-y-auto bg-card border border-border rounded-md shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 custom-scrollbar">
                     {catalog.map(cat => (
@@ -302,10 +304,10 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
           </div>
           
           <div className="bg-card rounded-xl border border-border p-4">
-            <h3 className="font-semibold text-sm text-foreground mb-3">Quote Settings & Notes</h3>
+            <h3 className="font-semibold text-sm text-foreground mb-3">{t("adm_qb_settings_notes", "Quote Settings & Notes")}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">GST %</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("adm_qb_gst_pct", "GST %")}</label>
                 <input 
                   type="number" 
                   value={gstPercent} 
@@ -314,7 +316,7 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Advance %</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("adm_qb_adv_pct", "Advance %")}</label>
                 <input 
                   type="number" 
                   value={advancePercent} 
@@ -324,11 +326,11 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
               </div>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Terms / Notes</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("adm_qb_terms_lbl", "Terms / Notes")}</label>
               <textarea 
                 value={notes} 
                 onChange={e => setNotes(e.target.value)}
-                placeholder="Important terms or warranties..."
+                placeholder={t("adm_qb_terms_ph", "Important terms or warranties...")}
                 className="w-full mt-1 h-20 bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none"
               />
             </div>
@@ -339,11 +341,11 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
         {/* RIGHT PANEL: Summary */}
         <div className="space-y-4">
           <div className="bg-card rounded-xl border border-border p-5 sticky top-24 shadow-sm">
-            <h3 className="font-semibold text-lg text-foreground tracking-tight mb-4 border-b border-border pb-3">Quote Summary</h3>
+            <h3 className="font-semibold text-lg text-foreground tracking-tight mb-4 border-b border-border pb-3">{t("adm_qb_summary", "Quote Summary")}</h3>
             
             <div className="space-y-3 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>Subtotal</span>
+                <span>{t("adm_qb_subtotal", "Subtotal")}</span>
                 <span className="font-medium text-foreground">₹{subtotal.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
@@ -356,8 +358,8 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
               </div>
               
               <div className="border-t border-border pt-3 mt-3">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-foreground">Grand Total</span>
+                <div className="flex justify-between items-center gap-2">
+                  <span className="font-bold text-foreground">{t("adm_qb_grand_total", "Grand Total")}</span>
                   <span className="text-xl font-black text-primary">₹{grandTotal.toLocaleString('en-IN')}</span>
                 </div>
               </div>
@@ -365,11 +367,11 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
 
             <div className="mt-6 p-3 rounded-lg bg-secondary/50 border border-border/50">
               <div className="flex items-center gap-2 mb-2">
-                <ShieldAlert className="w-4 h-4 text-amber-500" />
-                <span className="text-xs font-bold text-foreground">Profitability Analysis</span>
+                <ShieldAlert className="w-4 h-4 text-amber-500 shrink-0" />
+                <span className="text-xs font-bold text-foreground">{t("adm_qb_profit_anal", "Profitability Analysis")}</span>
               </div>
-              <div className="flex justify-between text-xs mt-2">
-                <span className="text-muted-foreground">Overall Margin</span>
+              <div className="flex justify-between text-xs mt-2 gap-2">
+                <span className="text-muted-foreground">{t("adm_qb_overall_margin", "Overall Margin")}</span>
                 <span className={`font-bold ${parseFloat(overallMargin as string) < MIN_MARGIN ? 'text-destructive' : 'text-success'}`}>
                   {overallMargin}%
                 </span>

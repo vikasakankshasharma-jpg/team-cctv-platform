@@ -4,7 +4,12 @@ import { useState, useEffect } from "react";
 import { X, History, BadgeIndianRupee, Calendar, ExternalLink, Loader2, RefreshCcw } from "lucide-react";
 import { getLeadQuotes } from "@/app/actions/leads";
 import { RefundDialog } from "./RefundDialog";
+import { useTranslation } from "@/hooks/useTranslation";
 
+const LOCALE_MAP: Record<string, string> = {
+  en: "en-IN", hi: "hi-IN", mr: "mr-IN", gu: "gu-IN", ta: "ta-IN",
+  te: "te-IN", kn: "kn-IN", bn: "bn-IN", ml: "ml-IN", pa: "pa-IN", or: "or-IN",
+};
 
 interface QuoteHistoryModalProps {
   isOpen: boolean;
@@ -14,6 +19,7 @@ interface QuoteHistoryModalProps {
 }
 
 export function QuoteHistoryModal({ isOpen, onClose, leadId, customerName }: QuoteHistoryModalProps) {
+  const { t, locale } = useTranslation();
   const [quotes, setQuotes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refundingQuote, setRefundingQuote] = useState<{ id: string; amount: number; paymentId?: string } | null>(null);
@@ -51,13 +57,13 @@ export function QuoteHistoryModal({ isOpen, onClose, leadId, customerName }: Quo
                 <History className="w-7 h-7" />
               </div>
               <div>
-                <h2 className="text-2xl font-black text-white tracking-tight">Quote History</h2>
+                <h2 className="text-2xl font-black text-white tracking-tight leading-snug">{t("adm_qh_title", "Quote History")}</h2>
                 <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mt-1">{customerName}</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="w-10 h-10 flex items-center justify-center text-zinc-500 hover:text-white bg-zinc-800 rounded-2xl transition-all"
+              className="w-10 h-10 flex items-center justify-center text-zinc-500 hover:text-white bg-zinc-800 rounded-2xl transition-all shrink-0"
             >
               <X className="w-5 h-5" />
             </button>
@@ -68,29 +74,29 @@ export function QuoteHistoryModal({ isOpen, onClose, leadId, customerName }: Quo
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-10 md:py-20 text-zinc-600 gap-4">
               <Loader2 className="w-8 h-8 animate-spin" />
-              <p className="text-[10px] font-black uppercase tracking-widest">Retrieving Manifest History...</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-center">{t("adm_qh_loading", "Retrieving Quote History...")}</p>
             </div>
           ) : quotes.length === 0 ? (
             <div className="text-center py-10 md:py-20 text-zinc-600">
-               <p className="text-[10px] font-black uppercase tracking-widest">No Previous Quotes Found</p>
+               <p className="text-[10px] font-black uppercase tracking-widest">{t("adm_qh_empty", "No Previous Quotes Found")}</p>
             </div>
           ) : (
             quotes.map((quote) => (
-              <div key={quote.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex items-center justify-between group hover:border-blue-500/30 transition-all">
+              <div key={quote.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-wrap items-center justify-between gap-4 group hover:border-blue-500/30 transition-all">
                 <div className="flex items-center gap-6">
-                   <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500">
+                   <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 shrink-0">
                       <BadgeIndianRupee className="w-5 h-5" />
                    </div>
                    <div className="space-y-1">
                       <div className="text-lg font-black text-white">₹{quote.quoteData?.total_payable?.toLocaleString('en-IN') || "0"}</div>
                       <div className="flex items-center gap-2 text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
-                         <Calendar className="w-3 h-3" />
-                         {new Date(quote.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                         <Calendar className="w-3 h-3 shrink-0" />
+                         {new Date(quote.created_at).toLocaleDateString(LOCALE_MAP[locale] || 'en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </div>
                    </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   {quote.status === "PAID" && (
                      <button
                        onClick={() => setRefundingQuote({
@@ -98,9 +104,9 @@ export function QuoteHistoryModal({ isOpen, onClose, leadId, customerName }: Quo
                          amount: quote.quoteData?.total_payable || 0,
                          paymentId: quote.razorpay_payment_id || undefined
                        })}
-                       className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-colors border border-rose-500/20 flex items-center gap-1.5"
+                       className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-colors border border-rose-500/20 flex items-center gap-1.5 whitespace-nowrap"
                      >
-                       <RefreshCcw className="w-3 h-3" /> Refund
+                       <RefreshCcw className="w-3 h-3 shrink-0" /> {t("adm_qh_refund", "Refund")}
                      </button>
                   )}
                   <a

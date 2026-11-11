@@ -7,6 +7,7 @@ import { resolveProducts } from "@/lib/product-resolver";
 import { generatePricingSnapshot } from "@/lib/pricing-engine";
 import { adminDb } from "@/lib/firebase-admin";
 import { getUniqueCanonicalBrands } from "@/lib/brand-utils";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 
 async function getActiveProducts(): Promise<Product[]> {
   const snap = await adminDb
@@ -28,8 +29,10 @@ async function getActiveAddons(): Promise<Addon[]> {
 
 export async function POST(request: Request) {
   console.log("HELLO FROM QUOTE GENERATE API");
+  let locale = resolveRequestLocale(request);
   try {
     const req: CCTVRequirement = await request.json();
+    locale = resolveRequestLocale(request, req as any);
 
     // 1. Fetch dependencies (Catalog, Settings, Addons)
     const settings = await getCachedAdminSettings();
@@ -115,7 +118,7 @@ export async function POST(request: Request) {
     });
   } catch (error: any) {
     console.error("Quote generation error:", error);
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: getApiMessage(locale, "internal_error") }, { status: 500 });
   }
 }
 

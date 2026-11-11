@@ -139,8 +139,8 @@ const WIZARD_STEPS: Record<string, WizardStep> = {
         is_required: true,
         position: 0,
         options: [
-          { id: "fopt_ip", label: "IP Network Camera (Smart Digital)", value: "IP", position: 0, badge: "Recommended" },
-          { id: "fopt_hd", label: "HD Analog Camera (Basic Budget)",   value: "HD", position: 1 },
+          { id: "fopt_ip", label: "IP Network Camera (Smart Digital)", value: "IP", position: 0, badge: "Smart Digital" },
+          { id: "fopt_hd", label: "HD Analog Camera (Low-Cost)",       value: "HD", position: 1 },
           { id: "opt_wifi", label: "WiFi Camera (Wireless Smart)", value: "WiFi", position: 2 },
           
         ],
@@ -162,7 +162,7 @@ const WIZARD_STEPS: Record<string, WizardStep> = {
         position: 0,
         options: [
           { id: "fopt_s_7",  label: "1 Week (Standard)",  value: "7",  position: 0 },
-          { id: "fopt_s_15", label: "15 Days",             value: "15", position: 1, badge: "Popular" },
+          { id: "fopt_s_15", label: "15 Days",             value: "15", position: 1, badge: "Most Picked" },
           { id: "fopt_s_30", label: "1 Month",             value: "30", position: 2 },
         ],
       },
@@ -185,7 +185,7 @@ const WIZARD_STEPS: Record<string, WizardStep> = {
             label: "Smart Motion Detection (Records only movement · Saves ~45% Disk Space & Cost)", 
             value: "motion", 
             position: 1, 
-            badge: "Best Value",
+            badge: "Saves Space",
           },
         ],
       },

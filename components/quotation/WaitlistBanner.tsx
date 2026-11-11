@@ -31,9 +31,9 @@ export function WaitlistBanner({ leadId, unservedCityName, nearestHubName, dista
           <h3 className="text-lg font-black tracking-tight mb-1">{t('waitlist_quote_ready', 'Your Quote is Ready!')}</h3>
           <p className="text-sm font-medium opacity-90 leading-relaxed max-w-2xl">
             {nearestHubName && distanceKm !== undefined ? (
-              <>{t('waitlist_hub_in', 'Our primary installation hub is in')} <span className="font-black">{nearestHubName}</span> (approx. <strong>{distanceKm} km</strong> away). {t('waitlist_priority_for', 'Based on your direct request, we are taking this on priority and expediting our operations in')} <span className="font-black uppercase">{unservedCityName}</span> specifically for you.</>
+              <>{t('waitlist_hub_in', 'Our primary installation hub is in')} <span className="font-black">{nearestHubName}</span> <strong>{t('waitlist_approx_km', '(approx. {km} km away).', { km: String(distanceKm) })}</strong> {t('waitlist_priority_for', 'Based on your direct request, we are taking this on priority and expediting our operations in')} <span className="font-black uppercase">{unservedCityName}</span> {t('waitlist_for_you', 'specifically for you.')}</>
             ) : (
-              <>{t('waitlist_hubs_active', 'Our installation teams are expanding rapidly across India. Based on your direct request, we are taking this on priority and expediting our operations in')} <span className="font-black uppercase">{unservedCityName}</span> specifically for you.</>
+              <>{t('waitlist_hubs_active', 'Our installation teams are expanding rapidly across India. Based on your direct request, we are taking this on priority and expediting our operations in')} <span className="font-black uppercase">{unservedCityName}</span> {t('waitlist_for_you', 'specifically for you.')}</>
             )}
           </p>
           {confirmed && (

@@ -1,10 +1,11 @@
 import { ProBuilderClient } from "@/components/builder/ProBuilderClient";
 import type { Metadata } from "next";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { buildPageMetadata } from "@/lib/i18n/seo-metadata";
 
-export const metadata: Metadata = {
-  title: "Pro Builder | CCTV Quotation",
-  description: "Advanced e-commerce builder for custom CCTV configurations.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata("pro_builder", await getServerLocale());
+}
 
 export default function ProBuilderPage() {
   return <ProBuilderClient />;

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { X, PenTool, CheckCircle2, Loader2, Camera, Barcode } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 import BarcodeScanner from "./BarcodeScanner"; // Re-using existing scanner
 
 interface JobSignoffModalProps {
@@ -13,6 +14,7 @@ interface JobSignoffModalProps {
 }
 
 export function JobSignoffModal({ leadId, onClose, onSuccess, productsToInstall }: JobSignoffModalProps) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [scannedSerials, setScannedSerials] = useState<Record<string, string[]>>({});
@@ -79,7 +81,7 @@ export function JobSignoffModal({ leadId, onClose, onSuccess, productsToInstall 
       if (existing.includes(code)) return prev;
       return { ...prev, [productId]: [...existing, code] };
     });
-    toast.success(`Scanned: ${code}`);
+    toast.success(t("inst_so_scanned", "Scanned: {code}", { code }));
     setActiveScanner(null); // Close scanner
   };
 
@@ -92,11 +94,11 @@ export function JobSignoffModal({ leadId, onClose, onSuccess, productsToInstall 
     blank.width = canvas.width;
     blank.height = canvas.height;
     if (canvas.toDataURL() === blank.toDataURL()) {
-      return toast.error("Please ask the customer to sign.");
+      return toast.error(t("inst_so_sign_err", "Please ask the customer to sign."));
     }
 
     if (photos.length === 0) {
-      return toast.error("Please upload at least 1 installation photo.");
+      return toast.error(t("inst_so_photo_err", "Please upload at least 1 installation photo."));
     }
 
     setIsSubmitting(true);
@@ -116,12 +118,12 @@ export function JobSignoffModal({ leadId, onClose, onSuccess, productsToInstall 
         })
       });
 
-      if (!res.ok) throw new Error("Failed to sign-off");
+      if (!res.ok) throw new Error(t("inst_so_fail_err", "Failed to complete job"));
       
-      toast.success("Job Signed Off Successfully!");
+      toast.success(t("inst_so_done_ok", "Job Signed Off Successfully!"));
       onSuccess();
     } catch (err) {
-      toast.error("Failed to complete job");
+      toast.error(t("inst_so_fail_err", "Failed to complete job"));
     } finally {
       setIsSubmitting(false);
     }
@@ -131,28 +133,28 @@ export function JobSignoffModal({ leadId, onClose, onSuccess, productsToInstall 
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in slide-in-from-bottom-10">
       <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col">
         
-        <div className="p-6 border-b sticky top-0 bg-white z-10 rounded-t-3xl flex justify-between items-center">
+        <div className="p-6 border-b sticky top-0 bg-white z-10 rounded-t-3xl flex justify-between items-center gap-3">
           <div>
-            <h2 className="text-xl font-black">Job Sign-Off</h2>
-            <p className="text-gray-500 text-sm">Scan serials and capture customer signature.</p>
+            <h2 className="text-xl font-black">{t("inst_so_title", "Job Sign-Off")}</h2>
+            <p className="text-gray-500 text-sm">{t("inst_so_sub", "Scan serials and capture customer signature.")}</p>
           </div>
-          <button onClick={onClose} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 shrink-0"><X className="w-5 h-5" /></button>
         </div>
 
         <div className="p-6 space-y-8 flex-1">
           {/* Step 1: Scan Serials */}
           <div className="space-y-4">
             <h3 className="font-bold flex items-center gap-2 text-blue-700">
-              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs">1</div>
-              Scan Hardware Serials
+              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs shrink-0">1</div>
+              {t("inst_so_step1", "Scan Hardware Serials")}
             </h3>
             
             <div className="space-y-3">
               {productsToInstall.map(p => (
-                <div key={p.id} className="border rounded-xl p-4 bg-gray-50 flex justify-between items-center">
+                <div key={p.id} className="border rounded-xl p-4 bg-gray-50 flex flex-wrap justify-between items-center gap-3">
                   <div>
                     <div className="font-bold text-sm">{p.name}</div>
-                    <div className="text-xs text-gray-500">Qty: {p.quantity}</div>
+                    <div className="text-xs text-gray-500">{t("inst_qty_lbl", "Qty: {qty}", { qty: p.quantity })}</div>
                     <div className="flex flex-wrap gap-1 mt-2">
                       {(scannedSerials[p.id] || []).map(code => (
                         <span key={code} className="px-2 py-1 bg-white border text-xs rounded font-mono shadow-sm">{code}</span>
@@ -161,7 +163,7 @@ export function JobSignoffModal({ leadId, onClose, onSuccess, productsToInstall 
                   </div>
                   <button 
                     onClick={() => setActiveScanner(p.id)}
-                    className="p-3 bg-white rounded-xl shadow border text-blue-600 hover:bg-blue-50"
+                    className="p-3 bg-white rounded-xl shadow border text-blue-600 hover:bg-blue-50 shrink-0"
                   >
                     <Barcode className="w-5 h-5" />
                   </button>
@@ -172,8 +174,8 @@ export function JobSignoffModal({ leadId, onClose, onSuccess, productsToInstall 
             {activeScanner && (
               <div className="mt-4 border-2 border-blue-500 rounded-xl overflow-hidden p-2 bg-black">
                 <div className="text-white text-xs text-center mb-2 flex justify-between px-2">
-                  <span>Scanning...</span>
-                  <button onClick={() => setActiveScanner(null)}>Cancel</button>
+                  <span>{t("inst_so_scanning", "Scanning...")}</span>
+                  <button onClick={() => setActiveScanner(null)}>{t("del_cancel", "Cancel")}</button>
                 </div>
                 <BarcodeScanner onScan={(code) => handleScanSuccess(activeScanner, code)} />
               </div>
@@ -183,13 +185,13 @@ export function JobSignoffModal({ leadId, onClose, onSuccess, productsToInstall 
           {/* Step 2: Photos */}
           <div className="space-y-4">
             <h3 className="font-bold flex items-center gap-2 text-blue-700">
-              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs">2</div>
-              Installation Photos
+              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs shrink-0">2</div>
+              {t("inst_so_step2", "Installation Photos")}
             </h3>
-            <label className="border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-gray-500 cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-colors">
+            <label className="border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-gray-500 cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-colors text-center">
               <Camera className="w-8 h-8 mb-2" />
-              <span className="font-bold">Tap to take photos</span>
-              <span className="text-xs mt-1">Upload {photos.length} photos</span>
+              <span className="font-bold">{t("inst_so_tap_photos", "Tap to take photos")}</span>
+              <span className="text-xs mt-1">{t("inst_so_photos_cnt", "Upload ({count}) photos", { count: String(photos.length) })}</span>
               <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => {
                 if (e.target.files) setPhotos(Array.from(e.target.files));
               }} />
@@ -199,12 +201,12 @@ export function JobSignoffModal({ leadId, onClose, onSuccess, productsToInstall 
           {/* Step 3: Signature */}
           <div className="space-y-4">
             <h3 className="font-bold flex items-center gap-2 text-blue-700">
-              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs">3</div>
-              Customer Signature
+              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs shrink-0">3</div>
+              {t("inst_so_step3", "Customer Signature")}
             </h3>
             <div className="border-2 rounded-xl bg-gray-50 overflow-hidden relative touch-none">
               <div className="absolute top-2 right-2 flex gap-2">
-                <button onClick={clearSignature} className="px-3 py-1 bg-white shadow rounded-lg text-xs font-bold text-gray-500">Clear</button>
+                <button onClick={clearSignature} className="px-3 py-1 bg-white shadow rounded-lg text-xs font-bold text-gray-500">{t("inst_so_clear", "Clear")}</button>
               </div>
               <canvas
                 ref={canvasRef}
@@ -220,7 +222,7 @@ export function JobSignoffModal({ leadId, onClose, onSuccess, productsToInstall 
                 onTouchEnd={stopDrawing}
               />
               <div className="text-center p-2 text-xs text-gray-400 bg-gray-50 border-t">
-                I confirm the installation is completed to my satisfaction.
+                {t("inst_so_sign_decl", "I confirm the installation is completed to my satisfaction.")}
               </div>
             </div>
           </div>
@@ -230,10 +232,10 @@ export function JobSignoffModal({ leadId, onClose, onSuccess, productsToInstall 
           <button 
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="w-full py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full min-h-14 h-auto py-4 px-4 whitespace-normal bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
-            {isSubmitting ? "Finalizing..." : "Complete & Generate Warranty"}
+            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin shrink-0" /> : <CheckCircle2 className="w-5 h-5 shrink-0" />}
+            {isSubmitting ? t("inst_so_finalizing", "Finalizing...") : t("inst_so_complete_btn", "Complete & Generate Warranty")}
           </button>
         </div>
       </div>

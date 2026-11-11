@@ -7,31 +7,34 @@ import { formatDistanceToNow } from "date-fns";
 import type { Lead } from "@/types";
 import { updateLeadStatus, claimBroadcastedLead } from "@/app/actions/leads";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 
 const STATUS_OPTIONS = [
-  { value: "new",         label: "New",          color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
-  { value: "contacted",   label: "Contacted",    color: "bg-sky-500/10 text-sky-500 border-sky-500/20" },
-  { value: "site_visit",  label: "Site Visit",   color: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
-  { value: "unreachable", label: "Unreachable",  color: "bg-rose-500/10 text-rose-500 border-rose-500/20" },
-  { value: "busy",        label: "Busy",         color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" },
-  { value: "technical_error", label: "Technical Error", color: "bg-red-500/10 text-red-500 border-red-500/20" },
-  { value: "negotiation", label: "Negotiation",  color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20" },
-  { value: "quoted",      label: "Re-Quote",     color: "bg-orange-500/10 text-orange-500 border-orange-500/20" },
-  { value: "won",         label: "Won",          color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
-  { value: "lost",        label: "Lost",         color: "bg-red-500/10 text-red-500 border-red-500/20" },
+  { value: "new",             key: "inst_st_new" as const,         label: "New",             color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
+  { value: "contacted",       key: "inst_st_contacted" as const,   label: "Contacted",       color: "bg-sky-500/10 text-sky-500 border-sky-500/20" },
+  { value: "site_visit",      key: "inst_st_site_visit" as const,  label: "Site Visit",      color: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
+  { value: "unreachable",     key: "inst_st_unreachable" as const, label: "Unreachable",     color: "bg-rose-500/10 text-rose-500 border-rose-500/20" },
+  { value: "busy",            key: "inst_st_busy" as const,        label: "Busy",            color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" },
+  { value: "technical_error", key: "inst_st_tech_err" as const,    label: "Technical Error", color: "bg-red-500/10 text-red-500 border-red-500/20" },
+  { value: "negotiation",     key: "inst_st_negotiation" as const, label: "Negotiation",     color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20" },
+  { value: "quoted",          key: "inst_st_requote" as const,     label: "Re-Quote",        color: "bg-orange-500/10 text-orange-500 border-orange-500/20" },
+  { value: "won",             key: "inst_st_won" as const,         label: "Won",             color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
+  { value: "lost",            key: "inst_st_lost" as const,        label: "Lost",            color: "bg-red-500/10 text-red-500 border-red-500/20" },
 ] as const;
 
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
   const opt = STATUS_OPTIONS.find(o => o.value === status);
   return (
     <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border ${opt?.color ?? "bg-zinc-100 text-zinc-500 border-zinc-200"}`}>
-      {opt?.label ?? status}
+      {opt ? t(opt.key, opt.label) : status}
     </span>
   );
 }
 
 function StatusDropdown({ leadId, currentStatus }: { leadId: string; currentStatus: string }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState(currentStatus);
   const [isPending, startTransition] = useTransition();
@@ -58,8 +61,8 @@ function StatusDropdown({ leadId, currentStatus }: { leadId: string; currentStat
         disabled={isPending}
         className={`flex items-center gap-1.5 text-[8px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest border transition-all ${current?.color ?? "bg-zinc-100 text-zinc-500 border-zinc-200"} ${isPending ? "opacity-50" : "hover:opacity-80"}`}
       >
-        {isPending ? "…" : current?.label ?? status}
-        <ChevronDown className="w-2.5 h-2.5" />
+        {isPending ? "…" : (current ? t(current.key, current.label) : status)}
+        <ChevronDown className="w-2.5 h-2.5 shrink-0" />
       </button>
 
       {open && (
@@ -72,8 +75,8 @@ function StatusDropdown({ leadId, currentStatus }: { leadId: string; currentStat
                 onClick={() => handleChange(opt.value)}
                 className={`w-full flex items-center justify-between gap-2 text-left text-[10px] font-bold px-3 py-2 rounded-xl hover:bg-white/10 transition-colors ${opt.color.split(" ")[1]}`}
               >
-                {opt.label}
-                {opt.value === status && <Check className="w-3 h-3" />}
+                {t(opt.key, opt.label)}
+                {opt.value === status && <Check className="w-3 h-3 shrink-0" />}
               </button>
             ))}
           </div>
@@ -84,6 +87,7 @@ function StatusDropdown({ leadId, currentStatus }: { leadId: string; currentStat
 }
 
 export function InstallerPipeline({ leads, partnerId, partnerName, role = "salesperson" }: { leads: Lead[], partnerId?: string, partnerName?: string, role?: "salesperson" | "installer" }) {
+  const { t } = useTranslation();
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(5);
 
@@ -93,12 +97,12 @@ export function InstallerPipeline({ leads, partnerId, partnerName, role = "sales
     try {
       const res = await claimBroadcastedLead(leadId, partnerId, partnerName, role);
       if (res.success) {
-        toast.success("Lead claimed successfully!");
+        toast.success(t("inst_claim_ok", "Lead claimed successfully!"));
       } else {
-        toast.error(res.error || "Failed to claim lead. Someone else might have claimed it first.");
+        toast.error(res.error || t("inst_claim_taken_err", "Failed to claim lead. Someone else might have claimed it first."));
       }
     } catch (e) {
-      toast.error("Failed to claim lead.");
+      toast.error(t("inst_claim_err", "Failed to claim job."));
     } finally {
       setClaimingId(null);
     }
@@ -107,7 +111,7 @@ export function InstallerPipeline({ leads, partnerId, partnerName, role = "sales
   if (leads.length === 0) {
     return (
       <div className="bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-300 dark:border-white/20 rounded-[32px] py-10 md:py-20 text-center">
-        <p className="text-zinc-400 dark:text-zinc-400 font-bold italic">No active leads requiring immediate attention.</p>
+        <p className="text-zinc-400 dark:text-zinc-400 font-bold italic">{t("inst_no_active_leads", "No active leads requiring immediate attention.")}</p>
       </div>
     );
   }
@@ -131,24 +135,24 @@ export function InstallerPipeline({ leads, partnerId, partnerName, role = "sales
                   <StatusBadge status={lead.status} />
                   {isBroadcast && (
                     <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border bg-red-500/20 text-red-400 border-red-500/30 animate-pulse">
-                      Urgent • Claim Now
+                      {t("inst_urgent_claim", "Urgent • Claim Now")}
                     </span>
                   )}
                   {lead.price_match_status === 'pending' && (
                     <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border bg-amber-500/10 text-amber-500 border-amber-500/20 animate-pulse">
-                      Price Match
+                      {t("inst_price_match", "Price Match")}
                     </span>
                   )}
                   {lead.is_escalated && (
                     <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border bg-red-500/20 text-red-500 border-red-500/30 animate-pulse">
-                      Escalated
+                      {t("inst_escalated", "Escalated")}
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-3 text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex-wrap">
-                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatDistanceToNow(lead.created_at as Date)} ago</span>
+                  <span className="flex items-center gap-1"><Clock className="w-3 h-3 shrink-0" />{t("inst_ago", "{time} ago", { time: formatDistanceToNow(lead.created_at as Date) })}</span>
                   <span className="w-1 h-1 bg-zinc-300 dark:bg-zinc-700 rounded-full" />
-                  <span>{lead.property_type ?? "Residential"}</span>
+                  <span>{lead.property_type ?? t("prop_residential", "Residential")}</span>
                   {lead.mobile_number && (
                     <>
                       <span className="w-1 h-1 bg-zinc-300 dark:bg-zinc-700 rounded-full" />
@@ -159,25 +163,25 @@ export function InstallerPipeline({ leads, partnerId, partnerName, role = "sales
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center gap-2 shrink-0 flex-wrap">
               {isBroadcast ? (
                 <button 
                   onClick={() => handleClaim(lead.id!)}
                   disabled={claimingId === lead.id}
-                  className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-500 text-black font-black text-[10px] uppercase tracking-widest hover:bg-indigo-400 shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all hover:scale-105"
+                  className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-500 text-black font-black text-[10px] uppercase tracking-widest hover:bg-indigo-400 shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all hover:scale-105 whitespace-normal h-auto"
                 >
-                  {claimingId === lead.id ? "Claiming..." : "Claim Lead"}
+                  {claimingId === lead.id ? t("inst_claiming", "Claiming...") : t("inst_claim_btn", "Claim Lead")}
                 </button>
               ) : (
                 <>
                   <StatusDropdown leadId={lead.id!} currentStatus={lead.status} />
-                  <a href={`tel:${lead.mobile_number}`} className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-zinc-100 dark:bg-white/5 text-zinc-700 dark:text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-500 transition-all border border-zinc-200 dark:border-white/10 hover:border-emerald-300 dark:hover:border-emerald-500/30">
-                    <Phone className="w-3.5 h-3.5" /> Call
+                  <a href={`tel:${lead.mobile_number}`} className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-zinc-100 dark:bg-white/5 text-zinc-700 dark:text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-500 transition-all border border-zinc-200 dark:border-white/10 hover:border-emerald-300 dark:hover:border-emerald-500/30 whitespace-normal h-auto">
+                    <Phone className="w-3.5 h-3.5 shrink-0" /> {t("inst_call_btn", "Call")}
                   </a>
-                  <a href={`https://wa.me/91${lead.mobile_number}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all">
-                    <MessageSquare className="w-3.5 h-3.5" /> WA
+                  <a href={`https://wa.me/91${lead.mobile_number}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all whitespace-normal h-auto">
+                    <MessageSquare className="w-3.5 h-3.5 shrink-0" /> {t("inst_wa_btn", "WA")}
                   </a>
-                  <Link href={`/${role}/jobs/${lead.id}`} className="w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-white/10 border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-600 dark:text-white hover:bg-blue-600 hover:text-white transition-all shadow-lg hover:border-blue-500/50">
+                  <Link href={`/${role}/jobs/${lead.id}`} className="w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-white/10 border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-600 dark:text-white hover:bg-blue-600 hover:text-white transition-all shadow-lg hover:border-blue-500/50 shrink-0">
                     <ArrowUpRight className="w-4 h-4" />
                   </Link>
                 </>
@@ -191,9 +195,9 @@ export function InstallerPipeline({ leads, partnerId, partnerName, role = "sales
         <div className="flex justify-center mt-4">
           <button
             onClick={() => setVisibleCount(prev => prev + 10)}
-            className="px-6 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-full font-bold text-xs transition-colors"
+            className="px-6 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-full font-bold text-xs transition-colors whitespace-normal h-auto"
           >
-            Load More Jobs ({leads.length - visibleCount} remaining)
+            {t("inst_load_more_jobs", "Load More Jobs ({count} remaining)", { count: String(leads.length - visibleCount) })}
           </button>
         </div>
       )}

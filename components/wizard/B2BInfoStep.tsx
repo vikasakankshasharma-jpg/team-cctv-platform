@@ -27,7 +27,7 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
     const upper = value.toUpperCase();
     setGstNumber(upper);
     if (upper && !validateGST(upper)) {
-      setGstError("Invalid GST format (e.g. 22AAAAA0000A1Z5)");
+      setGstError(t("b2b_err_gst_fmt", "Invalid GST format (e.g. 22AAAAA0000A1Z5)"));
     } else {
       setGstError("");
     }
@@ -35,7 +35,7 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
 
   const handleConfirm = () => {
     if (gstNumber && !validateGST(gstNumber)) {
-      setGstError("Please enter a valid GST number or leave it blank.");
+      setGstError(t("b2b_err_gst_valid", "Please enter a valid GST number or leave it blank."));
       return;
     }
     onConfirm({ company_name: companyName, gst_number: gstNumber });
@@ -64,7 +64,7 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
         {/* Info */}
         <div className="bg-white/70 rounded-[18px] p-4 mb-6 border border-blue-100">
           <p className="text-[13px] text-zinc-600 font-medium leading-relaxed">
-            {t('b2b_desc1', "We'll generate your")} <span className="font-black text-zinc-900">{t('b2b_desc2', 'full corporate quote')}</span> {t('b2b_desc3', 'instantly. Optionally add your company details for a')} <span className="font-black text-zinc-900">{t('b2b_desc4', 'GST invoice')}</span> {t('b2b_desc5', '— you can always add these later.')}
+            {t('b2b_desc_full', "We'll generate your complete business quote right away. Add your company details now for a GST Bill, or skip and share later.")}
           </p>
         </div>
 
@@ -78,7 +78,7 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
               type="text"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="e.g. Acme Pvt. Ltd."
+              placeholder={t('b2b_company_ph', 'e.g. Sharma Enterprises Pvt. Ltd.')}
               className="w-full bg-white border-2 border-zinc-200 focus:border-blue-500 rounded-[16px] px-4 py-3.5 text-[15px] font-semibold text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 placeholder:font-normal"
             />
           </div>
@@ -92,7 +92,7 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
               type="text"
               value={gstNumber}
               onChange={(e) => handleGSTChange(e.target.value)}
-              placeholder="e.g. 22AAAAA0000A1Z5"
+              placeholder={t("b2b_gst_ph", "e.g. 22AAAAA0000A1Z5")}
               maxLength={15}
               className={`w-full bg-white border-2 rounded-[16px] px-4 py-3.5 text-[15px] font-mono font-semibold text-zinc-900 outline-none transition-colors placeholder:font-sans placeholder:font-normal placeholder:text-zinc-400 ${
                 gstError ? "border-red-400 focus:border-red-500" : "border-zinc-200 focus:border-blue-500"
@@ -106,7 +106,7 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                 </svg>
-                Valid GST format
+                {t("b2b_gst_valid", "Valid GST format")}
               </p>
             )}
           </div>
@@ -116,14 +116,14 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
         <div className="flex flex-col gap-3">
           <button
             onClick={handleConfirm}
-            className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-xs sm:text-sm tracking-[0.2em] rounded-[18px] shadow-[0_8px_20px_-8px_rgba(37,99,235,0.5)] hover:shadow-blue-600/40 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+            className="w-full min-h-14 h-auto py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-xs sm:text-sm tracking-[0.12em] rounded-[18px] shadow-[0_8px_20px_-8px_rgba(37,99,235,0.5)] hover:shadow-blue-600/40 transition-all flex items-center justify-center gap-3 active:scale-[0.98] whitespace-normal text-center"
           >
             {t('b2b_btn', 'Generate Corporate Quote')}
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4 shrink-0" />
           </button>
           <button
             onClick={onSkip}
-            className="w-full h-11 text-zinc-500 hover:text-zinc-800 font-bold text-[12px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
+            className="w-full min-h-11 h-auto py-2 px-3 text-zinc-500 hover:text-zinc-800 font-bold text-[12px] uppercase tracking-wider transition-colors flex items-center justify-center gap-2 whitespace-normal text-center"
           >
             <UserCheck className="w-4 h-4" />
             {t('b2b_skip', "Skip — I'm an individual")}

@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { sendAdminNotification } from "@/lib/notification-service";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 
 export async function POST(request: Request) {
+  let locale = resolveRequestLocale(request);
   try {
     const data = await request.json();
+    locale = resolveRequestLocale(request, data);
     const { phone, requested_camera_count, property_type, technology, consent } = data;
 
     if (!phone || !requested_camera_count) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+      return NextResponse.json({ error: getApiMessage(locale, "missing_fields") }, { status: 400 });
     }
 
     const docRef = adminDb.collection("industrial_leads").doc();
@@ -29,7 +32,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, id: docRef.id });
   } catch (error) {
-    const err = error as Error;
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("Industrial submission error:", error);
+    return NextResponse.json({ error: getApiMessage(locale, "internal_error") }, { status: 500 });
   }
 }

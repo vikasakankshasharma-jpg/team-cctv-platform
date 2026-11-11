@@ -88,7 +88,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
     setError("");
 
     if (!/^[6-9]\d{9}$/.test(mobile)) {
-      return setError("Enter a valid 10-digit Indian mobile number (starts with 6-9).");
+      return setError(t('pcm_err_mob', "Enter a valid 10-digit Indian mobile number (starts with 6-9)."));
     }
 
     setLoading(true);
@@ -136,10 +136,10 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
     } catch (err: any) {
       console.error("PhoneCaptureModal OTP Error:", err);
       const errCode = err.code || "";
-      let errMsg = err.message || "Failed to send code. Please try again.";
-      if (errCode === "auth/too-many-requests" || errMsg.includes("auth/too-many-requests")) errMsg = "Too many attempts. Please wait a few minutes.";
-      else if (errCode === "auth/invalid-app-credential" || errMsg.includes("auth/invalid-app-credential")) errMsg = "reCAPTCHA verification failed. Please refresh.";
-      else if (errCode === "auth/captcha-check-failed" || errMsg.includes("auth/captcha-check-failed")) errMsg = "reCAPTCHA failed. Please refresh the page.";
+      let errMsg = err.message || t('pcm_err_send', "Failed to send code. Please try again.");
+      if (errCode === "auth/too-many-requests" || errMsg.includes("auth/too-many-requests")) errMsg = t('pcm_err_many', "Too many attempts. Please wait a few minutes.");
+      else if (errCode === "auth/invalid-app-credential" || errMsg.includes("auth/invalid-app-credential")) errMsg = t('pcm_err_recap1', "Security check failed. Please refresh the page and try again.");
+      else if (errCode === "auth/captcha-check-failed" || errMsg.includes("auth/captcha-check-failed")) errMsg = t('pcm_err_recap1', "Security check failed. Please refresh the page and try again.");
       setError(errMsg);
     } finally {
       setLoading(false);
@@ -183,7 +183,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
   const handleVerifyAndSave = async (e?: React.FormEvent, codeOverride?: string) => {
     if (e) e.preventDefault();
     const fullOtp = codeOverride || otp.join("");
-    if (fullOtp.length < 6) return setError("Please enter the complete 6-digit code.");
+    if (fullOtp.length < 6) return setError(t('pcm_err_otp6', "Please enter the complete 6-digit code."));
 
     setLoading(true);
     setError("");
@@ -194,7 +194,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
         const result = await confirmationResult.confirm(fullOtp);
         idToken = await result.user.getIdToken();
       } else {
-        throw new Error("Verification session missing. Please go back and request a new code.");
+        throw new Error(t('pcm_err_sess', "Verification session missing. Please go back and request a new code."));
       }
 
       const res = await fetch("/api/interest-leads", {
@@ -207,17 +207,17 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
       });
       const data = await res.json();
 
-      if (!res.ok) throw new Error(extractErrorMessage(data, "Verification failed."));
+      if (!res.ok) throw new Error(extractErrorMessage(data, t('pcm_err_ver', "Verification failed.")));
 
       setStep("success");
     } catch (err: any) {
       setOtp(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
       
-      let errMsg = extractErrorMessage(err, "Incorrect code. Please try again.");
-      if (errMsg.includes("auth/invalid-verification-code")) errMsg = "The code you entered is incorrect.";
-      else if (errMsg.includes("auth/code-expired")) errMsg = "The code has expired. Please resend.";
-      else if (errMsg.includes("auth/too-many-requests")) errMsg = "Too many attempts. Please try again later.";
+      let errMsg = extractErrorMessage(err, t('pcm_err_wrong', "Incorrect code. Please try again."));
+      if (errMsg.includes("auth/invalid-verification-code")) errMsg = t('pcm_err_wrong', "Incorrect code. Please try again.");
+      else if (errMsg.includes("auth/code-expired")) errMsg = t('pcm_err_exp', "The code has expired. Please resend.");
+      else if (errMsg.includes("auth/too-many-requests")) errMsg = t('pcm_err_many', "Too many attempts. Please wait a few minutes.");
       
       setError(errMsg);
     } finally {
@@ -234,7 +234,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
         const result = await confirmationResult.confirm(fullOtp);
         idToken = await result.user.getIdToken();
       } else {
-        throw new Error("Verification session missing.");
+        throw new Error(t('pcm_err_sess', "Verification session missing. Please go back and request a new code."));
       }
 
       const res = await fetch("/api/interest-leads", {
@@ -246,15 +246,15 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(extractErrorMessage(data, "Verification failed."));
+      if (!res.ok) throw new Error(extractErrorMessage(data, t('pcm_err_ver', "Verification failed.")));
       
       setStep("success");
     } catch (err: any) {
       setOtp(["", "", "", "", "", ""]);
       
-      let errMsg = extractErrorMessage(err, "Auto-fill verification failed. Please enter code manually.");
-      if (errMsg.includes("auth/invalid-verification-code")) errMsg = "The code you entered is incorrect.";
-      else if (errMsg.includes("auth/code-expired")) errMsg = "The code has expired. Please resend.";
+      let errMsg = extractErrorMessage(err, t('pcm_err_autofill', "Auto-fill verification failed. Please enter code manually."));
+      if (errMsg.includes("auth/invalid-verification-code")) errMsg = t('pcm_err_wrong', "Incorrect code. Please try again.");
+      else if (errMsg.includes("auth/code-expired")) errMsg = t('pcm_err_exp', "The code has expired. Please resend.");
       
       setError(errMsg);
     } finally {
@@ -271,7 +271,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
         <button
           onClick={onClose}
           className="absolute right-4 top-4 p-1.5 rounded-full text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-          aria-label="Close modal"
+          aria-label={t('pcm_close_aria', 'Close modal')}
         >
           <X className="w-5 h-5" />
         </button>
@@ -402,7 +402,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
                     : "text-indigo-600 dark:text-indigo-400 hover:underline"
                 }`}
               >
-                {countdown > 0 ? `Resend Code in ${countdown}s` : t('pcm_resend', "Resend Security Code")}
+                {countdown > 0 ? t('pcm_resend_in', 'Resend Code in {sec}s', { sec: String(countdown) }) : t('pcm_resend', "Resend Security Code")}
               </button>
               <button
                 type="button"
@@ -432,9 +432,9 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
                 {t('pcm_conf', 'Waitlist Confirmed!')}
               </h3>
               <p className="text-zinc-500 dark:text-zinc-400 font-medium text-xs sm:text-sm leading-relaxed px-2">
-                {t('pcm_wait_desc', 'We are not actively serving PIN-code')} <strong className="text-zinc-900 dark:text-white font-bold">{pincode}</strong> yet, but we are expanding fast! 
+                {t('pcm_wait_desc', 'We are not actively serving PIN-code')} <strong className="text-zinc-900 dark:text-white font-bold">{pincode}</strong> {t('pcm_wait_fast', 'yet, but we are expanding fast!')} 
                 <br/><br/>
-                Your request has been registered. We will notify you immediately as soon as we start operations in your area.
+                {t('pcm_wait_notify', 'Your request has been registered. We will notify you immediately as soon as we start operations in your area.')}
               </p>
             </div>
 

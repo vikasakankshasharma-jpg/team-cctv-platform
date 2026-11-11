@@ -23,37 +23,46 @@ import { LocalServiceHubs } from "@/components/landing/LocalServiceHubs";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 import { getDynamicPackageCatalog } from "@/lib/dynamic-package-pricing";
 import type { Metadata } from "next";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { HOME_SEO_METADATA } from "@/lib/i18n/seo-metadata";
+import { SPEECH_LOCALE_MAP } from "@/lib/i18n/mapping";
 
-export const metadata: Metadata = {
-  title: "Instant Free CCTV Quotation & CCTV Setup on EMI | Compare CP Plus, Hikvision & Prama",
-  description: "Get an instant free CCTV quotation online. Complete CCTV setup with installation on easy EMI starting ₹649/mo. Compare multiple brand variations for your home or business.",
-  keywords: ["Instant free CCTV quotation", "CCTV on EMI", "CCTV setup with installation", "CP Plus quotation", "Hikvision CCTV price", "CCTV price with installation", "CCTVQuotation", "TEAM CCTV"],
-  alternates: {
-    canonical: "https://cctvquotation.com",
-  },
-  openGraph: {
-    title: "Instant Free CCTV Quotation & CCTV Setup on EMI | Compare Brands",
-    description: "Instant CCTV quotation online. Complete setup with installation on EMI starting ₹649/month. Compare CP Plus, Hikvision, and Prama with transparent pricing.",
-    type: "website",
-    url: "https://cctvquotation.com",
-    siteName: "CCTVQuotation",
-    locale: "en_IN",
-    images: [
-      {
-        url: "https://cctvquotation.com/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "CCTVQuotation — Free Instant CCTV Quotation & CCTV on EMI",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Instant Free CCTV Quotation & CCTV Setup on EMI",
-    description: "Get your exact CCTV installation cost online in 2 minutes. Easy EMI options starting ₹649/month.",
-    images: ["https://cctvquotation.com/og-image.png"],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const seo = HOME_SEO_METADATA[locale] || HOME_SEO_METADATA.en;
+  const ogLocale = (SPEECH_LOCALE_MAP[locale] || "en-IN").replace("-", "_");
+
+  return {
+    title: seo.title,
+    description: seo.description,
+    keywords: ["Instant free CCTV quotation", "CCTV on EMI", "CCTV setup with installation", "CP Plus quotation", "Hikvision CCTV price", "CCTV price with installation", "CCTVQuotation", "TEAM CCTV"],
+    alternates: {
+      canonical: "https://cctvquotation.com",
+    },
+    openGraph: {
+      title: seo.ogTitle,
+      description: seo.ogDescription,
+      type: "website",
+      url: "https://cctvquotation.com",
+      siteName: "CCTVQuotation",
+      locale: ogLocale,
+      images: [
+        {
+          url: "https://cctvquotation.com/og-image.png",
+          width: 1200,
+          height: 630,
+          alt: "CCTVQuotation — Free Instant CCTV Quotation & CCTV on EMI",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: seo.ogTitle,
+      description: seo.ogDescription,
+      images: ["https://cctvquotation.com/og-image.png"],
+    },
+  };
+}
 
 export default async function LandingPage() {
   const dynamicPackages = await getDynamicPackageCatalog();
@@ -129,26 +138,30 @@ export default async function LandingPage() {
             <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-blue-500/50 hidden sm:block" />
             <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
               <CreditCard className="w-4 h-4 shrink-0" />
-              <span>Easy EMI from ₹649/mo</span>
+              <span><TranslatedText tKey="land_pill_emi" defaultText="Easy EMI from ₹649/mo" /></span>
             </span>
             <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-blue-500/50 hidden sm:block" />
-            <span className="text-slate-500 dark:text-slate-400 hidden sm:inline">18% GST Bill & Fitting Included</span>
+            <span className="text-slate-500 dark:text-slate-400 hidden sm:inline"><TranslatedText tKey="land_pill_gst" defaultText="18% GST Bill & Fitting Included" /></span>
           </div>
 
           {/* Core USP Headline in Authentic Blue-Indigo Theme */}
           <h1 className="text-3xl sm:text-5xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight max-w-5xl mb-4 sm:mb-6 leading-[1.25] md:leading-[1.18]">
-            <span>CCTV Setup with Installation on </span>
+            <span><TranslatedText tKey="land_h1_pre" defaultText="CCTV Setup with Installation on" />{" "}</span>
             <span className="text-blue-600 md:text-transparent md:bg-clip-text md:bg-gradient-to-r md:from-blue-600 md:to-indigo-600 dark:text-blue-400">
-              Easy EMI.
+              <TranslatedText tKey="land_h1_emi" defaultText="Easy EMI." />
             </span>
             <br />
             <span className="text-slate-800 dark:text-slate-200 text-2xl sm:text-4xl lg:text-5xl font-extrabold">
-              Compare Multiple Brand Variations for Your Site.
+              <TranslatedText tKey="land_h1_sub" defaultText="Compare Multiple Brand Variations for Your Site." />
             </span>
           </h1>
 
           <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-blue-100/70 max-w-3xl mb-8 sm:mb-10 font-medium leading-relaxed">
-            Get your exact quotation online in 2 minutes. Compare <strong className="text-slate-900 dark:text-white font-bold">CP Plus, Hikvision, and Prama</strong> packages side-by-side with transparent pricing. Full hardware, cabling, professional mounting, and mobile app setup included.
+            <TranslatedText tKey="land_hero_sub_1" defaultText="Get your exact quotation online in 2 minutes. Compare" />{" "}
+            <strong className="text-slate-900 dark:text-white font-bold">
+              <TranslatedText tKey="land_hero_sub_brands" defaultText="CP Plus, Hikvision, and Prama" />
+            </strong>{" "}
+            <TranslatedText tKey="land_hero_sub_2" defaultText="packages side-by-side with clear pricing. Full hardware, cabling, fitting & mobile app setup included." />
           </p>
 
           {/* Interactive Live Variation Estimator Widget */}
@@ -156,12 +169,12 @@ export default async function LandingPage() {
             <HomeVariationEstimator initialPackages={dynamicPackages} />
           </div>
 
-          <div className="flex items-center justify-center gap-4 text-[10px] sm:text-xs font-black text-slate-400 dark:text-blue-300/50 uppercase tracking-widest">
-            <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> 18% GST Bill</span>
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-[10px] sm:text-xs font-black text-slate-400 dark:text-blue-300/50 uppercase tracking-widest">
+            <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> <TranslatedText tKey="land_metric_gst" defaultText="18% GST Bill" /></span>
             <span>·</span>
-            <span className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-400" /> 500+ Installs</span>
+            <span className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-400" /> <TranslatedText tKey="land_metric_installs" defaultText="500+ Installs" /></span>
             <span>·</span>
-            <span className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-blue-500" /> BIS-ER Certified</span>
+            <span className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-blue-500" /> <TranslatedText tKey="land_metric_bis" defaultText="BIS-ER Certified" /></span>
           </div>
 
         </div>
@@ -185,7 +198,7 @@ export default async function LandingPage() {
                 <TranslatedText tKey="how_it_works" defaultText="Simple 3-Step Process" />
               </h2>
               <h3 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-                From Online Quote to Live Cameras on Your Phone
+                <TranslatedText tKey="land_steps_heading" defaultText="From Online Quote to Live Cameras on Your Phone" />
               </h3>
             </div>
             
@@ -194,29 +207,41 @@ export default async function LandingPage() {
                 { 
                   icon: Target, 
                   step: "01",
+                  tKey: "land_step1_title",
+                  dKey: "land_step1_desc",
                   title: "Choose Your Cameras & Compare", 
-                  desc: "Select your required cameras, pick between CP Plus, Hikvision or Prama, and see your exact monthly EMI or upfront discounted price." 
+                  desc: "Pick how many cameras you need, compare CP Plus, Hikvision or Prama side-by-side, and check EMI or upfront price." 
                 },
                 { 
                   icon: Cpu, 
                   step: "02",
+                  tKey: "land_step2_title",
+                  dKey: "land_step2_desc",
                   title: "Book with ₹500 Token or Free Survey", 
-                  desc: "Lock in your hardware pricing and installation date for just ₹500. Pay the remaining balance only after physical delivery and verification." 
+                  desc: "Lock your hardware rate and fitting date for just ₹500. Pay the remaining balance only after boxes arrive and you check them." 
                 },
                 { 
                   icon: Layers, 
                   step: "03",
-                  title: "Certified Setup & Mobile Live View", 
-                  desc: "Our verified technician completes cable routing, camera mounting, DVR setup, and connects high-speed live camera view to your smartphone." 
+                  tKey: "land_step3_title",
+                  dKey: "land_step3_desc",
+                  title: "Certified Fitting & Mobile Live View", 
+                  desc: "Our verified technician runs neat wiring, mounts the cameras, configures the DVR/NVR, and sets up live view on your phone." 
                 },
               ].map((item, i) => (
                 <div key={i} className="flex flex-col items-center text-center p-6 md:p-8 rounded-[32px] bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 shadow-xs hover:-translate-y-1.5 transition-all duration-300 group hover:shadow-lg dark:hover:shadow-none hover:border-blue-500/30">
                   <div className="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 flex items-center justify-center text-blue-600 dark:text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-md shrink-0 mb-4">
                     <item.icon className="w-6 h-6" />
                   </div>
-                  <span className="text-[11px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1">Step {item.step}</span>
-                  <h4 className="text-xl font-black text-slate-900 dark:text-white mb-2">{item.title}</h4>
-                  <p className="text-slate-600 dark:text-zinc-400 font-medium leading-relaxed text-sm">{item.desc}</p>
+                  <span className="text-[11px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1">
+                    <TranslatedText tKey="land_step_prefix" defaultText="Step" /> {item.step}
+                  </span>
+                  <h4 className="text-xl font-black text-slate-900 dark:text-white mb-2">
+                    <TranslatedText tKey={item.tKey} defaultText={item.title} />
+                  </h4>
+                  <p className="text-slate-600 dark:text-zinc-400 font-medium leading-relaxed text-sm">
+                    <TranslatedText tKey={item.dKey} defaultText={item.desc} />
+                  </p>
                 </div>
               ))}
             </div>
@@ -231,10 +256,10 @@ export default async function LandingPage() {
             <Zap className="w-7 h-7 sm:w-9 sm:h-9 fill-current" />
           </div>
           <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tight mb-4 leading-tight">
-            Ready to secure your space <br className="hidden sm:block" /> with transparent pricing?
+            <TranslatedText tKey="land_cta_title_1" defaultText="Ready to protect your property" /> <br className="hidden sm:block" /> <TranslatedText tKey="land_cta_title_2" defaultText="with transparent pricing?" />
           </h2>
           <p className="text-slate-600 dark:text-blue-100/70 text-base sm:text-lg mb-8 font-medium max-w-xl text-center">
-            2-minute setup. Multiple brand options. 18% GST invoice and manufacturer warranty included.
+            <TranslatedText tKey="land_cta_sub" defaultText="2-minute setup. Multiple brand options. 18% GST bill & manufacturer warranty included." />
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full sm:w-auto mb-12">
@@ -242,7 +267,7 @@ export default async function LandingPage() {
               href="/wizard"
               className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 active:scale-95"
             >
-              <span>Get Your Free Quotation</span>
+              <span><TranslatedText tKey="get_quote" defaultText="Get Your Free Quotation" /></span>
               <ArrowRight className="w-4 h-4" />
             </Link>
 
@@ -253,7 +278,7 @@ export default async function LandingPage() {
               className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 active:scale-95"
             >
               <MessageCircle className="w-4 h-4" />
-              <span>Chat on WhatsApp</span>
+              <span><TranslatedText tKey="wa_chat" defaultText="Chat on WhatsApp" /></span>
             </a>
           </div>
 

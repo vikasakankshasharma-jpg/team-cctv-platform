@@ -4,8 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, ShieldAlert, Loader2, CheckCircle2, ChevronRight, User } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function OnboardingClient() {
+  const { t } = useTranslation();
   const router = useRouter();
   
   const [panNumber, setPanNumber] = useState("");
@@ -41,13 +43,13 @@ export function OnboardingClient() {
       
       if (res.ok && data.valid) {
         setKycData({ valid: true, name: data.registeredName });
-        toast.success("Identity Verified Successfully!");
+        toast.success(t("onb_pan_ok", "Identity Verified Successfully!"));
       } else {
         setKycData({ valid: false, name: "" });
-        toast.error(data.error || data.message || "Invalid PAN Number");
+        toast.error(data.error || data.message || t("onb_pan_inv", "Invalid PAN Number"));
       }
     } catch (e) {
-      toast.error("Verification Service Error");
+      toast.error(t("onb_err_svc", "Verification Service Error"));
       setKycData({ valid: false, name: "" });
     } finally {
       setIsVerifying(false);
@@ -56,7 +58,7 @@ export function OnboardingClient() {
 
   const handleSubmit = async () => {
     if (!kycData || !kycData.valid) {
-      toast.error("Please provide a valid PAN number first.");
+      toast.error(t("onb_err_pan_req", "Please provide a valid PAN number first."));
       return;
     }
     
@@ -74,13 +76,13 @@ export function OnboardingClient() {
 
       const data = await res.json();
       if (res.ok) {
-        toast.success("Profile Setup Complete!");
+        toast.success(t("onb_ok_done", "Profile Setup Complete!"));
         router.push(data.redirectUrl);
       } else {
-        toast.error(data.error || "Failed to complete onboarding");
+        toast.error(data.error || t("onb_err_fail", "Failed to complete onboarding"));
       }
     } catch (e) {
-      toast.error("An error occurred");
+      toast.error(t("sup_err_gen", "An error occurred"));
     } finally {
       setIsSubmitting(false);
     }
@@ -95,9 +97,9 @@ export function OnboardingClient() {
         <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/10 backdrop-blur-md">
           <ShieldCheck className="w-8 h-8 text-white" />
         </div>
-        <h1 className="text-2xl font-black text-white">Complete Your Profile</h1>
+        <h1 className="text-2xl font-black text-white">{t("onb_title", "Complete Your Profile")}</h1>
         <p className="text-zinc-400 text-sm mt-2 font-medium">
-          You have been invited to join the platform. Please verify your identity to activate your account.
+          {t("onb_sub", "You have been invited to join the platform. Please verify your identity to activate your account.")}
         </p>
       </div>
 
@@ -107,7 +109,7 @@ export function OnboardingClient() {
         {/* PAN Input (The trigger) */}
         <div className="space-y-2">
           <label className="text-sm font-bold text-gray-700 flex items-center justify-between">
-            <span>Permanent Account Number (PAN) <span className="text-red-500">*</span></span>
+            <span>{t("onb_pan_lbl", "Permanent Account Number (PAN)")} <span className="text-red-500">*</span></span>
             {isVerifying && <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />}
           </label>
           <div className="relative">
@@ -125,13 +127,13 @@ export function OnboardingClient() {
             {kycData?.valid && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-emerald-100 px-2 py-1 rounded-md">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span className="text-xs font-bold text-emerald-700">Verified</span>
+                <span className="text-xs font-bold text-emerald-700">{t("onb_verified", "Verified")}</span>
               </div>
             )}
             {kycData?.valid === false && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-red-100 px-2 py-1 rounded-md">
                 <ShieldAlert className="w-4 h-4 text-red-600" />
-                <span className="text-xs font-bold text-red-700">Invalid</span>
+                <span className="text-xs font-bold text-red-700">{t("onb_invalid", "Invalid")}</span>
               </div>
             )}
           </div>
@@ -139,7 +141,7 @@ export function OnboardingClient() {
 
         {/* Locked Official Name */}
         <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-700">Official Legal Name</label>
+          <label className="text-sm font-bold text-gray-700">{t("onb_legal_name", "Official Legal Name")}</label>
           <div className="relative">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
               <User className="w-5 h-5" />
@@ -148,19 +150,19 @@ export function OnboardingClient() {
               type="text" 
               value={kycData?.name || ""}
               readOnly
-              placeholder="Auto-filled via Govt Database"
+              placeholder={t("onb_auto_ph", "Auto-filled via Govt Database")}
               className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-100 bg-gray-50 font-bold text-gray-900 cursor-not-allowed"
             />
           </div>
           <p className="text-xs font-bold text-gray-400 flex items-center gap-1 mt-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
-            This prevents fraud and ensures your TDS filings match exactly.
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+            <span>{t("onb_tds_note", "This prevents fraud and ensures your TDS filings match exactly.")}</span>
           </p>
         </div>
 
         {/* Optional GST */}
         <div className="space-y-2 pt-4 border-t">
-          <label className="text-sm font-bold text-gray-700">GST Number (Optional)</label>
+          <label className="text-sm font-bold text-gray-700">{t("onb_gst_opt", "GST Number (Optional)")}</label>
           <input 
             type="text" 
             value={gstNumber}
@@ -173,14 +175,14 @@ export function OnboardingClient() {
         <button
           onClick={handleSubmit}
           disabled={!kycData?.valid || isSubmitting}
-          className="w-full mt-4 bg-zinc-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-zinc-800 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2 group"
+          className="w-full mt-4 bg-zinc-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-zinc-800 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2 group whitespace-normal text-center leading-snug"
         >
           {isSubmitting ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
             <>
-              Activate Account
-              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              {t("onb_activate", "Activate Account")}
+              <ChevronRight className="w-5 h-5 shrink-0 group-hover:translate-x-1 transition-transform" />
             </>
           )}
         </button>

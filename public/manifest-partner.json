@@ -2,6 +2,8 @@
   "name": "CCTVQuotation Partner Portal",
   "short_name": "CCTV Partner",
   "description": "CCTVQuotation - Partner Dashboard",
+  "lang": "en-IN",
+  "dir": "ltr",
   "start_url": "/partner/dashboard",
   "display": "standalone",
   "background_color": "#ffffff",

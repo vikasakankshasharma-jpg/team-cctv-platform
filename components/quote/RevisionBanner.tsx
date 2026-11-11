@@ -1,4 +1,5 @@
 import { Info } from "lucide-react";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 
 interface RevisionBannerProps {
   version: number;
@@ -17,15 +18,15 @@ export function RevisionBanner({ version, revisionNotes, isRevision }: RevisionB
         </div>
         <div className="ml-3">
           <h3 className="text-sm font-medium text-amber-800">
-            Revised Quotation (Version {version})
+            <TranslatedText tKey="rev_title" defaultText={`Revised Quotation (Version ${version})`} params={{ version: String(version) }} />
           </h3>
           <div className="mt-2 text-sm text-amber-700">
             <p>
-              This quotation has been updated following your site visit to ensure a perfect installation.
+              <TranslatedText tKey="rev_desc" defaultText="This quotation has been updated following your site visit to ensure a perfect installation." />
             </p>
             {revisionNotes && (
               <div className="mt-3 bg-amber-100/50 p-3 rounded border border-amber-200">
-                <span className="font-semibold block mb-1">Updates made:</span>
+                <span className="font-semibold block mb-1"><TranslatedText tKey="rev_updates" defaultText="Updates made:" /></span>
                 <span className="italic">{revisionNotes}</span>
               </div>
             )}

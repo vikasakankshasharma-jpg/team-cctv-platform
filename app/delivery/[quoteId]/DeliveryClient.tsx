@@ -17,8 +17,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { DynamicOnScreenQRCodeModal } from "@/components/shared/DynamicOnScreenQRCodeModal";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function DeliveryClient({ quoteId, quote }: { quoteId: string, quote: any }) {
+  const { t } = useTranslation();
   const [otp, setOtp] = useState("");
   const [cashCollected, setCashCollected] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -70,12 +72,12 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
       const data = await res.json();
       if (res.ok && data.success) {
         setCashRequested(true);
-        toast.success("Cash approval requested from Admin desk!");
+        toast.success(t("del_cash_req_ok", "Cash approval requested from Admin desk!"));
       } else {
-        toast.error(data.error || "Failed to request cash approval");
+        toast.error(data.error || t("del_cash_req_err", "Failed to request cash approval"));
       }
     } catch {
-      toast.error("Network error requesting cash approval");
+      toast.error(t("del_cash_req_net_err", "Network error requesting cash approval"));
     } finally {
       setIsRequestingCash(false);
     }
@@ -83,13 +85,13 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
 
   const handleVerify = async () => {
     if (otp.length !== 4) {
-      toast.error("Please enter a 4-digit OTP.");
+      toast.error(t("del_otp_4digit_err", "Please enter a 4-digit OTP."));
       return;
     }
 
     // If an amount is due at delivery, ensure either UPI QR was paid or cash was collected with approval
     if (!isFullyPaid && expectedAmount > 0 && !upiPaymentVerified && !cashCollected) {
-      toast.error("Please collect payment via On-Screen UPI QR or confirm cash before verifying.");
+      toast.error(t("del_pay_before_verify", "Please collect payment via On-Screen UPI QR or confirm cash before verifying."));
       return;
     }
 
@@ -110,12 +112,12 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
       const data = await res.json();
       if (data.success) {
         setIsSuccess(true);
-        toast.success("Delivery Confirmed!");
+        toast.success(t("del_confirmed_toast", "Delivery Confirmed!"));
       } else {
-        toast.error(data.error || "Invalid OTP.");
+        toast.error(data.error || t("del_invalid_otp", "Invalid OTP."));
       }
     } catch (e) {
-      toast.error("Network error. Try again.");
+      toast.error(t("del_net_retry", "Network error. Try again."));
     } finally {
       setIsVerifying(false);
     }
@@ -127,22 +129,22 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
         <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <CheckCircle2 className="w-8 h-8" />
         </div>
-        <h2 className="text-xl font-bold text-zinc-900 mb-2">Delivery Completed</h2>
-        <p className="text-sm text-zinc-500">The OTP was verified and materials marked delivered.</p>
+        <h2 className="text-xl font-bold text-zinc-900 mb-2">{t("del_done_title", "Delivery Completed")}</h2>
+        <p className="text-sm text-zinc-500">{t("del_done_desc", "The OTP was verified and materials marked delivered.")}</p>
         
         {isFullyPaid && (
-          <p className="text-xs text-emerald-700 font-bold mt-4 bg-emerald-50 py-2 rounded-xl border border-emerald-200">
-            ✓ Smart Pay / Fully Paid Order
+          <p className="text-xs text-emerald-700 font-bold mt-4 bg-emerald-50 py-2 px-3 rounded-xl border border-emerald-200">
+            {t("del_done_smartpay", "✓ Smart Pay / Fully Paid Order")}
           </p>
         )}
         {upiPaymentVerified && (
-          <p className="text-xs text-emerald-700 font-bold mt-4 bg-emerald-50 py-2 rounded-xl border border-emerald-200">
-            ✓ ₹{expectedAmount.toLocaleString('en-IN')} Received via On-Screen UPI QR
+          <p className="text-xs text-emerald-700 font-bold mt-4 bg-emerald-50 py-2 px-3 rounded-xl border border-emerald-200">
+            ✓ ₹{expectedAmount.toLocaleString('en-IN')} {t("del_done_qr", "Received via On-Screen UPI QR")}
           </p>
         )}
         {cashCollected && (
-          <p className="text-xs text-emerald-700 font-bold mt-4 bg-emerald-50 py-2 rounded-xl border border-emerald-200">
-            ✓ Cash Collection Verified by Admin
+          <p className="text-xs text-emerald-700 font-bold mt-4 bg-emerald-50 py-2 px-3 rounded-xl border border-emerald-200">
+            {t("del_done_cash", "✓ Cash Collection Verified by Admin")}
           </p>
         )}
       </div>
@@ -157,14 +159,14 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
             <PackageCheck className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-zinc-900">Delivery Handover</h2>
-            <p className="text-xs text-zinc-500">Quote #{quoteId.slice(0, 8)}</p>
+            <h2 className="text-base font-bold text-zinc-900">{t("del_handover_title", "Delivery Handover")}</h2>
+            <p className="text-xs text-zinc-500">{t("del_quote_hash", "Quote #")}{quoteId.slice(0, 8)}</p>
           </div>
         </div>
 
         <div className="mb-6">
           <p className="text-sm text-zinc-700 mb-1">
-            Customer: <strong className="text-zinc-900">{quote.customer_name || quote.customer?.name}</strong>
+            {t("del_customer_lbl", "Customer:")} <strong className="text-zinc-900">{quote.customer_name || quote.customer?.name}</strong>
           </p>
           <p className="text-xs text-zinc-500">{quote.address?.full_address || quote.installationAddress}</p>
         </div>
@@ -174,9 +176,9 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
             <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-bold text-emerald-900">Fully Paid (Smart Pay)</p>
+              <p className="text-xs font-bold text-emerald-900">{t("del_fully_paid_title", "Fully Paid (Smart Pay)")}</p>
               <p className="text-[11px] text-emerald-700 mt-0.5">
-                Customer paid in full upfront. Zero collection required. Ask customer for delivery OTP.
+                {t("del_fully_paid_desc", "Customer paid in full upfront. Zero collection required. Ask customer for delivery OTP.")}
               </p>
             </div>
           </div>
@@ -184,16 +186,16 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
           /* 2. Amount Due & On-Screen Dynamic UPI QR Option */
           <div className="space-y-4 mb-6">
             <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-4">
-              <div className="flex justify-between items-center mb-1">
+              <div className="flex flex-wrap justify-between items-center gap-1 mb-1">
                 <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  Material Delivery Due (90%)
+                  {t("del_due_90_title", "Material Delivery Due (90%)")}
                 </span>
                 <span className="text-base font-black text-zinc-900">
                   ₹{expectedAmount.toLocaleString('en-IN')}
                 </span>
               </div>
               <p className="text-[11px] text-zinc-500">
-                Customer scans the dynamic QR directly on your mobile screen.
+                {t("del_qr_scan_desc", "Customer scans the dynamic QR directly on your mobile screen.")}
               </p>
             </div>
 
@@ -201,17 +203,17 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
             {upiPaymentVerified ? (
               <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-2.5 text-xs font-bold text-emerald-800">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                <span>₹{expectedAmount.toLocaleString('en-IN')} Received via UPI QR!</span>
+                <span>₹{expectedAmount.toLocaleString('en-IN')} {t("del_qr_received_badge", "Received via UPI QR!")}</span>
               </div>
             ) : (
               /* Show On-Screen UPI QR Button */
               <button
                 type="button"
                 onClick={() => setIsQrModalOpen(true)}
-                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98] whitespace-normal text-center"
               >
-                <QrCode className="w-5 h-5" />
-                <span>Show On-Screen UPI QR (₹{expectedAmount.toLocaleString('en-IN')})</span>
+                <QrCode className="w-5 h-5 shrink-0" />
+                <span>{t("del_qr_btn_amt", "Show On-Screen UPI QR (₹{amount})", { amount: expectedAmount.toLocaleString('en-IN') })}</span>
               </button>
             )}
 
@@ -221,13 +223,13 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
                 ? "bg-amber-50/60 border-amber-200" 
                 : "bg-zinc-50 border-zinc-200"
             }`}>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <span className="text-xs font-bold flex items-center gap-1.5 text-zinc-800">
-                  <Banknote className="w-4 h-4 text-amber-600" /> Pay Cash on Delivery
+                  <Banknote className="w-4 h-4 text-amber-600 shrink-0" /> {t("del_pay_cash_title", "Pay Cash on Delivery")}
                 </span>
                 {!isCashApproved && (
-                  <span className="text-[10px] bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <Lock className="w-3 h-3" /> Admin Gated
+                  <span className="text-[10px] bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                    <Lock className="w-3 h-3 shrink-0" /> {t("del_admin_gated", "Admin Gated")}
                   </span>
                 )}
               </div>
@@ -238,29 +240,29 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
                     type="checkbox" 
                     checked={cashCollected}
                     onChange={(e) => setCashCollected(e.target.checked)}
-                    className="mt-0.5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                    className="mt-0.5 rounded border-amber-300 text-amber-600 focus:ring-amber-500 shrink-0"
                   />
                   <span className="text-xs text-amber-950 font-medium leading-tight">
-                    Admin Approved: I confirm I have physically collected ₹{expectedAmount.toLocaleString('en-IN')} in cash.
+                    {t("del_confirm_collected_amt", "Admin Approved: I confirm I have physically collected ₹{amount} in cash.", { amount: expectedAmount.toLocaleString('en-IN') })}
                   </span>
                 </label>
               ) : (
                 <div className="space-y-2.5">
                   <p className="text-[11px] text-zinc-500 leading-relaxed">
-                    Cash collection is strictly disabled without authorization. Ask customer to scan the On-Screen QR above, or request Admin approval.
+                    {t("del_cash_disabled_desc", "Cash collection is strictly disabled without authorization. Ask customer to scan the On-Screen QR above, or request Admin approval.")}
                   </p>
                   {cashRequested ? (
                     <div className="text-[11px] font-bold text-amber-700 bg-amber-100 py-1.5 px-3 rounded-xl text-center">
-                      Approval request sent to Admin desk
+                      {t("del_approval_sent", "Approval request sent to Admin desk")}
                     </div>
                   ) : (
                     <button
                       type="button"
                       onClick={handleRequestCashApproval}
                       disabled={isRequestingCash}
-                      className="w-full py-2 bg-zinc-200 hover:bg-zinc-300 text-zinc-800 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all"
+                      className="w-full py-2 px-3 bg-zinc-200 hover:bg-zinc-300 text-zinc-800 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all whitespace-normal text-center"
                     >
-                      {isRequestingCash ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Request Admin Cash Approval"}
+                      {isRequestingCash ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : t("del_req_cash_approval", "Request Admin Cash Approval")}
                     </button>
                   )}
                 </div>
@@ -271,7 +273,7 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
 
         {/* OTP Input */}
         <div className="mb-6">
-          <label className="block text-xs font-bold text-zinc-700 mb-2">Customer Delivery OTP</label>
+          <label className="block text-xs font-bold text-zinc-700 mb-2">{t("del_otp_label", "Customer Delivery OTP")}</label>
           <div className="relative">
             <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
             <input
@@ -284,7 +286,7 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
             />
           </div>
           <p className="text-[10px] text-zinc-400 mt-2 text-center">
-            Ask customer for the 4-digit code sent to their WhatsApp.
+            {t("del_otp_hint", "Ask customer for the 4-digit code sent to their WhatsApp.")}
           </p>
         </div>
 
@@ -295,16 +297,16 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
             otp.length !== 4 || 
             (!isFullyPaid && expectedAmount > 0 && !upiPaymentVerified && !cashCollected)
           }
-          className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white font-bold rounded-xl text-sm transition-all shadow-md active:scale-95 mb-3"
+          className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white font-bold rounded-xl text-sm transition-all shadow-md active:scale-95 mb-3 whitespace-normal"
         >
-          {isVerifying ? "Verifying..." : "Verify Delivery"}
+          {isVerifying ? t("del_verifying", "Verifying...") : t("del_verify_delivery", "Verify Delivery")}
         </button>
 
         <button
           onClick={() => setIsFailureModalOpen(true)}
-          className="w-full py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 font-bold rounded-xl text-sm transition-all"
+          className="w-full py-3 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 font-bold rounded-xl text-sm transition-all whitespace-normal"
         >
-          Report Delivery Failure
+          {t("del_report_failure", "Report Delivery Failure")}
         </button>
 
         <DeliveryFailureModal
@@ -323,12 +325,12 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
         leadId={quote.lead_id}
         amount={expectedAmount}
         paymentType="delivery_90"
-        title="Delivery Handover (90%)"
+        title={t("del_qr_modal_title", "Delivery Handover (90%)")}
         onSuccess={() => {
           setIsQrModalOpen(false);
           setUpiPaymentVerified(true);
           setCashCollected(false);
-          toast.success("Delivery payment received! Enter OTP to complete handover.");
+          toast.success(t("del_qr_paid_toast", "Delivery payment received! Enter OTP to complete handover."));
         }}
       />
     </>

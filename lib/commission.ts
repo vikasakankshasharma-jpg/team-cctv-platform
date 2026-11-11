@@ -90,3 +90,77 @@ export function calculateCommission(
   // Ensure 2 decimal precision
   return Math.round(commission * 100) / 100;
 }
+
+/**
+ * Unified Promoter / Referral commission calculator (used on Lead WON & Profit Breakup).
+ * Precedence:
+ * 1. Explicit promoter_incentive_type ("flat" | "percent")
+ * 2. Tiered / B2C commission_slabs (e.g. ₹500 B2C reward or 2% B2B partner onboarding slab)
+ * 3. Legacy flat partner_type / discount_value
+ * 4. Global fallback promoter_commission_percent (default 2%)
+ */
+export function resolvePromoterCommission(
+  netTaxableAmount: number,
+  promoter?: {
+    promoter_incentive_type?: "percent" | "flat" | string;
+    promoter_incentive_value?: number;
+    commission_slabs?: CommissionSlab[];
+    partner_type?: string;
+    discount_type?: string;
+    discount_value?: number;
+    tier?: string;
+  } | null,
+  defaultCommissionPercent: number = 2
+): { amount: number; label: string } {
+  if (netTaxableAmount <= 0) return { amount: 0, label: "No taxable amount" };
+
+  if (!promoter) {
+    const pct = Number(defaultCommissionPercent || 0);
+    return {
+      amount: pct > 0 ? Math.round(netTaxableAmount * (pct / 100) * 100) / 100 : 0,
+      label: pct > 0 ? `Referral Commission (${pct}%)` : "None",
+    };
+  }
+
+  if (promoter.promoter_incentive_type === "flat" && Number(promoter.promoter_incentive_value) > 0) {
+    const val = Number(promoter.promoter_incentive_value);
+    return { amount: val, label: `Promoter Flat Commission (₹${val})` };
+  }
+
+  if (promoter.promoter_incentive_type === "percent" && Number(promoter.promoter_incentive_value) > 0) {
+    const pct = Number(promoter.promoter_incentive_value);
+    return {
+      amount: Math.round(netTaxableAmount * (pct / 100) * 100) / 100,
+      label: `Promoter Commission (${pct}%)`,
+    };
+  }
+
+  if (Array.isArray(promoter.commission_slabs) && promoter.commission_slabs.length > 0) {
+    const slabAmt = calculateCommission(netTaxableAmount, promoter.commission_slabs);
+    if (slabAmt > 0) {
+      return {
+        amount: slabAmt,
+        label: promoter.tier === "b2c" ? "B2C Refer & Earn Reward" : "Partner Slab Commission",
+      };
+    }
+  }
+
+  if (promoter.partner_type === "flat" && promoter.discount_value) {
+    const val = Number(promoter.discount_value) || 0;
+    return { amount: val, label: `Flat Partner Commission (₹${val})` };
+  }
+
+  if (promoter.discount_type === "percent" && promoter.discount_value && promoter.tier !== "b2c") {
+    const pct = Number(promoter.discount_value) || 0;
+    return {
+      amount: Math.round(netTaxableAmount * (pct / 100) * 100) / 100,
+      label: `Partner Commission (${pct}%)`,
+    };
+  }
+
+  const fallbackPct = Number(defaultCommissionPercent ?? 2);
+  return {
+    amount: Math.round(netTaxableAmount * (fallbackPct / 100) * 100) / 100,
+    label: `Promoter Commission (${fallbackPct}%)`,
+  };
+}

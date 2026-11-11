@@ -1,6 +1,6 @@
 # TEAM CCTV Platform - Master Project Status & Verification Log
 
-> **Last Updated:** November 8, 2026  
+> **Last Updated:** November 11, 2026  
 > **Production URL:** `https://cctvquotation.com`  
 > **Repository:** `team-cctv-platform` (`master` branch)  
 > **Canonical Plan & Architecture:** [`docs/HARDENING_SPRINT_PLAN.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/HARDENING_SPRINT_PLAN.md) | [`BUSINESS_RULES.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/BUSINESS_RULES.md)
@@ -17,7 +17,7 @@
 | **Customer Journey & Pro Builder** | `VERIFIED` | Compact Dropdown Filter Toolbar (Camera Brand, Retention Days, Storage Drive Brand, Sensor Type) with live match counter & quick reset; Key Difference badging (`key_difference`) explaining price variance per card; WhatsApp OTP lead capture before custom build; Mobile slide-over cart drawer; single-filter auto-collapse; Dynamic inventory-driven feature tags; Resolution vs feature boundary enforcement; Centered non-intrusive modal dialogs; Per-bucket feature independence with zero feature leakage; Intrinsic bullet camera weatherproofing standard; Purpose-driven smart wireless variants with edge storage advisory. |
 | **Checkout & Payment Pathways** | `VERIFIED` | 4 pathways: Pay Full (2% discount), ₹500 3-step token, EMI option, Free Site Visit calendar (future dates only); Webhook + Fallback Verification API. |
 | **Catalog & Inventory Integrity** | `VERIFIED` | Active-only inventory enforcement; zero fake fallback products; Dual-collection (`products` + `addons`) cascade delete and update; Direct row-level trash button in `ProductInventory.tsx`; Edit Modal delete action; 0-orphan clean state; Mega Compu World distributor integration with 99 verified SKUs, wholesale dealer pricing, and statutory HSN/GST rate tags. |
-| **Security & Credential Management** | `VERIFIED` | Hardcoded OTPs removed; exposed test scripts scrubbed; Vercel CLI env var management; Firestore role-based collection rules; HSTS enforced. |
+| **Security & Credential Management** | `VERIFIED` | Hardcoded OTPs removed; exposed test scripts scrubbed; Vercel CLI env var management + CRLF sanitization (`lib/env-utils.ts`); unified MSG91 OTP provider; `extractErrorMessage` (`lib/utils.ts`) zero `[object Object]`; Firestore role-based collection rules; HSTS enforced. |
 | **Localization & Language** | `VERIFIED` | Colloquial everyday terminology (replaced "अनुशंसित" with natural options, "कम"/"ज्यादा"); Language selector modal without underscores. |
 
 ---
@@ -706,6 +706,25 @@
 - **Production Verification**:
   - 12/12 automated resilience tests passed (`scripts/test-whatsapp-resilience.ts`).
   - Live deployment verified on `https://cctvquotation.com` via Vercel.
+
+---
+
+### Milestone 52: Cross-Flow Error Sanitization, MSG91 OTP Pipeline Hardening & Cross-Device WhatsApp App Launcher
+- **Date:** November 11, 2026 | **Status:** `VERIFIED & DEPLOYED`
+- **Client & Server Error Sanitization (`[object Object]` Elimination):**
+  - Standardized UI error extraction through `extractErrorMessage()` (`lib/utils.ts`) across Customer Wizard (`WizardClientV2.tsx`), Pro Builder (`ProBuilderClient.tsx`), Configurator (`ConfiguratorView.tsx`), Customer Portal/Login (`CustomerLoginClient.tsx`, `TrackBookingModal.tsx`, `SupportPanel.tsx`), Early OTP Gate (`PhoneCaptureModal.tsx`), Checkout/Survey (`SiteVisitBookingModal.tsx`, `PaymentSuccessClient.tsx`, `PaymentStagesWidget.tsx`, `BookSurveyClient.tsx`), Refer & Earn (`ReferAndEarnClient.tsx`), Pincode Gate (`PincodeWidget.tsx`), Installer/Partner logins (`InstallerLoginClient.tsx`, `PartnerLoginClient.tsx`), and Operations (`SiteSurveyRevisionModal.tsx`).
+- **MSG91 WhatsApp OTP Dispatch & Vercel Env Hygiene:**
+  - Created `lib/env-utils.ts` (`cleanEnvVar()`, `cleanPhoneEnvVar()`) to strip trailing `\r`/`\n`/whitespace and non-digit characters across server and client boundaries.
+  - Cleaned 7 CRLF-corrupted Vercel Production environment variables (`MSG91_WHATSAPP_NUMBER`, `WHATSAPP_PROVIDER`, `NEXT_PUBLIC_WHATSAPP_NUMBER`, `NEXT_PUBLIC_META_PIXEL_ID`, `RAZORPAY_WEBHOOK_SECRET`, `RESEND_API_KEY`, `GEMINI_API_KEY`).
+  - Unified OTP dispatch via `Msg91WhatsAppProvider.sendOtpTemplate()` (`lib/whatsapp/msg91-provider.ts`) with non-JSON-safe `response.text()` parsing across `/api/auth/otp/whatsapp`, `/api/auth/otp/sms`, and `/api/refer-and-earn/otp/send`, plus uniform env sanitization in `bot-engine.ts`, `quote-dispatch.ts`, `app/wa/[code]/route.ts`, `notification-service.ts`, Razorpay webhook, email OTP routes, `budget-tracker.ts`, and `admin/geo/tehsils/route.ts`.
+- **Cross-Device `"Open WhatsApp App"` Deep-Link Fix:**
+  - Updated `lib/whatsapp.ts` and `components/shared/WhatsAppOtpNotice.tsx` to replace bare `whatsapp://` and browser-blocked hidden `<iframe>` launches with a native synchronous `<a href="whatsapp://send?phone=...">` anchor (without `target="_blank"`), added iPadOS touch detection (`MacIntel` with `maxTouchPoints > 1`), and rendered device-adaptive fallback links (`https://wa.me/...` on mobile, `https://web.whatsapp.com` on desktop post-mount) with a non-blocking hint after `1600ms`.
+
+### Milestone 53: Deal Profitability Waterfall Audit, Services Accounting & Operating Overheads
+- **Root-Cause Classification Fix (`lib/quotation-profit.ts`):** Reordered `classifyItem()` precedence so explicit/canonical Services (`service`, `amc_*`, `promo_free_amc`, word-boundary `/\bcommissions?\b/` and `/\bamc\b/`) evaluate before Cables (`cab-`, `3+1`, `cable`, `wire`) and Accessories/Junction Boxes (`/\b(junction|pvc|weatherproof)\s*box\b/`, `mount`) before Cameras, preventing cable runs and PVC junction boxes from inflating camera counts and protecting `"Installation & Commissioning"` inside Services.
+- **Services Bucket Commission & AMC Accounting (`lib/commission.ts`, `lib/quotation-profit.ts`, `lib/profit-context.ts`):** Added `resolvePromoterCommission()` (with positive-value guard on promoter incentive overrides before `commission_slabs` / tier / global fallback) and wired B2B promoter commissions, B2C ₹500 referrals, salesperson commissions, Paid AMC plans + deduplicated `amc_subscriptions`/`amc_contracts`, and complimentary Promo Free AMC PM visit reserves (`2 * cost_labor_visit_charge`) directly into the **Services** bucket—without manufacturing phantom commissions on manual admin discounts lacking a referral code.
+- **Operating Overheads & True Net Pocket Profit (`lib/cached-settings.ts`, `lib/pricing-engine.ts`, `QuotationProfitBreakupCard.tsx`, `ProfitabilityAnalyticsClient.tsx`):** Added configurable reserves (`amc_fulfillment_cost_percent`, `payment_gateway_fee_percent`, `warranty_reserve_percent`, `logistics_consumables_per_job`, `travel_fee_payout_percent`), actual Razorpay MDR fees (`payment_history.razorpay_fee`, ₹0 on cash/bank transfer/direct UPI), fixed zeroed `labor_cost_margin_percent` fallback, and surfaced the **True Net Pocket Profit** waterfall across CRM Lead Deals and `/admin/analytics/profitability` without changing customer-facing GST-inclusive totals.
+- **Verified Checks:** `npm run build` (exit 0; 226 routes), `npx tsx scripts/verify-profit-waterfall.ts` (6/6 assertions PASS), and Playwright `tests/unit-commission-engine.spec.ts` + `tests/unit-profitability-engine.spec.ts` (11/11 PASS, 0 skipped/failed).
 
 ---
 

@@ -93,14 +93,31 @@ export function DynamicVariantGenerator({
       return { ...b, features: newFeats };
     }));
   };
-  // Check if hybrid setup (both wired and wireless cameras requested)
-  const isHybridInitial = (Number(selection.wifi_camera_count) > 0 && (Number(selection.outdoor_camera_count) > 0 || Number(selection.indoor_camera_count) > 0)) || selection.technology === "hybrid" || (selection as any).is_hybrid;
+  // Check if hybrid setup (both wired and wireless cameras requested — never misclassify pure wireless)
+  const isHybridInitial = (() => {
+    const selTech = String(selection.technology || "").toLowerCase();
+    const isPureWirelessSel =
+      (selTech === "wireless" || selTech === "wifi" || selTech === "4g_solar") &&
+      !(selection as any).is_hybrid;
+    const hasMixedHybridReqs =
+      Array.isArray(selection.mixed_camera_requirements) &&
+      selection.mixed_camera_requirements.some((r) => r.technology === "Wireless") &&
+      selection.mixed_camera_requirements.some((r) => r.technology && r.technology !== "Wireless");
+    return (
+      selTech === "hybrid" ||
+      Boolean((selection as any).is_hybrid) ||
+      hasMixedHybridReqs ||
+      (!isPureWirelessSel &&
+        Number(selection.wifi_camera_count) > 0 &&
+        (Number(selection.outdoor_camera_count) > 0 || Number(selection.indoor_camera_count) > 0))
+    );
+  })();
 
   // Auto-select based on selection.technology, session storage, or default
   const [activeTech, setActiveTech] = useState<"hd" | "ip" | "wireless" | "hybrid">(() => {
     if (isHybridInitial) return "hybrid";
     const selTech = String(selection.technology || "").toLowerCase();
-    if (selTech === "wireless" || selTech === "wifi") return "wireless";
+    if (selTech === "wireless" || selTech === "wifi" || selTech === "4g_solar") return "wireless";
     if (selTech === "hybrid") return "hybrid";
     if (selTech === "ip") return "ip";
     if (selTech === "hd") return "hd";
@@ -121,6 +138,7 @@ export function DynamicVariantGenerator({
     }
     return "all";
   });
+  const [showModeSwitcher, setShowModeSwitcher] = useState(false);
 
   const initialBrand = selection.brand_preference ? normalizeBrandKey(selection.brand_preference) : "all";
   const [activeBrand, setActiveBrand] = useState<string>(() => {
@@ -150,6 +168,7 @@ export function DynamicVariantGenerator({
     setSelectedStorageBrand("all");
     setSelectedSensorType("all");
     setHybridWiredTech("all");
+    setShowModeSwitcher(false);
   };
 
   useEffect(() => {
@@ -163,7 +182,8 @@ export function DynamicVariantGenerator({
     const selTech = String(selection.technology || "").toLowerCase();
     if (isHybridInitial || selTech === "hybrid") {
       setActiveTech("hybrid");
-    } else if (selTech === "wireless" || selTech === "wifi") {
+      setShowModeSwitcher(false);
+    } else if (selTech === "wireless" || selTech === "wifi" || selTech === "4g_solar") {
       setActiveTech("wireless");
     } else if (selTech === "ip") {
       setActiveTech("ip");
@@ -200,12 +220,16 @@ export function DynamicVariantGenerator({
         const techStr = String(req.technology || "").toUpperCase();
         let conn: "wired" | "wifi" | "4g" = "wired";
         if (tLower.includes("4g") || (req.features && req.features.includes("4g"))) conn = "4g";
-        else if (tLower.includes("wifi") || tLower.includes("wireless") || techStr === "WIRELESS" || techStr === "WIFI") conn = "wifi";
+        else if (tLower.includes("wifi") || tLower.includes("wi-fi") || tLower.includes("wireless") || techStr === "WIRELESS" || techStr === "WIFI") conn = "wifi";
         else if (activeTech === "wireless") conn = "wifi";
+
+        const isPtz = tLower.includes("ptz") || tLower.includes("360") || (req.features && req.features.includes("ptz"));
+        const isFixed = tLower.includes("fixed") || (conn === "wifi" && !isPtz && (tLower.includes("dome") || tLower.includes("bullet")));
 
         return {
           id: Math.random().toString(36).substring(7),
           type: tLower.includes("outdoor") ? "outdoor" : "indoor",
+          subType: isPtz ? "ptz" : isFixed ? "fixed" : undefined,
           count: req.count || 1,
           resolution: req.resolution || "2MP",
           connection: conn,
@@ -243,19 +267,34 @@ export function DynamicVariantGenerator({
     if (inCount > 0) {
       buckets.push({ id: Math.random().toString(36).substring(7), type: "indoor", count: inCount, resolution: "2MP", connection: defaultConn, features: [...initFeats] });
     }
-    // If hybrid setup has wifi cameras and we are in wired tab:
+    // If hybrid setup has wifi cameras and we are in wired/hybrid mode:
     if (!isWirelessMode && wifiCount > 0) {
-      const wifiIn = Number((selection as any).wifi_indoor_count);
-      const wifiOut = Number((selection as any).wifi_outdoor_count);
-      if (!isNaN(wifiIn) && !isNaN(wifiOut) && (wifiIn > 0 || wifiOut > 0)) {
+      const selAny = selection as any;
+      const wifiInPtz = Number(selAny.wifi_indoor_ptz_count) || 0;
+      const wifiInFixed = Number(selAny.wifi_indoor_fixed_count) || 0;
+      const wifiOutBullet = Number(selAny.wifi_outdoor_bullet_count) || 0;
+      const wifiOutPtz = Number(selAny.wifi_outdoor_ptz_count) || 0;
+      const wifi4g = Number(selAny.wifi_4g_count) || 0;
+      const hasGranularWifi = (wifiInPtz + wifiInFixed + wifiOutBullet + wifiOutPtz + wifi4g) > 0;
+      const wifiIn = Number(selAny.wifi_indoor_count);
+      const wifiOut = Number(selAny.wifi_outdoor_count);
+
+      if (hasGranularWifi) {
+        if (wifiInPtz > 0) buckets.push({ id: Math.random().toString(36).substring(7), type: "indoor", subType: "ptz", count: wifiInPtz, resolution: "3MP", connection: "wifi", features: Array.from(new Set([...initFeats, "ptz", "2-way"])) });
+        if (wifiInFixed > 0) buckets.push({ id: Math.random().toString(36).substring(7), type: "indoor", subType: "fixed", count: wifiInFixed, resolution: "3MP", connection: "wifi", features: Array.from(new Set([...initFeats, "2-way"])) });
+        if (wifiOutBullet > 0) buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", subType: "fixed", count: wifiOutBullet, resolution: "3MP", connection: "wifi", features: Array.from(new Set([...initFeats, "color"])) });
+        if (wifiOutPtz > 0) buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", subType: "ptz", count: wifiOutPtz, resolution: "3MP", connection: "wifi", features: Array.from(new Set([...initFeats, "ptz", "color"])) });
+        if (wifi4g > 0) buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: wifi4g, resolution: "3MP", connection: "4g", features: Array.from(new Set([...initFeats, "4g", "sim"])) });
+      } else if (!isNaN(wifiIn) && !isNaN(wifiOut) && (wifiIn > 0 || wifiOut > 0)) {
         if (wifiIn > 0) {
-          buckets.push({ id: Math.random().toString(36).substring(7), type: "indoor", count: wifiIn, resolution: "3MP", connection: "wifi", features: [...initFeats, "ptz", "2-way"] });
+          buckets.push({ id: Math.random().toString(36).substring(7), type: "indoor", subType: "ptz", count: wifiIn, resolution: "3MP", connection: "wifi", features: [...initFeats, "ptz", "2-way"] });
         }
         if (wifiOut > 0) {
-          buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: wifiOut, resolution: "3MP", connection: "wifi", features: [...initFeats, "color"] });
+          buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", subType: "fixed", count: wifiOut, resolution: "3MP", connection: "wifi", features: [...initFeats, "color"] });
         }
       } else {
-        buckets.push({ id: Math.random().toString(36).substring(7), type: "indoor", count: wifiCount, resolution: "3MP", connection: "wifi", features: [...initFeats, "ptz", "2-way"] });
+        const fallbackConn: "wifi" | "4g" = selAny.is_4g || selection.broadband_status === "independent_4g" ? "4g" : "wifi";
+        buckets.push({ id: Math.random().toString(36).substring(7), type: "indoor", subType: fallbackConn === "wifi" ? "ptz" : undefined, count: wifiCount, resolution: "3MP", connection: fallbackConn, features: fallbackConn === "4g" ? [...initFeats, "4g", "sim"] : [...initFeats, "ptz", "2-way"] });
       }
     }
     if (buckets.length === 0 && selection.camera_count) {
@@ -424,16 +463,16 @@ export function DynamicVariantGenerator({
 
     const available: { tag: string; label: string; title: string }[] = [];
     if (hasColor) {
-      available.push({ tag: "color", label: "🌙 24/7 Color", title: "Full color video in darkness (ColorVu / Dual-Light)" });
+      available.push({ tag: "color", label: t("dvg_feat_color_lbl"), title: t("dvg_feat_color_title") });
     }
     if (hasMic) {
-      available.push({ tag: "mic", label: "🎙️ Audio Mic", title: "Record spoken voice & sound along with video" });
+      available.push({ tag: "mic", label: t("dvg_feat_mic_lbl"), title: t("dvg_feat_mic_title") });
     }
     if (hasTwoWay) {
-      available.push({ tag: "2-way", label: "🗣️ 2-Way Talk", title: "Speak & listen live via mobile phone app" });
+      available.push({ tag: "2-way", label: t("dvg_feat_2way_lbl"), title: t("dvg_feat_2way_title") });
     }
     if (hasPtz) {
-      available.push({ tag: "ptz", label: "🔄 360° PTZ", title: "Motorized rotation remotely from phone" });
+      available.push({ tag: "ptz", label: t("dvg_feat_ptz_lbl"), title: t("dvg_feat_ptz_title") });
     }
     return available;
   };
@@ -450,7 +489,55 @@ export function DynamicVariantGenerator({
     }));
   }, [activeTech, targetBrand]);
 
-  const variants = useMemo(() => {
+  const buildBucketCameraReq = (bkt: any, isWirelessScope: boolean, wiredTech: "HD" | "IP") => {
+    const conn = isWirelessScope ? (bkt.connection === "4g" ? "4g" : "wifi") : (bkt.connection || "wired");
+    const bucketResList = getResolutionsForBucket(bkt);
+    const res = bucketResList.includes(bkt.resolution)
+      ? bkt.resolution
+      : (bucketResList.includes("3MP") ? "3MP" : (bucketResList.includes("2MP") ? "2MP" : (bucketResList[0] || "2MP")));
+
+    let baseFeatures: string[] = [];
+    if (conn === "4g") {
+      baseFeatures = bkt.type === "outdoor" ? ["outdoor", "4g", "sim"] : ["indoor", "4g", "sim"];
+    } else if (conn === "wifi") {
+      const wantsPtz = bkt.subType === "ptz" || (bkt.features || []).includes("ptz") || (bkt.type === "indoor" && bkt.subType !== "fixed");
+      baseFeatures = bkt.type === "outdoor"
+        ? (wantsPtz ? ["bullet", "wireless", "wifi", "ptz"] : ["bullet", "wireless", "wifi"])
+        : (wantsPtz ? ["dome", "wireless", "wifi", "ptz"] : ["dome", "wireless", "wifi"]);
+    } else {
+      baseFeatures = bkt.type === "outdoor" ? ["bullet", "outdoor"] : ["dome", "indoor"];
+    }
+    const extra = bkt.features && Array.isArray(bkt.features) ? bkt.features : [];
+    const allFeatures = Array.from(new Set([...baseFeatures, ...extra]));
+
+    if (conn === "4g") {
+      return {
+        type: bkt.type === "outdoor" ? "Outdoor 4G SIM Camera" : "Indoor 4G SIM Camera",
+        count: bkt.count,
+        resolution: res,
+        technology: "Wireless",
+        features: allFeatures
+      };
+    }
+    if (conn === "wifi") {
+      return {
+        type: bkt.type === "outdoor" ? "Outdoor Wi-Fi Camera" : "Indoor Wi-Fi Camera",
+        count: bkt.count,
+        resolution: res,
+        technology: "Wireless",
+        features: allFeatures
+      };
+    }
+    return {
+      type: bkt.type === "outdoor" ? "Outdoor Bullet Camera" : "Indoor Dome Camera",
+      count: bkt.count,
+      resolution: res,
+      technology: wiredTech,
+      features: allFeatures
+    };
+  };
+
+  const { variants: allComputedVariants, allHybridCount } = useMemo(() => {
     const results: PricingResult[] = [];
     const brandsToGenerate: { brand: string, brandKey: string }[] = [];
 
@@ -481,85 +568,66 @@ export function DynamicVariantGenerator({
     });
 
     const isWireless = activeTech === "wireless";
-    let mixedReqs: any[] = cameraBuckets.filter(b => b.count > 0).map(b => {
-        const conn = isWireless ? (b.connection === "4g" ? "4g" : "wifi") : (b.connection || "wired");
-        const bucketResList = getResolutionsForBucket(b);
-        const res = bucketResList.includes(b.resolution) ? b.resolution : (bucketResList.includes("3MP") ? "3MP" : (bucketResList.includes("2MP") ? "2MP" : (bucketResList[0] || "2MP")));
-
-        let baseFeatures: string[] = [];
-        if (conn === "4g") {
-          baseFeatures = b.type === "outdoor" ? ["outdoor", "4g", "sim"] : ["indoor", "4g", "sim"];
-        } else if (conn === "wifi") {
-          baseFeatures = b.type === "outdoor" ? ["bullet", "wireless", "wifi"] : ["dome", "wireless", "wifi", "ptz"];
-        } else {
-          baseFeatures = b.type === "outdoor" ? ["bullet", "outdoor"] : ["dome", "indoor"];
-        }
-        // Merge bucket-specific features (e.g., mic, color, 2-way) if any
-        const extra = b.features && Array.isArray(b.features) ? b.features : [];
-        const allFeatures = Array.from(new Set([...baseFeatures, ...extra]));
-
-        if (conn === "4g") {
-          return {
-            type: b.type === "outdoor" ? "Outdoor 4G SIM Camera" : "Indoor 4G SIM Camera",
-            count: b.count,
-            resolution: res,
-            technology: "Wireless",
-            features: allFeatures
-          };
-        }
-        if (conn === "wifi") {
-          return {
-            type: b.type === "outdoor" ? "Outdoor Wi-Fi Camera" : "Indoor Wi-Fi Camera",
-            count: b.count,
-            resolution: res,
-            technology: "Wireless",
-            features: allFeatures
-          };
-        }
-        return {
-          type: b.type === "outdoor" ? "Outdoor Bullet Camera" : "Indoor Dome Camera",
-          count: b.count,
-          resolution: res,
-          technology: activeTech === "ip" ? "IP" : "HD",
-          features: allFeatures
-        };
-      });
+    const defaultWiredTech: "HD" | "IP" = activeTech === "ip" ? "IP" : "HD";
+    let mixedReqs: any[] = cameraBuckets.filter(b => b.count > 0).map(b =>
+      buildBucketCameraReq(b, isWireless, defaultWiredTech)
+    );
     const enrich = (pricing: any, brandKey: string, brandName: string, wiredTech?: "HD" | "IP") => {
       if (!pricing || pricing.error) return null;
       const camItems = pricing.items?.filter((i: any) => effectiveProducts.find(p => p.id === i.product_id)?.category === "cctv_camera");
       const firstCamId = camItems?.[0]?.product_id;
       const camera_device = effectiveProducts.find(p => p.id === firstCamId) ? { ...effectiveProducts.find(p => p.id === firstCamId) } : undefined;
-      const strItem = pricing.items?.find((i: any) => effectiveProducts.find(p => p.id === i.product_id)?.category === "storage");
-      const strId = strItem?.product_id;
-      const storage_device = effectiveProducts.find(p => p.id === strId) ? { ...effectiveProducts.find(p => p.id === strId) } : undefined;
+      const storageItems = pricing.items?.filter((i: any) => effectiveProducts.find(p => p.id === i.product_id)?.category === "storage") || [];
+      const isSdStorageItem = (item: any) => {
+        const prod = effectiveProducts.find(p => p.id === item?.product_id) as any;
+        const nameLower = (prod?.display_name || item?.display_name || "").toLowerCase();
+        return prod?.subcategory === "sd_card" || nameLower.includes("microsd") || nameLower.includes("sd card");
+      };
+      const sdStrItem = storageItems.find(isSdStorageItem);
+      const hddStrItem = storageItems.find((i: any) => !isSdStorageItem(i));
+      const strItem = (activeTech === "wireless" ? sdStrItem : hddStrItem) || storageItems[0];
+
+      const hydrateStorageMeta = (item: any) => {
+        if (!item) return undefined;
+        const baseProd = effectiveProducts.find(p => p.id === item.product_id);
+        if (!baseProd) return undefined;
+        const dev: any = { ...baseProd };
+        let cap = dev.capacity;
+        if (!cap) {
+          const capStr = (dev.technical_name || dev.display_name || "").toUpperCase();
+          const gbMatch = capStr.match(/(\d+)\s*GB/i);
+          const tbMatch = capStr.match(/(\d+)\s*TB/i);
+          if (gbMatch) cap = `${gbMatch[1]}GB`;
+          else if (tbMatch) cap = `${tbMatch[1]}TB`;
+          else if (dev.storage_capacity_tb) {
+            const tbVal = dev.storage_capacity_tb;
+            cap = tbVal < 1 ? `${Math.round(tbVal * 1000)}GB` : `${tbVal}TB`;
+          }
+        }
+        const isSd = dev.subcategory === "sd_card" || (dev.display_name || "").toLowerCase().includes("sd") || (dev.display_name || "").toLowerCase().includes("microsd");
+        dev.derivedCapacity = cap ? (isSd ? `${cap} MicroSD` : cap) : (isSd ? "MicroSD" : "HDD");
+        dev.is_refurbished =
+          dev.is_refurbished === true ||
+          dev.brand === "Budget Brand" ||
+          (dev.brand || "").toLowerCase().includes("budget") ||
+          (dev.id || "").startsWith("HDD-BUD-") ||
+          (typeof cap === "string" && cap.includes("500GB"));
+        return { dev, cap, isSd };
+      };
+
+      const primaryMeta = hydrateStorageMeta(strItem);
+      const secondaryMeta = activeTech === "hybrid" && hddStrItem && sdStrItem
+        ? hydrateStorageMeta(sdStrItem)
+        : undefined;
+      const storage_device = primaryMeta?.dev;
+      const secondary_storage_device = secondaryMeta?.dev;
       let actualCalculatedDays = 7;
       
       if (camera_device) {
         (camera_device as any).brand = brandName;
       }
-      if (storage_device) {
-        let cap = (storage_device as any).capacity;
-        if (!cap) {
-          const capStr = ((storage_device as any).technical_name || (storage_device as any).display_name || "").toUpperCase();
-          const gbMatch = capStr.match(/(\d+)\s*GB/i);
-          const tbMatch = capStr.match(/(\d+)\s*TB/i);
-          if (gbMatch) cap = `${gbMatch[1]}GB`;
-          else if (tbMatch) cap = `${tbMatch[1]}TB`;
-          else if ((storage_device as any).storage_capacity_tb) {
-            const tbVal = (storage_device as any).storage_capacity_tb;
-            cap = tbVal < 1 ? `${Math.round(tbVal * 1000)}GB` : `${tbVal}TB`;
-          }
-        }
-        const isSd = (storage_device as any).subcategory === "sd_card" || ((storage_device as any).display_name || "").toLowerCase().includes("sd") || ((storage_device as any).display_name || "").toLowerCase().includes("microsd");
-        (storage_device as any).derivedCapacity = cap ? (isSd ? `${cap} MicroSD` : cap) : (isSd ? "MicroSD" : "HDD");
-        
-        const isRefurb = 
-          (storage_device as any).is_refurbished === true ||
-          (storage_device as any).brand === "Budget Brand" ||
-          ((storage_device as any).brand || "").toLowerCase().includes("budget") ||
-          ((storage_device as any).id || "").startsWith("HDD-BUD-") ||
-          (typeof cap === "string" && cap.includes("500GB"));
-        (storage_device as any).is_refurbished = isRefurb;
+      if (primaryMeta && storage_device) {
+        const { cap, isSd } = primaryMeta;
 
         // Technology-aware dynamic backup days
         if (isSd || activeTech === "wireless") {
@@ -612,15 +680,17 @@ export function DynamicVariantGenerator({
       
       let substitutionNotes: string[] = [];
       if (outdoorRequested && outdoorProvided && outdoorRequested !== outdoorProvided) {
-        substitutionNotes.push(`${outdoorProvided} Outdoor`);
+        substitutionNotes.push(t("dvg_sub_outdoor", "{count} Outdoor", { count: String(outdoorProvided) }));
       }
       if (indoorRequested && indoorProvided && indoorRequested !== indoorProvided) {
-        substitutionNotes.push(`${indoorProvided} Indoor`);
+        substitutionNotes.push(t("dvg_sub_indoor", "{count} Indoor", { count: String(indoorProvided) }));
       }
 
       let substitutionMessage = "";
       if (substitutionNotes.length > 0) {
-        substitutionMessage = `💡 Includes ${substitutionNotes.join(" and ")} upgrade based on brand availability.`;
+        substitutionMessage = t("dvg_sub_upgrade", "💡 Includes {notes} upgrade based on brand availability.", {
+          notes: substitutionNotes.join(` ${t("dvg_and")} `),
+        });
       }
 
       // Deduplicate
@@ -632,7 +702,10 @@ export function DynamicVariantGenerator({
       let displayResolution = resolvedRes[0] ? `${resolvedRes[0]} ${t("wz_resolution")}` : `2MP ${t("wz_resolution")}`;
       
       if (totalWiredCount > 0 && totalWifiCount > 0) {
-        displayResolution = `${totalWiredCount} Wired + ${totalWifiCount} Smart Wi-Fi`;
+        displayResolution = t("dvg_res_hybrid_line", "{wired} Wired + {wifi} Smart Wi-Fi", {
+          wired: String(totalWiredCount),
+          wifi: String(totalWifiCount),
+        });
       } else if (isHybrid) {
         displayResolution = `${t("wz_mixed_resolutions")} (${resolvedRes.join(", ")})`;
       } else if (hasOutdoor && !hasIndoor) {
@@ -646,7 +719,8 @@ export function DynamicVariantGenerator({
         technology: activeTech === "wireless" ? "Wireless" : activeTech === "hybrid" ? "Hybrid" : activeTech.toUpperCase(),
         hybridWiredTech: wiredTech || (activeTech === "ip" ? "IP" : "HD"),
         camera_device: camera_device ? { ...camera_device, derivedResolution: displayResolution } : { derivedResolution: displayResolution, brand: brandName }, 
-        storage_device, 
+        storage_device,
+        secondary_storage_device,
         camera_count: totalHardwareCount, 
         storage_days: actualCalculatedDays,
         plan_type: brandKey === "budget" ? "budget" : (Array.from(new Set(mixedReqs.map(r => r.resolution))).includes("8MP") ? "premium" : "recommended"),
@@ -664,7 +738,7 @@ export function DynamicVariantGenerator({
 
     const wiredTechsToRun: ("HD" | "IP")[] = 
       activeTech === "hybrid"
-        ? (hybridWiredTech === "all" ? ["HD", "IP"] : hybridWiredTech === "ip" ? ["IP"] : ["HD"])
+        ? ["HD", "IP"]
         : activeTech === "ip"
         ? ["IP"]
         : ["HD"];
@@ -692,48 +766,9 @@ export function DynamicVariantGenerator({
         if (!brandHasMatchingCam) return;
 
         // Dynamic mixed requirements with currentWiredTech for wired cameras
-        const techMixedReqs = cameraBuckets.filter(bkt => bkt.count > 0).map(bkt => {
-          const conn = isWireless ? (bkt.connection === "4g" ? "4g" : "wifi") : (bkt.connection || "wired");
-          const bucketResList = getResolutionsForBucket(bkt);
-          const res = bucketResList.includes(bkt.resolution) ? bkt.resolution : (bucketResList.includes("3MP") ? "3MP" : (bucketResList.includes("2MP") ? "2MP" : (bucketResList[0] || "2MP")));
-
-          let baseFeatures: string[] = [];
-          if (conn === "4g") {
-            baseFeatures = bkt.type === "outdoor" ? ["outdoor", "4g", "sim"] : ["indoor", "4g", "sim"];
-          } else if (conn === "wifi") {
-            baseFeatures = bkt.type === "outdoor" ? ["bullet", "wireless", "wifi"] : ["dome", "wireless", "wifi", "ptz"];
-          } else {
-            baseFeatures = bkt.type === "outdoor" ? ["bullet", "outdoor"] : ["dome", "indoor"];
-          }
-          const extra = bkt.features && Array.isArray(bkt.features) ? bkt.features : [];
-          const allFeatures = Array.from(new Set([...baseFeatures, ...extra]));
-
-          if (conn === "4g") {
-            return {
-              type: bkt.type === "outdoor" ? "Outdoor 4G SIM Camera" : "Indoor 4G SIM Camera",
-              count: bkt.count,
-              resolution: res,
-              technology: "Wireless",
-              features: allFeatures
-            };
-          }
-          if (conn === "wifi") {
-            return {
-              type: bkt.type === "outdoor" ? "Outdoor Wi-Fi Camera" : "Indoor Wi-Fi Camera",
-              count: bkt.count,
-              resolution: res,
-              technology: "Wireless",
-              features: allFeatures
-            };
-          }
-          return {
-            type: bkt.type === "outdoor" ? "Outdoor Bullet Camera" : "Indoor Dome Camera",
-            count: bkt.count,
-            resolution: res,
-            technology: currentWiredTech,
-            features: allFeatures
-          };
-        });
+        const techMixedReqs = cameraBuckets.filter(bkt => bkt.count > 0).map(bkt =>
+          buildBucketCameraReq(bkt, isWireless, currentWiredTech)
+        );
 
         // Check if brand has ColorVu / Full Color cameras in catalog for this currentWiredTech
         const brandHasColor = effectiveProducts.some(p => {
@@ -788,10 +823,10 @@ export function DynamicVariantGenerator({
             (enrichedStandard as any).hybridWiredTech = currentWiredTech;
             if (activeTech === "hybrid") {
               (enrichedStandard as any).key_difference = currentWiredTech === "IP"
-                ? "🌙 Standard IR Night Vision · Pro IP (NVR & PoE)"
-                : "🌙 Standard IR Night Vision · Value HD (DVR)";
+                ? t("dvg_diff_ir_ip")
+                : t("dvg_diff_ir_hd");
             } else {
-              (enrichedStandard as any).key_difference = "🌙 Standard IR Night Vision · Lowest Entry Price";
+              (enrichedStandard as any).key_difference = t("dvg_diff_ir_low");
             }
             results.push(enrichedStandard);
           }
@@ -838,10 +873,10 @@ export function DynamicVariantGenerator({
             (enrichedColor as any).hybridWiredTech = currentWiredTech;
             if (activeTech === "hybrid") {
               (enrichedColor as any).key_difference = currentWiredTech === "IP"
-                ? "🌈 24/7 ColorVu Full Color · Pro IP (NVR & PoE)"
-                : "🌈 24/7 ColorVu Full Color · Value HD (DVR)";
+                ? t("dvg_diff_color_ip")
+                : t("dvg_diff_color_hd");
             } else {
-              (enrichedColor as any).key_difference = "🌈 24/7 ColorVu Full Color · Daytime Clarity in Darkness";
+              (enrichedColor as any).key_difference = t("dvg_diff_color_day");
             }
             
             // Only add if it's different from standard or if standard wasn't added
@@ -859,17 +894,27 @@ export function DynamicVariantGenerator({
       });
     });
 
-    // Sort packages by price (low to high)
+    // Sort full results by price (low to high)
     results.sort((a, b) => a.total_payable - b.total_payable);
-    
-    // Tag the recommended item (middle item of default sort, non-economy)
-    const recIndex = Math.floor(results.length / 2);
-    results.forEach((v, idx) => {
-      (v as any).is_recommended = (idx === recIndex && results.length > 1 && !v.is_economy_storage);
-    });
 
-    return results;
-  }, [activeTech, hybridWiredTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, cablingMeters, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions, selectedStorageDays, selectedStorageBrand, selectedSensorType]);
+    return {
+      variants: results,
+      allHybridCount: activeTech === "hybrid" ? results.length : 0,
+    };
+  }, [activeTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, cablingMeters, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions, selectedStorageDays, selectedStorageBrand, selectedSensorType, t]);
+
+  const variants = useMemo<PricingResult[]>(() => {
+    const filtered = activeTech === "hybrid" && hybridWiredTech !== "all"
+      ? allComputedVariants.filter((v: any) => v.hybridWiredTech === (hybridWiredTech === "ip" ? "IP" : "HD"))
+      : allComputedVariants;
+
+    const sorted = [...filtered].sort((a, b) => a.total_payable - b.total_payable);
+    const recIndex = Math.floor(sorted.length / 2);
+    return sorted.map((v, idx): PricingResult => ({
+      ...v,
+      is_recommended: idx === recIndex && sorted.length > 1 && !v.is_economy_storage,
+    }));
+  }, [allComputedVariants, activeTech, hybridWiredTech]);
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-4 sm:space-y-6">
@@ -879,63 +924,64 @@ export function DynamicVariantGenerator({
           <summary className="px-3 py-2 sm:px-4 sm:py-2.5 flex items-center justify-between cursor-pointer font-medium text-blue-900 dark:text-blue-200 select-none">
             <span className="flex items-center gap-2">
               <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-              <span className="font-semibold text-xs sm:text-sm">How to customize this quote</span>
+              <span className="font-semibold text-xs sm:text-sm">{t("dvg_how_to_custom")}</span>
             </span>
             <span className="flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 font-medium">
-              <span className="group-open:hidden">Quick guide</span>
-              <span className="hidden group-open:inline">Hide</span>
+              <span className="group-open:hidden">{t("dvg_quick_guide")}</span>
+              <span className="hidden group-open:inline">{t("dvg_hide")}</span>
               <ChevronDown className="w-3.5 h-3.5 transition-transform group-open:rotate-180" />
             </span>
           </summary>
           <div className="px-3 pb-3 pt-1 sm:px-4 text-blue-800/90 dark:text-blue-300/90 text-xs leading-relaxed border-t border-blue-100/60 dark:border-blue-900/40">
-            Choose your preferred technology and brand, then adjust camera quantities and resolutions. Use <strong>+ Variant</strong> if you need multiple resolutions (e.g., two 2MP cameras and two 5MP cameras) in the same package.
+            {t("dvg_guide_p1")} <strong>{t("dvg_plus_variant")}</strong> {t("dvg_guide_p2")}
           </div>
         </details>
       </div>
 
       {/* Sticky Filter Bar: Technology & Brand Selectors */}
       <div className="sticky top-14 md:top-20 z-30 w-full max-w-2xl mx-auto bg-[#f5f5f7]/95 dark:bg-black/95 backdrop-blur-md pt-1.5 pb-2 px-2 sm:px-3 border-b border-zinc-200/80 dark:border-zinc-800/80 shadow-xs sm:rounded-2xl transition-all space-y-2">
-        {/* Technology Selector - Segmented Switcher */}
+        {/* Technology Selector - Segmented Switcher (hidden in Hybrid setups where dedicated Hybrid bar owns filtering) */}
+        {(activeTech !== "hybrid" || showModeSwitcher) && (
         <div className="w-full bg-zinc-100 dark:bg-zinc-800/70 p-1 rounded-2xl sm:rounded-full grid grid-cols-2 sm:grid-cols-4 gap-1 shadow-inner border border-zinc-200/50 dark:border-zinc-700/50">
           <button
             type="button"
-            onClick={() => { setActiveTech("hd"); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: "wired" }))); }}
+            onClick={() => { setActiveTech("hd"); setShowModeSwitcher(false); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: "wired" }))); }}
             className={`relative z-10 px-1 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${activeTech === "hd" ? "bg-blue-600 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}
           >
-            <span className="truncate">
-              <span className="sm:hidden">HD Analog</span>
+            <span className="leading-tight text-center">
+              <span className="sm:hidden">{t("dvg_hd_short")}</span>
               <span className="hidden sm:inline">{t("wz_standard_hd_analog")}</span>
             </span>
-            <span className={`text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-extrabold uppercase tracking-tight sm:tracking-wider ${activeTech === 'hd' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'}`}>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold uppercase tracking-tight sm:tracking-wider whitespace-normal text-center leading-tight ${activeTech === 'hd' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'}`}>
               {t("wz_lowest_price")}
             </span>
           </button>
 
           <button
             type="button"
-            onClick={() => { setActiveTech("ip"); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: "wired" }))); }}
+            onClick={() => { setActiveTech("ip"); setShowModeSwitcher(false); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: "wired" }))); }}
             className={`relative z-10 px-1 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${activeTech === "ip" ? "bg-blue-600 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}
           >
-            <span className="truncate">
-              <span className="sm:hidden">IP Network</span>
+            <span className="leading-tight text-center">
+              <span className="sm:hidden">{t("dvg_ip_short")}</span>
               <span className="hidden sm:inline">{t("wz_premium_ip_network")}</span>
             </span>
-            <span className={`text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-tight sm:tracking-wider ${activeTech === 'ip' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'}`}>
-              Popular
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-tight sm:tracking-wider whitespace-normal text-center leading-tight ${activeTech === 'ip' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'}`}>
+              {t("dvg_ip_tag")}
             </span>
           </button>
 
           <button
             type="button"
-            onClick={() => { setActiveTech("wireless"); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: b.connection === "4g" ? "4g" : "wifi" }))); }}
+            onClick={() => { setActiveTech("wireless"); setShowModeSwitcher(false); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: b.connection === "4g" ? "4g" : "wifi" }))); }}
             className={`relative z-10 px-1 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${activeTech === "wireless" ? "bg-blue-600 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}
           >
-            <span className="truncate">
-              <span className="sm:hidden">Wireless</span>
-              <span className="hidden sm:inline">Smart Wireless</span>
+            <span className="leading-tight text-center">
+              <span className="sm:hidden">{t("dvg_wireless_short")}</span>
+              <span className="hidden sm:inline">{t("dvg_wireless_full")}</span>
             </span>
-            <span className={`text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-extrabold uppercase tracking-tight sm:tracking-wider ${activeTech === 'wireless' ? 'bg-white/20 text-white' : 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300'}`}>
-              {selection.power_wiring_option === "wire_needed" ? "No Video Cable" : "0 Wiring"}
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold uppercase tracking-tight sm:tracking-wider whitespace-normal text-center leading-tight ${activeTech === 'wireless' ? 'bg-white/20 text-white' : 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300'}`}>
+              {selection.power_wiring_option === "wire_needed" ? t("dvg_no_video_cable") : t("dvg_zero_wiring")}
             </span>
           </button>
 
@@ -943,6 +989,7 @@ export function DynamicVariantGenerator({
             type="button"
             onClick={() => {
               setActiveTech("hybrid");
+              setShowModeSwitcher(false);
               setCameraBuckets(prev => {
                 const hasW = prev.some(b => b.connection === "wired" || !b.connection);
                 const hasWifi = prev.some(b => b.connection === "wifi" || b.connection === "4g");
@@ -963,61 +1010,87 @@ export function DynamicVariantGenerator({
             }}
             className={`relative z-10 px-1 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${activeTech === "hybrid" ? "bg-indigo-600 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}
           >
-            <span className="truncate">
-              <span className="sm:hidden">⚡ Hybrid</span>
-              <span className="hidden sm:inline">⚡ Hybrid Setup</span>
+            <span className="leading-tight text-center">
+              <span className="sm:hidden">{t("dvg_hybrid_short")}</span>
+              <span className="hidden sm:inline">{t("dvg_hybrid_full")}</span>
             </span>
-            <span className={`text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-extrabold uppercase tracking-tight sm:tracking-wider ${activeTech === 'hybrid' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-300'}`}>
-              Wired + Smart Wireless
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold uppercase tracking-tight sm:tracking-wider whitespace-normal text-center leading-tight ${activeTech === 'hybrid' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-300'}`}>
+              {t("dvg_hybrid_tag")}
             </span>
           </button>
         </div>
+        )}
 
         {/* Hybrid Backbone Sub-Bar */}
         {activeTech === "hybrid" && (
-          <div className="w-full bg-linear-to-r from-indigo-50/90 via-purple-50/90 to-pink-50/90 dark:from-indigo-950/40 dark:via-purple-950/40 dark:to-pink-950/40 border border-purple-200/80 dark:border-purple-800/60 p-2 sm:p-2.5 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-2 shadow-2xs">
-            <div className="flex items-center gap-2 text-xs">
-              <span className="font-extrabold text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
-                <span>⚡</span> Wired Backbone:
-              </span>
-              <span className="text-[11px] text-purple-700/90 dark:text-purple-300/90 hidden sm:inline">
-                Compare DVR vs. NVR PoE wired tiers
-              </span>
-            </div>
-            <div className="flex items-center gap-1 bg-white/90 dark:bg-zinc-900/90 p-1 rounded-lg border border-purple-200/70 dark:border-purple-800/50 w-full sm:w-auto shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setHybridWiredTech("all")}
-                className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
-                  hybridWiredTech === "all"
-                    ? "bg-purple-600 text-white shadow-xs"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
-                }`}
-              >
-                All Hybrid ({variants.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setHybridWiredTech("hd")}
-                className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                  hybridWiredTech === "hd"
-                    ? "bg-indigo-600 text-white shadow-xs"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
-                }`}
-              >
-                <span>🏷️</span> Value HD (DVR)
-              </button>
-              <button
-                type="button"
-                onClick={() => setHybridWiredTech("ip")}
-                className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                  hybridWiredTech === "ip"
-                    ? "bg-purple-600 text-white shadow-xs"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
-                }`}
-              >
-                <span>💎</span> Pro IP (NVR & PoE)
-              </button>
+          <div className="w-full bg-linear-to-r from-indigo-50/90 via-purple-50/90 to-pink-50/90 dark:from-indigo-950/40 dark:via-purple-950/40 dark:to-pink-950/40 border border-purple-200/80 dark:border-purple-800/60 p-2 sm:p-2.5 rounded-xl flex flex-col gap-2 shadow-2xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center justify-between sm:justify-start gap-2 text-xs min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                  <span className="font-extrabold text-purple-900 dark:text-purple-200 flex items-center gap-1 shrink-0">
+                    <span>⚡</span> {t("dvg_wired_backbone")}
+                  </span>
+                  {totalWiredCount > 0 && totalWifiCount > 0 && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 border border-purple-200/70 dark:border-purple-700/60 whitespace-nowrap">
+                      {t("dvg_res_hybrid_line", "{wired} Wired + {wifi} Smart Wi-Fi", { wired: String(totalWiredCount), wifi: String(totalWifiCount) })}
+                    </span>
+                  )}
+                  <span className="text-[11px] text-purple-700/90 dark:text-purple-300/90 hidden md:inline truncate">
+                    {t("dvg_compare_backbone")}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowModeSwitcher(v => !v)}
+                  className="text-[10px] font-bold text-purple-700 dark:text-purple-300 hover:text-purple-950 dark:hover:text-white underline underline-offset-2 shrink-0 cursor-pointer sm:hidden"
+                >
+                  {showModeSwitcher ? t("dvg_hide") : t("dvg_change_setup_mode", "Switch Setup")}
+                </button>
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                <div className="flex items-center gap-1 bg-white/90 dark:bg-zinc-900/90 p-1 rounded-lg border border-purple-200/70 dark:border-purple-800/50 flex-1 sm:flex-initial shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => setHybridWiredTech("all")}
+                    className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                      hybridWiredTech === "all"
+                        ? "bg-purple-600 text-white shadow-xs"
+                        : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+                    }`}
+                  >
+                    {t("dvg_all_hybrid", undefined, { count: String(allHybridCount) })}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHybridWiredTech("hd")}
+                    className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${
+                      hybridWiredTech === "hd"
+                        ? "bg-indigo-600 text-white shadow-xs"
+                        : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <span>🏷️</span> {t("dvg_hd_dvr")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHybridWiredTech("ip")}
+                    className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${
+                      hybridWiredTech === "ip"
+                        ? "bg-purple-600 text-white shadow-xs"
+                        : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <span>💎</span> {t("dvg_ip_nvr")}
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowModeSwitcher(v => !v)}
+                  className="hidden sm:inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-white/70 dark:bg-zinc-900/60 hover:bg-white dark:hover:bg-zinc-900 border border-purple-200/80 dark:border-purple-800/60 transition-colors cursor-pointer shrink-0"
+                >
+                  {showModeSwitcher ? t("dvg_hide") : t("dvg_change_setup_mode", "Switch Setup")}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1035,10 +1108,10 @@ export function DynamicVariantGenerator({
                 onChange={(e) => setActiveBrand(e.target.value)}
                 className="w-full px-2 py-1.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] sm:text-xs font-semibold text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
               >
-                <option value="all">All Brands ({availableBrands.filter(b => b !== "all").length})</option>
+                <option value="all">{t("dvg_all_brands_cnt", "All Brands ({count})", { count: String(availableBrands.filter(b => b !== "all").length) })}</option>
                 {availableBrands.filter(b => b !== "all").map(b => (
                   <option key={b} value={b}>
-                    {BRAND_DISPLAY[b] || getCanonicalBrandName(b) || b}
+                    {b === "budget" ? t("dvg_brand_budget_lbl", "Budget Brand") : BRAND_DISPLAY[b] || getCanonicalBrandName(b) || b}
                   </option>
                 ))}
               </select>
@@ -1047,7 +1120,7 @@ export function DynamicVariantGenerator({
             {/* 2. Recording Retention Dropdown */}
             <div className="flex flex-col gap-0.5">
               <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-                <span>💾</span> Retention Days
+                <span>💾</span> {t("dvg_ret_days_lbl")}
               </label>
               <select
                 value={selectedStorageDays}
@@ -1056,17 +1129,24 @@ export function DynamicVariantGenerator({
               >
                 {activeTech === "wireless" ? (
                   <>
-                    <option value={15}>15 Days (64GB) • Rec.</option>
-                    <option value={7}>7 Days (32GB) • Economy</option>
-                    <option value={30}>30 Days (128GB) • Extended</option>
-                    <option value={60}>60 Days (256GB) • Heavy</option>
+                    <option value={15}>{t("dvg_ret_15d_sd")}</option>
+                    <option value={7}>{t("dvg_ret_7d_sd")}</option>
+                    <option value={30}>{t("dvg_ret_30d_sd")}</option>
+                    <option value={60}>{t("dvg_ret_60d_sd")}</option>
+                  </>
+                ) : activeTech === "hybrid" ? (
+                  <>
+                    <option value={15}>{t("dvg_ret_15d_hyb", "15 Days (1TB + 64GB SD) • Standard")}</option>
+                    <option value={7}>{t("dvg_ret_7d_hyb", "7 Days (500GB + 32GB SD) • Economy")}</option>
+                    <option value={30}>{t("dvg_ret_30d_hyb", "30 Days (2TB + 128GB SD) • Extended")}</option>
+                    <option value={60}>{t("dvg_ret_60d_hyb", "60 Days (4TB + 256GB SD) • Heavy")}</option>
                   </>
                 ) : (
                   <>
-                    <option value={15}>15 Days (1TB) • Rec.</option>
-                    <option value={7}>7 Days (500GB) • Economy</option>
-                    <option value={30}>30 Days (2TB) • Extended</option>
-                    <option value={60}>60 Days (4TB) • Heavy</option>
+                    <option value={15}>{t("dvg_ret_15d_hdd")}</option>
+                    <option value={7}>{t("dvg_ret_7d_hdd")}</option>
+                    <option value={30}>{t("dvg_ret_30d_hdd")}</option>
+                    <option value={60}>{t("dvg_ret_60d_hdd")}</option>
                   </>
                 )}
               </select>
@@ -1075,11 +1155,11 @@ export function DynamicVariantGenerator({
             {/* 3. Storage Drive Brand Dropdown */}
             <div className="flex flex-col gap-0.5">
               <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-                <span>💽</span> Storage Drive
+                <span>💽</span> {t("dvg_storage_drive_lbl")}
               </label>
               {activeTech === "wireless" ? (
-                <div className="w-full px-2 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200/60 dark:border-zinc-700 text-[11px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 truncate">
-                  Dedicated MicroSD
+                <div className="w-full px-2 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200/60 dark:border-zinc-700 text-[11px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 break-words leading-snug">
+                  {t("dvg_ded_microsd")}
                 </div>
               ) : (
                 <select
@@ -1087,11 +1167,11 @@ export function DynamicVariantGenerator({
                   onChange={(e) => setSelectedStorageBrand(e.target.value)}
                   className="w-full px-2 py-1.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] sm:text-xs font-semibold text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
                 >
-                  <option value="all">All Storage Brands</option>
-                  <option value="seagate">Seagate SkyHawk (3-Yr)</option>
-                  <option value="wd">WD Purple (3-Yr)</option>
-                  <option value="toshiba">Toshiba S300 (3-Yr)</option>
-                  <option value="budget">Budget Brand (1-Yr Economy)</option>
+                  <option value="all">{t("dvg_all_storage_brands")}</option>
+                  <option value="seagate">{t("dvg_str_seagate")}</option>
+                  <option value="wd">{t("dvg_str_wd")}</option>
+                  <option value="toshiba">{t("dvg_str_toshiba")}</option>
+                  <option value="budget">{t("dvg_str_budget")}</option>
                 </select>
               )}
             </div>
@@ -1099,16 +1179,16 @@ export function DynamicVariantGenerator({
             {/* 4. Night Vision / Sensor Dropdown */}
             <div className="flex flex-col gap-0.5">
               <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-                <span>👁️</span> Night Vision
+                <span>👁️</span> {t("dvg_night_vision_lbl")}
               </label>
               <select
                 value={selectedSensorType}
                 onChange={(e) => setSelectedSensorType(e.target.value)}
                 className="w-full px-2 py-1.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] sm:text-xs font-semibold text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
               >
-                <option value="all">All Sensors (IR & Color)</option>
-                <option value="standard_ir">🌙 Standard IR (Lowest Price)</option>
-                <option value="colorvu">🌈 24/7 ColorVu (Full Color)</option>
+                <option value="all">{t("dvg_all_sensors")}</option>
+                <option value="standard_ir">{t("dvg_sensor_ir")}</option>
+                <option value="colorvu">{t("dvg_sensor_color")}</option>
               </select>
             </div>
           </div>
@@ -1119,7 +1199,7 @@ export function DynamicVariantGenerator({
               <span className="font-bold text-zinc-900 dark:text-white">
                 {variants.length}
               </span>
-              <span>{variants.length === 1 ? "quotation variation available" : "quotation variations available"}</span>
+              <span>{variants.length === 1 ? t("dvg_var_singular") : t("dvg_var_plural")}</span>
             </div>
             {isFiltered && (
               <button
@@ -1127,7 +1207,7 @@ export function DynamicVariantGenerator({
                 onClick={handleResetFilters}
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 cursor-pointer transition-all"
               >
-                <span>Reset Filters</span>
+                <span>{t("dvg_reset_filters")}</span>
                 <span>✕</span>
               </button>
             )}
@@ -1144,31 +1224,31 @@ export function DynamicVariantGenerator({
               <div className="space-y-0.5 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
-                    Economy Storage (500GB · 1-Year Local Warranty)
+                    {t("dvg_econ_title")}
                   </span>
                   <span className="text-[10px] bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full font-bold">
-                    ~8 Days Backup
+                    {t("dvg_econ_days")}
                   </span>
                 </div>
                 <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90 leading-snug">
-                  Many competitors secretly bundle refurbished desktop HDDs to quote artificially low prices. For continuous 24×7 reliability, we recommend upgrading to 1TB.
+                  {t("dvg_econ_warn")}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+            <div className="flex flex-wrap items-center gap-2 shrink-0 self-end sm:self-auto">
               <button
                 type="button"
                 onClick={() => setShowStorageModal(true)}
-                className="text-[11px] font-bold text-amber-800 dark:text-amber-300 hover:underline px-1.5 py-1 cursor-pointer whitespace-nowrap"
+                className="text-[11px] font-bold text-amber-800 dark:text-amber-300 hover:underline px-1.5 py-1 cursor-pointer"
               >
-                Learn More
+                {t("dvg_learn_more")}
               </button>
               <button
                 type="button"
                 onClick={() => setSelectedStorageDays(15)}
-                className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shadow-2xs transition-all cursor-pointer whitespace-nowrap flex items-center gap-1"
+                className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shadow-2xs transition-all cursor-pointer flex items-center gap-1"
               >
-                <span>Switch to 1TB Rec.</span>
+                <span>{t("dvg_switch_1tb")}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -1182,10 +1262,10 @@ export function DynamicVariantGenerator({
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                System Overview:
+                {t("dvg_sys_overview")}
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-600 text-white shadow-xs">
-                {totalHardwareCount} {totalHardwareCount === 1 ? t("wz_camera") : t("wz_cameras")} Total
+                {totalHardwareCount} {totalHardwareCount === 1 ? t("wz_camera") : t("wz_cameras")} {t("dvg_total_word")}
               </span>
             </div>
             
@@ -1194,19 +1274,19 @@ export function DynamicVariantGenerator({
                 type="button"
                 onClick={() => setShowGuideModal(true)}
                 className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 hover:underline px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 cursor-pointer"
-                title="View plain language explanations and practical real-life examples for every feature"
+                title={t("dvg_feat_guide_title")}
               >
                 <HelpCircle className="w-3.5 h-3.5" />
-                <span>Feature Guide</span>
+                <span>{t("dvg_feat_guide")}</span>
               </button>
               
               <button
                 type="button"
                 onClick={onOpenSpecsModal}
                 className="inline-flex items-center gap-1 text-[11px] font-bold text-gray-600 dark:text-gray-300 hover:text-gray-900 hover:underline px-2 py-1 rounded-lg bg-gray-100 dark:bg-zinc-800 cursor-pointer"
-                title="Open system specifications wizard"
+                title={t("dvg_checklist_title")}
               >
-                <span>⚙️ Checklist</span>
+                <span>{t("dvg_checklist")}</span>
               </button>
             </div>
           </div>
@@ -1215,47 +1295,47 @@ export function DynamicVariantGenerator({
           <div className="flex flex-wrap items-center gap-1.5 py-0.5 text-[11px]">
             {outdoorCount > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-bold shrink-0 flex items-center gap-1">
-                <span>🌧️</span> {outdoorCount} Weatherproof (IP67)
+                <span>🌧️</span> {outdoorCount} {t("dvg_tag_weather")}
               </span>
             )}
             {indoorCount > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 font-bold shrink-0 flex items-center gap-1">
-                <span>🏠</span> {indoorCount} Indoor
+                <span>🏠</span> {indoorCount} {t("dvg_tag_indoor")}
               </span>
             )}
             {colorCount > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 font-bold shrink-0 flex items-center gap-1">
-                <span>🌙</span> {colorCount} Color Night
+                <span>🌙</span> {colorCount} {t("dvg_tag_color")}
               </span>
             )}
             {micCount > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800/60 font-bold shrink-0 flex items-center gap-1">
-                <span>🎙️</span> {micCount} Audio
+                <span>🎙️</span> {micCount} {t("dvg_tag_audio")}
               </span>
             )}
             {twoWayCount > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 font-bold shrink-0 flex items-center gap-1">
-                <span>🗣️</span> {twoWayCount} 2-Way
+                <span>🗣️</span> {twoWayCount} {t("dvg_tag_2way")}
               </span>
             )}
             {ptzCount > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 font-bold shrink-0 flex items-center gap-1">
-                <span>🔄</span> {ptzCount} 360° PTZ
+                <span>🔄</span> {ptzCount} {t("dvg_feat_ptz")}
               </span>
             )}
             {cellularCount > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold shrink-0 flex items-center gap-1">
-                <span>🛰️</span> {cellularCount} 4G SIM
+                <span>🛰️</span> {cellularCount} {t("dvg_feat_4g")}
               </span>
             )}
             {wifiCount > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 font-bold shrink-0 flex items-center gap-1">
-                <span>📶</span> {wifiCount} Smart Wireless
+                <span>📶</span> {wifiCount} {t("dvg_wireless_full")}
               </span>
             )}
             {colorCount === 0 && micCount === 0 && twoWayCount === 0 && ptzCount === 0 && (
               <span className="text-gray-400 dark:text-zinc-500 text-[11px] italic">
-                Tip: Toggle features below on each camera card as needed.
+                {t("dvg_tip_toggle")}
               </span>
             )}
           </div>
@@ -1287,16 +1367,16 @@ export function DynamicVariantGenerator({
                       return newBuckets;
                     })}
                     className="px-2.5 py-1 flex items-center gap-1 text-[11px] font-semibold rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-gray-200 transition-colors"
-                    title="Add another resolution variant for this camera type"
+                    title={t("dvg_add_var_title")}
                   >
                     <Plus className="w-3 h-3" />
-                    <span>Variant</span>
+                    <span>{t("dvg_variant_btn")}</span>
                   </button>
                   {cameraBuckets.length > 1 && (
                     <button 
                       onClick={() => setCameraBuckets(prev => prev.filter(b => b.id !== bucket.id))}
                       className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 dark:hover:text-red-400 transition-colors"
-                      title="Remove this row"
+                      title={t("dvg_remove_row")}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -1354,31 +1434,30 @@ export function DynamicVariantGenerator({
                 {(
                   <div className="relative col-span-2 sm:col-span-1">
                     <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
-                      Connection
+                      {t("dvg_connection")}
                     </label>
                     <select
                       value={bucket.connection || (activeTech === 'wireless' ? 'wifi' : 'wired')}
                       onChange={(e) => {
                         const newConn = e.target.value as "wired" | "wifi" | "4g";
-                        setCameraBuckets(prev => {
-                          const next = prev.map(b => b.id === bucket.id ? { ...b, connection: newConn } : b);
-                          const hasW = next.some(b => b.connection === "wired" || !b.connection);
-                          const hasWifi = next.some(b => b.connection === "wifi" || b.connection === "4g");
-                          if (hasW && hasWifi) {
-                            setActiveTech("hybrid");
-                          } else if (hasWifi && !hasW) {
-                            setActiveTech("wireless");
-                          } else if (hasW && !hasWifi) {
-                            setActiveTech("hd");
-                          }
-                          return next;
-                        });
+                        const next = cameraBuckets.map(b => b.id === bucket.id ? { ...b, connection: newConn } : b);
+                        setCameraBuckets(next);
+                        const hasW = next.some(b => b.connection === "wired" || !b.connection);
+                        const hasWifi = next.some(b => b.connection === "wifi" || b.connection === "4g");
+                        if (hasW && hasWifi) {
+                          setActiveTech("hybrid");
+                          setShowModeSwitcher(false);
+                        } else if (hasWifi && !hasW) {
+                          setActiveTech("wireless");
+                        } else if (hasW && !hasWifi) {
+                          setActiveTech("hd");
+                        }
                       }}
                       className="w-full py-2 px-3 text-xs sm:text-sm font-bold bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none pr-8 transition-all"
                     >
-                      <option value="wired">🔌 Wired (Coaxial/CAT6)</option>
-                      <option value="wifi">📶 Smart Wireless (Wi-Fi)</option>
-                      <option value="4g">🛰️ 4G SIM / Solar Standalone</option>
+                      <option value="wired">{t("dvg_conn_wired")}</option>
+                      <option value="wifi">{t("dvg_conn_wifi")}</option>
+                      <option value="4g">{t("dvg_conn_4g")}</option>
                     </select>
                     <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 bottom-2.5 pointer-events-none" />
                   </div>
@@ -1387,17 +1466,17 @@ export function DynamicVariantGenerator({
 
               {/* Per-Bucket Specific Features */}
               <div className="mt-2.5 pt-2 border-t border-gray-100 dark:border-zinc-800/80">
-                <div className="flex items-center justify-between mb-1.5 gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 truncate">
-                    Features ({bucket.count} cameras):
+                <div className="flex flex-wrap items-center justify-between mb-1.5 gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                    {t("dvg_features_cam", "Features ({count} cameras):", { count: String(bucket.count) })}
                   </span>
                   <button
                     type="button"
                     onClick={() => setShowGuideModal(true)}
-                    className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer shrink-0 whitespace-nowrap"
+                    className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer shrink-0"
                   >
                     <HelpCircle className="w-3 h-3" />
-                    <span>Feature Guide</span>
+                    <span>{t("dvg_feat_guide")}</span>
                   </button>
                 </div>
                 
@@ -1405,12 +1484,12 @@ export function DynamicVariantGenerator({
                   {/* Weatherproof IP67 is standard on all outdoor cameras */}
                   {bucket.type === 'outdoor' && (
                     <span 
-                      title="IP67 Weatherproof is standard on all our outdoor cameras (heavy monsoon rain, heat, & dust sealed)"
+                      title={t("dvg_ip67_title")}
                       className="px-2 py-1 text-[11px] font-bold rounded-lg bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1 select-none"
                     >
                       <span>🌧️</span>
-                      <span>IP67 Weatherproof</span>
-                      <span className="text-[9px] bg-emerald-600 text-white px-1 rounded-sm font-semibold">Standard</span>
+                      <span>{t("dvg_ip67_std")}</span>
+                      <span className="text-[9px] bg-emerald-600 text-white px-1 rounded-sm font-semibold">{t("dvg_std_badge")}</span>
                     </span>
                   )}
 
@@ -1418,8 +1497,8 @@ export function DynamicVariantGenerator({
                   {bucket.connection === '4g' && (
                     <span className="px-2 py-1 text-[11px] font-bold rounded-lg bg-purple-50 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 flex items-center gap-1 select-none">
                       <span>🛰️</span>
-                      <span>4G SIM Cellular</span>
-                      <span className="text-[9px] bg-purple-600 text-white px-1 rounded-sm font-semibold">Built-in</span>
+                      <span>{t("dvg_4g_cell")}</span>
+                      <span className="text-[9px] bg-purple-600 text-white px-1 rounded-sm font-semibold">{t("dvg_built_in")}</span>
                     </span>
                   )}
 
@@ -1456,13 +1535,15 @@ export function DynamicVariantGenerator({
                   <span className="text-xs">
                     {bucket.connection === "wifi" ? "📶" : bucket.connection === "4g" ? "🛰️" : "🔌"}
                   </span>
-                  <span className="truncate">
+                  <span className="leading-snug">
                     {bucket.connection === "wifi" ? (
-                      bucket.type === "outdoor" ? "Outdoor Wi-Fi Bullet • MicroSD • Zero Cable" : "Indoor 360° Wi-Fi Dome • MicroSD • Zero Cable"
+                      bucket.type === "outdoor" ? t("dvg_line_wifi_out") : t("dvg_line_wifi_in")
                     ) : bucket.connection === "4g" ? (
-                      bucket.type === "outdoor" ? "Outdoor 4G SIM Bullet • MicroSD • No Broadband" : "Indoor 4G SIM Dome • MicroSD • No Broadband"
+                      bucket.type === "outdoor" ? t("dvg_line_4g_out") : t("dvg_line_4g_in")
                     ) : (
-                      bucket.type === "outdoor" ? `Outdoor Bullet • Central ${activeTech === "ip" ? "NVR" : "DVR"} + Cabling` : `Indoor Dome • Central ${activeTech === "ip" ? "NVR" : "DVR"} + Cabling`
+                      bucket.type === "outdoor"
+                        ? t("dvg_line_wired_out", "Outdoor Bullet • Central {rec} + Cabling", { rec: activeTech === "ip" ? "NVR" : "DVR" })
+                        : t("dvg_line_wired_in", "Indoor Dome • Central {rec} + Cabling", { rec: activeTech === "ip" ? "NVR" : "DVR" })
                     )}
                   </span>
                 </div>
@@ -1492,9 +1573,9 @@ export function DynamicVariantGenerator({
           {outdoorCount + indoorCount > 16 ? (
             <div className="w-full max-w-4xl mx-auto border border-blue-100 dark:border-blue-900/30 rounded-2xl overflow-hidden bg-white dark:bg-[#1d1d1f] shadow-sm mt-4 animate-in fade-in zoom-in-95 duration-300">
               <div className="bg-blue-50/80 dark:bg-blue-900/20 p-6 text-center border-b border-blue-100 dark:border-blue-900/30">
-                <h3 className="text-2xl font-bold text-blue-900 dark:text-blue-300 mb-2">Custom Solution Required</h3>
+                <h3 className="text-2xl font-bold text-blue-900 dark:text-blue-300 mb-2">{t("dvg_custom_title")}</h3>
                 <p className="text-blue-700/80 dark:text-blue-400/80 max-w-xl mx-auto">
-                  A {outdoorCount + indoorCount}-camera installation requires specialized design. Our experts will prepare a custom quote for you.
+                  {t("dvg_custom_desc", "A {count}-camera installation requires specialized design. Our experts will prepare a custom quote for you.", { count: String(outdoorCount + indoorCount) })}
                 </p>
               </div>
               <div className="p-6 md:p-8 bg-slate-50 dark:bg-zinc-900/30">
@@ -1518,7 +1599,7 @@ export function DynamicVariantGenerator({
             <h2 className="text-xl font-bold text-[#1d1d1f] dark:text-white">{t("wz_available_packages")}</h2>
             {activeTech === "hybrid" && (
               <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-                {hybridWiredTech === "all" ? "Showing Value HD & Pro IP Packages" : hybridWiredTech === "ip" ? "Filtered: Pro IP Network (NVR)" : "Filtered: Value HD Analog (DVR)"}
+                {hybridWiredTech === "all" ? t("dvg_filter_all") : hybridWiredTech === "ip" ? t("dvg_filter_ip") : t("dvg_filter_hd")}
               </span>
             )}
           </div>
@@ -1528,11 +1609,11 @@ export function DynamicVariantGenerator({
               <Info className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <p className="font-bold">
-                  💡 Hybrid Setup Guide: Wired Perimeter Stability + Smart Wireless Indoor Flexibility
+                  {t("dvg_hybrid_guide_title")}
                 </p>
                 <p className="text-[11.5px] text-purple-800 dark:text-purple-300 leading-relaxed">
-                  • <strong>🏷️ Value HD Hybrid (HD DVR):</strong> Wired cameras connect to an HD DVR via copper coaxial cable with central SMPS power. <em>Lowest entry cost for budget-conscious homes and shops.</em><br />
-                  • <strong>💎 Pro IP Hybrid (Digital IP NVR & PoE):</strong> Wired cameras connect to a PoE network switch via Cat6 LAN cable. Zero signal drop, 4K digital clarity, and Smart Wi-Fi cameras link into the NVR for unified recording.
+                  • <strong>{t("dvg_hybrid_hd_label")}</strong> {t("dvg_hybrid_hd_desc")}<br />
+                  • <strong>{t("dvg_hybrid_ip_label")}</strong> {t("dvg_hybrid_ip_desc")}
                 </p>
               </div>
             </div>
@@ -1551,11 +1632,6 @@ export function DynamicVariantGenerator({
               onClick={() => onSelectCheckout(variant)}
               className={`group relative overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-xl hover:border-blue-500 hover:-translate-y-1 ${isSelectedForCompare ? "ring-2 ring-blue-600 shadow-lg" : "hover:shadow-md border-[#d2d2d7] dark:border-[#424245]"}`}
             >
-              {(variant as any).is_recommended && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-b-xl z-10 flex items-center gap-1 shadow-sm">
-                  <Sparkles className="w-3 h-3" />  {t("wz_recommended")}
-                                          </div>
-              )}
               {variant.is_economy_storage && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-b-xl z-10 flex items-center gap-1 shadow-sm">
                   <Tag className="w-3 h-3" />  {t("wz_economy_match")}
@@ -1567,7 +1643,7 @@ export function DynamicVariantGenerator({
                     ? "bg-purple-600 text-white"
                     : "bg-indigo-600 text-white"
                 }`}>
-                  {(variant as any).hybridWiredTech === "IP" ? "💎 Pro IP Hybrid" : "🏷️ Value HD Hybrid"}
+                  {(variant as any).hybridWiredTech === "IP" ? t("dvg_badge_ip_hybrid") : t("dvg_badge_hd_hybrid")}
                 </div>
               )}
               
@@ -1577,10 +1653,10 @@ export function DynamicVariantGenerator({
                     <span>{variant.camera_device?.brand || "Budget"}</span>
                     {(() => {
                       const b = (variant.camera_device?.brand || "").toLowerCase();
-                      if (b.includes("hikvision")) return <span className="text-[9px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 px-2 py-0.5 rounded-full">Global Leader • World #1</span>;
-                      if (b.includes("cp") || b.includes("plus")) return <span className="text-[9px] font-bold bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-200 px-2 py-0.5 rounded-full">India's #1 • 1500+ Service Centers</span>;
-                      if (b.includes("trueview")) return <span className="text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200 px-2 py-0.5 rounded-full">Specialist in 4G & Smart PTZ</span>;
-                      if (b.includes("prama")) return <span className="text-[9px] font-bold bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-200 px-2 py-0.5 rounded-full">Make-in-India Enterprise Grade</span>;
+                      if (b.includes("hikvision")) return <span className="text-[9px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 px-2 py-0.5 rounded-full">{t("dvg_brand_hik")}</span>;
+                      if (b.includes("cp") || b.includes("plus")) return <span className="text-[9px] font-bold bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-200 px-2 py-0.5 rounded-full">{t("dvg_brand_cp")}</span>;
+                      if (b.includes("trueview")) return <span className="text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200 px-2 py-0.5 rounded-full">{t("dvg_brand_tv")}</span>;
+                      if (b.includes("prama")) return <span className="text-[9px] font-bold bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-200 px-2 py-0.5 rounded-full">{t("dvg_brand_prama")}</span>;
                       return null;
                     })()}
                   </div>
@@ -1611,20 +1687,20 @@ export function DynamicVariantGenerator({
                       }`}>
                         {(variant as any).hybridWiredTech === "IP" ? (
                           <>
-                            <span className="text-purple-600 dark:text-purple-400">💎 PRO HYBRID:</span>
-                            <span>{totalWiredCount} Wired (IP NVR & PoE) + {totalWifiCount} Smart Wireless</span>
+                            <span className="text-purple-600 dark:text-purple-400">{t("dvg_card_ip_hybrid")}</span>
+                            <span>{t("dvg_hybrid_ip_mix", "{wired} Wired (IP NVR & PoE) + {wifi}", { wired: String(totalWiredCount), wifi: `${totalWifiCount} ${t("dvg_wireless_full")}` })}</span>
                           </>
                         ) : (
                           <>
-                            <span className="text-indigo-600 dark:text-indigo-400">🏷️ VALUE HYBRID:</span>
-                            <span>{totalWiredCount} Wired (HD DVR) + {totalWifiCount} Smart Wireless</span>
+                            <span className="text-indigo-600 dark:text-indigo-400">{t("dvg_card_hd_hybrid")}</span>
+                            <span>{t("dvg_hybrid_hd_mix", "{wired} Wired (HD DVR) + {wifi}", { wired: String(totalWiredCount), wifi: `${totalWifiCount} ${t("dvg_wireless_full")}` })}</span>
                           </>
                         )}
                       </div>
                       <span className="text-[9.5px] font-medium text-slate-500 dark:text-zinc-400">
                         {(variant as any).hybridWiredTech === "IP"
-                          ? "PoE Switch + Cat6 Copper Cable + NVR + MicroSD Recording"
-                          : "Central SMPS + 3+1 Copper Cable + DVR + MicroSD Recording"}
+                          ? t("dvg_ip_hw_line")
+                          : t("dvg_hd_hw_line")}
                       </span>
                     </div>
                   )}
@@ -1633,32 +1709,32 @@ export function DynamicVariantGenerator({
                   <div className="flex flex-wrap items-center justify-center gap-1.5 mb-2.5">
                     {colorCount > 0 && (
                       <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 flex items-center gap-1">
-                        <span>🌙</span> 24/7 Color Night
+                        <span>🌙</span> {t("est_res_color")}
                       </span>
                     )}
                     {micCount > 0 && (
                       <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 border border-teal-200 dark:border-teal-800/60 flex items-center gap-1">
-                        <span>🎙️</span> Audio Mic
+                        <span>🎙️</span> {t("feat_mic")}
                       </span>
                     )}
                     {outdoorCount > 0 && (
                       <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1">
-                        <span>🌧️</span> IP67 Weatherproof
+                        <span>🌧️</span> {t("dvg_ip67_std")}
                       </span>
                     )}
                     {twoWayCount > 0 && (
                       <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 flex items-center gap-1">
-                        <span>🗣️</span> 2-Way Talk
+                        <span>🗣️</span> {t("dvg_2way_talk")}
                       </span>
                     )}
                     {ptzCount > 0 && (
                       <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 flex items-center gap-1">
-                        <span>🔄</span> 360° PTZ
+                        <span>🔄</span> {t("dvg_feat_ptz")}
                       </span>
                     )}
                     {cellularCount > 0 && (
                       <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 flex items-center gap-1">
-                        <span>🛰️</span> 4G SIM
+                        <span>🛰️</span> {t("dvg_feat_4g")}
                       </span>
                     )}
                   </div>
@@ -1670,14 +1746,23 @@ export function DynamicVariantGenerator({
                   {variant.is_economy_storage && (
                     <div className="flex flex-col items-center justify-center mb-3 gap-1">
                       <p className="text-xs text-[#86868b] font-medium">
-                        {variant.technology === "Wireless" 
-                          ? `Basic Storage (${variant.storage_device?.derivedCapacity || "64GB MicroSD"} per camera)`
-                          : `Basic Storage (${variant.storage_device?.derivedCapacity || "500GB HDD"})`
+                        {variant.technology === "Wireless"
+                          ? t("dvg_basic_storage_wifi", undefined, { cap: variant.storage_device?.derivedCapacity || "64GB MicroSD" })
+                          : variant.technology === "Hybrid" && (variant as any).secondary_storage_device
+                          ? t("dvg_basic_storage_hybrid", "Basic: {hdd} + {sd}/Wi-Fi Cam", {
+                              hdd: variant.storage_device?.derivedCapacity || "500GB HDD",
+                              sd: (variant as any).secondary_storage_device?.derivedCapacity || "32GB MicroSD",
+                            })
+                          : t("dvg_basic_storage_wired", undefined, { cap: variant.storage_device?.derivedCapacity || "500GB HDD" })
                         }
                       </p>
                       {(variant as any).original_payable && (variant as any).original_payable > variant.total_payable ? (
                         <p className="text-[11px] bg-green-50 text-green-700 px-2.5 py-1 rounded-md border border-green-200 font-bold inline-block">
-                          Save ₹{((variant as any).original_payable - variant.total_payable).toLocaleString('en-IN')} (~{variant.storage_days} Days Backup vs {(variant as any).requested_days} Days Requested)
+                          {t("dvg_save_backup", undefined, {
+                            amount: ((variant as any).original_payable - variant.total_payable).toLocaleString('en-IN'),
+                            days: String(variant.storage_days),
+                            reqDays: String((variant as any).requested_days),
+                          })}
                         </p>
                       ) : null}
                     </div>
@@ -1685,7 +1770,13 @@ export function DynamicVariantGenerator({
                   {!variant.is_economy_storage && variant.is_economy_storage !== undefined && (
                     <p className="text-xs text-zinc-700 dark:text-zinc-300 font-medium mb-2">
                       {variant.technology === "Wireless"
-                        ? `Requested Storage (${variant.storage_device?.derivedCapacity || "128GB MicroSD"} per camera) · ~${variant.storage_days} Days Backup`
+                        ? t("dvg_req_storage_wifi", undefined, { cap: variant.storage_device?.derivedCapacity || "128GB MicroSD", days: String(variant.storage_days) })
+                        : variant.technology === "Hybrid" && (variant as any).secondary_storage_device
+                        ? t("dvg_req_storage_hybrid", "Storage: {hdd} (Wired) + {sd}/Wi-Fi Cam · ~{days} Days", {
+                            hdd: variant.storage_device?.derivedCapacity || "1TB",
+                            sd: (variant as any).secondary_storage_device?.derivedCapacity || "64GB MicroSD",
+                            days: String(variant.storage_days),
+                          })
                         : `${t("wz_requested_storage_")}${variant.storage_device?.derivedCapacity || "1TB"}) · ~${variant.storage_days} ${t("wz_days")}`
                       }
                     </p>
@@ -1694,12 +1785,12 @@ export function DynamicVariantGenerator({
                   {/* Refurbished / Economy Storage Transparency Alert */}
                   {variant.storage_device?.is_refurbished && (
                     <div className="w-full my-2 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 text-[11px] font-bold flex items-center justify-between gap-1.5">
-                      <div className="flex items-center gap-1.5 truncate">
+                      <div className="flex items-center gap-1.5 min-w-0">
                         <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                        <span className="truncate">
+                        <span className="leading-snug text-left">
                           {variant.technology === "Wireless"
-                            ? `Basic Storage · ~${variant.storage_days} Days Backup · 1-Yr Local`
-                            : `Basic 500GB HDD · ~${variant.storage_days} Days Backup · 1-Yr Local`
+                            ? t("dvg_econ_alert_wifi", undefined, { days: String(variant.storage_days) })
+                            : t("dvg_econ_alert_wired", undefined, { days: String(variant.storage_days) })
                           }
                         </span>
                       </div>
@@ -1710,9 +1801,9 @@ export function DynamicVariantGenerator({
                           setShowStorageModal(true);
                         }}
                         className="text-[10px] font-extrabold text-amber-800 dark:text-amber-200 hover:underline flex items-center gap-0.5 shrink-0 ml-1 cursor-pointer bg-amber-100/90 dark:bg-amber-900/60 px-1.5 py-0.5 rounded-md"
-                        title="Read about storage types & warranty transparency"
+                        title={t("dvg_advisory_title")}
                       >
-                        <span>Advisory</span>
+                        <span>{t("dvg_advisory")}</span>
                         <Info className="w-3 h-3" />
                       </button>
                     </div>
@@ -1723,8 +1814,13 @@ export function DynamicVariantGenerator({
                       <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                       <span>
                         {variant.technology === "Wireless"
-                          ? `100% High Endurance MicroSD · ~${variant.storage_days} Days Backup per Camera · Official Warranty`
-                          : `100% Genuine 24×7 ${variant.storage_device?.brand || "Surveillance"} HDD · ~${variant.storage_days} Days Backup · 3-Yr Warranty`
+                          ? t("dvg_sd_assurance", "100% High Endurance MicroSD · ~{days} Days Backup per Camera · Official Warranty", { days: String(variant.storage_days) })
+                          : variant.technology === "Hybrid" && (variant as any).secondary_storage_device
+                          ? t("dvg_hybrid_assurance", "100% Genuine {brand} HDD + High Endurance MicroSD · ~{days} Days · Official Warranty", {
+                              brand: variant.storage_device?.brand || "Surveillance",
+                              days: String(variant.storage_days),
+                            })
+                          : t("dvg_hdd_assurance", "100% Genuine 24×7 {brand} HDD · ~{days} Days Backup · 3-Yr Warranty", { brand: variant.storage_device?.brand || "Surveillance", days: String(variant.storage_days) })
                         }
                       </span>
                     </div>
@@ -1735,11 +1831,11 @@ export function DynamicVariantGenerator({
                     </span>
                   </div>
                   <div className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium mt-1">
-                    or from <span className="text-blue-600 dark:text-blue-400 font-bold">₹{Math.round((variant.total_payable * 1.06) / 12).toLocaleString('en-IN')}/mo</span> (EMI)
+                    {t("dvg_or_from")} <span className="text-blue-600 dark:text-blue-400 font-bold">{t("dvg_per_mo_emi", "{amt}/mo (EMI)", { amt: `₹${Math.round((variant.total_payable * 1.06) / 12).toLocaleString('en-IN')}` })}</span>
                   </div>
                   <div className="mt-3 w-full">
                     <div className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm transition-all group-hover:bg-blue-700">
-                      <span>Select & Proceed</span>
+                      <span>{t("dvg_select_proceed")}</span>
                       <ChevronRight className="w-4 h-4" />
                     </div>
                   </div>
@@ -1757,7 +1853,7 @@ export function DynamicVariantGenerator({
                       className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/60 transition-all hover:scale-[1.02] shadow-xs cursor-pointer w-full"
                     >
                       <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                      <span>Lower competitor quote? Match Price</span>
+                      <span>{t("dvg_match_price")}</span>
                     </button>
                   </div>
                 </div>

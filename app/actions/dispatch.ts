@@ -64,10 +64,13 @@ export async function assignJob(
 
           // Notify Customer
           if (leadData?.mobile_number) {
+            const { resolveCustomerLocale, getCustomerNotifications } = await import("@/lib/whatsapp/customer-notifications-i18n");
+            const custLocale = await resolveCustomerLocale({ leadData, leadId: jobData.lead_id, phone: leadData.mobile_number });
+            const notif = getCustomerNotifications(custLocale);
             const trackingUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/track/${jobData.lead_id}`;
             await sendCustomerWhatsApp(
               leadData.mobile_number,
-              `✅ *Installer Assigned!*\n\nHi ${leadData.customer_name},\nYour CCTV installer, ${installerName}, has been assigned and will be on their way shortly.\n\n*Track your installation status and view your secure Completion PIN here:*\n${trackingUrl}\n\nDo not share your PIN until the work is completed to your satisfaction.`
+              notif.installerAssigned({ name: leadData.customer_name || "", installerName, trackingUrl })
             );
           }
         }

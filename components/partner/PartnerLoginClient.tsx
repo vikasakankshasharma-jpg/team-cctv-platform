@@ -7,8 +7,10 @@ import { ShieldCheck, Mail, Smartphone, ArrowRight, ArrowLeft, ShieldAlert, Badg
 import { auth } from "@/lib/firebase-client";
 import { signInWithCustomToken, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { extractErrorMessage } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function PartnerLoginClient() {
+  const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/partner/dashboard";
@@ -52,7 +54,7 @@ export function PartnerLoginClient() {
         });
         const data = await res.json();
         
-        if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to send code."));
+        if (!res.ok) throw new Error(extractErrorMessage(data, t("inst_log_send_err", "Failed to send code.")));
         setPartnerName(data.partnerName);
       } else {
         // Mobile flow
@@ -63,7 +65,7 @@ export function PartnerLoginClient() {
         });
         const data = await res.json();
         
-        if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to initiate mobile verification."));
+        if (!res.ok) throw new Error(extractErrorMessage(data, t("inst_log_init_mob_err", "Failed to initiate mobile verification.")));
         setPartnerName(data.partnerName);
 
         // Call Firebase Phone Auth
@@ -77,9 +79,9 @@ export function PartnerLoginClient() {
     } catch (err: any) {
       console.error(err);
       if (err.code === "auth/unauthorized-domain") {
-        setError("Mobile login is restricted in the local environment. Please switch to Email login.");
+        setError(t("inst_log_mob_local_err", "Mobile login is restricted in the local environment. Please switch to Email login."));
       } else {
-        setError(extractErrorMessage(err, "An unexpected error occurred."));
+        setError(extractErrorMessage(err, t("inst_log_unexpected_err", "An unexpected error occurred.")));
       }
     } finally {
       setLoading(false);
@@ -104,13 +106,13 @@ export function PartnerLoginClient() {
             body: JSON.stringify({ identifier, otp: code, type: "email" }),
           });
           const data = await res.json();
-          if (!res.ok) throw new Error(extractErrorMessage(data, "Invalid verification code."));
+          if (!res.ok) throw new Error(extractErrorMessage(data, t("inst_log_invalid_code", "Invalid verification code.")));
           customToken = data.customToken;
           if (customToken !== "mock-custom-token") await signInWithCustomToken(auth, customToken);
         } else {
           // Mobile flow: verify with Firebase client SDK first
           const confirmationResult = (window as any).confirmationResult;
-          if (!confirmationResult) throw new Error("Verification session expired. Please try again.");
+          if (!confirmationResult) throw new Error(t("inst_log_sess_expired", "Verification session expired. Please try again."));
           
           const result = await confirmationResult.confirm(code);
           const idToken = await result.user.getIdToken();
@@ -122,7 +124,7 @@ export function PartnerLoginClient() {
             body: JSON.stringify({ identifier, otp: idToken, type: "mobile" }),
           });
           const data = await res.json();
-          if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to upgrade session."));
+          if (!res.ok) throw new Error(extractErrorMessage(data, t("inst_log_upgrade_err", "Failed to upgrade session.")));
           customToken = data.customToken;
           if (customToken !== "mock-custom-token") await signInWithCustomToken(auth, customToken);
         }
@@ -135,14 +137,14 @@ export function PartnerLoginClient() {
           body: JSON.stringify({ idToken: finalIdToken }),
         });
 
-      if (!sessionRes.ok) throw new Error("Failed to create secure session.");
+      if (!sessionRes.ok) throw new Error(t("inst_log_sess_create_err", "Failed to create secure session."));
 
       router.push(redirectTo);
       router.refresh();
       
     } catch (err: any) {
       console.error(err);
-      setError(extractErrorMessage(err, "Verification failed. Please try again."));
+      setError(extractErrorMessage(err, t("inst_log_verify_fail", "Verification failed. Please try again.")));
     } finally {
       setLoading(false);
     }
@@ -192,29 +194,29 @@ export function PartnerLoginClient() {
             </div>
             <div>
               <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em]">TEAM CCTV</p>
-              <p className="text-sm font-black text-zinc-900 dark:text-white leading-none">Partner Network</p>
+              <p className="text-sm font-black text-zinc-900 dark:text-white leading-none">{t("prt_log_network", "Partner Network")}</p>
             </div>
           </div>
         </div>
 
         <div className="relative z-10">
           <h1 className="text-6xl font-black text-zinc-900 dark:text-white tracking-tighter leading-[1.2] md:leading-[1.1] mb-8">
-            Referral<br/>
-            <span className="text-amber-500 dark:text-amber-400 border-b-8 border-amber-500/10">Growth</span><br/>
-            Portal.
+            {t("prt_log_hero1", "Referral")}<br/>
+            <span className="text-amber-500 dark:text-amber-400 border-b-8 border-amber-500/10">{t("prt_log_hero2", "Growth")}</span><br/>
+            {t("prt_log_hero3", "Portal.")}
           </h1>
           <p className="text-zinc-400 dark:text-zinc-500 font-medium text-lg leading-relaxed max-w-xs">
-            Track your pipeline, monitor closed deals, and manage your commissions in real-time.
+            {t("prt_log_hero_desc", "Track your pipeline, monitor closed deals, and manage your commissions in real-time.")}
           </p>
         </div>
 
         <div className="relative z-10 space-y-4">
           {[
-            { icon: Target, label: "Lead Tracking", sub: "Monitor the status of your referrals" },
-            { icon: BadgeDollarSign, label: "Live Commissions", sub: "Instant updates on your earnings" },
-            { icon: Activity, label: "Transparent Pipeline", sub: "Full visibility into won & lost deals" },
-          ].map(({ icon: Icon, label, sub }) => (
-            <div key={label} className="flex items-center gap-4 group">
+            { id: "f1", icon: Target, label: t("prt_log_f1_t", "Lead Tracking"), sub: t("prt_log_f1_d", "Monitor the status of your referrals") },
+            { id: "f2", icon: BadgeDollarSign, label: t("prt_log_f2_t", "Live Commissions"), sub: t("prt_log_f2_d", "Instant updates on your earnings") },
+            { id: "f3", icon: Activity, label: t("prt_log_f3_t", "Transparent Pipeline"), sub: t("prt_log_f3_d", "Full visibility into won & lost deals") },
+          ].map(({ id, icon: Icon, label, sub }) => (
+            <div key={id} className="flex items-center gap-4 group">
               <div className="w-9 h-9 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center group-hover:border-amber-500/30 transition-colors shrink-0 shadow-inner">
                 <Icon className="w-4 h-4 text-amber-500 dark:text-amber-400" />
               </div>
@@ -234,15 +236,15 @@ export function PartnerLoginClient() {
           
           <div className="mb-10">
             <Link href="/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500 transition-colors mb-8">
-              <ArrowLeft className="w-3 h-3" /> Back to Website
+              <ArrowLeft className="w-3 h-3 shrink-0" /> {t("inst_log_back_web", "Back to Website")}
             </Link>
             <h2 className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter leading-tight mb-2">
-              {step === 1 ? "Partner Access" : "Verify Identity"}
+              {step === 1 ? t("prt_log_title", "Partner Access") : t("inst_log_verify_title", "Verify Identity")}
             </h2>
             <p className="text-zinc-400 dark:text-zinc-500 font-medium text-sm">
               {step === 1 
-                ? "Enter your registered details to receive an access code." 
-                : `Enter the code sent to ${identifier}`}
+                ? t("inst_log_step1_desc", "Enter your registered details to receive an access code.") 
+                : t("inst_log_step2_desc", "Enter the code sent to {target}", { target: identifier })}
             </p>
           </div>
 
@@ -259,22 +261,22 @@ export function PartnerLoginClient() {
                 <button
                   type="button"
                   onClick={() => { setMethod("mobile"); setIdentifier(""); }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[16px] text-[10px] font-black uppercase tracking-widest transition-all ${method === "mobile" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-400"}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 px-2 h-auto whitespace-normal rounded-[16px] text-[10px] font-black uppercase tracking-widest transition-all ${method === "mobile" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-400"}`}
                 >
-                  <Smartphone className="w-3.5 h-3.5" /> Mobile
+                  <Smartphone className="w-3.5 h-3.5 shrink-0" /> {t("inst_log_mob_tab", "Mobile")}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setMethod("email"); setIdentifier(""); }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[16px] text-[10px] font-black uppercase tracking-widest transition-all ${method === "email" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-400"}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 px-2 h-auto whitespace-normal rounded-[16px] text-[10px] font-black uppercase tracking-widest transition-all ${method === "email" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-400"}`}
                 >
-                  <Mail className="w-3.5 h-3.5" /> Email
+                  <Mail className="w-3.5 h-3.5 shrink-0" /> {t("inst_log_email_tab", "Email")}
                 </button>
               </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">
-                  {method === "mobile" ? "Mobile Number" : "Email Address"}
+                  {method === "mobile" ? t("inst_log_mob_lbl", "Mobile Number") : t("inst_log_email_lbl", "Email Address")}
                 </label>
                 <div className="relative">
                   {method === "mobile" ? (
@@ -296,13 +298,13 @@ export function PartnerLoginClient() {
               <button 
                 type="submit"
                 disabled={loading || !identifier}
-                className="group relative w-full h-16 bg-amber-500 hover:bg-amber-400 text-white font-black uppercase text-[11px] tracking-[0.3em] rounded-3xl transition-all disabled:opacity-40 mt-6 shadow-xl shadow-amber-500/20 active:scale-[0.98]"
+                className="group relative w-full min-h-16 h-auto py-3 px-4 whitespace-normal bg-amber-500 hover:bg-amber-400 text-white font-black uppercase text-[11px] tracking-[0.3em] rounded-3xl transition-all disabled:opacity-40 mt-6 shadow-xl shadow-amber-500/20 active:scale-[0.98]"
               >
                 <span className="relative z-10 flex items-center justify-center gap-3">
                   {loading ? (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
-                    <>Send Code <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></>
+                    <>{t("inst_log_send_btn", "Send Code")} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform shrink-0" /></>
                   )}
                 </span>
               </button>
@@ -311,11 +313,11 @@ export function PartnerLoginClient() {
             <form onSubmit={handleVerifyCode} className="space-y-6 animate-in fade-in slide-in-from-right-8">
               {partnerName && (
                 <div className="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-2xl mb-6">
-                  <div className="w-8 h-8 bg-emerald-500 text-white rounded-xl flex items-center justify-center">
+                  <div className="w-8 h-8 bg-emerald-500 text-white rounded-xl flex items-center justify-center shrink-0">
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest leading-none">Welcome back</p>
+                    <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest leading-none">{t("inst_log_welcome_back", "Welcome back")}</p>
                     <p className="text-sm font-bold text-zinc-900 dark:text-white mt-1">{partnerName}</p>
                   </div>
                 </div>
@@ -331,22 +333,24 @@ export function PartnerLoginClient() {
                     value={digit}
                     onChange={(e) => handleOtpChange(i, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(i, e)}
-                    className="w-12 h-14 text-center text-xl font-black bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-zinc-900 dark:text-white rounded-xl transition-all outline-none"
+                    className="flex-1 min-w-0 max-w-12 h-14 text-center text-xl font-black bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-zinc-900 dark:text-white rounded-xl transition-all outline-none"
                   />
                 ))}
               </div>
 
-              <div className="flex items-center justify-between mt-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 mt-4">
                 <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">
-                  {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')} remaining
+                  {t("inst_log_remaining", "{time} remaining", {
+                    time: `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`,
+                  })}
                 </span>
                 <button
                   type="button"
-                  onClick={() => { setStep(1); setOtp(["","","",""]); }}
+                  onClick={() => { setStep(1); setOtp(["","","","","",""]); }}
                   disabled={timeLeft > 0 || loading}
-                  className="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest disabled:opacity-50 hover:underline"
+                  className="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest disabled:opacity-50 hover:underline whitespace-normal h-auto"
                 >
-                  Resend Code
+                  {t("inst_log_resend_code", "Resend Code")}
                 </button>
               </div>
 
@@ -354,12 +358,12 @@ export function PartnerLoginClient() {
                 id="verify-btn"
                 type="submit"
                 disabled={loading || otp.join("").length < 6}
-                className="group relative w-full h-16 bg-amber-500 hover:bg-amber-400 text-white font-black uppercase text-[11px] tracking-[0.3em] rounded-3xl transition-all disabled:opacity-40 mt-6 shadow-xl shadow-amber-500/20 active:scale-[0.98]"
+                className="group relative w-full min-h-16 h-auto py-3 px-4 whitespace-normal bg-amber-500 hover:bg-amber-400 text-white font-black uppercase text-[11px] tracking-[0.3em] rounded-3xl transition-all disabled:opacity-40 mt-6 shadow-xl shadow-amber-500/20 active:scale-[0.98]"
               >
                 <span className="relative z-10 flex items-center justify-center gap-3">
                   {loading ? (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : "Verify Securely"}
+                  ) : t("inst_log_verify_btn", "Verify Securely")}
                 </span>
               </button>
             </form>

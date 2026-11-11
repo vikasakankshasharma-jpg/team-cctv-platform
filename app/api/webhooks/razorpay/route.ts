@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { adminDb, serverTimestamp, arrayUnion } from "@/lib/firebase-admin";
 import { InventoryEngine } from "@/lib/inventory-engine";
 import { sendCustomerWhatsApp, sendAdminNotification } from "@/lib/notification-service";
+import { cleanEnvVar } from "@/lib/env-utils";
 
 
 // ── Payment History Logger ──
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
     const signature = req.headers.get("x-razorpay-signature");
 
     // 1. Fail Closed: Webhook Secret MUST be set in environment
-    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    const secret = cleanEnvVar(process.env.RAZORPAY_WEBHOOK_SECRET);
 
     if (!secret) {
       console.error("[Razorpay Webhook Error]: RAZORPAY_WEBHOOK_SECRET is not configured on server.");
@@ -125,9 +126,12 @@ export async function POST(req: Request) {
         // Send Delivery OTP to customer now that 90% is paid
         const deliveryOtp = dQuoteData.delivery_otp;
         if (deliveryOtp && dQuoteData.customer_mobile) {
+          const { resolveCustomerLocale, getCustomerNotifications } = await import("@/lib/whatsapp/customer-notifications-i18n");
+          const custLocale = await resolveCustomerLocale({ quoteData: dQuoteData, leadId: dLeadId, phone: dQuoteData.customer_mobile });
+          const notif = getCustomerNotifications(custLocale);
           await sendCustomerWhatsApp(
             dQuoteData.customer_mobile,
-            `✅ Payment of ₹${paidAmount.toLocaleString()} received!\n\nYour secure Delivery OTP is: *${deliveryOtp}*\n\nPlease share this OTP with the delivery person only after inspecting your CCTV materials.\n\nThank you for choosing TEAM CCTV! 🛡️`
+            notif.deliveryPaidOtp({ amount: paidAmount.toLocaleString("en-IN"), otp: String(deliveryOtp) })
           );
         }
 
@@ -187,9 +191,12 @@ export async function POST(req: Request) {
         }
 
         if (iQuoteData.customer_mobile) {
+          const { resolveCustomerLocale, getCustomerNotifications } = await import("@/lib/whatsapp/customer-notifications-i18n");
+          const custLocale = await resolveCustomerLocale({ quoteData: iQuoteData, leadId: iLeadId, phone: iQuoteData.customer_mobile });
+          const notif = getCustomerNotifications(custLocale);
           await sendCustomerWhatsApp(
             iQuoteData.customer_mobile,
-            `🎉 Final payment of ₹${iPaidAmount.toLocaleString()} received!\n\nYour CCTV installation is now COMPLETE. Your Warranty Certificate is being generated and will be sent shortly.\n\nThank you for choosing TEAM CCTV! 🛡️`
+            notif.finalPaidCompleted({ amount: iPaidAmount.toLocaleString("en-IN") })
           );
         }
 
@@ -368,7 +375,14 @@ export async function POST(req: Request) {
         }
 
 
-        return { status: "processed", jobId, customerMobile: quoteData.customer_mobile, quoteId };
+        return {
+          status: "processed",
+          jobId,
+          customerMobile: quoteData.customer_mobile,
+          quoteId,
+          leadId: quoteData.lead_id || quoteData.leadId || null,
+          preferredLanguage: quoteData.preferred_language || null,
+        };
       });
 
       console.log(`[Razorpay Webhook]: Quote ${quoteId} successfully verified & transitioned.`, txResult);
@@ -380,7 +394,18 @@ export async function POST(req: Request) {
           await sendAdminNotification(adminMessage);
 
           if (txResult.customerMobile) {
-            const customerMessage = `🎉 Payment Received!\n\nYour booking is confirmed.\nQuote ID: ${txResult.quoteId}\nJob ID: ${txResult.jobId}\n\nTrack your booking in real-time here:\n${trackingUrl}\n\nThank you for choosing TEAM CCTV!`;
+            const { resolveCustomerLocale, getCustomerNotifications } = await import("@/lib/whatsapp/customer-notifications-i18n");
+            const custLocale = await resolveCustomerLocale({
+              preferredLanguage: txResult.preferredLanguage,
+              leadId: txResult.leadId,
+              phone: txResult.customerMobile,
+            });
+            const notif = getCustomerNotifications(custLocale);
+            const customerMessage = notif.bookingPaidConfirmed({
+              quoteId: String(txResult.quoteId),
+              jobId: String(txResult.jobId),
+              trackingUrl,
+            });
             await sendCustomerWhatsApp(txResult.customerMobile, customerMessage);
           }
         } catch (notifErr) {
@@ -469,7 +494,14 @@ export async function POST(req: Request) {
           await InventoryEngine.reverseDeduction(transaction, inventoryItems, refundEntity.id, "manual");
         }
 
-        return { status: "processed", quoteId: refundQuoteId, customerMobile: quoteData.customer_mobile, amount: refundEntity.amount / 100 };
+        return {
+          status: "processed",
+          quoteId: refundQuoteId,
+          customerMobile: quoteData.customer_mobile,
+          amount: refundEntity.amount / 100,
+          leadId: quoteData.lead_id || quoteData.leadId || null,
+          preferredLanguage: quoteData.preferred_language || null,
+        };
       });
 
       console.log(`[Razorpay Webhook]: Refund for Quote ${refundQuoteId} processed.`, refundTxResult);
@@ -478,7 +510,20 @@ export async function POST(req: Request) {
         try {
           await sendAdminNotification(`💸 Refund Processed!\nQuote ID: ${refundTxResult.quoteId}\nAmount: ₹${refundTxResult.amount}`);
           if (refundTxResult.customerMobile) {
-            await sendCustomerWhatsApp(refundTxResult.customerMobile, `Hi, your refund of ₹${refundTxResult.amount} for Quote ID ${refundTxResult.quoteId} has been successfully processed. It may take 5-7 business days to reflect in your account.`);
+            const { resolveCustomerLocale, getCustomerNotifications } = await import("@/lib/whatsapp/customer-notifications-i18n");
+            const custLocale = await resolveCustomerLocale({
+              preferredLanguage: refundTxResult.preferredLanguage,
+              leadId: refundTxResult.leadId,
+              phone: refundTxResult.customerMobile,
+            });
+            const notif = getCustomerNotifications(custLocale);
+            await sendCustomerWhatsApp(
+              refundTxResult.customerMobile,
+              notif.refundProcessed({
+                amount: Number(refundTxResult.amount).toLocaleString("en-IN"),
+                quoteId: String(refundTxResult.quoteId),
+              })
+            );
           }
         } catch (notifErr) {
           console.error("[Razorpay Webhook]: Failed to send refund notifications", notifErr);

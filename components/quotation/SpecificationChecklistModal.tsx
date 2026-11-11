@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Check, ShieldCheck, Sparkles, SlidersHorizontal, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface SpecificationOption {
   id: string;
@@ -85,6 +86,16 @@ export function SpecificationChecklistModal({
   wifiCount = 0,
   availableFeatureTags,
 }: SpecificationChecklistModalProps) {
+  const { t } = useTranslation();
+
+  const optionI18nMap: Record<string, { t: string; s: string; w: string; r: string }> = {
+    weatherproof: { t: "chk_o1_t", s: "chk_o1_s", w: "chk_o1_w", r: "chk_o1_r" },
+    color: { t: "tg_i2_t", s: "chk_o2_s", w: "chk_o2_w", r: "chk_o2_r" },
+    mic: { t: "tg_i3_t", s: "chk_o3_s", w: "chk_o3_w", r: "chk_o3_r" },
+    two_way: { t: "tg_i4_t", s: "chk_o4_s", w: "chk_o4_w", r: "chk_o4_r" },
+    ptz: { t: "chk_o5_t", s: "chk_o5_s", w: "chk_o5_w", r: "chk_o5_r" },
+  };
+
   // Filter specification options to only those available in active product inventory
   const visibleOptions = useMemo(() => {
     if (!availableFeatureTags || availableFeatureTags.length === 0) return SPECIFICATION_OPTIONS;
@@ -164,52 +175,54 @@ export function SpecificationChecklistModal({
         {/* Modal Header */}
         <div className="px-5 sm:px-6 py-4 sm:py-5 border-b border-zinc-100 dark:border-zinc-800 flex items-start justify-between bg-zinc-50/70 dark:bg-zinc-900/90 sticky top-0 z-10">
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">
-                Setup Assistant
+                {t("chk_badge", "Setup Assistant")}
               </span>
               {(outdoorCount > 0 || indoorCount > 0) && (
                 <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-                  {outdoorCount > 0 ? `${outdoorCount} Outdoor` : ""}{outdoorCount > 0 && indoorCount > 0 ? " + " : ""}{indoorCount > 0 ? `${indoorCount} Indoor` : ""}
+                  {outdoorCount > 0 ? t("chk_outdoor_n", "{n} Outdoor", { n: String(outdoorCount) }) : ""}
+                  {outdoorCount > 0 && indoorCount > 0 ? " + " : ""}
+                  {indoorCount > 0 ? t("chk_indoor_n", "{n} Indoor", { n: String(indoorCount) }) : ""}
                 </span>
               )}
             </div>
             <h3 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white tracking-tight">
-              Select Your Security Requirements
+              {t("chk_title", "Select Your Security Requirements")}
             </h3>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              Choose the hardware capabilities you need. Camera resolution (2MP, 3MP, 5MP, 8MP) is configured directly on each camera card.
+              {t("chk_sub", "Choose the hardware capabilities you need. Camera resolution (2MP, 3MP, 5MP, 8MP) is configured directly on each camera card.")}
             </p>
           </div>
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-zinc-200/60 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
-            aria-label="Close"
+            aria-label={t("pcm_close_aria", "Close modal")}
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Quick select helpers */}
-        <div className="px-5 sm:px-6 py-2.5 bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-zinc-500 dark:text-zinc-400">Quick selection:</span>
+        <div className="px-5 sm:px-6 py-2.5 bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-zinc-500 dark:text-zinc-400">{t("chk_quick", "Quick selection:")}</span>
             <button
               onClick={handleSelectAll}
               className="font-bold text-blue-600 dark:text-blue-400 hover:underline"
             >
-              Select All
+              {t("chk_sel_all", "Select All")}
             </button>
             <span className="text-zinc-300 dark:text-zinc-700">•</span>
             <button
               onClick={handleClearAll}
               className="font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
             >
-              Clear All
+              {t("chk_clr_all", "Clear All")}
             </button>
           </div>
           <span className="text-zinc-400 font-medium">
-            {selected.size} selected
+            {t("chk_selected_n", "{n} selected", { n: String(selected.size) })}
           </span>
         </div>
 
@@ -217,6 +230,7 @@ export function SpecificationChecklistModal({
         <div className="p-4 sm:p-6 overflow-y-auto space-y-3.5 divide-y divide-zinc-100 dark:divide-zinc-800/60">
           {visibleOptions.map((opt, idx) => {
             const isChecked = selected.has(opt.tag);
+            const keys = optionI18nMap[opt.id];
             return (
               <div
                 key={opt.id}
@@ -244,22 +258,22 @@ export function SpecificationChecklistModal({
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span className="text-base sm:text-lg">{opt.icon}</span>
                       <h4 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">
-                        {opt.title}
+                        {keys ? t(keys.t, opt.title) : opt.title}
                       </h4>
                       <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                        {opt.subtitle}
+                        {keys ? t(keys.s, opt.subtitle) : opt.subtitle}
                       </span>
                     </div>
 
                     {/* Layman Real-Life Explanation */}
                     <p className="text-xs sm:text-[13px] text-zinc-600 dark:text-zinc-300 leading-relaxed mt-1">
-                      {opt.whyNeeded}
+                      {keys ? t(keys.w, opt.whyNeeded) : opt.whyNeeded}
                     </p>
 
                     {/* Where it is recommended */}
-                    <div className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-blue-700 dark:text-blue-400">
-                      <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                      <span>Best for: {opt.recommendedFor}</span>
+                    <div className="mt-2 flex items-start gap-1.5 text-[11px] font-medium text-blue-700 dark:text-blue-400">
+                      <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                      <span>{t("chk_best_for", "Best for:")} {keys ? t(keys.r, opt.recommendedFor) : opt.recommendedFor}</span>
                     </div>
                   </div>
                 </div>
@@ -269,24 +283,28 @@ export function SpecificationChecklistModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-5 sm:px-6 py-4 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-3 sticky bottom-0">
+        <div className="px-5 sm:px-6 py-4 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 sticky bottom-0">
           <button
             onClick={() => {
               // Apply no filter restriction
               onApply([]);
               onClose();
             }}
-            className="text-xs sm:text-sm font-semibold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors py-2 px-3"
+            className="text-xs sm:text-sm font-semibold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors py-2 px-3 whitespace-normal text-left leading-snug"
           >
-            Skip & View All Quotes
+            {t("chk_skip", "Skip & View All Quotes")}
           </button>
 
           <Button
             onClick={handleApply}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm px-5 sm:px-6 py-2.5 rounded-full flex items-center gap-2 shadow-md shadow-blue-600/20"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm px-5 sm:px-6 py-2.5 h-auto whitespace-normal text-center leading-snug rounded-full flex items-center gap-2 shadow-md shadow-blue-600/20"
           >
-            <span>Apply {selected.size > 0 ? `(${selected.size}) Specs` : "Requirements"}</span>
-            <ArrowRight className="w-4 h-4" />
+            <span>
+              {selected.size > 0
+                ? t("chk_apply_n", "Apply ({n}) Specs", { n: String(selected.size) })
+                : t("chk_apply_req", "Apply Requirements")}
+            </span>
+            <ArrowRight className="w-4 h-4 shrink-0" />
           </Button>
         </div>
       </div>

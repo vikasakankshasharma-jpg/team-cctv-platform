@@ -1,6 +1,7 @@
 import { adminDb } from "@/lib/firebase-admin";
 import { sendAdminNotification } from "@/lib/notification-service";
 import { Resend } from "resend";
+import { cleanEnvVar, cleanPhoneEnvVar } from "@/lib/env-utils";
 
 export interface ServiceCostBudget {
   // Budget Limits
@@ -76,8 +77,8 @@ export const DEFAULT_BUDGET_CONFIG: ServiceCostBudget = {
   gemini_monthly_uncredited_calls_limit: 50,
   strict_zero_cost_mode: true, // Default to strict safety
   notifications_enabled: true,
-  admin_alert_whatsapp: process.env.ADMIN_WHATSAPP_NUMBER || "917357612865",
-  admin_alert_email: process.env.ADMIN_ALERT_EMAIL || "sales@teamcctv.com",
+  admin_alert_whatsapp: cleanPhoneEnvVar(process.env.ADMIN_WHATSAPP_NUMBER, "917357612865"),
+  admin_alert_email: cleanEnvVar(process.env.ADMIN_ALERT_EMAIL) || "sales@teamcctv.com",
   last_alerts: {},
 };
 
@@ -318,9 +319,10 @@ export async function checkAndNotifyThresholdBreaches(force: boolean = false): P
     }
 
     // 2. Send Email Alert via Resend
-    if (process.env.RESEND_API_KEY && budget.admin_alert_email) {
+    const resendApiKey = cleanEnvVar(process.env.RESEND_API_KEY);
+    if (resendApiKey && budget.admin_alert_email) {
       try {
-        const resend = new Resend(process.env.RESEND_API_KEY);
+        const resend = new Resend(resendApiKey);
         await resend.emails.send({
           from: "TEAM CCTV Alerts <alerts@teamcctv.com>",
           to: budget.admin_alert_email,

@@ -25,7 +25,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
    - **Option A (2-Button Checkpoint):** At the camera count checkpoint, provide 2 buttons: `[ ✅ Done (Proceed) ]` and `[ ✏️ Change Qty ]`.
    - **Non-Destructive Quantity Editing (`ASK_CAMERA_EDIT_CHOICE`):** Tapping `[ ✏️ Change Qty ]` allows modifying camera counts without resetting language, property type, or pincode.
    - **Media & Off-Topic Input Resilience:** Images, stickers, audio, or off-topic queries never break the journey; the system gracefully reminds the customer of the pending question.
-   - **Sanitized Error Strings:** Zero `[object Object]` across all APIs, webhooks, and UI toasts.
+   - **Sanitized Error Strings:** Zero `[object Object]` across all APIs, webhooks, and UI toasts (`extractErrorMessage` in `lib/utils.ts`).
+   - **Env Hygiene, MSG91 OTP & Cross-Device WhatsApp Launcher:** All OTP/WhatsApp/webhook/email/Gemini env vars must pass through `cleanEnvVar()` / `cleanPhoneEnvVar()` (`lib/env-utils.ts`); OTP dispatch uses `Msg91WhatsAppProvider.sendOtpTemplate()` (`lib/whatsapp/msg91-provider.ts`); UI app launch links use native `<a href="whatsapp://send?phone=...">` (no bare `whatsapp://` or hidden `<iframe>`) with adaptive mobile `wa.me` / desktop `web.whatsapp.com` fallback (`lib/whatsapp.ts`, `components/shared/WhatsAppOtpNotice.tsx`).
+5. **Profit Waterfall, Services Bucket (AMC & Commissions) & True Net Pocket Profit:**
+   - `classifyItem()` (`lib/quotation-profit.ts`) distinguishes `service` / `amc` / `commission` (word-boundary safe so `"Commissioning"` remains in `service`) before `cable` (`3+1`, `cab-`) and `accessory` (`junction box`) before `camera`.
+   - Paid/Promo AMC (`amc_1yr`..`amc_3yr`, `promo_free_amc`, linked `amc_subscriptions`/`amc_contracts`) and Referral/Salesperson Commissions (`resolvePromoterCommission()` in `lib/commission.ts`) are accounted directly inside the **Services** bucket (`services.profit`).
+   - Operating overheads (`payment_gateway_fee` actual/est or ₹0 on cash, `warranty_reserve`, `logistics_consumables`, `installer_payout_bonus`) compute `overheads.net_profit` ("True Net Pocket Profit") via `lib/profit-context.ts` without modifying customer checkout totals.
 
 
 ---

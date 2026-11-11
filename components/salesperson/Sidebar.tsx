@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase-client";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 import { 
   LayoutDashboard, 
   Users, 
@@ -20,28 +21,32 @@ import {
 
 const NAV_GROUPS = [
   {
-    label: "Overview",
+    labelKey: "inst_nav_overview" as const,
+    labelFallback: "Overview",
     items: [
-      { name: "Dashboard",    href: "/salesperson/dashboard",    icon: LayoutDashboard },
+      { nameKey: "nav_dashboard" as const, nameFallback: "Dashboard", href: "/salesperson/dashboard", icon: LayoutDashboard },
     ]
   },
   {
-    label: "Sales Operations",
+    labelKey: "sls_nav_ops" as const,
+    labelFallback: "Sales Operations",
     items: [
-      { name: "Daily Client Visits", href: "/salesperson/route", icon: MapPin },
-      { name: "My Leads",     href: "/salesperson/leads",        icon: Users },
-      { name: "Walk-In Quote",href: "/salesperson/create-quote", icon: FileText },
+      { nameKey: "sls_nav_visits" as const, nameFallback: "Daily Client Visits", href: "/salesperson/route", icon: MapPin },
+      { nameKey: "sls_nav_my_leads" as const, nameFallback: "My Leads", href: "/salesperson/leads", icon: Users },
+      { nameKey: "sls_nav_walkin" as const, nameFallback: "Walk-In Quote", href: "/salesperson/create-quote", icon: FileText },
     ]
   },
   {
-    label: "Financials",
+    labelKey: "sls_nav_financials" as const,
+    labelFallback: "Financials",
     items: [
-      { name: "Commissions",  href: "/salesperson/commissions",  icon: HandCoins },
+      { nameKey: "prt_nav_commissions" as const, nameFallback: "Commissions", href: "/salesperson/commissions", icon: HandCoins },
     ]
   },
 ];
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -54,7 +59,7 @@ export function Sidebar() {
       router.refresh();
     } catch (error) {
       console.error("Logout failed", error);
-      toast.error('Logout failed. Please try again.');
+      toast.error(t("inst_side_logout_err", "Logout failed. Please try again."));
     }
   };
 
@@ -69,10 +74,10 @@ export function Sidebar() {
         </div>
         <div className="relative z-10 min-w-0 flex-1">
           <p className="text-[8px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.3em] leading-none">TEAM CCTV</p>
-          <p className="text-sm font-black text-zinc-900 dark:text-white leading-tight tracking-tight truncate">Sales Portal</p>
+          <p className="text-sm font-black text-zinc-900 dark:text-white leading-tight tracking-tight truncate">{t("sls_portal_title", "Sales Portal")}</p>
         </div>
         {/* Mobile close button */}
-        <button aria-label="Close menu" onClick={() => setMobileOpen(false)} className="md:hidden w-8 h-8 rounded-xl bg-zinc-100 dark:bg-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+        <button aria-label={t("inst_side_close_menu", "Close menu")} onClick={() => setMobileOpen(false)} className="md:hidden w-8 h-8 rounded-xl bg-zinc-100 dark:bg-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -80,17 +85,18 @@ export function Sidebar() {
       {/* ── NAVIGATION GROUPS ── */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5 scrollbar-none">
         {NAV_GROUPS.map((group) => (
-          <div key={group.label}>
-            <p className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.25em] px-3 mb-2 leading-none">
-              {group.label}
+          <div key={group.labelKey}>
+            <p className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] px-3 mb-2 leading-snug">
+              {t(group.labelKey, group.labelFallback)}
             </p>
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const active = isActive(item.href);
                 const Icon = item.icon;
+                const label = t(item.nameKey, item.nameFallback);
                 return (
                   <Link
-                    key={item.name + item.href}
+                    key={item.nameKey + item.href}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-[11px] uppercase tracking-wider transition-all relative group ${
@@ -109,7 +115,7 @@ export function Sidebar() {
                     }`}>
                       <Icon className="w-3.5 h-3.5" />
                     </div>
-                    <span className="truncate flex-1">{item.name}</span>
+                    <span className="flex-1 leading-snug break-words">{label}</span>
                     {active && (
                       <ChevronRight className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
                     )}
@@ -130,7 +136,7 @@ export function Sidebar() {
           <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-white/5 group-hover:bg-red-100 dark:group-hover:bg-red-500/20 text-zinc-500 group-hover:text-red-600 flex items-center justify-center shrink-0 transition-colors">
             <LogOut className="w-3.5 h-3.5" />
           </div>
-          <span className="font-bold">Secure Logout</span>
+          <span className="font-bold leading-snug">{t("inst_side_logout", "Secure Logout")}</span>
         </button>
       </div>
     </>
@@ -144,9 +150,9 @@ export function Sidebar() {
           <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-md shadow-blue-500/20">
             <ShieldCheck className="w-4 h-4 text-white" />
           </div>
-          <span className="text-sm font-black text-zinc-900 dark:text-white tracking-tight">Sales</span>
+          <span className="text-sm font-black text-zinc-900 dark:text-white tracking-tight">{t("sls_mob_sales", "Sales")}</span>
         </div>
-        <button aria-label="Open menu" onClick={() => setMobileOpen(true)} className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/10 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+        <button aria-label={t("inst_side_open_menu", "Open menu")} onClick={() => setMobileOpen(true)} className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/10 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
           <Menu className="w-5 h-5" />
         </button>
       </div>

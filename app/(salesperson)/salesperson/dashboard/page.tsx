@@ -10,6 +10,7 @@ import type { Lead } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { ActivePipeline } from "@/components/salesperson/ActivePipeline";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 
 export const metadata: Metadata = {
   title: "Sales Dashboard | TEAM CCTV",
@@ -115,44 +116,54 @@ export default async function SalespersonDashboard() {
 
   const KPIS = [
     {
-      label: "Total Assigned",
+      labelKey: "sls_kpi_assigned" as const,
+      labelFallback: "Total Assigned",
       value: totalAssigned,
       icon: Users,
       color: "text-blue-500",
       bg: "bg-blue-500/10",
-      sub: "all time"
+      subKey: "sls_kpi_all_time" as const,
+      subFallback: "all time",
     },
     {
-      label: "Won Deals",
+      labelKey: "sls_kpi_won" as const,
+      labelFallback: "Won Deals",
       value: wonLeads,
       icon: CalendarCheck,
       color: "text-emerald-500",
       bg: "bg-emerald-500/10",
-      sub: "closed successfully"
+      subKey: "sls_kpi_closed_ok" as const,
+      subFallback: "closed successfully",
     },
     {
-      label: "Conversion Rate",
+      labelKey: "sls_kpi_conv_rate" as const,
+      labelFallback: "Conversion Rate",
       value: `${conversionRate}%`,
       icon: ArrowUpRight,
       color: conversionRate > 20 ? "text-emerald-500" : "text-amber-500",
       bg: conversionRate > 20 ? "bg-emerald-500/10" : "bg-amber-500/10",
-      sub: conversionRate > 20 ? "above target" : "needs improvement"
+      subKey: conversionRate > 20 ? ("sls_kpi_above_target" as const) : ("sls_kpi_needs_imp" as const),
+      subFallback: conversionRate > 20 ? "above target" : "needs improvement",
     },
     {
-      label: "Active Pipeline",
+      labelKey: "sls_kpi_pipeline" as const,
+      labelFallback: "Active Pipeline",
       value: activeCount,
       icon: Flame,
       color: "text-orange-500",
       bg: "bg-orange-500/10",
-      sub: "in progress"
+      subKey: "sls_kpi_in_prog" as const,
+      subFallback: "in progress",
     },
     {
-      label: "Follow-Ups Today",
+      labelKey: "sls_kpi_followups" as const,
+      labelFallback: "Follow-Ups Today",
       value: todayFollowUps,
       icon: Target,
       color: todayFollowUps > 0 ? "text-red-500" : "text-zinc-400",
       bg: todayFollowUps > 0 ? "bg-red-500/10" : "bg-zinc-100 dark:bg-zinc-800",
-      sub: todayFollowUps > 0 ? "action required" : "all clear"
+      subKey: todayFollowUps > 0 ? ("sls_kpi_act_req" as const) : ("sls_kpi_all_clear" as const),
+      subFallback: todayFollowUps > 0 ? "action required" : "all clear",
     },
   ];
 
@@ -160,22 +171,26 @@ export default async function SalespersonDashboard() {
     <div className="space-y-10 animate-in fade-in duration-700">
       <PageHeader
         icon={LayoutDashboard}
-        title="Command Centre"
-        description="Monitor your active pipeline and conversion performance."
+        title={<TranslatedText tKey="sls_dash_title" defaultText="Command Centre" />}
+        description={<TranslatedText tKey="sls_dash_desc" defaultText="Monitor your active pipeline and conversion performance." />}
       />
 
       {/* KPI Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {KPIS.map((kpi, idx) => (
           <div key={idx} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[28px] p-6 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-3 relative z-10">
-              <span className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest leading-tight">{kpi.label}</span>
-              <div className={`p-2.5 rounded-xl ${kpi.bg} ${kpi.color}`}>
+            <div className="flex items-center justify-between gap-2 mb-3 relative z-10">
+              <span className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest leading-snug">
+                <TranslatedText tKey={kpi.labelKey} defaultText={kpi.labelFallback} />
+              </span>
+              <div className={`p-2.5 rounded-xl shrink-0 ${kpi.bg} ${kpi.color}`}>
                 <kpi.icon className="w-4 h-4" />
               </div>
             </div>
             <div className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter relative z-10">{kpi.value}</div>
-            <div className="text-[9px] font-bold text-zinc-400 mt-1 uppercase tracking-widest">{kpi.sub}</div>
+            <div className="text-[9px] font-bold text-zinc-400 mt-1 uppercase tracking-widest leading-snug">
+              <TranslatedText tKey={kpi.subKey} defaultText={kpi.subFallback} />
+            </div>
             <div className="absolute inset-0 bg-gradient-to-br from-zinc-50 dark:from-zinc-800/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         ))}
@@ -185,12 +200,13 @@ export default async function SalespersonDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Active Pipeline — 2/3 width */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-base font-black text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-              <Flame className="w-4 h-4 text-orange-500" /> Active Pipeline
+              <Flame className="w-4 h-4 text-orange-500 shrink-0" />
+              <TranslatedText tKey="sls_kpi_pipeline" defaultText="Active Pipeline" />
             </h3>
             <Link href="/salesperson/leads" className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest hover:underline">
-              View All →
+              <TranslatedText tKey="sls_view_all" defaultText="View All" /> →
             </Link>
           </div>
           <ActivePipeline leads={activeLeads} partnerId={spId} partnerName={spName} role="salesperson" />
@@ -201,8 +217,10 @@ export default async function SalespersonDashboard() {
           {/* Monthly Win Trend */}
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[28px] p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-5">
-              <TrendingUp className="w-4 h-4 text-emerald-500" />
-              <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Win Trend (5 Months)</h4>
+              <TrendingUp className="w-4 h-4 text-emerald-500 shrink-0" />
+              <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                <TranslatedText tKey="sls_win_trend" defaultText="Win Trend (5 Months)" />
+              </h4>
             </div>
             <div className="flex items-end gap-2 h-24">
               {trendMonths.map((m, i) => (
@@ -222,26 +240,36 @@ export default async function SalespersonDashboard() {
 
           {/* Quick Actions */}
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[28px] p-6 shadow-sm space-y-3">
-            <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Quick Actions</h4>
+            <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">
+              <TranslatedText tKey="sls_quick_actions" defaultText="Quick Actions" />
+            </h4>
             <Link href="/salesperson/create-quote" className="flex items-center gap-3 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors group">
-              <div className="w-8 h-8 rounded-xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+              <div className="w-8 h-8 rounded-xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30 shrink-0">
                 <FileText className="w-4 h-4 text-white" />
               </div>
-              <div>
-                <p className="text-xs font-black text-zinc-900 dark:text-white">Walk-In Quote</p>
-                <p className="text-[9px] text-zinc-500 font-medium">Create quote for walk-in customer</p>
+              <div className="min-w-0">
+                <p className="text-xs font-black text-zinc-900 dark:text-white">
+                  <TranslatedText tKey="sls_nav_walkin" defaultText="Walk-In Quote" />
+                </p>
+                <p className="text-[9px] text-zinc-500 font-medium leading-snug">
+                  <TranslatedText tKey="sls_qa_walkin_desc" defaultText="Create quote for walk-in customer" />
+                </p>
               </div>
-              <ArrowUpRight className="w-4 h-4 text-zinc-400 ml-auto group-hover:text-amber-500 transition-colors" />
+              <ArrowUpRight className="w-4 h-4 text-zinc-400 ml-auto shrink-0 group-hover:text-amber-500 transition-colors" />
             </Link>
             <Link href="/salesperson/leads" className="flex items-center gap-3 p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors group">
-              <div className="w-8 h-8 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <div className="w-8 h-8 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">
                 <Users className="w-4 h-4 text-white" />
               </div>
-              <div>
-                <p className="text-xs font-black text-zinc-900 dark:text-white">My Leads</p>
-                <p className="text-[9px] text-zinc-500 font-medium">View and manage all assigned leads</p>
+              <div className="min-w-0">
+                <p className="text-xs font-black text-zinc-900 dark:text-white">
+                  <TranslatedText tKey="sls_nav_my_leads" defaultText="My Leads" />
+                </p>
+                <p className="text-[9px] text-zinc-500 font-medium leading-snug">
+                  <TranslatedText tKey="sls_qa_leads_desc" defaultText="View and manage all assigned leads" />
+                </p>
               </div>
-              <ArrowUpRight className="w-4 h-4 text-zinc-400 ml-auto group-hover:text-blue-500 transition-colors" />
+              <ArrowUpRight className="w-4 h-4 text-zinc-400 ml-auto shrink-0 group-hover:text-blue-500 transition-colors" />
             </Link>
           </div>
 
@@ -249,14 +277,20 @@ export default async function SalespersonDashboard() {
           {todayFollowUps > 0 && (
             <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-[28px] p-5">
               <div className="flex items-center gap-2 mb-2">
-                <Target className="w-4 h-4 text-red-500" />
-                <h4 className="text-[10px] font-black text-red-600 dark:text-red-400 uppercase tracking-widest">Action Required</h4>
+                <Target className="w-4 h-4 text-red-500 shrink-0" />
+                <h4 className="text-[10px] font-black text-red-600 dark:text-red-400 uppercase tracking-widest">
+                  <TranslatedText tKey="sls_act_req_title" defaultText="Action Required" />
+                </h4>
               </div>
               <p className="text-sm font-bold text-red-700 dark:text-red-300">
-                {todayFollowUps} lead{todayFollowUps > 1 ? "s" : ""} need{todayFollowUps === 1 ? "s" : ""} follow-up today.
+                {todayFollowUps === 1 ? (
+                  <TranslatedText tKey="sls_act_req_one" defaultText="1 lead needs follow-up today." />
+                ) : (
+                  <TranslatedText tKey="sls_act_req_many" defaultText="{count} leads need follow-up today." params={{ count: String(todayFollowUps) }} />
+                )}
               </p>
               <Link href="/salesperson/leads" className="mt-3 inline-flex items-center gap-1.5 text-[10px] font-black text-red-600 dark:text-red-400 uppercase tracking-widest hover:underline">
-                View Now <ArrowUpRight className="w-3 h-3" />
+                <TranslatedText tKey="sls_view_now" defaultText="View Now" /> <ArrowUpRight className="w-3 h-3" />
               </Link>
             </div>
           )}

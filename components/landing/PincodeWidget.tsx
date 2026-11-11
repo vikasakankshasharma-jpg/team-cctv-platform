@@ -30,7 +30,7 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(extractErrorMessage(data, "Pincode check failed."));
+        throw new Error(extractErrorMessage(data, t("pin_err_check", "Pincode check failed.")));
       }
 
       if (data.citySlug) {

@@ -76,8 +76,9 @@ function daysUntil(dateStr: string) {
   return Math.max(0, Math.ceil(diff / 86_400_000));
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-IN", {
+function formatDate(dateStr: string, locale = "en") {
+  const dateLocale = locale === "en" ? "en-IN" : `${locale}-IN`;
+  return new Date(dateStr).toLocaleDateString(dateLocale, {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -90,12 +91,12 @@ function StatusBadge({ status }: { status: QuoteData["status"] | "pending_custom
   const { t } = useTranslation();
   const map = {
     pending:  { label: t("quote_awaiting", "Awaiting Approval"), classes: "bg-amber-100/50 text-amber-800 border-amber-200/50" },
-    pending_customer_approval: { label: "Review Requested", classes: "bg-amber-100/50 text-amber-800 border-amber-200/50" },
+    pending_customer_approval: { label: t("qrc_status_review", "Review Requested"), classes: "bg-amber-100/50 text-amber-800 border-amber-200/50" },
     accepted: { label: t("quote_accepted", "Accepted"),          classes: "bg-emerald-100/50 text-emerald-800 border-emerald-200/50" },
     expired:  { label: t("quote_expired", "Expired"),           classes: "bg-rose-100/50 text-rose-800 border-rose-200/50" },
     rejected: { label: t("quote_rejected", "Rejected"),          classes: "bg-zinc-100/50 text-zinc-600 border-zinc-200/50" },
-      PARTIAL_PAID: { label: "Partially Paid", classes: "bg-indigo-100/50 text-indigo-800 border-indigo-200/50" },
-      PAID: { label: "Fully Paid", classes: "bg-emerald-100/50 text-emerald-800 border-emerald-200/50" },
+      PARTIAL_PAID: { label: t("qrc_status_partial", "Partially Paid"), classes: "bg-indigo-100/50 text-indigo-800 border-indigo-200/50" },
+      PAID: { label: t("track_fully_paid", "Fully Paid"), classes: "bg-emerald-100/50 text-emerald-800 border-emerald-200/50" },
   };
   const s = map[status] || map.pending;
   
@@ -111,6 +112,7 @@ function StatusBadge({ status }: { status: QuoteData["status"] | "pending_custom
 // ─── Main Client Component ───────────────────────────────────────────────────
 
 export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
+  const { t, locale } = useTranslation();
 
   const localizeString = (str: string) => {
     let s = str;
@@ -140,14 +142,35 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     s = s.replace(/\(Color Night Vision\)/, t("qrc_color_night", "(Color Night Vision)"));
     s = s.replace(/\(Audio IN\)/, t("qrc_audio_in", "(Audio IN)"));
     
-    // Misc
-    s = s.replace(/Surveillance Hard Disk/, t("qrc_surv_hdd", "Surveillance Hard Disk"));
-    s = s.replace(/Power Supply SMPS (\d+)Ch/, t("qrc_power_supply_ch", "Power Supply SMPS $1Ch").replace("{d}", "$1"));
+    // Cameras & Services
+    s = s.replace(/Outdoor Bullet Camera/g, t("wz_prod_outdoor_bullet", "Outdoor Bullet Camera"));
+    s = s.replace(/Indoor Dome Camera/g, t("wz_prod_indoor_dome", "Indoor Dome Camera"));
+    s = s.replace(/Outdoor 4G SIM Camera/g, t("iqr_prod_outdoor_4g", "Outdoor 4G SIM Camera"));
+    s = s.replace(/Indoor 4G SIM Camera/g, t("iqr_prod_indoor_4g", "Indoor 4G SIM Camera"));
+    s = s.replace(/Outdoor Wi-Fi Camera/g, t("iqr_prod_outdoor_wifi", "Outdoor Wi-Fi Camera"));
+    s = s.replace(/Indoor Wi-Fi Camera/g, t("iqr_prod_indoor_wifi", "Indoor Wi-Fi Camera"));
+    s = s.replace(/Smart Wi-Fi Camera Wall Mounting & App Pairing/g, t("iqr_prod_wifi_mount", "Smart Wi-Fi Camera Wall Mounting & App Pairing"));
+    s = s.replace(/Wireless Camera Wall Mounting, Power Concealment & App Setup/g, t("iqr_prod_wireless_mount", "Wireless Camera Wall Mounting, Power Concealment & App Setup"));
+    s = s.replace(/Camera Installation & Setup/g, t("iqr_prod_install_setup", "Camera Installation & Setup"));
+    s = s.replace(/Technician Site Visit & Mobilization Fee/g, t("iqr_prod_mobilization", "Technician Site Visit & Mobilization Fee"));
+    s = s.replace(/Site Visit & Travel Fee/g, t("iqr_prod_site_visit", "Site Visit & Travel Fee"));
+    s = s.replace(/Small Job Flat Rate:/g, t("iqr_prod_small_job", "Small Job Flat Rate:"));
+    s = s.replace(/Surveillance SD Card/g, t("iqr_prod_sd_card", "Surveillance SD Card"));
+
+    // Misc & Fallbacks
+    s = s.replace(/Surveillance Hard Disk/g, t("qrc_surv_hdd", "Surveillance Hard Disk"));
+    s = s.replace(/Weatherproof Camera Junction Box/g, t("wz_prod_junction_box", "Weatherproof Camera Junction Box"));
+    s = s.replace(/Power Supply SMPS (\d+)Ch/g, t("qrc_power_supply_ch", "Power Supply SMPS $1Ch").replace("{d}", "$1"));
+    s = s.replace(/Power Supply SMPS/g, t("iqr_prod_smps", "Power Supply SMPS"));
+    s = s.replace(/Camera type:/g, t("qrc_cam_tech_prefix", "Camera type:"));
+    s = s.replace(/^Add-on component$/i, t("qrc_item_addon", "Add-on accessory"));
+    s = s.replace(/^Special Discount$/i, t("qrc_item_discount", "Special Discount"));
+    s = s.replace(/^Applied discount$/i, t("qrc_desc_discount", "Applied discount"));
+    s = s.replace(/^CCTV Component$/i, t("qrc_item_cctv", "CCTV Component"));
+    s = s.replace(/^Discount$/i, t("qrc_badge_discount", "Discount"));
     
     return s;
   };
-
-  const { t } = useTranslation();
   const [accepted, setAccepted] = useState(quote.status === "accepted");
   const [showEmiModal, setShowEmiModal] = useState(false);
   const [isPayingEMI, setIsPayingEMI] = useState(false);
@@ -159,10 +182,10 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     try {
       setIsRequestingPdf(true);
       const res = await fetch(`/api/quote/${quote.id}/whatsapp`, { method: "POST" });
-      if (!res.ok) throw new Error("Failed to send WhatsApp");
-      toast.success("Quote PDF sent to your WhatsApp successfully!");
+      if (!res.ok) throw new Error(t("qrc_err_wa", "Failed to send WhatsApp"));
+      toast.success(t("qrc_ok_wa_pdf", "Quote PDF sent to your WhatsApp successfully!"));
     } catch (e) {
-      toast.error("Could not send PDF right now. Please try again.");
+      toast.error(t("qrc_err_wa_pdf", "Could not send PDF right now. Please try again."));
     } finally {
       setIsRequestingPdf(false);
     }
@@ -252,7 +275,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     try {
       const backendType = (type === "advance" || type === "advance_500" || type === "advance_500_cod") ? "booking" : type;
       if (returnUrlOnly) {
-        const toastId = toast.loading("Generating secure payment link...");
+        const toastId = toast.loading(t("qrc_gen_pay_link", "Generating secure payment link..."));
         const res = await fetch("/api/payment/razorpay-link", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -267,11 +290,11 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         if (data.success && data.payment_url) {
           return data.payment_url;
         }
-        toast.error(extractErrorMessage(data, "Failed to generate payment link"));
+        toast.error(extractErrorMessage(data, t("qrc_err_pay_link", "Failed to generate payment link")));
         return null;
       }
 
-      const toastId = toast.loading("Initializing secure payment gateway...");
+      const toastId = toast.loading(t("qrc_init_gateway", "Initializing secure payment gateway..."));
       
       const res = await fetch("/api/payment/razorpay-order", {
         method: "POST",
@@ -285,13 +308,13 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        toast.error(extractErrorMessage(data, "Failed to initialize payment"), { id: toastId });
+        toast.error(extractErrorMessage(data, t("qrc_err_init_pay", "Failed to initialize payment")), { id: toastId });
         return;
       }
 
       const isLoaded = await loadRazorpayScript();
       if (!isLoaded) {
-        toast.error("Failed to load payment gateway. Please check your connection.", { id: toastId });
+        toast.error(t("qrc_err_gateway_load", "Failed to load payment gateway. Please check your connection."), { id: toastId });
         return;
       }
 
@@ -302,10 +325,10 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         amount: data.amount,
         currency: "INR",
         name: "TEAM CCTV",
-        description: "Secure Checkout",
+        description: t("qrc_secure_checkout", "Secure Checkout"),
         order_id: data.orderId,
         handler: function (response: any) {
-          toast.success("Payment Successful! Verifying...");
+          toast.success(t("qrc_pay_ok_verifying", "Payment Successful! Verifying..."));
           window.location.href = `/payment-success?quoteId=${quote.id}&paymentId=${response.razorpay_payment_id}`;
         },
         prefill: {
@@ -318,12 +341,12 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any){
-         toast.error(response.error?.description || "Payment failed or cancelled.");
+         toast.error(response.error?.description || t("qrc_pay_failed", "Payment failed or cancelled."));
       });
       rzp.open();
 
     } catch (e: any) {
-      toast.error("An error occurred loading the payment gateway.");
+      toast.error(t("qrc_err_gateway_occurred", "An error occurred loading the payment gateway."));
       console.error(e);
     }
   };
@@ -338,7 +361,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const handleWhatsAppShare = async () => {
     const url = await redirectToPaymentLink("advance_500", "all", true);
     if (typeof url === "string") {
-      const message = `Hi! Here is the secure payment link to confirm your CCTV installation booking: ${url}`;
+      const message = t("qrc_wa_share_msg", "Hi! Here is the secure payment link to confirm your CCTV installation booking: {url}", { url });
       window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
     }
   };
@@ -379,7 +402,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
       await handlePayment(pType, "all", formData);
     } catch (e) {
       console.error("Billing submit error:", e);
-      toast.error("Failed to save billing details. Proceeding with payment...");
+      toast.error(t("qrc_err_save_billing", "Failed to save billing details. Proceeding with payment..."));
       setIsBillingModalOpen(false);
       await handlePayment(pType, "all", formData);
     } finally {
@@ -397,12 +420,12 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     try {
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
-        toast.error("Payment SDK blocked by your browser. Redirecting securely...", { duration: 5000 });
+        toast.error(t("qrc_sdk_blocked", "Payment SDK blocked by your browser. Redirecting securely..."), { duration: 5000 });
         
         const success = await redirectToPaymentLink(type, method);
         // @ts-ignore`n        if (success) return;
 
-        toast.error("Could not load payment gateway. Please disable your ad-blocker or try a different browser.");
+        toast.error(t("qrc_adblocker_hint", "Could not load payment gateway. Please disable your ad-blocker or try a different browser."));
         if (method === "emi") setIsPayingEMI(false);
         else if (type === "full") setIsPayingFull(false);
         else setIsPayingAdvance(false);
@@ -430,7 +453,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(extractErrorMessage(data, "Failed to initiate payment"));
+        throw new Error(extractErrorMessage(data, t("qrc_err_initiate_pay", "Failed to initiate payment")));
       }
 
       const options = {
@@ -438,7 +461,9 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         amount: data.order.amount,
         currency: data.order.currency || "INR",
         name: "TEAM CCTV",
-        description: `Security System Installation (${type === "advance" ? "Advance Booking" : "Full Payment"})`,
+        description: t("qrc_pay_desc", "Security System Installation ({mode})", {
+          mode: type === "advance" ? t("bo_mode_adv", "Advance Booking") : t("bo_mode_full", "Full Payment"),
+        }),
         order_id: data.order.id,
         prefill: {
           name: activeBilling.customer_name || quote.customer.name,
@@ -449,24 +474,24 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
           color: "#0F172A",
         },
         handler: async function (response: any) {
-          toast.success("Payment confirmed! Scheduling installation...");
+          toast.success(t("qrc_pay_confirmed_sched", "Payment confirmed! Scheduling installation..."));
           setAccepted(true);
           window.location.href = `/payment-success?quoteId=${quote.id}&paymentId=${response.razorpay_payment_id}`;
         },
         modal: {
           ondismiss: function () {
-            toast.info("Payment window closed.");
+            toast.info(t("qrc_pay_win_closed", "Payment window closed."));
           },
         },
       };
 
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any){
-        toast.error(extractErrorMessage(response, "Payment failed or cancelled."));
+        toast.error(extractErrorMessage(response, t("qrc_pay_failed", "Payment failed or cancelled.")));
       });
       rzp.open();
     } catch (err: any) {
-      toast.error(extractErrorMessage(err, "Payment initiation failed"));
+      toast.error(extractErrorMessage(err, t("qrc_pay_init_failed", "Payment initiation failed")));
       console.error(err);
     } finally {
       setIsPayingEMI(false);
@@ -477,7 +502,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
   const handleDownloadPDF = async () => {
     try {
-      toast.info("Generating your PDF...");
+      toast.info(t("qrc_gen_pdf", "Generating your PDF..."));
       const user = auth.currentUser;
       const token = user ? await user.getIdToken() : "";
       const pdfRes = await fetch(`/api/v1/leads/${quote.leadId}/quotes/${quote.id}/pdf?t=${Date.now()}`, {
@@ -498,11 +523,11 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
           }
         }
       } else {
-         toast.error("Failed to generate PDF.");
+         toast.error(t("qrc_err_pdf_gen", "Failed to generate PDF."));
       }
     } catch (error) {
       console.error("PDF download failed", error);
-      toast.error("An error occurred while downloading the PDF.");
+      toast.error(t("qrc_err_pdf_dl", "An error occurred while downloading the PDF."));
     }
   };
 
@@ -587,12 +612,12 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                     <button
                       type="button"
                       onClick={() => setShowEmiModal(true)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[11px] sm:text-xs shadow-md transition-all active:scale-95 cursor-pointer group"
+                      className="inline-flex flex-wrap items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[11px] sm:text-xs shadow-md transition-all active:scale-95 cursor-pointer group whitespace-normal text-center leading-snug"
                     >
-                      <CreditCard className="w-3.5 h-3.5 text-slate-950 group-hover:scale-110 transition-transform" />
-                      <span>or ₹{emiMonthlyAmount.toLocaleString("en-IN")}/mo (EMI)</span>
-                      <span className="bg-slate-950 text-amber-300 text-[9px] uppercase font-black px-1.5 py-0.2 rounded-full ml-0.5">
-                        Plans ⓘ
+                      <CreditCard className="w-3.5 h-3.5 text-slate-950 group-hover:scale-110 transition-transform shrink-0" />
+                      <span>{t("qrc_or_emi_mo", "or ₹{amt}/mo (EMI)", { amt: emiMonthlyAmount.toLocaleString("en-IN") })}</span>
+                      <span className="bg-slate-950 text-amber-300 text-[9px] uppercase font-black px-1.5 py-0.2 rounded-full ml-0.5 shrink-0">
+                        {t("qrc_plans_info", "Plans ⓘ")}
                       </span>
                     </button>
                   </div>
@@ -603,14 +628,14 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                       type="button"
                       onClick={() => openBillingModal("advance_500")}
                       disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                      className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black text-xs sm:text-sm py-2.5 px-4 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer border border-emerald-400/30"
+                      className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black text-xs sm:text-sm py-2.5 px-4 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer border border-emerald-400/30 whitespace-normal text-center leading-snug"
                     >
-                      <ShieldCheck className="w-4 h-4 text-emerald-200" />
-                      <span>Book with ₹500 Token Advance</span>
-                      <ChevronRight className="w-4 h-4" />
+                      <ShieldCheck className="w-4 h-4 text-emerald-200 shrink-0" />
+                      <span>{t("qrc_book_token_500", "Book with ₹500 Token Advance")}</span>
+                      <ChevronRight className="w-4 h-4 shrink-0" />
                     </button>
                     <p className="text-[10px] text-blue-200/80 mt-1 text-center sm:text-left">
-                      ✓ Full Setup Included • Balance after live testing
+                      {t("qrc_full_setup_inc", "✓ Full Setup Included • Balance after live testing")}
                     </p>
                   </div>
                 </div>
@@ -633,7 +658,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                   </p>
                   {billingData.is_business && (
                     <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/20 text-blue-200 border border-blue-400/30">
-                      GST: {billingData.gstin || 'Registered'}
+                      {t("qrc_gst_label", "GST:")} {billingData.gstin || t("qrc_gst_registered", "Registered")}
                     </span>
                   )}
                 </div>
@@ -671,19 +696,19 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-xs font-black text-slate-900">
-                      Easy EMI from ₹{emiMonthlyAmount.toLocaleString("en-IN")}/mo
+                      {t("qrc_easy_emi_from", "Easy EMI from ₹{amt}/mo", { amt: emiMonthlyAmount.toLocaleString("en-IN") })}
                     </span>
                     <span className="text-[9px] uppercase font-black px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-                      No Cost Available
+                      {t("qrc_no_cost_avail", "No Cost Available")}
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-600 truncate mt-0.5">
-                    HDFC, ICICI, SBI, Axis, Bajaj Finserv & more • Powered by Razorpay
+                  <p className="text-[10px] text-slate-600 leading-snug mt-0.5">
+                    {t("qrc_emi_banks_razorpay", "HDFC, ICICI, SBI, Axis, Bajaj Finserv & more • Powered by Razorpay")}
                   </p>
                 </div>
               </div>
               <div className="text-[11px] font-bold text-blue-600 group-hover:translate-x-0.5 transition-transform flex items-center shrink-0 ml-2">
-                <span>Plans</span> <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+                <span>{t("qrc_plans_btn", "Plans")}</span> <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
               </div>
             </div>
 
@@ -699,19 +724,19 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-xs font-black text-slate-900">
-                      Pay After Installation (Zero Risk)
+                      {t("qrc_pay_after_install", "Pay After Installation (Zero Risk)")}
                     </span>
                     <span className="text-[9px] uppercase font-black px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-                      ₹500 Booking Token
+                      {t("qrc_token_badge_500", "₹500 Booking Token")}
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-600 truncate mt-0.5">
-                    Book your technician slot with ₹500 token, pay balance only after live camera testing
+                  <p className="text-[10px] text-slate-600 leading-snug mt-0.5">
+                    {t("qrc_token_desc", "Book your technician slot with ₹500 token, pay balance only after live camera testing")}
                   </p>
                 </div>
               </div>
               <div className="text-[11px] font-bold text-emerald-600 group-hover:translate-x-0.5 transition-transform flex items-center shrink-0 ml-2">
-                <span>Book</span> <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+                <span>{t("qrc_book_btn", "Book")}</span> <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
               </div>
             </div>
           </div>
@@ -728,7 +753,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               </div>
               <button
                 onClick={handleDownloadPDF}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-lg transition-colors"
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-lg transition-colors shrink-0"
               >
                 <Download className="w-3 h-3 text-zinc-600" />
                 <span>{t("qrc_pdf")}</span>
@@ -741,10 +766,10 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                 <thead>
                   <tr className="border-b border-zinc-200 text-zinc-500 font-bold uppercase text-[10px] tracking-wider">
                     <th className="pb-3 w-10">#</th>
-                    <th className="pb-3">Item & Description</th>
-                    <th className="pb-3 text-center w-16">Qty</th>
-                    <th className="pb-3 text-right w-24">Unit Price</th>
-                    <th className="pb-3 text-right w-28">Line Total</th>
+                    <th className="pb-3">{t("qrc_th_item_desc", "Item & Description")}</th>
+                    <th className="pb-3 text-center w-16">{t("qrc_th_qty", "Qty")}</th>
+                    <th className="pb-3 text-right w-24">{t("qrc_unit_price", "Unit Price")}</th>
+                    <th className="pb-3 text-right w-28">{t("qrc_th_line_total", "Line Total")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
@@ -758,7 +783,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                             <span>{localizeString(item.name)}</span>
                             {item.brand && (
                               <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-zinc-100 text-zinc-600 border border-zinc-200">
-                                {item.brand}
+                                {item.brand === "Budget Brand" || item.brand === "Budget" ? t("dvg_brand_budget_lbl", "Budget Brand") : item.brand}
                               </span>
                             )}
                           </div>
@@ -776,7 +801,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                                 borderColor: item.badge.color ? `${item.badge.color}30` : '#e4e4e7'
                               }}
                             >
-                              {item.badge.label}
+                              {localizeString(item.badge.label)}
                             </span>
                           )}
                         </td>
@@ -812,7 +837,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                         </h4>
                         {item.brand && (
                           <span className="inline-block mt-0.5 mb-0.5 px-1.5 py-0.2 rounded text-[9px] font-semibold bg-zinc-100 text-zinc-500 border border-zinc-200">
-                            {item.brand}
+                            {item.brand === "Budget Brand" || item.brand === "Budget" ? t("dvg_brand_budget_lbl", "Budget Brand") : item.brand}
                           </span>
                         )}
                         {cleanDescription && (
@@ -822,7 +847,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                         )}
                       </div>
                       <span className="text-[11px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full shrink-0">
-                        Qty: {item.quantity}
+                        {t("qrc_qty_colon", "Qty: {qty}", { qty: String(item.quantity) })}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs mt-2 pt-2 border-t border-zinc-50">
@@ -871,14 +896,14 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
           {/* 4-PILLAR CUSTOMER PEACE-OF-MIND GUARANTEE */}
           <div className="px-4 sm:px-0">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white border border-zinc-200 rounded-2xl p-4 shadow-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 bg-white border border-zinc-200 rounded-2xl p-4 shadow-xs">
               <div className="flex items-start gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <div>
-                  <h5 className="text-xs font-bold text-zinc-900">Zero Advance Risk</h5>
-                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">₹500 token booking. Balance after live camera test on phone.</p>
+                  <h5 className="text-xs font-bold text-zinc-900">{t("qrc_p1_title", "Zero Advance Risk")}</h5>
+                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">{t("qrc_p1_desc", "₹500 token booking. Balance after live camera test on phone.")}</p>
                 </div>
               </div>
 
@@ -887,8 +912,8 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h5 className="text-xs font-bold text-zinc-900">100% Original Brand</h5>
-                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">Original sealed boxes with valid brand warranty and GST bill.</p>
+                  <h5 className="text-xs font-bold text-zinc-900">{t("qrc_p2_title", "100% Original Brand")}</h5>
+                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">{t("qrc_p2_desc", "Original sealed boxes with valid brand warranty and GST bill.")}</p>
                 </div>
               </div>
 
@@ -897,8 +922,8 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div>
-                  <h5 className="text-xs font-bold text-zinc-900">Certified Engineers</h5>
-                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">Police-verified engineers equipped with pro wiring tools.</p>
+                  <h5 className="text-xs font-bold text-zinc-900">{t("qrc_p3_title", "Certified Engineers")}</h5>
+                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">{t("qrc_p3_desc", "Police-verified engineers equipped with pro wiring tools.")}</p>
                 </div>
               </div>
 
@@ -908,7 +933,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                 </div>
                 <div>
                   <h5 className="text-xs font-bold text-zinc-900">{t("qrc_price_lock", "7-Day Price Lock")}</h5>
-                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">This quote is locked. No hidden charges on site visit.</p>
+                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">{t("qrc_p4_desc", "This quote is locked. No hidden charges on site visit.")}</p>
                 </div>
               </div>
             </div>
@@ -938,11 +963,11 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                         
-                        {/* Option 1: Standard Milestone (Recommended / Lowest Upfront) */}
+                        {/* Option 1: Standard Milestone (Lowest Upfront) */}
                         <div className="relative p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-300 flex flex-col justify-between shadow-sm group hover:shadow-md transition-all">
-                          <div className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2">
-                            <span className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm whitespace-nowrap">
-                              Recommended 🌟
+                          <div className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 w-max max-w-[90%]">
+                            <span className="inline-block bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm text-center leading-tight">
+                              {t("qrc_lowest_advance_badge", "₹500 Token Start")}
                             </span>
                           </div>
                           
@@ -974,10 +999,10 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                           <button
                             onClick={() => openBillingModal("advance_500")}
                             disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                            className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                            className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 whitespace-normal text-center leading-snug"
                           >
-                            <ShieldCheck className="w-4 h-4 text-emerald-200" />
-                            Book with ₹500 Advance
+                            <ShieldCheck className="w-4 h-4 text-emerald-200 shrink-0" />
+                            <span>{t("qrc_book_with_advance", "Book with ₹{d} Advance", { d: "500" })}</span>
                           </button>
                         </div>
 
@@ -1002,7 +1027,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                                 <span className="text-sm font-black text-emerald-600">₹{Math.round(total * 0.98).toLocaleString('en-IN')}</span>
                               </div>
                               <div className="text-[10px] font-bold text-emerald-600 text-right">
-                                Instant Savings: ₹{Math.round(total * 0.02).toLocaleString('en-IN')}
+                                {t("qrc_instant_savings", "Instant Savings: ₹{d}", { d: Math.round(total * 0.02).toLocaleString('en-IN') })}
                               </div>
                             </div>
                           </div>
@@ -1010,10 +1035,10 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                           <button
                             onClick={() => openBillingModal("full_discount")}
                             disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                            className="w-full py-3.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-xl text-sm shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                            className="w-full py-3.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-xl text-sm shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 whitespace-normal text-center leading-snug"
                           >
-                            <CreditCard className="w-4 h-4 text-zinc-300" />
-                            Pay ₹{Math.round(total * 0.98).toLocaleString('en-IN')}
+                            <CreditCard className="w-4 h-4 text-zinc-300 shrink-0" />
+                            <span>{t("qrc_pay_amount", "Pay ₹{d}", { d: Math.round(total * 0.98).toLocaleString('en-IN') })}</span>
                           </button>
                         </div>
                         
@@ -1022,7 +1047,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                           <div>
                             <div className="flex items-baseline justify-between mb-1">
                               <h4 className="text-lg font-black text-zinc-900">{t("qrc_flexi_emi")}</h4>
-                              <span className="text-[10px] font-black text-slate-950 bg-amber-400 px-2 py-0.5 rounded-full">from ₹{emiMonthlyAmount.toLocaleString('en-IN')}/mo</span>
+                              <span className="text-[10px] font-black text-slate-950 bg-amber-400 px-2 py-0.5 rounded-full">{t("qrc_from_emi_mo", "from ₹{amt}/mo", { amt: emiMonthlyAmount.toLocaleString('en-IN') })}</span>
                             </div>
                             <p className="text-xs text-zinc-600 leading-relaxed mb-4">
                               {t("qrc_convert_emi")}
@@ -1047,10 +1072,10 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                           <button
                             onClick={() => setShowEmiModal(true)}
                             disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                            className="w-full py-3.5 px-4 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 cursor-pointer"
+                            className="w-full py-3.5 px-4 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 cursor-pointer whitespace-normal text-center leading-snug"
                           >
-                            <CreditCard className="w-4 h-4 text-slate-950" />
-                            View EMI Plans & Banks
+                            <CreditCard className="w-4 h-4 text-slate-950 shrink-0" />
+                            <span>{t("qrc_view_emi_banks", "View EMI Plans & Banks")}</span>
                           </button>
                         </div>
 
@@ -1061,19 +1086,18 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                         <div className="flex-1">
                           <h3 className="text-base sm:text-lg font-black text-purple-900 dark:text-purple-300 flex items-center gap-2">
                             <MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
-                            Not Sure About Your Exact Requirements?
+                            <span>{t("qrc_not_sure_title", "Not Sure About Your Exact Requirements?")}</span>
                           </h3>
                           <p className="text-xs sm:text-sm text-purple-800/80 dark:text-purple-300/80 mt-1.5 leading-relaxed font-medium">
-                            Don't worry! Book a <strong className="text-purple-900 dark:text-purple-200">100% Free Physical Site Survey</strong>. 
-                            Our engineer will visit your property, assess your exact camera coverage needs, and finalize the quotation with zero obligation.
+                            {t("qrc_not_sure_pre", "Don't worry! Book a")} <strong className="text-purple-900 dark:text-purple-200">{t("qrc_not_sure_bold", "100% Free Physical Site Survey")}</strong>{t("qrc_not_sure_post", ". Our engineer will visit your property, assess your exact camera coverage needs, and finalize the quotation with zero obligation.")}
                           </p>
                         </div>
                         <button 
                           onClick={() => setIsSurveyModalOpen(true)}
-                          className="w-full sm:w-auto shrink-0 px-6 py-3.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-sm shadow-md shadow-purple-600/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                          className="w-full sm:w-auto shrink-0 px-6 py-3.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-sm shadow-md shadow-purple-600/20 transition-all active:scale-95 flex items-center justify-center gap-2 whitespace-normal text-center leading-snug"
                         >
-                          <Calendar className="w-4 h-4" />
-                          Book Free Survey
+                          <Calendar className="w-4 h-4 shrink-0" />
+                          <span>{t("qrc_book_free_survey", "Book Free Survey")}</span>
                         </button>
                       </div>
 
@@ -1087,14 +1111,14 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                       onClick={() => openHostedPaymentLink("advance_500")}
                       className="text-xs text-zinc-500 hover:text-blue-600 underline underline-offset-2 transition-colors text-center"
                     >
-                      Trouble with the payment window? Click here to pay securely.
+                      {t("qrc_trouble_payment", "Trouble with the payment window? Click here to pay securely.")}
                     </button>
                     <button 
                       onClick={handleWhatsAppShare}
-                      className="text-xs text-emerald-600 hover:text-emerald-700 font-bold transition-colors flex items-center gap-1.5 pt-1"
+                      className="text-xs text-emerald-600 hover:text-emerald-700 font-bold transition-colors flex items-center gap-1.5 pt-1 text-center"
                     >
-                      <MessageCircle className="w-4 h-4" />
-                      Send Payment Link via WhatsApp (Alternate Device)
+                      <MessageCircle className="w-4 h-4 shrink-0" />
+                      <span>{t("qrc_wa_alt_device", "Send Payment Link via WhatsApp (Alternate Device)")}</span>
                     </button>
                   </div>
                 </div>
@@ -1109,8 +1133,8 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                 <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-md">
                   <Check className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-2">Quote Accepted & Paid!</h3>
-                <p className="text-emerald-50 font-medium text-sm">Thank you for choosing TEAM CCTV. Our dispatch team will contact you shortly to schedule your installation.</p>
+                <h3 className="text-2xl font-bold mb-2">{t("qrc_accepted_title", "Quote Accepted & Paid!")}</h3>
+                <p className="text-emerald-50 font-medium text-sm">{t("qrc_accepted_desc", "Thank you for choosing TEAM CCTV. Our dispatch team will contact you shortly to schedule your installation.")}</p>
               </motion.div>
             )}
           </motion.div>
@@ -1125,7 +1149,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             
             <div className="flex items-center justify-between px-1">
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Total Estimate</span>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{t("qrc_sticky_total", "Total Estimate")}</span>
                 <span className="text-lg font-black text-zinc-900 leading-none">{formatINR(total)}</span>
               </div>
               
@@ -1134,7 +1158,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                 disabled={isRequestingPdf}
                 className={`flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isRequestingPdf ? "opacity-70 cursor-not-allowed" : ""}`}
               >
-                <MessageCircle className="w-3.5 h-3.5" /> WhatsApp PDF
+                <MessageCircle className="w-3.5 h-3.5 shrink-0" /> {t("qrc_sticky_wa_pdf", "WhatsApp PDF")}
               </button>
             </div>
 
@@ -1142,28 +1166,28 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               <button
                 onClick={() => setShowEmiModal(true)}
                 disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl transition-all active:scale-95 disabled:opacity-50 shadow-2xs"
+                className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 px-1 text-center bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl transition-all active:scale-95 disabled:opacity-50 shadow-2xs"
               >
                 <CreditCard className="w-3.5 h-3.5 text-slate-950 shrink-0" />
-                <span className="text-[10px] sm:text-[11px] font-black leading-tight">EMI Plans</span>
+                <span className="text-[10px] sm:text-[11px] font-black leading-tight">{t("qrc_sticky_emi", "EMI Plans")}</span>
               </button>
 
               <button
                 onClick={() => openBillingModal("full_discount")}
                 disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 px-1 text-center bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl transition-all active:scale-95 disabled:opacity-50"
               >
                 <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-blue-600" />
-                <span className="text-[10px] sm:text-[11px] font-bold leading-tight">2% Off Full</span>
+                <span className="text-[10px] sm:text-[11px] font-bold leading-tight">{t("qrc_sticky_full2", "2% Off Full")}</span>
               </button>
 
               <button
                 onClick={() => openBillingModal("advance_500")}
                 disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                className="flex-[1.2] flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50 font-black"
+                className="flex-[1.2] flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 px-1 text-center bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50 font-black"
               >
                 <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-200 shrink-0" />
-                <span className="text-[10px] sm:text-[11px] font-black leading-tight">Book ₹500</span>
+                <span className="text-[10px] sm:text-[11px] font-black leading-tight">{t("qrc_sticky_book500", "Book ₹500")}</span>
               </button>
             </div>
 
@@ -1188,7 +1212,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         isOpen={showEmiModal}
         onClose={() => setShowEmiModal(false)}
         totalAmount={total}
-        packageName={`Confirmed Quotation #${quote.quoteNumber}`}
+        packageName={t("qrc_emi_pkg_name", "Confirmed Quotation #{num}", { num: quote.quoteNumber })}
         onProceed={() => {
           setShowEmiModal(false);
           openBillingModal("emi");
@@ -1205,7 +1229,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         customerMobile={billingData.phone || quote.customer.phone}
         initialAddress={billingData.address_line1 || quote.installationAddress}
         onBookingSuccess={() => {
-          toast.success("Survey request registered! Our team will contact you.");
+          toast.success(t("qrc_survey_registered", "Survey request registered! Our team will contact you."));
         }}
       />
     </div>

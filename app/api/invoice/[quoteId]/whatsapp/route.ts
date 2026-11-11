@@ -45,7 +45,9 @@ export async function POST(
       });
     }
 
-    const pdfUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/invoice/${quoteId}/download`;
+    const { resolveCustomerLocale } = await import("@/lib/whatsapp/customer-notifications-i18n");
+    const custLocale = await resolveCustomerLocale({ quoteData: quote, leadId: quote.lead_id, phone: quote.customer_mobile });
+    const pdfUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/invoice/${quoteId}/download?lang=${custLocale}`;
 
     // 4. Send via WhatsApp Provider
     let deliveryResult: { success: boolean; messageId?: string; error?: string } = { success: false, messageId: "", error: "" };
@@ -60,7 +62,8 @@ export async function POST(
         phone: quote.customer_mobile,
         customerName: quote.customer_name || 'Customer',
         pdfUrl: pdfUrl,
-        amount: invoice.total_payable
+        amount: invoice.total_payable,
+        preferredLanguage: custLocale,
       });
     }
 

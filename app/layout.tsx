@@ -12,6 +12,10 @@ import { headers } from "next/headers";
 import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
 import { LanguageSync } from "@/components/shared/LanguageSync";
+import { I18nProvider } from "@/components/shared/I18nProvider";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { loadLocaleDict } from "@/lib/i18n/locales";
+import { INDIC_GOOGLE_FONTS } from "@/lib/i18n/mapping";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -82,35 +86,62 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const initialLocale = await getServerLocale();
+  const initialDict =
+    initialLocale === "en" ? undefined : await loadLocaleDict(initialLocale);
+  const indicFont = INDIC_GOOGLE_FONTS[initialLocale];
+
   return (
-    <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
+    <html
+      lang={initialLocale}
+      data-locale={initialLocale}
+      suppressHydrationWarning
+      className={cn("font-sans", geist.variable)}
+      style={
+        indicFont
+          ? ({ ["--font-indic-sans" as string]: indicFont.cssFamily } as React.CSSProperties)
+          : undefined
+      }
+    >
       <head>
         {/* ── DNS Preconnect: Firebase Auth + Firestore (used at wizard start) ── */}
         <link rel="preconnect" href="https://identitytoolkit.googleapis.com" />
         <link rel="preconnect" href="https://firestore.googleapis.com" />
         <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
         <link rel="dns-prefetch" href="https://www.googleapis.com" />
+        {/* ── DNS Preconnect: Google Fonts (for on-demand Indic Noto Sans) ───── */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {indicFont && (
+          <link
+            id="indic-google-font-stylesheet"
+            rel="stylesheet"
+            href={`https://fonts.googleapis.com/css2?family=${indicFont.family}&display=swap`}
+          />
+        )}
         {/* ── DNS Preconnect: Analytics ──────────────────────────────────────── */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://connect.facebook.net" />
       </head>
       <body className={`antialiased font-sans selection:bg-blue-500/30`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          storageKey="team-cctv-theme"
-        >
-          <Suspense fallback={null}>
-            <TrackingProvider />
-            <LanguageSync />
-          </Suspense>
-          <PwaRegistry />
-          <WebVitalsReporter />
-          <JsonLd />
-          <Toaster position="top-center" richColors closeButton />
-          {children}
-        </ThemeProvider>
+        <I18nProvider initialLocale={initialLocale} initialDict={initialDict}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem={false}
+            storageKey="team-cctv-theme"
+          >
+            <Suspense fallback={null}>
+              <TrackingProvider />
+              <LanguageSync />
+            </Suspense>
+            <PwaRegistry />
+            <WebVitalsReporter />
+            <JsonLd />
+            <Toaster position="top-center" richColors closeButton />
+            {children}
+          </ThemeProvider>
+        </I18nProvider>
       </body>
     </html>
   );

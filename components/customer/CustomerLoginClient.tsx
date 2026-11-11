@@ -21,8 +21,10 @@ import { TranslatedText } from "@/components/shared/TranslatedText";
 import { WhatsAppOtpNotice } from "@/components/shared/WhatsAppOtpNotice";
 import { toast } from "sonner";
 import { extractErrorMessage } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function CustomerLoginClient() {
+  const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/customer/dashboard";
@@ -64,7 +66,7 @@ export function CustomerLoginClient() {
 
     const cleanMobile = mobile.replace(/\D/g, "").slice(-10);
     if (cleanMobile.length !== 10 || !/^[6-9]\d{9}$/.test(cleanMobile)) {
-      setError("Please enter a valid 10-digit Indian mobile number.");
+      setError(t("cl_err_mob", "Please enter a valid 10-digit Indian mobile number."));
       return;
     }
 
@@ -95,7 +97,7 @@ export function CustomerLoginClient() {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(extractErrorMessage(data, "Failed to send WhatsApp OTP. Please try again."));
+        throw new Error(extractErrorMessage(data, t("cl_err_send", "Failed to send WhatsApp OTP. Please try again.")));
       }
 
       setStep(2);
@@ -104,7 +106,7 @@ export function CustomerLoginClient() {
       setCanResend(false);
       setOtp(["", "", "", ""]);
       otpRef.current = ["", "", "", ""];
-      toast.success("OTP sent to your WhatsApp.");
+      toast.success(t("cl_otp_sent", "OTP sent to your WhatsApp."));
 
       // Auto-focus first input box
       setTimeout(() => {
@@ -112,7 +114,7 @@ export function CustomerLoginClient() {
       }, 100);
     } catch (err: any) {
       console.error("WhatsApp OTP Send Error:", err);
-      setError(extractErrorMessage(err, "Failed to send WhatsApp OTP. Please try again."));
+      setError(extractErrorMessage(err, t("cl_err_send", "Failed to send WhatsApp OTP. Please try again.")));
     } finally {
       setLoading(false);
     }
@@ -135,7 +137,7 @@ export function CustomerLoginClient() {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(extractErrorMessage(data, "Invalid OTP code. Please check your WhatsApp and try again."));
+        throw new Error(extractErrorMessage(data, t("cl_err_otp", "Invalid OTP code. Please check your WhatsApp and try again.")));
       }
 
       const customToken = data.customToken;
@@ -158,17 +160,17 @@ export function CustomerLoginClient() {
 
         if (!sessionRes.ok) {
           const errData = await sessionRes.json().catch(() => ({}));
-          throw new Error(extractErrorMessage(errData, "Failed to establish secure session. Please try again."));
+          throw new Error(extractErrorMessage(errData, t("cl_err_sess", "Failed to establish secure session. Please try again.")));
         }
 
-        toast.success("Welcome! Redirecting to your dashboard...");
+        toast.success(t("cl_ok_login", "Welcome! Redirecting to your dashboard..."));
         window.location.href = redirectTo;
       } else {
-        throw new Error("Missing authentication token from server.");
+        throw new Error(t("cl_err_tok", "Missing authentication token from server."));
       }
     } catch (err: any) {
       console.error("Verification error:", err);
-      setError(extractErrorMessage(err, "Invalid OTP code. Please try again."));
+      setError(extractErrorMessage(err, t("cl_err_otp2", "Invalid OTP code. Please try again.")));
     } finally {
       setLoading(false);
     }
@@ -240,7 +242,7 @@ export function CustomerLoginClient() {
               <TranslatedText tKey="customer_login_title" defaultText="Customer Login" />
             </h1>
             <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mb-6 font-medium text-center">
-              Enter your mobile number to receive your secure 4-digit code on WhatsApp.
+              {t("cl_sub", "Enter your mobile number to receive your secure 4-digit code on WhatsApp.")}
             </p>
 
             <form onSubmit={handleSendOtp} className="space-y-4">
@@ -275,18 +277,18 @@ export function CustomerLoginClient() {
               <button
                 type="submit"
                 disabled={loading || mobile.replace(/\D/g, "").length !== 10}
-                className="w-full bg-[#25D366] hover:bg-[#20bd5a] disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 text-white font-black py-3.5 sm:py-4 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed text-sm"
+                className="w-full bg-[#25D366] hover:bg-[#20bd5a] disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 text-white font-black py-3.5 sm:py-4 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed text-sm whitespace-normal text-center leading-snug"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Sending Code...</span>
+                    <Loader2 className="w-5 h-5 animate-spin shrink-0" />
+                    <span>{t("cl_sending", "Sending Code...")}</span>
                   </>
                 ) : (
                   <>
-                    <MessageCircle className="w-5 h-5" />
-                    <span>Get Code on WhatsApp</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <MessageCircle className="w-5 h-5 shrink-0" />
+                    <span>{t("cl_get_code", "Get Code on WhatsApp")}</span>
+                    <ArrowRight className="w-4 h-4 shrink-0" />
                   </>
                 )}
               </button>
@@ -306,13 +308,13 @@ export function CustomerLoginClient() {
               }}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span>← Change phone number</span>
+              <ArrowLeft className="w-4 h-4 shrink-0" />
+              <span>{t("cl_chg_num", "← Change phone number")}</span>
             </button>
 
             {customerName && customerName !== "Valued Customer" ? (
               <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                Welcome back, <strong className="text-zinc-900 dark:text-white">{customerName}</strong>!
+                {t("cl_welcome_back", "Welcome back,")} <strong className="text-zinc-900 dark:text-white">{customerName}</strong>!
               </p>
             ) : null}
 
@@ -356,8 +358,8 @@ export function CustomerLoginClient() {
                   }}
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 px-3.5 py-1.5 rounded-full transition-colors cursor-pointer"
                 >
-                  <Clipboard className="w-3.5 h-3.5" />
-                  Paste 4-Digit Code
+                  <Clipboard className="w-3.5 h-3.5 shrink-0" />
+                  {t("cl_paste", "Paste 4-Digit Code")}
                 </button>
               </div>
 
@@ -372,17 +374,17 @@ export function CustomerLoginClient() {
                 type="submit"
                 id="verify-btn"
                 disabled={loading || otp.some((d) => d === "")}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 text-white font-black py-4 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 text-white font-black py-4 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed whitespace-normal text-center leading-snug"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Verifying Code...</span>
+                    <Loader2 className="w-5 h-5 animate-spin shrink-0" />
+                    <span>{t("cl_verifying", "Verifying Code...")}</span>
                   </>
                 ) : (
                   <>
-                    <span>Access Dashboard</span>
-                    <CheckCircle2 className="w-5 h-5" />
+                    <span>{t("cl_access", "Access Dashboard")}</span>
+                    <CheckCircle2 className="w-5 h-5 shrink-0" />
                   </>
                 )}
               </button>
@@ -397,11 +399,11 @@ export function CustomerLoginClient() {
                     className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 transition-all cursor-pointer shadow-xs active:scale-95"
                   >
                     <RotateCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-                    <span>Resend WhatsApp Code</span>
+                    <span>{t("cl_resend", "Resend WhatsApp Code")}</span>
                   </button>
                 ) : (
                   <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800/60 select-none">
-                    <span>⏳ Resend code in {timeLeft}s</span>
+                    <span>{t("cl_resend_in", "⏳ Resend code in {sec}s", { sec: String(timeLeft) })}</span>
                   </div>
                 )}
               </div>
@@ -412,9 +414,9 @@ export function CustomerLoginClient() {
         {/* Footer info */}
         <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800 text-center">
           <p className="text-xs text-zinc-400">
-            Need help?{" "}
+            {t("cl_need_help", "Need help?")}{" "}
             <a href="tel:+917357612865" className="text-zinc-600 dark:text-zinc-300 font-bold hover:underline">
-              Call Support: +91 73576 12865
+              {t("cl_call_sup", "Call Support: +91 73576 12865")}
             </a>
           </p>
         </div>

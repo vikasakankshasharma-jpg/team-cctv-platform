@@ -29,13 +29,19 @@ export async function POST(req: Request) {
     if (remainingBalance < 0) remainingBalance = 0;
 
     const { sendCustomerWhatsApp } = await import("@/lib/notification-service");
+    const { resolveCustomerLocale, getCustomerNotifications } = await import("@/lib/whatsapp/customer-notifications-i18n");
+    const custLocale = await resolveCustomerLocale({ quoteData, phone: quoteData?.customer_mobile });
+    const notif = getCustomerNotifications(custLocale);
     
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://cctvquotation.com";
     const paymentLink = `${baseUrl}/quote/${quoteData?.lead_id}/review/${quoteId}`; // Direct to their quote page for online payment if needed.
 
-    const msg = remainingBalance > 0 
-      ? `Your installation is complete! Please settle the final balance (₹${remainingBalance}) online here: ${paymentLink} \n\nIf you are paying in cash, hand it to the installer. \n\nUpon settlement, your Final Sign-off OTP is *${quoteData?.install_end_otp}*. Please share this with the installer to close the job.`
-      : `Your installation is complete! Your Final Sign-off OTP is *${quoteData?.install_end_otp}*. Please share this with the installer to close the job.`;
+    const msg = notif.installerSignoffRequest({
+      balance: remainingBalance.toLocaleString("en-IN"),
+      balanceNum: remainingBalance,
+      paymentLink,
+      otp: String(quoteData?.install_end_otp || ""),
+    });
 
     await sendCustomerWhatsApp(quoteData?.customer_mobile || "", msg);
 

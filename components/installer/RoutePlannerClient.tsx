@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import HybridMap from "@/components/maps/HybridMap";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 import { 
   optimizeRouteWithTimeWindows, 
@@ -62,10 +63,10 @@ interface RouteStop {
   map_url?: string | null;
 }
 
-const TIME_SLOT_LABELS: Record<string, { label: string; time: string; color: string; icon: string }> = {
-  morning: { label: "Morning Slot", time: "09:30 AM – 01:00 PM", color: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20", icon: "🌅" },
-  afternoon: { label: "Afternoon Slot", time: "01:30 PM – 05:00 PM", color: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20", icon: "☀️" },
-  evening: { label: "Evening Slot", time: "05:30 PM – 08:00 PM", color: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20", icon: "🌆" },
+const TIME_SLOT_LABELS: Record<string, { labelKey: string; defaultLabel: string; time: string; color: string; icon: string }> = {
+  morning: { labelKey: "del_slot_morning", defaultLabel: "Morning Slot", time: "09:30 AM – 01:00 PM", color: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20", icon: "🌅" },
+  afternoon: { labelKey: "del_slot_afternoon", defaultLabel: "Afternoon Slot", time: "01:30 PM – 05:00 PM", color: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20", icon: "☀️" },
+  evening: { labelKey: "del_slot_evening", defaultLabel: "Evening Slot", time: "05:30 PM – 08:00 PM", color: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20", icon: "🌆" },
 };
 
 const mapContainerStyle = {
@@ -93,7 +94,33 @@ function getHaversineDistanceKm(
 }
 
 export function RoutePlannerClient() {
+  const { t } = useTranslation();
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
+
+  const getStopStatusLabel = useCallback((status?: string) => {
+    if (status === "completed" || status === "WON") return t("inst_status_completed", "Completed");
+    if (status === "site_visit") return t("inst_status_on_site", "On Site / Visit");
+    if (status === "en_route") return t("inst_status_en_route", "En Route");
+    if (status === "new") return t("inst_st_new", "New");
+    if (status === "contacted") return t("inst_st_contacted", "Contacted");
+    if (status === "unreachable") return t("inst_st_unreachable", "Unreachable");
+    if (status === "busy") return t("inst_st_busy", "Busy");
+    if (status === "technical_error") return t("inst_st_tech_err", "Technical Error");
+    if (status === "negotiation") return t("inst_st_negotiation", "Negotiation");
+    if (status === "requote") return t("inst_st_requote", "Re-Quote");
+    if (status === "won") return t("inst_st_won", "Won");
+    if (status === "lost") return t("inst_st_lost", "Lost");
+    return status ? status.replace(/_/g, " ") : t("inst_status_scheduled", "Scheduled");
+  }, [t]);
+
+  const getPropertyLabel = (propType?: string) => {
+    if (!propType) return t("prop_residential", "Residential");
+    const lower = propType.toLowerCase();
+    if (lower === "home" || lower === "residential" || lower === "villa") return t("est_prop_home_short", "Home");
+    if (lower === "shop" || lower === "retail") return t("est_prop_shop_short", "Shop");
+    if (lower === "office" || lower === "factory" || lower === "commercial") return t("est_prop_office_short", "Office");
+    return propType.replace(/_/g, " ");
+  };
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [scheduledStops, setScheduledStops] = useState<RouteStop[]>([]);
   const [pendingPool, setPendingPool] = useState<RouteStop[]>([]);
@@ -116,15 +143,15 @@ export function RoutePlannerClient() {
         setScheduledStops(data.scheduledStops || []);
         setPendingPool(data.pendingPool || []);
       } else {
-        toast.error(data.error || "Failed to load route data");
+        toast.error(data.error || t("inst_route_load_err", "Unable to load route planner"));
       }
 
     } catch {
-      toast.error("Failed to connect to route service");
+      toast.error(t("inst_route_conn_err", "Connection error loading route"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchRoute(selectedDate);
@@ -133,7 +160,7 @@ export function RoutePlannerClient() {
   // Request Technician's Live GPS
   const handleLocateMe = () => {
     if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by your browser");
+      toast.error(t("del_geo_unsupported", "Geolocation not supported by browser"));
       return;
     }
     setLocatingUser(true);
@@ -142,11 +169,11 @@ export function RoutePlannerClient() {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setTechnicianLocation(coords);
         setLocatingUser(false);
-        toast.success("Current location captured!");
+        toast.success(t("inst_gps_synced_toast", "Live GPS Location captured as your route starting point!"));
       },
       (err) => {
         setLocatingUser(false);
-        toast.error("Could not obtain GPS location: " + err.message);
+        toast.error(t("del_gps_err", "GPS error: {msg}", { msg: err.message }));
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -184,11 +211,11 @@ export function RoutePlannerClient() {
       });
       const data = await res.json();
       if (!data.success) {
-        toast.error("Failed to persist reordering");
+        toast.error(t("del_reorder_err", "Failed to save reordering"));
         fetchRoute(selectedDate);
       }
     } catch {
-      toast.error("Network error saving route");
+      toast.error(t("del_net_err", "Network error"));
       fetchRoute(selectedDate);
     } finally {
       setIsSaving(false);
@@ -212,9 +239,9 @@ export function RoutePlannerClient() {
           routeOrder: updated.find((s) => s.id === stopId)?.route_order || 1,
         }),
       });
-      toast.success("Time slot updated");
+      toast.success(t("del_slot_updated", "Time slot updated"));
     } catch {
-      toast.error("Failed to update time slot");
+      toast.error(t("del_slot_upd_err", "Failed to update slot"));
     }
   };
 
@@ -236,13 +263,13 @@ export function RoutePlannerClient() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(`Job updated to ${newStatus.replace("_", " ").toUpperCase()}`);
+        toast.success(t("inst_job_upd_toast", "Job updated to {status}", { status: getStopStatusLabel(newStatus) }));
       } else {
-        toast.error(data.error || "Failed to update status");
+        toast.error(data.error || t("inst_upd_status_err", "Failed to update status"));
         fetchRoute(selectedDate);
       }
     } catch {
-      toast.error("Network error updating status");
+      toast.error(t("del_net_err", "Network error"));
       fetchRoute(selectedDate);
     }
   };
@@ -250,7 +277,7 @@ export function RoutePlannerClient() {
   // Time-Window-Aware Hybrid Route Auto-Optimizer
   const handleAutoOptimize = async () => {
     if (scheduledStops.length < 2) {
-      toast.info("Need at least 2 stops with coordinates to auto-optimize");
+      toast.info(t("del_opt_min2", "Need at least 2 stops to auto-optimize"));
       return;
     }
 
@@ -278,14 +305,17 @@ export function RoutePlannerClient() {
       const data = await res.json();
       if (data.success) {
         toast.success(
-          `⚡ Route sequence optimized! ~${totalDistanceKm} km (${estimatedDriveMinutes} mins drive) sequenced by time slots.`
+          t("del_route_opt_ok", "⚡ Route optimized! ~{km} km ({mins} mins drive) scheduled by time windows.", {
+            km: String(totalDistanceKm),
+            mins: String(estimatedDriveMinutes),
+          })
         );
       } else {
-        toast.error("Failed to save optimized sequence");
+        toast.error(t("del_opt_save_err", "Failed to save optimized sequence"));
         fetchRoute(selectedDate);
       }
     } catch {
-      toast.error("Error calculating optimized route");
+      toast.error(t("inst_err_calc_route", "Error calculating optimized route"));
     } finally {
       setIsOptimizing(false);
     }
@@ -318,13 +348,15 @@ export function RoutePlannerClient() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(`Stop added to ${TIME_SLOT_LABELS[slot]?.label || slot}`);
+        const slotMeta = TIME_SLOT_LABELS[slot];
+        const slotLabel = slotMeta ? t(slotMeta.labelKey, slotMeta.defaultLabel) : slot;
+        toast.success(t("del_added_slot", "Delivery added to {slot}", { slot: slotLabel }));
       } else {
-        toast.error("Failed to add stop");
+        toast.error(t("del_add_stop_err", "Failed to add stop"));
         fetchRoute(selectedDate);
       }
     } catch {
-      toast.error("Network error");
+      toast.error(t("del_net_err", "Network error"));
       fetchRoute(selectedDate);
     }
   };
@@ -348,10 +380,10 @@ export function RoutePlannerClient() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.info("Stop moved back to pending list");
+        toast.info(t("del_moved_pending", "Moved back to pending pool"));
       }
     } catch {
-      toast.error("Network error");
+      toast.error(t("del_net_err", "Network error"));
       fetchRoute(selectedDate);
     }
   };
@@ -400,42 +432,42 @@ export function RoutePlannerClient() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <span className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
               <Navigation className="w-5 h-5" />
             </span>
             <h1 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight">
-              Daily Route Plan
+              {t("inst_route_title", "Daily Route Plan")}
             </h1>
           </div>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            Sequence stops, optimize drive path, and navigate seamlessly in real-time.
+            {t("inst_route_desc", "Organize customer site visits into time slots and navigate with Google Maps.")}
           </p>
         </div>
 
         {/* Date Selector Tabs */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setSelectedDate(todayStr)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-normal h-auto ${
               selectedDate === todayStr
                 ? "bg-blue-600 text-white shadow-xs"
                 : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200"
             }`}
           >
-            Today
+            {t("del_today", "Today")}
           </button>
           <button
             onClick={() => {
               const tmr = new Date(Date.now() + 86400000).toISOString().split("T")[0];
               setSelectedDate(tmr);
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-normal h-auto ${
               selectedDate !== todayStr && selectedDate === new Date(Date.now() + 86400000).toISOString().split("T")[0]
                 ? "bg-blue-600 text-white shadow-xs"
                 : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200"
             }`}
           >
-            Tomorrow
+            {t("del_tomorrow", "Tomorrow")}
           </button>
           <input
             type="date"
@@ -449,23 +481,23 @@ export function RoutePlannerClient() {
       {/* ── SUMMARY STATS STRIP ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-3 sm:p-4 rounded-xl">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Scheduled Stops</p>
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider leading-snug">{t("inst_kpi_sched_stops", "Scheduled Stops")}</p>
           <p className="text-xl font-black text-zinc-900 dark:text-zinc-100 mt-0.5">{scheduledStops.length}</p>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-3 sm:p-4 rounded-xl">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Completed Visits</p>
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider leading-snug">{t("inst_kpi_visits", "Completed Visits")}</p>
           <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
             {completedCount} <span className="text-xs font-semibold text-zinc-400">/ {scheduledStops.length}</span>
           </p>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-3 sm:p-4 rounded-xl">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Est. Travel Dist.</p>
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider leading-snug">{t("inst_kpi_dist", "Est. Travel Dist.")}</p>
           <p className="text-xl font-black text-blue-600 dark:text-blue-400 mt-0.5">
             ~{estimatedDistanceKm} <span className="text-xs font-normal">km</span>
           </p>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-3 sm:p-4 rounded-xl">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Pending Leads</p>
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider leading-snug">{t("inst_kpi_pending_leads", "Pending Leads")}</p>
           <p className="text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5">{pendingPool.length}</p>
         </div>
       </div>
@@ -479,16 +511,16 @@ export function RoutePlannerClient() {
               href={fullGoogleMapsRouteUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all"
+              className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all whitespace-normal h-auto text-center"
             >
-              <Navigation className="w-4 h-4" />
-              <span>Start Daily Route ({scheduledStops.length} Stops)</span>
-              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+              <Navigation className="w-4 h-4 shrink-0" />
+              <span>{t("inst_start_route_btn", "Start Daily Route ({count} Stops)", { count: String(scheduledStops.length) })}</span>
+              <ExternalLink className="w-3.5 h-3.5 opacity-80 shrink-0" />
             </a>
           ) : (
             <div className="text-xs text-zinc-400 italic flex items-center gap-1.5 p-2">
-              <Clock className="w-3.5 h-3.5" />
-              <span>Add stops with pin locations to enable 1-tap route navigation.</span>
+              <Clock className="w-3.5 h-3.5 shrink-0" />
+              <span>{t("inst_add_stops_hint", "Add stops with pin locations to unlock Multi-Stop Maps")}</span>
             </div>
           )}
 
@@ -497,11 +529,11 @@ export function RoutePlannerClient() {
             <button
               onClick={handleAutoOptimize}
               disabled={isOptimizing}
-              className="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 px-3.5 py-2.5 rounded-xl font-bold text-xs transition-all disabled:opacity-50"
-              title="Automatically reorder stops for shortest driving loop"
+              className="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 px-3.5 py-2.5 rounded-xl font-bold text-xs transition-all disabled:opacity-50 whitespace-normal h-auto text-center"
+              title={t("inst_tt_auto_opt", "Automatically reorder stops for shortest driving loop")}
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>{isOptimizing ? "Optimizing..." : "⚡ Auto-Optimize Sequence"}</span>
+              <Sparkles className="w-3.5 h-3.5 shrink-0" />
+              <span>{isOptimizing ? t("del_optimizing", "Optimizing...") : t("inst_opt_seq_btn", "⚡ Auto-Optimize Sequence")}</span>
             </button>
           )}
 
@@ -509,41 +541,41 @@ export function RoutePlannerClient() {
           <button
             onClick={handleLocateMe}
             disabled={locatingUser}
-            className={`inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-bold text-xs border transition-all ${
+            className={`inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-bold text-xs border transition-all whitespace-normal h-auto text-center ${
               technicianLocation
                 ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800"
                 : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-200"
             }`}
-            title="Pin your current live GPS position as Route Start"
+            title={t("inst_tt_pin_gps", "Pin your current live GPS position as Route Start")}
           >
-            <Locate className={`w-3.5 h-3.5 ${locatingUser ? "animate-spin" : ""}`} />
-            <span>{technicianLocation ? "📍 Location Synced" : "Locate Me"}</span>
+            <Locate className={`w-3.5 h-3.5 shrink-0 ${locatingUser ? "animate-spin" : ""}`} />
+            <span>{technicianLocation ? t("del_loc_synced", "📍 Location Synced") : t("del_locate_me", "Locate Me")}</span>
           </button>
         </div>
 
         {/* View Toggle */}
-        <div className="flex items-center bg-zinc-200 dark:bg-zinc-800/80 p-1 rounded-xl self-end sm:self-auto">
+        <div className="flex flex-wrap items-center bg-zinc-200 dark:bg-zinc-800/80 p-1 rounded-xl self-end sm:self-auto">
           <button
             onClick={() => setActiveTab("timeline")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-normal h-auto ${
               activeTab === "timeline"
                 ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-xs"
                 : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900"
             }`}
           >
-            <ListOrdered className="w-3.5 h-3.5" />
-            <span>Timeline</span>
+            <ListOrdered className="w-3.5 h-3.5 shrink-0" />
+            <span>{t("del_tab_timeline", "Timeline")}</span>
           </button>
           <button
             onClick={() => setActiveTab("map")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-normal h-auto ${
               activeTab === "map"
                 ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-xs"
                 : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900"
             }`}
           >
-            <MapPin className="w-3.5 h-3.5" />
-            <span>Map View</span>
+            <MapPin className="w-3.5 h-3.5 shrink-0" />
+            <span>{t("del_tab_map", "Map View")}</span>
           </button>
         </div>
       </div>
@@ -552,7 +584,7 @@ export function RoutePlannerClient() {
       {loading ? (
         <div className="py-20 flex flex-col items-center justify-center text-zinc-400 space-y-3">
           <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-semibold">Loading daily itinerary...</p>
+          <p className="text-xs font-semibold">{t("inst_loading_itinerary", "Loading daily itinerary...")}</p>
         </div>
       ) : activeTab === "map" ? (
         /* MAP VIEW */
@@ -587,14 +619,17 @@ export function RoutePlannerClient() {
   }]}
 />
 {selectedMarker && (
-  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur shadow-xl rounded-xl p-4 border border-zinc-200 z-10 min-w-[240px]">
+  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur shadow-xl rounded-xl p-4 border border-zinc-200 z-10 min-w-[240px] max-w-[90%]">
     <button onClick={() => setSelectedMarker(null)} className="absolute top-3 right-3 text-zinc-400 hover:text-zinc-700">
       <X className="w-4 h-4" />
     </button>
-    <div className="font-bold text-sm mb-1 pr-6">{selectedMarker.customer_name || "Customer"}</div>
-    <div className="text-xs text-zinc-600 mb-2 truncate max-w-[200px]">{selectedMarker.address?.street || "Address"}</div>
+    <div className="font-bold text-sm mb-1 pr-6">{selectedMarker.customer_name || t("del_cust_fallback", "Customer")}</div>
+    <div className="text-xs text-zinc-600 mb-2 leading-snug">{selectedMarker.address?.street || t("inst_addr_short", "Address")}</div>
     <div className="text-[10px] text-zinc-500 font-mono">
-      Stop #{scheduledStops.findIndex(s => s.id === selectedMarker.id) + 1} &bull; {selectedMarker.status}
+      {t("inst_stop_hash_status", "Stop #{num} • {status}", {
+        num: String(scheduledStops.findIndex(s => s.id === selectedMarker.id) + 1),
+        status: getStopStatusLabel(selectedMarker.status),
+      })}
     </div>
   </div>
 )}
@@ -604,16 +639,17 @@ export function RoutePlannerClient() {
         <div className="space-y-4">
           {scheduledStops.length === 0 ? (
             <div className="bg-white dark:bg-zinc-900 p-8 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 text-center space-y-2">
-              <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">No jobs scheduled for {selectedDate}</p>
+              <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{t("inst_no_stops_title", "No stops scheduled for {day}", { day: selectedDate })}</p>
               <p className="text-xs text-zinc-400">
-                Pick jobs from your Pending Pool below to construct your route for this date.
+                {t("inst_no_stops_desc", "Add leads from your Pending Queue below into Morning, Afternoon, or Evening slots.")}
               </p>
             </div>
           ) : (
             <div className="space-y-3">
               {scheduledStops.map((stop, index) => {
                 const slotInfo = TIME_SLOT_LABELS[stop.time_slot || "morning"] || TIME_SLOT_LABELS.morning;
-                const custName = stop.customer_name || stop.billing_details?.customer_name || "Valued Customer";
+                const slotLabel = t(slotInfo.labelKey, slotInfo.defaultLabel);
+                const custName = stop.customer_name || stop.billing_details?.customer_name || t("ps_valued_customer", "Valued Customer");
                 const phone = stop.mobile_number || stop.billing_details?.phone || "";
                 const addressStr =
                   stop.address?.street ||
@@ -649,10 +685,10 @@ export function RoutePlannerClient() {
                           <span
                             className={`text-[9px] font-black px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${slotInfo.color}`}
                           >
-                            {slotInfo.icon} {slotInfo.label} ({slotInfo.time})
+                            {slotInfo.icon} {slotLabel} ({slotInfo.time})
                           </span>
                           <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 uppercase">
-                            {stop.property_type || "Residential"}
+                            {getPropertyLabel(stop.property_type)}
                           </span>
 
                           {/* Real-time Status Badge */}
@@ -662,16 +698,16 @@ export function RoutePlannerClient() {
                             isEnRoute ? "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" :
                             "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
                           }`}>
-                            {isCompleted ? "Completed" : isSiteVisit ? "On Site / Visit" : isEnRoute ? "En Route" : (stop.status || "Scheduled")}
+                            {getStopStatusLabel(stop.status)}
                           </span>
                         </div>
 
-                        <h3 className="font-extrabold text-sm sm:text-base text-zinc-900 dark:text-zinc-100 truncate">
+                        <h3 className="font-extrabold text-sm sm:text-base text-zinc-900 dark:text-zinc-100 leading-snug break-words">
                           {custName}
                         </h3>
 
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1 flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-snug flex items-start gap-1">
+                          <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
                           <span>
                             {addressStr} {pincode ? `(${pincode})` : ""}
                           </span>
@@ -680,44 +716,44 @@ export function RoutePlannerClient() {
                     </div>
 
                     {/* Middle: On-Site Status Progression Buttons */}
-                    <div className="flex items-center gap-1.5 self-start md:self-center">
+                    <div className="flex flex-wrap items-center gap-1.5 self-start md:self-center">
                       {!isCompleted && !isSiteVisit && !isEnRoute && (
                         <button
                           onClick={() => handleUpdateStatus(stop.id, "en_route")}
-                          className="px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 text-amber-700 dark:text-amber-400 text-xs font-bold transition-colors inline-flex items-center gap-1 border border-amber-200 dark:border-amber-800/40"
-                          title="Notify that you are traveling to this site"
+                          className="px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 text-amber-700 dark:text-amber-400 text-xs font-bold transition-colors inline-flex items-center gap-1 border border-amber-200 dark:border-amber-800/40 whitespace-normal h-auto"
+                          title={t("inst_tt_start_nav", "Mark as On The Way & notify customer")}
                         >
-                          <Car className="w-3.5 h-3.5" />
-                          <span>En Route</span>
+                          <Car className="w-3.5 h-3.5 shrink-0" />
+                          <span>{t("inst_btn_en_route", "En Route")}</span>
                         </button>
                       )}
 
                       {isEnRoute && (
                         <button
                           onClick={() => handleUpdateStatus(stop.id, "site_visit")}
-                          className="px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 text-blue-700 dark:text-blue-400 text-xs font-bold transition-colors inline-flex items-center gap-1 border border-blue-200 dark:border-blue-800/40"
-                          title="Mark arrived on customer site"
+                          className="px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 text-blue-700 dark:text-blue-400 text-xs font-bold transition-colors inline-flex items-center gap-1 border border-blue-200 dark:border-blue-800/40 whitespace-normal h-auto"
+                          title={t("inst_tt_arrived", "Mark as Arrived at Site")}
                         >
-                          <MapPin className="w-3.5 h-3.5" />
-                          <span>Arrived</span>
+                          <MapPin className="w-3.5 h-3.5 shrink-0" />
+                          <span>{t("inst_btn_arrived", "Arrived")}</span>
                         </button>
                       )}
 
                       {isSiteVisit && (
                         <button
                           onClick={() => handleUpdateStatus(stop.id, "completed")}
-                          className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-xs"
-                          title="Complete site visit / job"
+                          className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-xs whitespace-normal h-auto"
+                          title={t("inst_tt_complete_visit", "Mark Site Visit / Installation Complete")}
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Complete Visit</span>
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                          <span>{t("inst_btn_complete_visit", "Complete Visit")}</span>
                         </button>
                       )}
 
                       {isCompleted && (
                         <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 px-2 py-1">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>Visit Done</span>
+                          <CheckCircle2 className="w-4 h-4 shrink-0" />
+                          <span>{t("inst_btn_visit_done", "Visit Done")}</span>
                         </span>
                       )}
                     </div>
@@ -730,9 +766,9 @@ export function RoutePlannerClient() {
                         onChange={(e) => handleSlotChange(stop.id, e.target.value)}
                         className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 focus:outline-hidden"
                       >
-                        <option value="morning">🌅 Morning (09:30-01:00)</option>
-                        <option value="afternoon">☀️ Afternoon (01:30-05:00)</option>
-                        <option value="evening">🌆 Evening (05:30-08:00)</option>
+                        <option value="morning">🌅 {t("del_slot_morning", "Morning Slot")} (09:30-01:00)</option>
+                        <option value="afternoon">☀️ {t("del_slot_afternoon", "Afternoon Slot")} (01:30-05:00)</option>
+                        <option value="evening">🌆 {t("del_slot_evening", "Evening Slot")} (05:30-08:00)</option>
                       </select>
 
                       {/* Direct Single Navigation */}
@@ -745,7 +781,7 @@ export function RoutePlannerClient() {
                           target="_blank"
                           rel="noreferrer"
                           className="p-2 rounded-xl bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 text-blue-600 dark:text-blue-400 transition-colors"
-                          title="Navigate to Stop"
+                          title={t("inst_tt_nav_stop", "Navigate to Stop")}
                         >
                           <Navigation className="w-4 h-4" />
                         </a>
@@ -756,7 +792,7 @@ export function RoutePlannerClient() {
                         <a
                           href={`tel:${phone}`}
                           className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 text-emerald-600 dark:text-emerald-400 transition-colors"
-                          title="Call Customer"
+                          title={t("del_call_cust_title", "Call Customer")}
                         >
                           <Phone className="w-4 h-4" />
                         </a>
@@ -766,12 +802,16 @@ export function RoutePlannerClient() {
                       {phone && (
                         <a
                           href={`https://wa.me/91${phone.replace(/\D/g, "")}?text=${encodeURIComponent(
-                            `Hello ${custName}, I am your assigned TEAM CCTV technician. I am scheduled to arrive during your ${slotInfo.label} (${slotInfo.time}) today.`
+                            t("inst_wa_msg", "Hello {name}, I am your assigned TEAM CCTV technician. I am scheduled to arrive during your {slot} ({time}) today.", {
+                              name: custName,
+                              slot: slotLabel,
+                              time: slotInfo.time,
+                            })
                           )}`}
                           target="_blank"
                           rel="noreferrer"
                           className="p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors"
-                          title="WhatsApp Customer"
+                          title={t("del_wa_cust_title", "WhatsApp Customer")}
                         >
                           <MessageSquare className="w-4 h-4" />
                         </a>
@@ -783,7 +823,7 @@ export function RoutePlannerClient() {
                           onClick={() => handleMoveStop(index, "up")}
                           disabled={index === 0 || isSaving}
                           className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-600 dark:text-zinc-300 disabled:opacity-30 transition-colors"
-                          title="Move Earlier in Route"
+                          title={t("inst_tt_move_earlier", "Move Earlier in Route")}
                         >
                           <ChevronUp className="w-4 h-4" />
                         </button>
@@ -791,7 +831,7 @@ export function RoutePlannerClient() {
                           onClick={() => handleMoveStop(index, "down")}
                           disabled={index === scheduledStops.length - 1 || isSaving}
                           className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-600 dark:text-zinc-300 disabled:opacity-30 transition-colors"
-                          title="Move Later in Route"
+                          title={t("inst_tt_move_later", "Move Later in Route")}
                         >
                           <ChevronDown className="w-4 h-4" />
                         </button>
@@ -801,7 +841,7 @@ export function RoutePlannerClient() {
                       <button
                         onClick={() => handleUnschedule(stop.id)}
                         className="p-1.5 rounded-lg hover:bg-rose-50 text-zinc-400 hover:text-rose-600 transition-colors"
-                        title="Remove from Today's Route"
+                        title={t("inst_tt_remove_stop", "Remove from Today's Route")}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -819,20 +859,20 @@ export function RoutePlannerClient() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-sm font-extrabold text-zinc-900 dark:text-zinc-100">
-              Pending Queue ({pendingPool.length} Unscheduled Leads)
+              {t("inst_pending_queue_title", "Pending Queue ({count} Unscheduled Leads)", { count: String(pendingPool.length) })}
             </h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Leads assigned to you that are awaiting a site visit or installation slot.
+              {t("inst_pending_queue_desc", "Click Morning, Afternoon, or Evening to schedule a visit onto your {day} route.", { day: selectedDate })}
             </p>
           </div>
         </div>
 
         {pendingPool.length === 0 ? (
-          <p className="text-xs text-zinc-400 italic">No unscheduled leads in your queue.</p>
+          <p className="text-xs text-zinc-400 italic">{t("inst_no_unsched", "No unscheduled leads in your queue.")}</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {pendingPool.map((lead) => {
-              const custName = lead.customer_name || lead.billing_details?.customer_name || "Lead";
+              const custName = lead.customer_name || lead.billing_details?.customer_name || t("inst_lead_fallback", "Lead");
               const addressStr =
                 lead.address?.street ||
                 lead.billing_details?.address_line1 ||
@@ -846,35 +886,35 @@ export function RoutePlannerClient() {
                   <div>
                     <div className="flex items-center justify-between gap-1 mb-1">
                       <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 uppercase">
-                        {lead.property_type || "Residential"}
+                        {getPropertyLabel(lead.property_type)}
                       </span>
                       <span className="text-[10px] font-mono text-zinc-400">#{lead.id.slice(0, 6)}</span>
                     </div>
-                    <h4 className="font-bold text-xs text-zinc-900 dark:text-zinc-100 truncate">{custName}</h4>
-                    <p className="text-[11px] text-zinc-500 line-clamp-1">{addressStr}</p>
+                    <h4 className="font-bold text-xs text-zinc-900 dark:text-zinc-100 leading-snug break-words">{custName}</h4>
+                    <p className="text-[11px] text-zinc-500 leading-snug">{addressStr}</p>
                   </div>
 
                   {/* Add to Date Quick Buttons */}
-                  <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-1">
-                    <span className="text-[10px] font-bold text-zinc-400">Add to:</span>
-                    <div className="flex items-center gap-1">
+                  <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-1.5">
+                    <span className="text-[10px] font-bold text-zinc-400">{t("inst_add_to_lbl", "Add to:")}</span>
+                    <div className="flex flex-wrap items-center gap-1">
                       <button
                         onClick={() => handleAddToRoute(lead, "morning")}
-                        className="px-2 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold transition-colors"
+                        className="px-2 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold transition-colors whitespace-normal h-auto"
                       >
-                        🌅 Morn
+                        {t("del_morn_short", "🌅 Morn")}
                       </button>
                       <button
                         onClick={() => handleAddToRoute(lead, "afternoon")}
-                        className="px-2 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-bold transition-colors"
+                        className="px-2 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-bold transition-colors whitespace-normal h-auto"
                       >
-                        ☀️ Aft
+                        {t("del_aft_short", "☀️ Aft")}
                       </button>
                       <button
                         onClick={() => handleAddToRoute(lead, "evening")}
-                        className="px-2 py-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-[10px] font-bold transition-colors"
+                        className="px-2 py-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-[10px] font-bold transition-colors whitespace-normal h-auto"
                       >
-                        🌆 Eve
+                        {t("del_eve_short", "🌆 Eve")}
                       </button>
                     </div>
                   </div>

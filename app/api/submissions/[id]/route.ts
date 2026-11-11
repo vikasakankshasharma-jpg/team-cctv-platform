@@ -70,10 +70,13 @@ export async function PATCH(
         
         // 1. Send Link to Customer
         if (mobileNumber) {
-          const quoteLink = `https://teamcctv.in/quote/${id}`;
+          const { resolveCustomerLocale, getCustomerNotifications } = await import("@/lib/whatsapp/customer-notifications-i18n");
+          const custLocale = await resolveCustomerLocale({ leadData, leadId: id, phone: mobileNumber });
+          const notif = getCustomerNotifications(custLocale);
+          const quoteLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://teamcctv.in"}/quote/${id}`;
           await sendCustomerWhatsApp(
             mobileNumber,
-            `👋 Hi ${customerName},\n\nYour customized CCTV quotations are ready! 🎥🛡️\n\nClick the link below to view, compare, and customize your system:\n${quoteLink}\n\nOur team is here if you need any help.\n- TEAM CCTV`
+            notif.quoteReady({ name: customerName, link: quoteLink })
           );
         }
 

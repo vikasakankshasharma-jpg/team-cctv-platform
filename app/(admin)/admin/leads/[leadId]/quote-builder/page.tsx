@@ -4,6 +4,7 @@ import { getBaselineCatalogData } from "@/lib/baseline-quote";
 import { notFound } from "next/navigation";
 import { QuotationBuilderClient } from "@/components/admin/QuotationBuilderClient";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 import { FileEdit } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -68,8 +69,13 @@ export default async function AdminQuoteBuilderPage({ params }: { params: Promis
     <div className="space-y-6">
       <PageHeader 
         icon={FileEdit} 
-        title={`Custom Quote Builder - ${leadData?.name || "Customer"}`}
-        description="Build a bespoke quotation with custom pricing, margins, and custom line items."
+        title={
+          <span className="flex flex-wrap items-center gap-1.5">
+            <TranslatedText tKey="adm_qb_page_t" defaultText="Custom Quote Builder" />
+            <span>- {leadData?.name || <TranslatedText tKey="adm_lc_col_cust" defaultText="Customer" />}</span>
+          </span>
+        }
+        description={<TranslatedText tKey="adm_qb_page_d" defaultText="Build a bespoke quotation with custom pricing, margins, and custom line items." />}
       />
 
       <QuotationBuilderClient 

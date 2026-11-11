@@ -3,8 +3,10 @@ import { adminDb } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
 import { generateOtp, otpExpiresAt } from "@/lib/auth-installer";
 import { Resend } from "resend";
+import { cleanEnvVar } from "@/lib/env-utils";
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const resendApiKey = cleanEnvVar(process.env.RESEND_API_KEY);
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 export async function POST(req: Request) {
   try {

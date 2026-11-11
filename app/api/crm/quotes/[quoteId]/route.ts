@@ -3,6 +3,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import { toIsoStringSafe } from "@/lib/date-utils";
 import { getOrCreateLeadQuote } from "@/lib/baseline-quote";
 import { calculateQuotationProfitBreakup } from "@/lib/quotation-profit";
+import { fetchSingleQuoteProfitContext } from "@/lib/profit-context";
 
 export async function GET(
   request: Request,
@@ -86,6 +87,14 @@ export async function GET(
       return dateA - dateB;
     });
 
+    // Fetch promoter/referral, Paid AMC contracts, commission records & global settings
+    const { settings: profitSettings, context: profitContext } = await fetchSingleQuoteProfitContext({
+      leadId,
+      quoteId,
+      quoteData,
+      leadData,
+    });
+
     const latestQuoteId = leadData?.latest_quote_id || leadData?.last_quote_id || quoteId;
 
     const formattedVersions = rawVersions.map((v, index) => {
@@ -119,19 +128,52 @@ export async function GET(
           qty: it.qty || it.quantity || 1,
           price: it.price || it.sellingPriceExTax || it.unit_price || 0
         })),
-        margin_breakup: v.pricingSnapshot?.margin_breakup || calculateQuotationProfitBreakup(v.pricingSnapshot || {
+        margin_breakup: calculateQuotationProfitBreakup(v.pricingSnapshot || {
           items,
           addons: v.addons || [],
           labor_cost: v.labor_cost,
           total_payable: payable,
           gross_subtotal: v.gross_subtotal,
+          referral_discount: v.referral_discount,
+          discount_amount: v.discount_amount,
+          net_taxable_amount: v.net_taxable_amount,
+          promoter_id: v.promoter_id || quoteData?.promoter_id || leadData?.promoter_id,
+          referral_code: v.referral_code_used || v.referral_code || leadData?.referral_code,
           total_purchase_cost: v.total_purchase_cost
-        })
+        }, profitSettings, profitContext)
       };
     });
 
     const activeQuotePayable = quoteData?.pricingSnapshot?.finalPrice || quoteData?.pricingSnapshot?.total_payable || quoteData?.total_payable || leadData?.pricingSnapshot?.finalPrice || leadData?.total_payable || 0;
     const currentVersionNum = quoteData?.version || (formattedVersions.length > 0 ? formattedVersions[formattedVersions.length - 1].version : 1);
+
+    const activePricingSource = (() => {
+      const pSnap = quoteData?.pricingSnapshot || leadData?.pricingSnapshot;
+      if (pSnap && (pSnap.total_payable > 0 || pSnap.finalPrice > 0 || (Array.isArray(pSnap.items) && pSnap.items.length > 0))) {
+        return {
+          ...pSnap,
+          promoter_id: pSnap.promoter_id || quoteData?.promoter_id || leadData?.promoter_id,
+          referral_code: pSnap.referral_code || quoteData?.referral_code_used || leadData?.referral_code,
+        };
+      }
+      return {
+        items: quoteData?.items || quoteData?.configuration_snapshot || leadData?.items || [],
+        addons: quoteData?.addons || quoteData?.addons_snapshot || leadData?.addons || [],
+        labor_cost: quoteData?.labor_cost ?? leadData?.labor_cost,
+        gross_subtotal: quoteData?.gross_subtotal ?? leadData?.gross_subtotal,
+        referral_discount: quoteData?.referral_discount ?? leadData?.referral_discount,
+        discount_amount: quoteData?.discount_amount ?? leadData?.discount_amount,
+        net_taxable_amount: quoteData?.net_taxable_amount ?? leadData?.net_taxable_amount,
+        gst_rate: quoteData?.gst_rate ?? leadData?.gst_rate,
+        gst_amount: quoteData?.gst_amount ?? leadData?.gst_amount,
+        total_payable: activeQuotePayable,
+        finalPrice: activeQuotePayable,
+        promoter_id: quoteData?.promoter_id || leadData?.promoter_id,
+        referral_code: quoteData?.referral_code_used || leadData?.referral_code,
+      };
+    })();
+
+    const liveMarginBreakup = calculateQuotationProfitBreakup(activePricingSource, profitSettings, profitContext);
 
     const mergedData = {
       id: quoteId,
@@ -148,18 +190,16 @@ export async function GET(
       versions: formattedVersions,
       total_payable: activeQuotePayable,
       
-      // Commercial & Pricing Snapshot
-      pricingSnapshot: (() => {
-        const pSnap = quoteData?.pricingSnapshot || leadData?.pricingSnapshot;
-        const resolvedSnap = (pSnap && (pSnap.total_payable > 0 || pSnap.finalPrice > 0))
-          ? { ...pSnap }
-          : { total_payable: activeQuotePayable, finalPrice: activeQuotePayable };
-        if (!resolvedSnap.margin_breakup) {
-          resolvedSnap.margin_breakup = calculateQuotationProfitBreakup(resolvedSnap);
-        }
-        return resolvedSnap;
-      })(),
-      margin_breakup: calculateQuotationProfitBreakup(quoteData?.pricingSnapshot || leadData?.pricingSnapshot || { total_payable: activeQuotePayable }),
+      // Commercial & Pricing Snapshot (Always synced with live commission, Paid AMC & overhead intelligence)
+      pricingSnapshot: {
+        ...activePricingSource,
+        margin_breakup: liveMarginBreakup,
+      },
+      margin_breakup: liveMarginBreakup,
+      profit_settings: profitSettings,
+      profit_context: profitContext,
+      promoter_id: quoteData?.promoter_id || leadData?.promoter_id || null,
+      referral_code: quoteData?.referral_code_used || leadData?.referral_code || null,
       requirementSnapshot: quoteData?.requirementSnapshot || leadData?.wizard_answers || {},
       
       // Billing Details (merged)

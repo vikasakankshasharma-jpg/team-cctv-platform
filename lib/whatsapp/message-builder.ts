@@ -8,6 +8,32 @@ export interface WhatsAppMessagePayload {
   document?: { link: string; filename?: string; caption?: string };
 }
 
+/**
+ * Clamp a WhatsApp Cloud API label or description to Meta's UTF-16 length limit
+ * without splitting surrogate emoji pairs or Indic grapheme clusters.
+ */
+function clampMetaText(text: string, maxUtf16Units: number): string {
+  const normalized = (text || "").trim();
+  if (!normalized || normalized.length <= maxUtf16Units) return normalized;
+
+  if (typeof Intl !== "undefined" && typeof Intl.Segmenter === "function") {
+    const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
+    let out = "";
+    for (const { segment } of segmenter.segment(normalized)) {
+      if ((out + segment).length > maxUtf16Units) break;
+      out += segment;
+    }
+    return out.trim();
+  }
+
+  let out = "";
+  for (const cp of Array.from(normalized)) {
+    if ((out + cp).length > maxUtf16Units) break;
+    out += cp;
+  }
+  return out.trim();
+}
+
 export const MessageBuilder = {
   text(to: string, body: string): WhatsAppMessagePayload {
     return {
@@ -38,7 +64,7 @@ export const MessageBuilder = {
             reply: { 
               id: b.id, 
               // Meta strictly enforces max 20 characters for quick reply button titles
-              title: b.title.length > 20 ? b.title.slice(0, 20).trim() : b.title 
+              title: clampMetaText(b.title, 20)
             }
           }))
         }
@@ -50,7 +76,7 @@ export const MessageBuilder = {
    * Create an interactive list message (max 10 items, button <= 20 chars, section & row title <= 24 chars, description <= 72 chars).
    */
   list(to: string, body: string, buttonText: string, sections: { title: string, rows: { id: string, title: string, description?: string }[] }[]): WhatsAppMessagePayload {
-    const safeButton = buttonText.length > 20 ? buttonText.slice(0, 20).trim() : buttonText;
+    const safeButton = clampMetaText(buttonText, 20);
     return {
       messaging_product: "whatsapp",
       recipient_type: "individual",
@@ -62,13 +88,11 @@ export const MessageBuilder = {
         action: {
           button: safeButton,
           sections: sections.map(s => ({
-            title: s.title.length > 24 ? s.title.slice(0, 24).trim() : s.title,
+            title: clampMetaText(s.title, 24),
             rows: s.rows.map(r => ({
               id: r.id,
-              title: r.title.length > 24 ? r.title.slice(0, 24).trim() : r.title,
-              description: r.description 
-                ? (r.description.length > 72 ? r.description.slice(0, 72).trim() : r.description)
-                : undefined
+              title: clampMetaText(r.title, 24),
+              description: r.description ? clampMetaText(r.description, 72) : undefined
             }))
           }))
         }

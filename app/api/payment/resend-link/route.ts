@@ -78,21 +78,24 @@ export async function POST(req: Request) {
       amount = Math.round(remaining * 0.10);
       stageName = "Installation Final (10%)";
     }
-    const customerPhone = quoteData.mobile_number || quoteData.phone;
+    const customerPhone = quoteData.mobile_number || quoteData.phone || quoteData.customer_mobile;
     const customerName = quoteData.customer_name || "Customer";
 
     // 4. Send WhatsApp Notification
     if (customerPhone) {
-      const waMessage = `Hello ${customerName},
-
-Your payment for *${stageName}* is due.
-Amount: ₹${amount.toLocaleString('en-IN')}
-
-Please complete your payment using this secure link:
-${paymentUrl}
-
-Thank you,
-TEAM CCTV`;
+      const { resolveCustomerLocale, getCustomerNotifications } = await import("@/lib/whatsapp/customer-notifications-i18n");
+      const custLocale = await resolveCustomerLocale({ quoteData, phone: customerPhone });
+      const notif = getCustomerNotifications(custLocale);
+      const localizedStageName =
+        paymentType === "delivery_90" ? notif.stageDelivery90
+        : paymentType === "installation_final" ? notif.stageFinal10
+        : notif.stageBooking;
+      const waMessage = notif.paymentReminderLink({
+        name: customerName,
+        stageName: localizedStageName,
+        amount: amount.toLocaleString("en-IN"),
+        paymentUrl,
+      });
 
       await sendCustomerWhatsApp(customerPhone, waMessage);
     }

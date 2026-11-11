@@ -170,3 +170,7 @@ flowchart TD
   - Any sent images, videos, audio notes, or off-topic questions are handled gracefully without breaking state.
   - Name protection filter shields customer lead records from price queries.
   - Canonical phone formatting standardizes leads to `91XXXXXXXXXX`.
+- **OTP Gate, Error Sanitization & Cross-Device App Launcher (Website Flows):**
+  - Customer OTP delivery (`/api/auth/otp/whatsapp`, `/api/auth/otp/sms`, `/api/refer-and-earn/otp/send`) routes through `Msg91WhatsAppProvider.sendOtpTemplate()` (`lib/whatsapp/msg91-provider.ts`) with CRLF-stripped credentials (`lib/env-utils.ts`).
+  - Client UI components extract structured API/exception errors via `extractErrorMessage()` (`lib/utils.ts`) to prevent `[object Object]` toasts on every journey screen.
+  - `WhatsAppOtpNotice` (`components/shared/WhatsAppOtpNotice.tsx`) and `lib/whatsapp.ts` invoke the native WhatsApp app synchronously via `<a href="whatsapp://send?phone=...">` with adaptive `wa.me` (mobile) / `web.whatsapp.com` (desktop) fallback after `1600ms`.

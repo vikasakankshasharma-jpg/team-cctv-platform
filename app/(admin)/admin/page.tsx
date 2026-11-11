@@ -7,6 +7,7 @@ import { Users, FileText, Percent, BadgeIndianRupee, LayoutDashboard, TrendingUp
 import { DashboardClient, type WeeklyBucket, type SourceBreakdown, type RecentActivity } from "@/components/admin/DashboardClient";
 import ActionCenterWidget from "@/components/admin/ActionCenterWidget";
 import { PipelineSubNav } from "@/components/admin/navigation/AdminSubNav";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 import type { Metadata } from "next";
 import type { Promoter, Lead } from "@/types";
 import fs from "fs";
@@ -47,9 +48,11 @@ export default async function AdminDashboard() {
 
   const buckets = Array.from({ length: 7 }, (_, i) => {
     const offset = 6 - i;
+    const d = getMidnight(offset);
     return {
       label: getDayLabel(offset),
-      date: getMidnight(offset),
+      isoDate: d.toISOString(),
+      date: d,
       total: 0,
       won: 0,
     };
@@ -187,14 +190,16 @@ export default async function AdminDashboard() {
     } catch (_) {}
   }
 
-  trend = buckets.map(({ label, total, won }) => ({ label, total, won }));
+  trend = buckets.map(({ label, isoDate, total, won }) => ({ label, isoDate, total, won }));
   const conversionRate = leadsCount > 0 ? Math.round((wonLeadsCount / leadsCount) * 100) : 0;
 
   const KPIS = [
     {
+      labelKey: "adm_dash_total_pipeline",
       label: "Total Pipeline",
       value: leadsCount.toLocaleString("en-IN"),
       icon: Users,
+      trendKey: "adm_dash_captured",
       trend: "Captured Inquiries",
       trendIcon: TrendingUp,
       trendClass: "up",
@@ -204,9 +209,11 @@ export default async function AdminDashboard() {
       href: "/admin/leads"
     },
     {
+      labelKey: "adm_dash_op_success",
       label: "Operational Success",
       value: wonLeadsCount.toLocaleString("en-IN"),
       icon: FileText,
+      trendKey: "adm_dash_closed_paid",
       trend: "Closed / Paid Deals",
       trendIcon: TrendingUp,
       trendClass: "up",
@@ -216,9 +223,11 @@ export default async function AdminDashboard() {
       href: "/admin/leads?filter=won"
     },
     {
+      labelKey: "adm_dash_yield",
       label: "Yield Velocity",
       value: `${conversionRate}%`,
       icon: Percent,
+      trendKey: "adm_dash_conv_eff",
       trend: "Lead conversion efficacy",
       trendIcon: Minus,
       trendClass: "neutral",
@@ -228,9 +237,11 @@ export default async function AdminDashboard() {
       href: "/admin/leads"
     },
     {
+      labelKey: "adm_dash_gross_tp",
       label: "Gross Throughput",
       value: `₹${Math.floor(totalExTaxBusiness / 1000)}k`,
       icon: BadgeIndianRupee,
+      trendKey: "adm_dash_extax_vol",
       trend: "Ex-tax net business volume",
       trendIcon: TrendingUp,
       trendClass: "up",
@@ -249,10 +260,11 @@ export default async function AdminDashboard() {
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="font-semibold text-sm">Firestore Free Spark Quota Active — Showing Cached Telemetry</p>
-            <p className="text-xs text-amber-800 dark:text-amber-300 mt-1">
-              Google Cloud Firestore daily read quota has reached the 50k reads limit on the Spark Plan.
-              Displaying cached operational metrics so you can navigate the system smoothly. To remove this limit permanently, upgrade to the Firebase Blaze (Pay-as-you-go) plan.
+            <p className="font-semibold text-sm leading-snug">
+              <TranslatedText tKey="adm_dash_quota_t" defaultText="Firestore Free Spark Quota Active — Showing Cached Telemetry" />
+            </p>
+            <p className="text-xs text-amber-800 dark:text-amber-300 mt-1 leading-relaxed">
+              <TranslatedText tKey="adm_dash_quota_d" defaultText="Google Cloud Firestore daily read quota has reached the 50k reads limit on the Spark Plan. Displaying cached operational metrics so you can navigate the system smoothly." />
             </p>
           </div>
         </div>
@@ -262,11 +274,13 @@ export default async function AdminDashboard() {
       <div className="kpi-grid">
         {KPIS.map((kpi, idx) => (
           <Link href={kpi.href} key={idx} className="kpi block" style={{ textDecoration: 'none' }}>
-            <div className="kpi-label">{kpi.label}</div>
+            <div className="kpi-label leading-snug">
+              <TranslatedText tKey={kpi.labelKey} defaultText={kpi.label} />
+            </div>
             <div className="kpi-value">{kpi.value}</div>
-            <div className={`kpi-delta ${kpi.trendClass}`}>
+            <div className={`kpi-delta ${kpi.trendClass} leading-snug`}>
               <kpi.trendIcon style={{ width: '12px', height: '12px' }} />
-              {kpi.trend}
+              <TranslatedText tKey={kpi.trendKey} defaultText={kpi.trend} />
             </div>
             
             <div className="kpi-icon" style={{ background: kpi.dimVar, color: kpi.colorVar }}>

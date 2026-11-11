@@ -58,6 +58,15 @@
 - **Dynamic Category Margins:** Hardware components (Cameras, Recorders, Storage, Power Supplies, Cables, Connectors, Accessories) strictly follow the dynamic margins configured in the Admin Panel (`margin_cctv_camera`, `margin_hdd`, `margin_connectors`, etc.) via `lib/margin-engine.ts`.
 - **Tie-Breaking Rule:** When multiple compatible products meet configuration criteria, the engine selects the one with the lowest calculated retail price to maintain competitive advantage.
 
+### 3.1.1 Services Bucket (Paid/Promo AMC & Referral Commissions) & True Net Pocket Profit Waterfall
+- **Strict Category Classification Precedence (`classifyItem()` in `lib/quotation-profit.ts`):** Evaluates `service` / `amc` / `commission` (using word-boundary matching so `"Installation & Commissioning"` stays in `service`), followed by `cable` (`3+1`, `cab-`, `wire`), then `accessory` (`junction box`, `mount`, `rack`), before `camera`. Prevents cables and camera boxes from inflating camera counts in admin margin audits.
+- **Services Bucket Accounting:**
+  - **Installation Labor & Site Surcharges:** Uses per-item `base_cost_at_quote` recorded in `lib/pricing-engine.ts` (`calculateLabor()` + `travel_fee` payout via `travel_fee_payout_percent` default `85%`), preventing silent ₹0 labor cost when `labor_cost_margin_percent` is unset.
+  - **Paid AMC & Promotional Free AMC:** Quote AMC add-ons (`amc_1yr`, `amc_2yr`, `amc_3yr` with `amc_fulfillment_cost_percent` default `35%`) and linked standalone `amc_subscriptions` / `amc_contracts` (deduplicated against checkout add-ons) count directly inside the **Services** bucket. Complimentary `promo_free_amc` records technician PM visit fulfillment liability inside `services.cost`.
+  - **Referral & Partner Commissions:** Unified `resolvePromoterCommission()` (`lib/commission.ts`), salesperson commissions, and actual `commission_records` / `commissions` deduct directly inside the **Services** bucket (`services.cost` / `services.profit`), ensuring product hardware margins remain unclouded while turnkey Services margin reflects customer acquisition payout cost. Manual admin discounts with no referral tag never trigger synthetic referral commissions.
+- **Operating Overheads & True Net Pocket Profit (`overheads`):**
+  - After Combined Deal Gross Profit (`Products + Services`), `calculateQuotationProfitBreakup()` deducts configurable operating reserves (`payment_gateway_fee` using actual `payment_history.razorpay_fee` when present, ₹0 on `cash`/`bank_transfer`/`upi_direct`, or `payment_gateway_fee_percent` default `2.36%`; `warranty_reserve_percent` default `2%` on products; `logistics_consumables_per_job` default `₹150`; plus any `installer_payout_bonus`) to report **True Net Pocket Profit (`overheads.net_profit`)** across Deal View (`QuotationProfitBreakupCard.tsx`) and `/admin/analytics/profitability` without altering customer GST-inclusive `total_payable`.
+
 ### 3.2 Power Supply (SMPS) & PoE Switch Selection Rules
 - **Competitive "Best Price" Selection Rule:** A higher-channel power supply (e.g., 8-channel SMPS) can power a smaller system (e.g., 4 cameras). The pricing engine MUST select the lowest-priced compatible power supply, even if it has a higher channel count, to offer maximum competitive pricing.
 - **Fallback Quantity Math:** When falling back to smaller capacity units (e.g., powering 12 cameras with 8Ch SMPS), the quantity must be calculated as `Math.ceil(camera_count / max_cameras_supported)` (e.g., `Math.ceil(12 / 8) = 2` units).
@@ -349,9 +358,10 @@ To ensure professional, 100% accurate map rendering across all PIN codes in Indi
   - Referrer Incentive: **₹500** flat payout per completed installation.
   - Referred Customer Discount: **₹500** discount on their quotation.
 
-### 6.3 Payout Maturity & Financial Dashboard
+### 6.3 Payout Maturity, Financial Dashboard & Services Bucket Deduction
 - Admin Financial Dashboard governs all payouts for Installers, B2B Promoters, and B2C Referrers.
 - Payouts unlock only after 100% job completion with zero open punch-list items/pendencies, tracking maturity days and overdue alerts.
+- **Services Bucket Profit Allocation:** B2B promoter commissions (`commission_slabs` / promoter override via `resolvePromoterCommission()`), B2C ₹500 referral payouts, salesperson incentives, and actual `commission_records` / `commissions` are deducted directly inside the **Services** bucket (`services.cost` / `services.profit`), alongside Paid AMC fulfillment reserves (`amc_1yr`/`amc_2yr`/`amc_3yr` and deduplicated `amc_subscriptions`/`amc_contracts`) and Promo Free AMC PM visit liabilities. Manual admin discounts without a valid referral code never manufacture phantom commissions.
 
 ---
 
@@ -723,4 +733,9 @@ A **Hybrid CCTV System** combines a central wired CCTV setup (Analog HD with DVR
 - **Universal Phone Normalization:** Standardizes all input formats (`+91`, `91`, `0`-prefix, 10-digit) into canonical `91XXXXXXXXXX`.
 
 ### 14.7 Zero `[object Object]` & Sanitized Error Invariant
-- **Sanitized Logging & Output:** All API error handlers, customer notifications, and webhook responses must sanitize object errors (`error?.message || String(error)`), guaranteeing zero `[object Object]` occurrences in UI toasts or customer WhatsApp messages.
+- **Sanitized Logging & Output:** All client UI handlers (`extractErrorMessage()` in `lib/utils.ts`), API error handlers, customer notifications, and webhook responses must unwrap nested `{ error: { message } }`, `{ error }`, `{ message }`, and `{ details }` structures and reject `"[object Object]"` strings, guaranteeing human-readable feedback across Website and WhatsApp customer journeys.
+
+### 14.8 Environment Variable Hygiene, MSG91 OTP Dispatch & Cross-Device WhatsApp Launcher
+- **CRLF-Safe Runtime Env Parsing (`lib/env-utils.ts`):** All integration keys, provider selectors, webhook secrets, and sender phone numbers must be read through `cleanEnvVar()` / `cleanPhoneEnvVar()` (and digit-stripped where appropriate) so trailing `\r`/`\n`/whitespace never corrupt external HTTP headers, template payloads, or HMAC checks.
+- **Unified MSG91 OTP Pipeline (`lib/whatsapp/msg91-provider.ts`):** `/api/auth/otp/whatsapp`, `/api/auth/otp/sms`, and `/api/refer-and-earn/otp/send` route through `Msg91WhatsAppProvider.sendOtpTemplate()`, parsing upstream responses with non-JSON-safe `response.text()` handling and actionable diagnostics.
+- **Cross-Device WhatsApp App Deep-Linking (`lib/whatsapp.ts`, `components/shared/WhatsAppOtpNotice.tsx`):** The `"Open WhatsApp App"` launcher must use a native synchronous `<a href="whatsapp://send?phone=...">` anchor targeting the configured business/sender number (never bare `whatsapp://` or hidden `<iframe>` injection, which modern browsers block), detect touch-capable iPadOS devices (`MacIntel` with `maxTouchPoints > 1`), and present an adaptive fallback link (`https://wa.me/...` on mobile, `https://web.whatsapp.com` on desktop post-mount) with non-blocking fallback guidance after `1600ms`.

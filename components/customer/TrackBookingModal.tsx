@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Search, AlertCircle, Loader2 } from "lucide-react";
 import { TranslatedText } from "@/components/shared/TranslatedText";
+import { useTranslation } from "@/hooks/useTranslation";
 import { extractErrorMessage } from "@/lib/utils";
 
 interface TrackBookingModalProps {
@@ -12,6 +13,7 @@ interface TrackBookingModalProps {
 }
 
 export function TrackBookingModal({ isOpen, onClose }: TrackBookingModalProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [referenceId, setReferenceId] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,10 +39,10 @@ export function TrackBookingModal({ isOpen, onClose }: TrackBookingModalProps) {
         onClose();
         router.push(`/track/${data.leadId}`);
       } else {
-        setError(extractErrorMessage(data, "Failed to find booking. Please check your details."));
+        setError(extractErrorMessage(data, t("tb_err_not_found", "Failed to find booking. Please check your details.")));
       }
     } catch (err) {
-      setError(extractErrorMessage(err, "Network error. Please try again."));
+      setError(extractErrorMessage(err, t("tb_err_net", "Network error. Please try again.")));
     } finally {
       setLoading(false);
     }
@@ -77,7 +79,7 @@ export function TrackBookingModal({ isOpen, onClose }: TrackBookingModalProps) {
                 required
                 value={referenceId}
                 onChange={(e) => setReferenceId(e.target.value)}
-                placeholder="e.g. 9876543210 or QT-2026-..."
+                placeholder={t("tb_placeholder", "e.g. 9876543210 or QT-2026-...")}
                 className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono text-sm dark:text-white"
               />
             </div>

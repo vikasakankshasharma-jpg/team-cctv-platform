@@ -6,6 +6,8 @@ import { requireAdminApi } from "@/lib/auth-server";
 import { toIsoStringSafe } from "@/lib/date-utils";
 import { calculateQuotationProfitBreakup } from "@/lib/quotation-profit";
 import { getOrCreateLeadQuote } from "@/lib/baseline-quote";
+import { getCachedAdminSettings } from "@/lib/cached-settings";
+import { extractPaymentGatewayMeta, mapAmcDocToSubscription } from "@/lib/profit-context";
 import fs from "fs";
 import path from "path";
 
@@ -29,21 +31,51 @@ export async function GET(request: NextRequest) {
     let isQuotaExceeded = false;
     let leadsDocs: any[] = [];
     let quotesDocs: any[] = [];
+    let settings: any = {};
+    let commRecsDocs: any[] = [];
+    let installerCommDocs: any[] = [];
+    let promotersDocs: any[] = [];
+    let salespersonsDocs: any[] = [];
+    let amcSubsDocs: any[] = [];
+    let amcContractsDocs: any[] = [];
 
-    // 1. Fetch leads and quotes concurrently with protective error catch
+    const catchQuota = (fallback: any) => (err: any) => {
+      if (err?.code === 8 || err?.message?.includes("Quota exceeded")) isQuotaExceeded = true;
+      return fallback;
+    };
+
+    // 1. Fetch leads, quotes, commissions, promoters, AMC & settings concurrently
     try {
-      const [leadsSnap, quotesSnap] = await Promise.all([
-        adminDb.collection("leads").orderBy("created_at", "desc").limit(50).get().catch((err) => {
-          if (err?.code === 8 || err?.message?.includes("Quota exceeded")) isQuotaExceeded = true;
-          return { docs: [] };
-        }),
-        adminDb.collection("quotes").limit(50).get().catch((err) => {
-          if (err?.code === 8 || err?.message?.includes("Quota exceeded")) isQuotaExceeded = true;
-          return { docs: [] };
-        })
+      const [
+        leadsSnap,
+        quotesSnap,
+        loadedSettings,
+        commRecsSnap,
+        installerCommsSnap,
+        promotersSnap,
+        salespersonsSnap,
+        amcSubsSnap,
+        amcContractsSnap,
+      ] = await Promise.all([
+        adminDb.collection("leads").orderBy("created_at", "desc").limit(50).get().catch(catchQuota({ docs: [] })),
+        adminDb.collection("quotes").limit(50).get().catch(catchQuota({ docs: [] })),
+        getCachedAdminSettings().catch(() => ({})),
+        adminDb.collection("commission_records").get().catch(catchQuota({ docs: [] })),
+        adminDb.collection("commissions").get().catch(catchQuota({ docs: [] })),
+        adminDb.collection("promoters").get().catch(catchQuota({ docs: [] })),
+        adminDb.collection("salespersons").get().catch(catchQuota({ docs: [] })),
+        adminDb.collection("amc_subscriptions").get().catch(catchQuota({ docs: [] })),
+        adminDb.collection("amc_contracts").get().catch(catchQuota({ docs: [] })),
       ]);
       leadsDocs = leadsSnap.docs;
       quotesDocs = quotesSnap.docs;
+      settings = loadedSettings || {};
+      commRecsDocs = commRecsSnap.docs;
+      installerCommDocs = installerCommsSnap.docs;
+      promotersDocs = promotersSnap.docs;
+      salespersonsDocs = salespersonsSnap.docs;
+      amcSubsDocs = amcSubsSnap.docs;
+      amcContractsDocs = amcContractsSnap.docs;
     } catch (err: any) {
       if (err?.code === 8 || err?.message?.includes("Quota exceeded")) {
         isQuotaExceeded = true;
@@ -54,6 +86,64 @@ export async function GET(request: NextRequest) {
     quotesDocs.forEach((d: any) => {
       quotesMap.set(d.id, { id: d.id, ...d.data() });
     });
+
+    const promoterById = new Map<string, any>();
+    const promoterByCode = new Map<string, any>();
+    promotersDocs.forEach((d: any) => {
+      const obj = { id: d.id, ...d.data() };
+      promoterById.set(d.id, obj);
+      if (obj.referral_code) promoterByCode.set(String(obj.referral_code), obj);
+    });
+
+    const salespersonById = new Map<string, any>();
+    salespersonsDocs.forEach((d: any) => {
+      salespersonById.set(d.id, { id: d.id, ...d.data() });
+    });
+
+    const commByKey = new Map<string, any[]>();
+    const pushComm = (key: string | undefined, rec: any) => {
+      if (!key) return;
+      const list = commByKey.get(key) || [];
+      list.push(rec);
+      commByKey.set(key, list);
+    };
+    commRecsDocs.forEach((d: any) => {
+      const c = d.data();
+      const rec = { id: d.id, user_type: c.user_type || "promoter", commission_amount: Number(c.commission_amount || 0), status: c.status || "pending", source: "commission_records" };
+      pushComm(c.lead_id, rec);
+      if (c.quote_id && c.quote_id !== c.lead_id) pushComm(c.quote_id, rec);
+    });
+    installerCommDocs.forEach((d: any) => {
+      const c = d.data();
+      const rec = { id: d.id, user_type: c.user_type || "installer", commission_amount: Number(c.commission_amount || 0), status: c.status || "pending", source: "commissions" };
+      pushComm(c.lead_id, rec);
+      if (c.quote_id && c.quote_id !== c.lead_id) pushComm(c.quote_id, rec);
+    });
+
+    const amcByQuoteOrLead = new Map<string, any[]>();
+    const amcByMobile10 = new Map<string, any[]>();
+    const ingestAmcMap = (docs: any[]) => {
+      const seen = new Set<string>();
+      for (const d of docs) {
+        if (seen.has(d.id)) continue;
+        seen.add(d.id);
+        const raw = d.data();
+        const sub = mapAmcDocToSubscription(d.id, raw);
+        const keys = [raw.quoteId, raw.leadId, raw.dealId].filter(Boolean);
+        for (const k of keys) {
+          const arr = amcByQuoteOrLead.get(k) || [];
+          if (!arr.some(x => x.id === sub.id)) arr.push(sub);
+          amcByQuoteOrLead.set(k, arr);
+        }
+        const mob10 = String(raw.customerMobile || "").replace(/\D/g, "").slice(-10);
+        if (mob10.length === 10) {
+          const arr = amcByMobile10.get(mob10) || [];
+          if (!arr.some(x => x.id === sub.id)) arr.push(sub);
+          amcByMobile10.set(mob10, arr);
+        }
+      }
+    };
+    ingestAmcMap([...amcSubsDocs, ...amcContractsDocs]);
 
     const handledIds = new Set<string>();
     const results: any[] = [];
@@ -98,22 +188,58 @@ export async function GET(request: NextRequest) {
 
       let computedStatus = isPaid ? "WON" : isSiteVisit ? "SITE_VISIT" : (data.status || quoteData?.status || "QUOTED").toUpperCase();
 
+      const customerName = data.customer_name || quoteData?.customer_name || "Walk-in Customer";
+      const customerMobile = data.mobile_number || quoteData?.customer_mobile || "";
+      const mobile10 = String(customerMobile).replace(/\D/g, "").slice(-10);
+
+      const pId = quoteData?.promoter_id || data.promoter_id || null;
+      const refCode = quoteData?.referral_code_used || quoteData?.referral_code || data.referral_code || null;
+      const promoter = (pId && promoterById.get(String(pId))) || (refCode && promoterByCode.get(String(refCode))) || null;
+      const spId = data.assigned_to_salesperson_id || data.assigned_salesperson_id || quoteData?.assigned_salesperson_id || null;
+      const salesperson = spId ? salespersonById.get(String(spId)) || null : null;
+
+      const actualComms = [
+        ...(commByKey.get(leadId) || []),
+        ...((qId && qId !== leadId) ? (commByKey.get(qId) || []) : [])
+      ];
+
+      const amcMapForDeal = new Map<string, any>();
+      for (const list of [
+        amcByQuoteOrLead.get(qId) || [],
+        amcByQuoteOrLead.get(leadId) || [],
+        mobile10.length === 10 ? (amcByMobile10.get(mobile10) || []) : []
+      ]) {
+        for (const s of list) amcMapForDeal.set(s.id, s);
+      }
+
       const pricing = quoteData?.pricingSnapshot || data.pricingSnapshot || {
         total_payable: quoteData?.total_payable || data.total_payable || 0,
-        gross_subtotal: quoteData?.gross_subtotal || data.total_payable || 0,
+        gross_subtotal: quoteData?.gross_subtotal || data.gross_subtotal || data.total_payable || 0,
+        referral_discount: quoteData?.referral_discount ?? data.referral_discount,
+        discount_amount: quoteData?.discount_amount ?? data.discount_amount,
+        net_taxable_amount: quoteData?.net_taxable_amount ?? data.net_taxable_amount,
         items: quoteData?.items || data.items || [],
-        addons: quoteData?.addons || data.addons || []
+        addons: quoteData?.addons || data.addons || [],
+        labor_cost: quoteData?.labor_cost ?? data.labor_cost,
+        promoter_id: pId,
+        referral_code: refCode,
       };
 
-      const breakup = calculateQuotationProfitBreakup(pricing);
+      const breakup = calculateQuotationProfitBreakup(pricing, settings, {
+        referral_code: refCode,
+        promoter_id: pId,
+        promoter,
+        salesperson,
+        actual_commissions: actualComms,
+        amc_subscriptions: Array.from(amcMapForDeal.values()),
+        ...extractPaymentGatewayMeta(quoteData, data),
+      });
 
       // Skip entries with 0 revenue unless requested
       if (breakup.overall.revenue <= 0 && breakup.overall.total_payable <= 0) {
         continue;
       }
 
-      const customerName = data.customer_name || quoteData?.customer_name || "Walk-in Customer";
-      const customerMobile = data.mobile_number || quoteData?.customer_mobile || "";
       const city = data.address?.city || data.city || quoteData?.city || "Jaipur";
       const tech = (quoteData?.technology || data.technology_choice || "HD").toUpperCase();
       const planType = quoteData?.plan_type || data.plan_type || "recommended";
@@ -140,9 +266,9 @@ export async function GET(request: NextRequest) {
         contingencyPercent: 0,
         serviceCostAllocations: {
           warrantyParts: 0,
-          warrantyLabour: 0,
+          warrantyLabour: breakup.overheads?.warranty_reserve || 0,
           amcParts: 0,
-          amcLabour: 0,
+          amcLabour: breakup.services.amc_cost || 0,
           rmaOperational: 0
         },
 
@@ -157,6 +283,18 @@ export async function GET(request: NextRequest) {
         serviceProfit: breakup.services.profit,
         serviceMarginPercent: breakup.services.margin_percent,
         serviceItemCount: breakup.services.item_count,
+
+        amcRevenue: breakup.services.amc_revenue || 0,
+        amcProfit: breakup.services.amc_profit || 0,
+        referralCommissionCost: breakup.services.referral_commission_cost || 0,
+        referralCommissionSource: breakup.services.referral_commission_source || "none",
+
+        totalOverheads: breakup.overheads?.total_overheads || 0,
+        paymentGatewayFee: breakup.overheads?.payment_gateway_fee || 0,
+        warrantyReserve: breakup.overheads?.warranty_reserve || 0,
+        logisticsConsumables: breakup.overheads?.logistics_consumables || 0,
+        netProfit: breakup.overheads?.net_profit ?? breakup.overall.profit,
+        netMarginPercent: breakup.overheads?.net_margin_percent ?? breakup.overall.margin_percent,
 
         overallMarginPercent: breakup.overall.margin_percent,
         healthStatus: breakup.health.status,
@@ -213,6 +351,16 @@ export async function GET(request: NextRequest) {
               serviceProfit: servProfit,
               serviceMarginPercent: Math.round((servProfit / servRev) * 100),
               serviceItemCount: 2,
+              amcRevenue: 0,
+              amcProfit: 0,
+              referralCommissionCost: 0,
+              referralCommissionSource: "none",
+              totalOverheads: Math.round(rev * 0.0236) + Math.round(prodRev * 0.02) + 150,
+              paymentGatewayFee: Math.round(rev * 0.0236),
+              warrantyReserve: Math.round(prodRev * 0.02),
+              logisticsConsumables: 150,
+              netProfit: grossProfit - (Math.round(rev * 0.0236) + Math.round(prodRev * 0.02) + 150),
+              netMarginPercent: exTax > 0 ? Number((((grossProfit - (Math.round(rev * 0.0236) + Math.round(prodRev * 0.02) + 150)) / exTax) * 100).toFixed(1)) : 0,
               overallMarginPercent: margin,
               healthStatus: margin >= 25 ? "healthy" : "low_margin",
               healthBadge: margin >= 25 ? "Healthy (25-45%)" : "Low Margin (<25%)",
@@ -273,6 +421,14 @@ export async function GET(request: NextRequest) {
     let totalServiceCost = 0;
     let totalServiceProfit = 0;
 
+    let totalAmcRevenue = 0;
+    let totalAmcProfit = 0;
+    let totalReferralCommissions = 0;
+    let totalOverheads = 0;
+    let totalPaymentGatewayFees = 0;
+    let totalWarrantyReserves = 0;
+    let totalNetProfit = 0;
+
     const healthCounts = {
       healthy: 0,
       subsidized: 0,
@@ -293,6 +449,14 @@ export async function GET(request: NextRequest) {
       totalServiceCost += d.serviceCost;
       totalServiceProfit += d.serviceProfit;
 
+      totalAmcRevenue += d.amcRevenue || 0;
+      totalAmcProfit += d.amcProfit || 0;
+      totalReferralCommissions += d.referralCommissionCost || 0;
+      totalOverheads += d.totalOverheads || 0;
+      totalPaymentGatewayFees += d.paymentGatewayFee || 0;
+      totalWarrantyReserves += d.warrantyReserve || 0;
+      totalNetProfit += (d.netProfit ?? d.grossProfit);
+
       const hKey = d.healthStatus as keyof typeof healthCounts;
       if (healthCounts[hKey] !== undefined) {
         healthCounts[hKey]++;
@@ -302,6 +466,7 @@ export async function GET(request: NextRequest) {
     const avgProductMargin = totalProductRevenue > 0 ? Number(((totalProductProfit / totalProductRevenue) * 100).toFixed(1)) : 0;
     const avgServiceMargin = totalServiceRevenue > 0 ? Number(((totalServiceProfit / totalServiceRevenue) * 100).toFixed(1)) : 0;
     const averageMargin = totalRevenue > 0 ? Number(((totalGrossProfit / totalRevenue) * 100).toFixed(1)) : 0;
+    const avgNetMargin = totalRevenue > 0 ? Number(((totalNetProfit / totalRevenue) * 100).toFixed(1)) : 0;
 
     return ApiResponse.success({
       summary: {
@@ -310,6 +475,8 @@ export async function GET(request: NextRequest) {
         totalPayableWithGst: Math.round(totalPayableWithGst),
         totalGrossProfit: Math.round(totalGrossProfit),
         averageMargin,
+        totalNetProfit: Math.round(totalNetProfit),
+        avgNetMargin,
 
         // Product material aggregates
         totalProductRevenue: Math.round(totalProductRevenue),
@@ -317,11 +484,19 @@ export async function GET(request: NextRequest) {
         totalProductProfit: Math.round(totalProductProfit),
         avgProductMargin,
 
-        // Service labor aggregates
+        // Service labor, Paid AMC & Commission aggregates
         totalServiceRevenue: Math.round(totalServiceRevenue),
         totalServiceCost: Math.round(totalServiceCost),
         totalServiceProfit: Math.round(totalServiceProfit),
         avgServiceMargin,
+        totalAmcRevenue: Math.round(totalAmcRevenue),
+        totalAmcProfit: Math.round(totalAmcProfit),
+        totalReferralCommissions: Math.round(totalReferralCommissions),
+
+        // Operating Overheads
+        totalOverheads: Math.round(totalOverheads),
+        totalPaymentGatewayFees: Math.round(totalPaymentGatewayFees),
+        totalWarrantyReserves: Math.round(totalWarrantyReserves),
 
         healthCounts
       },

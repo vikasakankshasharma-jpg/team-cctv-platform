@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const LeafletMapFallback = dynamic(() => import("./LeafletMapFallback"), { ssr: false });
 
@@ -179,10 +180,12 @@ export default function HybridMap({
     }
   }, [polylines, mapEngine]);
 
+  const { t } = useTranslation();
+
   if (mapEngine === "loading") {
     return (
       <div className="w-full h-full flex items-center justify-center bg-slate-100">
-        <span className="text-sm text-slate-500">Loading map...</span>
+        <span className="text-sm text-slate-500">{t("map_loading", "Loading map...")}</span>
       </div>
     );
   }

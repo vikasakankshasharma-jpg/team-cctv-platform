@@ -3,6 +3,7 @@ import { verifySession } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
 import { SalespersonCommissionsClient } from "@/components/salesperson/SalespersonCommissionsClient";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 import type { CommissionRecord, Lead } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,11 @@ export default async function SalespersonCommissionsPage() {
   // Find the salesperson document linked to this UID
   const spSnap = await adminDb.collection("salespersons").where("firebase_uid", "==", salespersonUid).limit(1).get();
   if (spSnap.empty) {
-    return <div className="p-4 md:p-8 text-red-400">Salesperson profile not linked correctly. Please contact admin.</div>;
+    return (
+      <div className="p-4 md:p-8 text-red-400">
+        <TranslatedText tKey="sls_comm_not_linked" defaultText="Salesperson profile not linked correctly. Please contact admin." />
+      </div>
+    );
   }
   
   const salespersonId = spSnap.docs[0].id;
@@ -34,7 +39,7 @@ export default async function SalespersonCommissionsPage() {
 
   const recordsPromises = commsSnap.docs.map(async (doc) => {
     const data = doc.data() as CommissionRecord;
-    let customerName = "Unknown Customer";
+    let customerName = "";
     try {
       const leadSnap = await adminDb.collection(COLLECTIONS.LEADS).doc(data.lead_id).get();
       if (leadSnap.exists) {
@@ -65,8 +70,12 @@ export default async function SalespersonCommissionsPage() {
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">My Commissions</h1>
-        <p className="text-zinc-400 mt-2">Track your earned commissions from won deals.</p>
+        <h1 className="text-3xl font-bold text-white tracking-tight">
+          <TranslatedText tKey="sls_comm_title" defaultText="My Commissions" />
+        </h1>
+        <p className="text-zinc-400 mt-2">
+          <TranslatedText tKey="sls_comm_desc" defaultText="Track your earned commissions from won deals." />
+        </p>
       </div>
       
       <SalespersonCommissionsClient 

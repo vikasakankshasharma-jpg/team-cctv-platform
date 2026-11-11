@@ -101,13 +101,13 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
       if (data.success) {
         setBillingData(data.billingDetails || formData);
         setIsEditModalOpen(false);
-        toast.success("Billing and GST details updated! Your invoice PDF is refreshed.");
+        toast.success(t("ps_billing_updated", "Billing and GST details updated! Your invoice PDF is refreshed."));
       } else {
-        toast.error(extractErrorMessage(data, "Failed to update billing details"));
+        toast.error(extractErrorMessage(data, t("ps_billing_err", "Failed to update billing details")));
       }
     } catch (err: any) {
       console.error("Error saving billing details:", err);
-      toast.error(extractErrorMessage(err, "Failed to update billing details"));
+      toast.error(extractErrorMessage(err, t("ps_billing_err", "Failed to update billing details")));
     } finally {
       setIsSubmittingEdit(false);
     }
@@ -131,14 +131,15 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
   const dueAmount = isPaid ? 0 : (statusData?.amount_due || (isAdvance && statusData?.total_payable ? Math.max(0, statusData.total_payable - paidAmount) : 0));
 
   const invoiceUrl = `/api/invoice/${quoteId}/download?t=${Date.now()}`;
-  const whatsappInvoiceUrl = `https://wa.me/917357612865?text=${encodeURIComponent(`Hi TEAM CCTV, please send me the official ${isAdvance ? 'Advance Booking Receipt' : 'Tax Invoice'} PDF for my booking.\n\nQuote ID: ${quoteId}\n{t("ps_payment_id")}: ${paymentId}`)}`;
-  const whatsappSupportUrl = `https://wa.me/917357612865?text=${encodeURIComponent(`Hi TEAM CCTV, I need support regarding my booking (Quote ID: ${quoteId}, {t("ps_payment_id")}: ${paymentId}).`)}`;
+  const docTypeLabel = isAdvance ? t("ps_doc_adv", "Advance Booking Receipt") : t("ps_doc_inv", "Tax Invoice");
+  const whatsappInvoiceUrl = `https://wa.me/917357612865?text=${encodeURIComponent(t("ps_wa_invoice_msg", `Hi TEAM CCTV, please share my updated ${docTypeLabel} PDF for Quote ID: ${quoteId} (Payment ID: ${paymentId})`, { docType: docTypeLabel, quoteId: String(quoteId || ""), paymentId: String(paymentId || "") }))}`;
+  const whatsappSupportUrl = `https://wa.me/917357612865?text=${encodeURIComponent(t("ps_wa_support_msg", `Hi TEAM CCTV, I need support regarding my confirmed booking for Quote ID: ${quoteId} (Payment ID: ${paymentId})`, { quoteId: String(quoteId || ""), paymentId: String(paymentId || "") }))}`;
   const trackUrl = `/track/${quoteId}`;
   const quoteReviewUrl = `/quote/review/${quoteId}`;
 
   const displayName = billingData?.is_business && billingData?.company_name
     ? billingData.company_name
-    : (billingData?.customer_name || "Valued Customer");
+    : (billingData?.customer_name || t("ps_valued_customer", "Valued Customer"));
 
   // Sanitize address line to avoid showing duplicate pincodes e.g. "302004, 302004"
   const rawAddr = (billingData?.address_line1 || "").trim();
@@ -160,8 +161,8 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
           </h1>
           <p className="text-white/90 text-sm sm:text-base font-medium">
             {isAdvance 
-              ? `₹${paidAmount.toLocaleString('en-IN')} Advance Received. Your CCTV installation slot is reserved.`
-              : "Full Payment Confirmed • Your CCTV installation is locked in."}
+              ? t("ps_advance_received_desc").replace("500", paidAmount.toLocaleString('en-IN'))
+              : t("ps_full_paid_desc", "Full Payment Confirmed • Your CCTV installation is locked in.")}
           </p>
         </div>
 
@@ -169,8 +170,8 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
           
           {/* Transaction & Billing Overview */}
           <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-5 sm:p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-emerald-950 text-base sm:text-lg">Booking & Billing Summary</h3>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <h3 className="font-bold text-emerald-950 text-base sm:text-lg">{t("ps_booking_billing_summary", "Booking & Billing Summary")}</h3>
               <button
                 onClick={() => setIsEditModalOpen(true)}
                 className="text-xs font-bold text-emerald-700 hover:text-emerald-900 bg-white/80 hover:bg-white px-3 py-1 rounded-full border border-emerald-300 transition-all flex items-center gap-1 shadow-sm"
@@ -195,7 +196,7 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
               {billingData?.is_business && billingData?.gstin && (
                 <div className="flex justify-between items-center">
                   <span className="text-emerald-800">GSTIN</span>
-                  <span className="font-mono font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">{billingData.gstin} (B2B Tax Invoice)</span>
+                  <span className="font-mono font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">{billingData.gstin} {t("ps_b2b_invoice", "(B2B Tax Invoice)")}</span>
                 </div>
               )}
               {fullAddressString && (
@@ -215,7 +216,7 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
                   </span>
                 ) : (
                   <span className="font-bold text-emerald-700 bg-emerald-100 border border-emerald-300 px-3 py-0.5 rounded-full text-xs uppercase tracking-wider">
-                    Full Payment Confirmed • Zero Balance Due
+                    {t("ps_full_zero_due", "Full Payment Confirmed • Zero Balance Due")}
                   </span>
                 )}
               </div>
@@ -294,7 +295,7 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
             >
               <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-12" />
               <svg className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-              <span className="text-sm sm:text-base tracking-wide">Track Booking & Go To Dashboard</span>
+              <span className="text-sm sm:text-base tracking-wide">{t("ps_track_go_dash", "Track Booking & Go To Dashboard")}</span>
             </Link>
           </div>
 

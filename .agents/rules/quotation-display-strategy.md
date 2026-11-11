@@ -88,3 +88,7 @@ Never confuse or revert the quotation presentation strategy for this project. Th
   - Inbound media (images, stickers, audio, documents) or off-topic text never crashes or resets the session. The bot gracefully acknowledges and re-prompts the current step.
 - **Name Protection Filter & Data Normalization:**
   - Rejects rate/pricing queries in the name prompt; intercepts 10-digit mobile numbers typed into the pincode prompt; standardizes phone numbers to canonical `91XXXXXXXXXX`.
+- **Error, Env Hygiene & Cross-Device WhatsApp App Launcher Invariants:**
+  - Zero `[object Object]` across client/server boundaries via `extractErrorMessage()` (`lib/utils.ts`).
+  - All integration keys and phone env vars must be trimmed/sanitized via `cleanEnvVar()` / `cleanPhoneEnvVar()` (`lib/env-utils.ts`) to prevent CRLF header/API failures (`MSG91_WHATSAPP_NUMBER`, `WHATSAPP_PROVIDER`, `RAZORPAY_WEBHOOK_SECRET`, `RESEND_API_KEY`, `GEMINI_API_KEY`, etc.).
+  - WhatsApp OTP and quote links launch via native `<a href="whatsapp://send?phone=...">` (no bare `whatsapp://` or hidden `<iframe>`), with iPadOS detection and adaptive mobile (`wa.me`) vs desktop (`web.whatsapp.com`) fallback (`lib/whatsapp.ts`, `WhatsAppOtpNotice.tsx`).

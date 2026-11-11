@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { Wrench } from "lucide-react";
 import type { Metadata } from "next";
 import InstallerJobDetailClient from "@/components/installer/InstallerJobDetailClient";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 import { adminDb } from "@/lib/firebase-admin";
 
 export const metadata: Metadata = {
@@ -82,8 +83,8 @@ export default async function InstallerJobDetailPage({ params }: { params: { id:
     <div className="space-y-8 animate-in fade-in duration-700">
       <PageHeader
         icon={Wrench}
-        title="Job Details"
-        description="View dispatch notes, hardware requirements, and upload proof of installation."
+        title={<TranslatedText tKey="inst_job_details_title" defaultText="Job Details" />}
+        description={<TranslatedText tKey="inst_job_details_desc" defaultText="View dispatch notes, hardware list, and upload installation photos." />}
       />
       
       <InstallerJobDetailClient 

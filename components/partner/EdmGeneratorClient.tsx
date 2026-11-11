@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Download, Share2, Image as ImageIcon } from "lucide-react";
+import { Download, Share2 } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Template {
   id: string;
@@ -19,9 +20,22 @@ interface Props {
 }
 
 export function EdmGeneratorClient({ partnerName, referralCode, isB2B, templates }: Props) {
+  const { t } = useTranslation();
   const [selectedTemplate, setSelectedTemplate] = useState<Template>(templates[0]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
+
+  const getTemplateName = (tpl: Template) => {
+    if (tpl.id === "general-1") return t("prt_tpl_gen_name", tpl.name);
+    if (tpl.id === "diwali-1") return t("prt_tpl_diwali_name", tpl.name);
+    return tpl.name;
+  };
+
+  const getTemplateCategory = (tpl: Template) => {
+    if (tpl.id === "general-1") return t("prt_tpl_gen_cat", tpl.category);
+    if (tpl.id === "diwali-1") return t("prt_tpl_fest_cat", tpl.category);
+    return tpl.category;
+  };
 
   useEffect(() => {
     if (!selectedTemplate) return;
@@ -30,6 +44,10 @@ export function EdmGeneratorClient({ partnerName, referralCode, isB2B, templates
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    const benefitText = isB2B
+      ? t("prt_edm_use_3_off", "Use Code for 3% OFF!")
+      : t("prt_edm_use_500_off", "Use Code for ₹500 OFF!");
 
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -66,8 +84,7 @@ export function EdmGeneratorClient({ partnerName, referralCode, isB2B, templates
       ctx.shadowOffsetY = 0;
       ctx.fillStyle = "#ffcc00"; // yellow
       
-      const benefitText = isB2B ? "Use Code for 3% OFF!" : "Use Code for ₹500 OFF!";
-      ctx.fillText(benefitText, x, y + 60);
+      ctx.fillText(benefitText, x, y + 60, canvas.width - 80);
 
       setImageLoaded(true);
     };
@@ -90,7 +107,7 @@ export function EdmGeneratorClient({ partnerName, referralCode, isB2B, templates
       ctx.fillText("TEAM CCTV", canvas.width/2, 200);
       
       ctx.font = "40px sans-serif";
-      ctx.fillText(selectedTemplate.name, canvas.width/2, 300);
+      ctx.fillText(getTemplateName(selectedTemplate), canvas.width/2, 300, canvas.width - 100);
       
       ctx.font = "bold 120px sans-serif";
       ctx.fillStyle = "#fbbf24"; // amber-400
@@ -98,13 +115,12 @@ export function EdmGeneratorClient({ partnerName, referralCode, isB2B, templates
       
       ctx.font = "bold 50px sans-serif";
       ctx.fillStyle = "#ffffff";
-      const benefitText = isB2B ? "Use Code for 3% OFF!" : "Use Code for ₹500 OFF!";
-      ctx.fillText(benefitText, canvas.width/2, canvas.height/2 + 100);
+      ctx.fillText(benefitText, canvas.width/2, canvas.height/2 + 100, canvas.width - 100);
 
       setImageLoaded(true);
     };
 
-  }, [selectedTemplate, referralCode, isB2B]);
+  }, [selectedTemplate, referralCode, isB2B, t]);
 
   const handleDownload = () => {
     const canvas = canvasRef.current;
@@ -127,17 +143,22 @@ export function EdmGeneratorClient({ partnerName, referralCode, isB2B, templates
       if (!blob) return;
 
       const file = new File([blob], `referral_${selectedTemplate.id}.png`, { type: 'image/png' });
-      const benefitText = isB2B ? "3% OFF" : "₹500 OFF";
+      const benefitText = isB2B ? t("prt_edm_3_off", "3% OFF") : t("prt_edm_500_off", "₹500 OFF");
+      const shareMessage = t(
+        "prt_edm_wa_share_msg",
+        "Get {benefit} on your TEAM CCTV installation! Use my referral code: {code}. Visit https://cctvquotation.com",
+        { benefit: benefitText, code: referralCode }
+      );
       
       if (navigator.share && navigator.canShare({ files: [file] })) {
         await navigator.share({
           title: 'TEAM CCTV Referral Code',
-          text: `Get ${benefitText} on your TEAM CCTV installation! Use my referral code: ${referralCode}. Visit cctvquotation.com`,
+          text: shareMessage,
           files: [file],
         });
       } else {
         // Fallback to WhatsApp URL
-        const msg = encodeURIComponent(`Get ${benefitText} on your TEAM CCTV installation! Use my referral code: *${referralCode}*. Visit https://cctvquotation.com`);
+        const msg = encodeURIComponent(shareMessage);
         window.open(`https://wa.me/?text=${msg}`, '_blank');
       }
     } catch (err) {
@@ -148,21 +169,21 @@ export function EdmGeneratorClient({ partnerName, referralCode, isB2B, templates
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">EDM Posters & Marketing</h1>
-        <p className="text-zinc-500 dark:text-zinc-400">Download personalized posters with your referral code to share on WhatsApp Status.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">{t("prt_edm_title", "EDM Posters & Marketing")}</h1>
+        <p className="text-zinc-500 dark:text-zinc-400">{t("prt_edm_sub", "Download personalized posters with your referral code to share on WhatsApp Status.")}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Col: Template Selection */}
         <div className="lg:col-span-1 space-y-4">
-          <h2 className="text-lg font-semibold text-zinc-800 dark:text-zinc-100 mb-4">Choose Template</h2>
+          <h2 className="text-lg font-semibold text-zinc-800 dark:text-zinc-100 mb-4">{t("prt_edm_choose_tpl", "Choose Template")}</h2>
           <div className="space-y-3">
             {templates.map(tpl => (
               <button
                 key={tpl.id}
                 onClick={() => setSelectedTemplate(tpl)}
-                className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-center justify-between ${
+                className={`w-full text-left p-4 h-auto whitespace-normal rounded-xl border-2 transition-all flex items-center justify-between gap-2 ${
                   selectedTemplate.id === tpl.id 
                     ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20" 
                     : "border-zinc-200 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900"
@@ -170,14 +191,14 @@ export function EdmGeneratorClient({ partnerName, referralCode, isB2B, templates
               >
                 <div>
                   <h3 className={`font-semibold ${selectedTemplate.id === tpl.id ? "text-blue-700 dark:text-blue-400" : "text-zinc-800 dark:text-zinc-200"}`}>
-                    {tpl.name}
+                    {getTemplateName(tpl)}
                   </h3>
                   <span className="text-xs text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded mt-1 inline-block">
-                    {tpl.category}
+                    {getTemplateCategory(tpl)}
                   </span>
                 </div>
                 {selectedTemplate.id === tpl.id && (
-                  <div className="w-4 h-4 rounded-full bg-blue-600 border-4 border-blue-200 shadow-sm" />
+                  <div className="w-4 h-4 rounded-full bg-blue-600 border-4 border-blue-200 shadow-sm shrink-0" />
                 )}
               </button>
             ))}
@@ -194,20 +215,20 @@ export function EdmGeneratorClient({ partnerName, referralCode, isB2B, templates
             />
           </div>
 
-          <div className="flex gap-4 mt-8 w-full max-w-sm">
+          <div className="flex flex-wrap gap-4 mt-8 w-full max-w-sm">
             <button 
               onClick={handleDownload}
-              className="flex-1 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-zinc-800 dark:hover:bg-white transition-colors"
+              className="flex-1 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold py-3 px-4 h-auto whitespace-normal rounded-xl flex items-center justify-center gap-2 hover:bg-zinc-800 dark:hover:bg-white transition-colors"
             >
-              <Download size={20} />
-              Download
+              <Download size={20} className="shrink-0" />
+              {t("prt_edm_dl_btn", "Download")}
             </button>
             <button 
               onClick={handleShare}
-              className="flex-1 bg-green-600 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-green-700 transition-colors"
+              className="flex-1 bg-green-600 text-white font-bold py-3 px-4 h-auto whitespace-normal rounded-xl flex items-center justify-center gap-2 hover:bg-green-700 transition-colors"
             >
-              <Share2 size={20} />
-              Share
+              <Share2 size={20} className="shrink-0" />
+              {t("prt_edm_share_btn", "Share")}
             </button>
           </div>
           

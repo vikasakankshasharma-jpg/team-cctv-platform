@@ -105,12 +105,12 @@ export function CompetitorQuoteUploader({
       if (!file) return;
 
       if (!ACCEPTED_TYPES.includes(file.type)) {
-        toast.error("Please upload a PDF, JPG, or PNG file");
+        toast.error(t("cqu_err_type", "Please upload a PDF, JPG, or PNG file"));
         return;
       }
 
       if (file.size > MAX_FILE_SIZE) {
-        toast.error("File must be smaller than 10MB");
+        toast.error(t("cqu_err_size", "File must be smaller than 10MB"));
         return;
       }
 
@@ -150,7 +150,7 @@ export function CompetitorQuoteUploader({
           },
           (error) => {
             console.error("Upload error:", error);
-            toast.error("Upload failed. Please try again.");
+            toast.error(t("cqu_err_up", "Upload failed. Please try again."));
             setIsUploading(false);
           },
           async () => {
@@ -159,10 +159,10 @@ export function CompetitorQuoteUploader({
               setUploadedUrl(downloadUrl);
               setUploadedFileName(file.name);
               setUploadedFileType(file.type === "application/pdf" ? "pdf" : "image");
-              toast.success("File uploaded successfully");
+              toast.success(t("cqu_ok_up", "File uploaded successfully"));
             } catch (err) {
               console.error("Error getting download URL:", err);
-              toast.error("Failed to process file. Please try again.");
+              toast.error(t("cqu_err_proc", "Failed to process file. Please try again."));
             } finally {
               setIsUploading(false);
             }
@@ -170,7 +170,7 @@ export function CompetitorQuoteUploader({
         );
       } catch (err) {
         console.error(err);
-        toast.error("Failed to upload file. Please try again.");
+        toast.error(t("cqu_err_up", "Failed to upload file. Please try again."));
         setIsUploading(false);
       }
     },
@@ -205,12 +205,12 @@ export function CompetitorQuoteUploader({
     e.preventDefault();
 
     if (!uploadedUrl) {
-      toast.error("Please upload a competitor quote first");
+      toast.error(t("cqu_err_up2", "Please upload a competitor quote first"));
       return;
     }
 
     if (!yourName.trim()) {
-      toast.error("Please enter your name");
+      toast.error(t("svb_err_name", "Please enter your name"));
       return;
     }
 
@@ -231,7 +231,7 @@ export function CompetitorQuoteUploader({
       setIsSubmitted(true);
     } catch (error) {
       console.error(error);
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("cqu_err_gen", "Something went wrong. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -270,21 +270,21 @@ export function CompetitorQuoteUploader({
           </div>
           <div className="space-y-1.5 flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-xs">
-                Price Match Guarantee
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-xs">
+                {t("cqu_badge", "Price Match Guarantee")}
               </span>
               {activePkg && (
                 <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300">
-                  Our Catalog Target: ₹{activePkg.price.toLocaleString("en-IN")}
+                  {t("cqu_target", "Our Catalog Target: ₹{price}", { price: activePkg.price.toLocaleString("en-IN") })}
                 </span>
               )}
             </div>
 
             {availablePackages && availablePackages.length > 0 ? (
               <div className="space-y-2 pt-1">
-                <label className="text-[11px] font-black text-amber-900/90 dark:text-amber-200 uppercase tracking-wider flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-amber-600" />
-                  Select package to compare from our catalog:
+                <label className="text-[11px] font-black text-amber-900/90 dark:text-amber-200 uppercase flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  {t("cqu_sel_pkg", "Select setup to compare from our catalog:")}
                 </label>
                 <div className="relative">
                   <select
@@ -307,18 +307,18 @@ export function CompetitorQuoteUploader({
                   <ChevronDown className="w-4 h-4 text-amber-700 dark:text-amber-300 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
                 <p className="text-xs sm:text-[13px] text-zinc-600 dark:text-zinc-300 leading-relaxed pt-1">
-                  Upload your competitor's quote for a similar {activePkg?.cameraCount || 4}-camera setup and we guarantee to match or beat their price while giving you 100% pure solid copper cables and genuine surveillance-grade storage!
+                  {t("cqu_pitch", "Upload your competitor's quote for a similar {count}-camera setup and we guarantee to match or beat their price while giving you 100% pure solid copper cables and genuine surveillance storage!", { count: String(activePkg?.cameraCount || 4) })}
                 </p>
               </div>
             ) : (
               <>
                 <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
                   {activePkg
-                    ? `You are comparing: ${activePkg.title} (Our Price: ₹${activePkg.price.toLocaleString("en-IN")})`
-                    : "Compare with our verified CCTV package"}
+                    ? t("cqu_comparing", "You are comparing: {title} (Our Price: ₹{price})", { title: activePkg.title, price: activePkg.price.toLocaleString("en-IN") })
+                    : t("cqu_compare_def", "Compare with our verified CCTV setup")}
                 </h3>
                 <p className="text-xs sm:text-[13px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                  Upload your competitor's quote for a similar {activePkg?.cameraCount || 4}-camera setup and we guarantee to match or beat their price while giving you 100% pure solid copper cables and genuine surveillance-grade storage!
+                  {t("cqu_pitch", "Upload your competitor's quote for a similar {count}-camera setup and we guarantee to match or beat their price while giving you 100% pure solid copper cables and genuine surveillance storage!", { count: String(activePkg?.cameraCount || 4) })}
                 </p>
               </>
             )}
@@ -344,7 +344,7 @@ export function CompetitorQuoteUploader({
                 <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700">
                   <Image
                     src={uploadedUrl}
-                    alt="Competitor quote"
+                    alt={t("cqu_alt", "Competitor quote")}
                     fill
                     className="object-cover"
                   />
@@ -355,7 +355,7 @@ export function CompetitorQuoteUploader({
                   {uploadedFileName}
                 </p>
                 <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">
-                  <CheckCircle2 className="w-3 h-3" /> Uploaded successfully
+                  <CheckCircle2 className="w-3 h-3 shrink-0" /> {t("cqu_uploaded", "Uploaded successfully")}
                 </p>
               </div>
               <button
@@ -398,8 +398,8 @@ export function CompetitorQuoteUploader({
                     {Math.round(uploadProgress)}%
                   </span>
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">
-                  Uploading...
+                <p className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400">
+                  {t("cqu_uploading", "Uploading...")}
                 </p>
               </>
             ) : (
@@ -467,8 +467,8 @@ export function CompetitorQuoteUploader({
         {/* Competitor Total (Optional with Real-Time Variance & Smart Guidance) */}
         <div>
           <div className="flex items-center justify-between ml-1 mb-1.5 flex-wrap gap-1">
-            <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest block">
-              {t("up_total", "Competitor's Quoted Amount (₹)")} <span className="text-zinc-400 dark:text-zinc-500 font-normal lowercase">(optional)</span>
+            <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase block">
+              {t("up_total", "Competitor's Quoted Amount (₹)")} <span className="text-zinc-400 dark:text-zinc-500 font-normal lowercase">{t("cqu_opt", "(optional)")}</span>
             </label>
             {activePkg && competitorTotal && Number(competitorTotal) > 0 && (
               <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md ${
@@ -477,8 +477,8 @@ export function CompetitorQuoteUploader({
                   : "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800"
               }`}>
                 {Number(competitorTotal) < activePkg.price
-                  ? `Competitor is ₹${(activePkg.price - Number(competitorTotal)).toLocaleString("en-IN")} lower • We match or beat!`
-                  : `Our price is already ₹${(Number(competitorTotal) - activePkg.price).toLocaleString("en-IN")} lower with Pure Copper!`}
+                  ? t("cqu_cmp_lower", "Competitor is ₹{diff} lower • We match or beat!", { diff: (activePkg.price - Number(competitorTotal)).toLocaleString("en-IN") })
+                  : t("cqu_our_lower", "Our price is already ₹{diff} lower with Pure Copper!", { diff: (Number(competitorTotal) - activePkg.price).toLocaleString("en-IN") })}
               </span>
             )}
           </div>
@@ -488,20 +488,20 @@ export function CompetitorQuoteUploader({
               type="number"
               value={competitorTotal}
               onChange={(e) => setCompetitorTotal(e.target.value)}
-              placeholder="e.g. 18500 (or leave blank if unsure)"
+              placeholder={t("cqu_amt_ph", "e.g. 18500 (or leave blank if unsure)")}
               min="0"
               step="1"
               className="w-full h-11 pl-8 pr-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all tabular-nums"
             />
           </div>
           <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1.5 ml-1 leading-relaxed">
-            💡 <span className="font-semibold text-zinc-700 dark:text-zinc-300">All-Inclusive Standard:</span> Our catalog price already includes 18% GST, 100% solid pure copper cabling, and professional installation. If your competitor quoted without GST or extra for cabling, leave this blank and our team will verify the full quote for you.
+            💡 <span className="font-semibold text-zinc-700 dark:text-zinc-300">{t("cqu_all_inc_lbl", "All-Inclusive Standard:")}</span> {t("cqu_all_inc_body", "Our catalog price already includes 18% GST, 100% solid pure copper cabling, and professional installation. If your competitor quoted without GST or extra for cabling, leave this blank and our team will verify the full quote for you.")}
           </p>
         </div>
 
         {/* Notes */}
         <div>
-          <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1 mb-1.5 block">
+          <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase ml-1 mb-1.5 block">
             {t("up_notes", "Additional Notes (Equipment specs quoted by competitor)")}
           </label>
           <textarea
@@ -515,7 +515,7 @@ export function CompetitorQuoteUploader({
       </div>
 
       {/* ─── Actions ────────────────────────────────────────────── */}
-      <div className="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800">
+      <div className="flex flex-wrap items-center justify-end gap-3 mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800">
         {onCancel && (
           <button
             type="button"
@@ -528,17 +528,17 @@ export function CompetitorQuoteUploader({
         <button
           type="submit"
           disabled={!uploadedUrl || !yourName.trim() || isSubmitting}
-          className="group inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all shadow-lg shadow-amber-500/20 active:scale-95"
+          className="group inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all shadow-lg shadow-amber-500/20 active:scale-95 whitespace-normal text-center leading-snug"
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Submitting...
+              <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+              {t("cqu_submitting", "Submitting...")}
             </>
           ) : (
             <>
               {t("up_submit", "Submit for Price Match")}
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform shrink-0" />
             </>
           )}
         </button>

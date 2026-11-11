@@ -1,5 +1,7 @@
 export type LocaleCode = 'en' | 'hi' | 'mr' | 'gu' | 'ta' | 'te' | 'kn' | 'bn' | 'ml' | 'pa' | 'or';
 
+export const LOCALE_COOKIE_NAME = 'team_locale';
+
 export interface LanguageOption {
   num: number;
   code: LocaleCode;
@@ -36,6 +38,33 @@ export const languageNames: Record<LocaleCode, string> = {
   or: 'ଓଡ଼ିଆ (Odia)'
 };
 
+export const SPEECH_LOCALE_MAP: Record<LocaleCode, string> = {
+  en: 'en-IN',
+  hi: 'hi-IN',
+  mr: 'mr-IN',
+  gu: 'gu-IN',
+  ta: 'ta-IN',
+  te: 'te-IN',
+  kn: 'kn-IN',
+  bn: 'bn-IN',
+  ml: 'ml-IN',
+  pa: 'pa-IN',
+  or: 'or-IN',
+};
+
+export const INDIC_GOOGLE_FONTS: Partial<Record<LocaleCode, { family: string; cssFamily: string }>> = {
+  hi: { family: 'Noto+Sans+Devanagari:wght@400;500;600;700', cssFamily: '"Noto Sans Devanagari"' },
+  mr: { family: 'Noto+Sans+Devanagari:wght@400;500;600;700', cssFamily: '"Noto Sans Devanagari"' },
+  gu: { family: 'Noto+Sans+Gujarati:wght@400;500;600;700', cssFamily: '"Noto Sans Gujarati"' },
+  ta: { family: 'Noto+Sans+Tamil:wght@400;500;600;700', cssFamily: '"Noto Sans Tamil"' },
+  te: { family: 'Noto+Sans+Telugu:wght@400;500;600;700', cssFamily: '"Noto Sans Telugu"' },
+  kn: { family: 'Noto+Sans+Kannada:wght@400;500;600;700', cssFamily: '"Noto Sans Kannada"' },
+  bn: { family: 'Noto+Sans+Bengali:wght@400;500;600;700', cssFamily: '"Noto Sans Bengali"' },
+  ml: { family: 'Noto+Sans+Malayalam:wght@400;500;600;700', cssFamily: '"Noto Sans Malayalam"' },
+  pa: { family: 'Noto+Sans+Gurmukhi:wght@400;500;600;700', cssFamily: '"Noto Sans Gurmukhi"' },
+  or: { family: 'Noto+Sans+Oriya:wght@400;500;600;700', cssFamily: '"Noto Sans Oriya"' },
+};
+
 /**
  * Resolves user text input (number, code, English or native name) to a valid LocaleCode.
  * Returns null if not a recognized language selection.
@@ -43,9 +72,10 @@ export const languageNames: Record<LocaleCode, string> = {
 export function resolveLanguageInput(input: string): LocaleCode | null {
   if (!input) return null;
   const clean = String(input).trim().toLowerCase();
+  const normalized = clean.startsWith("lang_") ? clean.slice(5) : clean;
   
   for (const lang of ALL_11_LANGUAGES) {
-    if (lang.aliases.includes(clean)) {
+    if (lang.aliases.includes(clean) || lang.aliases.includes(normalized)) {
       return lang.code;
     }
   }
@@ -60,7 +90,7 @@ export function getStateLanguage(stateName: string): LocaleCode {
   if (!stateName) return 'en';
   const state = stateName.toLowerCase().trim();
 
-  // Hindi Belt
+  // Hindi Belt + UTs
   if (
     state.includes("uttar pradesh") ||
     state.includes("madhya pradesh") ||
@@ -71,22 +101,49 @@ export function getStateLanguage(stateName: string): LocaleCode {
     state.includes("uttarakhand") ||
     state.includes("chhattisgarh") ||
     state.includes("jharkhand") ||
-    state.includes("himachal pradesh")
+    state.includes("himachal pradesh") ||
+    state.includes("chandigarh") ||
+    state.includes("jammu") ||
+    state.includes("ladakh") ||
+    state.includes("andaman")
   ) {
     return 'hi';
   }
 
-  // Other specific languages
-  if (state.includes("maharashtra")) return 'mr';
-  if (state.includes("gujarat")) return 'gu';
+  // Other specific languages & UTs
+  if (state.includes("maharashtra") || state.includes("goa")) return 'mr';
+  if (state.includes("gujarat") || state.includes("daman") || state.includes("dadra")) return 'gu';
   if (state.includes("tamil nadu") || state.includes("pondicherry") || state.includes("puducherry")) return 'ta';
   if (state.includes("karnataka")) return 'kn';
-  if (state.includes("west bengal")) return 'bn';
+  if (state.includes("west bengal") || state.includes("tripura")) return 'bn';
   if (state.includes("andhra pradesh") || state.includes("telangana")) return 'te';
-  if (state.includes("kerala")) return 'ml';
+  if (state.includes("kerala") || state.includes("lakshadweep")) return 'ml';
   if (state.includes("punjab")) return 'pa';
   if (state.includes("odisha") || state.includes("orissa")) return 'or';
 
   // Fallback
   return 'en';
+}
+
+export function getLanguageFromPincodePrefix(pincode?: string | null): LocaleCode | null {
+  const clean = String(pincode || "").replace(/\D/g, "");
+  if (clean.length < 2) return null;
+  const p2 = parseInt(clean.slice(0, 2), 10);
+  if (p2 === 14 || p2 === 15 || p2 === 16) return "pa";
+  if ((p2 >= 11 && p2 <= 34) || (p2 >= 45 && p2 <= 49) || (p2 >= 80 && p2 <= 85)) return "hi";
+  if (p2 >= 36 && p2 <= 39) return "gu";
+  if (p2 >= 40 && p2 <= 44) return "mr";
+  if (p2 >= 50 && p2 <= 53) return "te";
+  if (p2 >= 56 && p2 <= 59) return "kn";
+  if (p2 >= 60 && p2 <= 64) return "ta";
+  if (p2 >= 67 && p2 <= 69) return "ml";
+  if (p2 >= 70 && p2 <= 74) return "bn";
+  if (p2 >= 75 && p2 <= 77) return "or";
+  return null;
+}
+
+export const VALID_LOCALE_CODES: readonly LocaleCode[] = ALL_11_LANGUAGES.map((l) => l.code);
+
+export function isValidLocale(val: unknown): val is LocaleCode {
+  return typeof val === "string" && (VALID_LOCALE_CODES as readonly string[]).includes(val);
 }

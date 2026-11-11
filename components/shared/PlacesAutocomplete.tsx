@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { MapPin, Search, Loader2 } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface PlaceResult {
   full_address: string;
@@ -23,9 +24,11 @@ interface PlacesAutocompleteProps {
 export function PlacesAutocomplete({
   onPlaceSelected,
   defaultValue = "",
-  placeholder = "Search for an address...",
+  placeholder,
   className = ""
 }: PlacesAutocompleteProps) {
+  const { t, locale } = useTranslation();
+  const resolvedPlaceholder = placeholder || t("pa_search_ph", "Search for an address...");
   const [inputValue, setInputValue] = useState(defaultValue);
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,9 +55,9 @@ export function PlacesAutocomplete({
     setIsLoading(true);
     try {
       // Nominatim free API with country lock to India
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=in&format=json&addressdetails=1&limit=5`, {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=in&format=json&addressdetails=1&limit=5&accept-language=${encodeURIComponent(locale || 'en')}`, {
         headers: {
-          'Accept-Language': 'en',
+          'Accept-Language': locale || 'en',
           'User-Agent': 'CCTVQuotationApp/1.0'
         }
       });
@@ -112,7 +115,7 @@ export function PlacesAutocomplete({
         value={inputValue}
         onChange={handleInputChange}
         onFocus={() => { if (results.length > 0) setShowDropdown(true); }}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         className={`w-full pl-9 pr-4 py-2 border rounded-xl focus:ring-2 outline-none transition-all ${className}`}
       />
       

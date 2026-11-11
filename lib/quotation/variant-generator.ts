@@ -8,6 +8,7 @@
 import { Product, Addon, AppSettings, ConfiguratorSelection, PricingResult } from "../../types";
 import { calculatePricing } from "../pricing-engine";
 import { getCanonicalBrandKey, getCanonicalBrandName } from "../brand-utils";
+import { buildMixedCameraRequirements } from "../camera-requirements";
 
 export const DEFAULT_500GB_HDD: Product = {
   id: "budget_hdd_500gb",
@@ -71,9 +72,54 @@ export function generateAllCatalogVariations(params: {
   } = params;
 
   const rawTech = String(selection.technology || "HD").toLowerCase();
-  const activeTech: "hd" | "ip" | "wireless" = 
-    rawTech === "wireless" || rawTech === "wifi" ? "wireless" :
-    rawTech === "ip" ? "ip" : "hd";
+  const isPureWireless =
+    (rawTech === "wireless" || rawTech === "wifi" || rawTech === "4g_solar") &&
+    !(selection as any).is_hybrid;
+  const wifiCount = Number((selection as any).wifi_camera_count) || 0;
+  const totalCams = selection.camera_count || 4;
+  const outCount = selection.outdoor_camera_count !== undefined
+    ? selection.outdoor_camera_count
+    : (isPureWireless ? Math.ceil(totalCams / 2) : Math.max(0, Math.ceil((totalCams - wifiCount) / 2)));
+  const inCount = selection.indoor_camera_count !== undefined
+    ? selection.indoor_camera_count
+    : Math.max(0, totalCams - outCount - (isPureWireless ? 0 : wifiCount));
+  const wiredCount = isPureWireless ? 0 : (outCount + inCount);
+  const isHybrid =
+    !isPureWireless &&
+    (rawTech === "hybrid" ||
+      Boolean((selection as any).is_hybrid) ||
+      (wifiCount > 0 && wiredCount > 0));
+  const wiredTech: "HD" | "IP" =
+    rawTech === "ip" || String((selection as any).hybrid_wired_technology || "").toUpperCase() === "IP"
+      ? "IP"
+      : "HD";
+  const activeTech: "hd" | "ip" | "wireless" =
+    isPureWireless ? "wireless" : wiredTech === "IP" ? "ip" : "hd";
+
+  // Preserve or synthesize mixed_camera_requirements for accurate Hybrid / Wireless pricing
+  const rawMixed = (selection as any).mixed_camera_requirements;
+  const baseMixedReqs =
+    Array.isArray(rawMixed) && rawMixed.length > 0
+      ? rawMixed.map((req: any) => {
+          const isWirelessItem =
+            String(req?.technology || "").toLowerCase() === "wireless" ||
+            String(req?.type || "").toLowerCase().includes("wi-fi") ||
+            String(req?.type || "").toLowerCase().includes("wifi") ||
+            String(req?.type || "").toLowerCase().includes("4g");
+          return {
+            ...req,
+            technology: isWirelessItem ? "Wireless" : (isPureWireless ? "Wireless" : wiredTech),
+          };
+        })
+      : (isHybrid || isPureWireless)
+      ? buildMixedCameraRequirements({
+          ...(selection as any),
+          outdoor_camera_count: outCount,
+          indoor_camera_count: inCount,
+          wifi_camera_count: wifiCount,
+          technology_preference: isPureWireless ? "Wireless" : wiredTech,
+        })
+      : undefined;
 
   // Effective products strictly sourced from database catalog (zero fake products)
   const effectiveProducts = [...products];
@@ -132,14 +178,6 @@ export function generateAllCatalogVariations(params: {
   const allVariants: PricingResult[] = [];
   const brandSummaries: BrandPriceSummary[] = [];
 
-  const totalCams = selection.camera_count || 4;
-  const outCount = selection.outdoor_camera_count !== undefined 
-    ? selection.outdoor_camera_count 
-    : Math.ceil(totalCams / 2);
-  const inCount = selection.indoor_camera_count !== undefined 
-    ? selection.indoor_camera_count 
-    : Math.max(0, totalCams - outCount);
-
   targetBrands.forEach(b => {
     const brandVariations: PricingResult[] = [];
 
@@ -153,11 +191,16 @@ export function generateAllCatalogVariations(params: {
     // 1. Standard Quote
     const standardSel: ConfiguratorSelection = {
       ...selection,
-      technology: activeTech === "wireless" ? "Wireless" : activeTech === "ip" ? "IP" : "HD",
+      technology: activeTech === "wireless" ? "Wireless" : wiredTech,
+      hybrid_wired_technology: wiredTech,
+      is_hybrid: isHybrid,
       brand_preference: b.brandName,
       outdoor_camera_count: outCount,
       indoor_camera_count: inCount,
       camera_count: totalCams,
+      ...(baseMixedReqs ? { mixed_camera_requirements: baseMixedReqs } : {}),
+      plan_type: "budget",
+      sensor_preference: "standard_ir",
       is_economy_storage: isEconomyRequested as any,
       target_storage_tb: targetStorageTB,
     };
@@ -183,12 +226,21 @@ export function generateAllCatalogVariations(params: {
       allVariants.push(rawStandardPricing);
     }
 
-    // 2. Enhanced Color Night Vision / 2K Resolution Package (ColorVu / Guard+ with Mic)
+    // 2. Enhanced Color Night Vision Package (ColorVu / Full Color with Mic)
     let colorNightPricing: PricingResult | undefined = undefined;
+    const colorMixedReqs = baseMixedReqs
+      ? baseMixedReqs.map((r: any) => ({
+          ...r,
+          features: Array.from(new Set([...(r.features || []), "color"])),
+        }))
+      : undefined;
     const colorNightSel: ConfiguratorSelection = {
       ...standardSel,
-      resolution_preference: "3MP",
-      requested_features: ["color_night_vision", "mic"],
+      resolution_preference: selection.resolution_preference || (activeTech === "ip" || activeTech === "wireless" ? "3MP" : "2MP"),
+      requested_features: ["color", "mic"],
+      plan_type: "recommended",
+      sensor_preference: "colorvu",
+      ...(colorMixedReqs ? { mixed_camera_requirements: colorMixedReqs } : {}),
     };
 
     const rawColorNightPricing = calculatePricing({

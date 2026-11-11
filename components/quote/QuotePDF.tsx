@@ -29,6 +29,10 @@ import {
 
 import path from "path";
 import { FONT_REGULAR, FONT_SEMIBOLD, FONT_BOLD } from "@/lib/pdf-fonts";
+import { ensurePdfFontsForLocale, normalizePdfLocale } from "@/lib/pdf/pdf-fonts-indic";
+import { resolvePdfImageSrc } from "@/lib/pdf/pdf-image";
+import { getPdfLabels } from "@/lib/pdf/pdf-i18n";
+import { SPEECH_LOCALE_MAP } from "@/lib/i18n/mapping";
 
 // ─── Font Registration ────────────────────────────────────────────────────────
 // Fonts embedded as base64 data URIs — zero network requests, works client-side and server-side
@@ -77,15 +81,21 @@ interface QuoteData {
   advancePercent: number;
   companyGstin: string;
   notes?: string;
+  preferred_language?: string;
+  language?: string;
+  locale?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatINR(n: number) {
-  return "INR " + Math.round(n).toLocaleString("en-IN");
+  return "₹" + Math.round(n).toLocaleString("en-IN");
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-IN", {
+function formatDate(iso: string, dateLocale = "en-IN") {
+  if (!iso) return "N/A";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "N/A";
+  return d.toLocaleDateString(dateLocale, {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -477,14 +487,21 @@ const s = StyleSheet.create({
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, settings?: any, isInvoice?: boolean }) {
+export function QuotePDF({ quote, settings, isInvoice, locale }: { quote: QuoteData, settings?: any, isInvoice?: boolean, locale?: string }) {
+  const pdfLocale = normalizePdfLocale(locale ?? quote?.preferred_language ?? quote?.language ?? quote?.locale);
+  const pdfFont = ensurePdfFontsForLocale(pdfLocale);
+  const isEn = pdfLocale === "en";
+  const noUpper = isEn ? {} : { textTransform: "none" as const, letterSpacing: 0 };
+  const L = getPdfLabels(pdfLocale);
+  const dateLocale = SPEECH_LOCALE_MAP[pdfLocale] || "en-IN";
+
   const companyName = settings?.company_legal_name || settings?.company_name || "TEAM CCTV";
   const tagline = settings?.company_tagline || "Smart Security Solutions · Jaipur";
   const gstinDisplay = settings?.company_gstin && settings.company_gstin.trim().length > 0
-    ? `GSTIN: ${settings.company_gstin.trim()}`
-    : (quote.companyGstin ? `GSTIN: ${quote.companyGstin}` : "GST Registration Pending");
-  const phoneDisplay = settings?.company_phone || "+91 98290 00000";
+    ? `${L.gstinPrefix}: ${settings.company_gstin.trim()}`
+    : (quote.companyGstin ? `${L.gstinPrefix}: ${quote.companyGstin}` : L.gstPending);
   const emailDisplay = settings?.company_email || "support@cctvquotation.com";
+  const phoneDisplay = settings?.company_phone || "+91 98290 00000";
   const webDisplay = settings?.company_website || "cctvquotation.com";
 
   const subtotal  = quote.lineItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
@@ -492,7 +509,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
   const halfGst   = (subtotal * quote.gstPercent / 100) / 2;
   const advance   = 500;
   
-  const docTitle = isInvoice ? "TAX INVOICE" : "QUOTATION";
+  const docTitle = isInvoice ? L.invoiceTitle : L.quotationTitle;
 
   return (
     <Document
@@ -500,7 +517,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
       author={companyName}
       subject={`CCTV Installation ${docTitle}`}
     >
-      <Page size="A4" style={s.page}>
+      <Page size="A4" style={[s.page, { fontFamily: pdfFont }]}>
 
         {/* ── HEADER ──────────────────────────────────────────────────── */}
         <View style={s.header}>
@@ -508,17 +525,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
             {(() => {
               const rawLogo = settings?.pdf_logo_url || settings?.company_logo_url || "/logo-horizontal.jpg";
               const logoUrl = (rawLogo && !rawLogo.startsWith("C:") && !rawLogo.includes("\\")) ? rawLogo : "/logo-horizontal.jpg";
-              let resolvedLogo = logoUrl;
-              if (typeof window === "undefined" && logoUrl.startsWith("/")) {
-                try {
-                  const pathMod = require("path");
-                  const fsMod = require("fs");
-                  const localPath = pathMod.join(process.cwd(), "public", logoUrl.replace(/^\/+/, ""));
-                  if (fsMod.existsSync(localPath)) {
-                    resolvedLogo = localPath;
-                  }
-                } catch (_) {}
-              }
+              const resolvedLogo = resolvePdfImageSrc(rawLogo, "/logo-horizontal.jpg");
 
               const isHorizontal = logoUrl.includes("horizontal") || logoUrl.includes("banner");
 
@@ -543,14 +550,14 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
                   </View>
                   <View>
                     <Text style={s.brandName}>{companyName}</Text>
-                    <Text style={s.brandTagline}>{tagline}</Text>
+                    <Text style={[s.brandTagline, noUpper]}>{tagline}</Text>
                   </View>
                 </View>
               );
             })()}
             <View style={s.quoteLabel}>
-              <Text style={s.quoteLabelText}>{docTitle}</Text>
-              <Text style={s.quoteNumber}>#{quote.quoteNumber}</Text>
+              <Text style={[s.quoteLabelText, noUpper]}>{docTitle}</Text>
+              <Text style={[s.quoteNumber, noUpper]}>#{quote.quoteNumber}</Text>
             </View>
           </View>
 
@@ -558,13 +565,13 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
 
           <View style={s.headerMeta}>
             {[
-              ["Date Issued",    formatDate(quote.issuedAt)],
-              ["Prepared For",   quote.customer.name],
-              ["Valid Until",    formatDate(quote.validUntil)],
-              ["Lead Reference", (quote.leadId || quote.id).substring(0, 14) + "…"],
+              [L.dateIssued,   formatDate(quote.issuedAt, dateLocale)],
+              [L.preparedFor,  quote.customer.name],
+              [L.validUntil,   formatDate(quote.validUntil, dateLocale)],
+              [L.leadRef,      (quote.leadId || quote.id).substring(0, 14) + "…"],
             ].map(([label, value]) => (
               <View key={label}>
-                <Text style={s.metaLabel}>{label}</Text>
+                <Text style={[s.metaLabel, noUpper]}>{label}</Text>
                 <Text style={s.metaValue}>{value}</Text>
               </View>
             ))}
@@ -578,7 +585,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
           <View style={s.billGrid}>
             {/* Bill To */}
             <View style={s.billBlock}>
-              <Text style={s.billLabel}>Bill To</Text>
+              <Text style={[s.billLabel, noUpper]}>{L.billTo}</Text>
               <Text style={s.billName}>{quote.customer.name}</Text>
               {quote.customer.phone ? <Text style={s.billDetail}>{quote.customer.phone}</Text> : null}
               {quote.customer.email ? <Text style={s.billDetail}>{quote.customer.email}</Text> : null}
@@ -591,14 +598,14 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
 
             {/* Installation site */}
             <View style={s.billBlock}>
-              <Text style={s.billLabel}>Installation Site</Text>
+              <Text style={[s.billLabel, noUpper]}>{L.installationSite}</Text>
               <Text style={s.billName}>{quote.propertyType}</Text>
               {quote.propertyDetail ? <Text style={s.billDetail}>{quote.propertyDetail}</Text> : null}
               {quote.installationAddress || quote.siteVisitDate ? (
                 <View style={s.addressBox}>
                   <Text style={s.addressText}>
                     {quote.installationAddress}
-                    {quote.siteVisitDate ? `\nSite visit: ${formatDate(quote.siteVisitDate)}` : ""}
+                    {quote.siteVisitDate ? `\n${L.siteVisit}: ${formatDate(quote.siteVisitDate, dateLocale)}` : ""}
                   </Text>
                 </View>
               ) : null}
@@ -606,13 +613,13 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
           </View>
 
           {/* Table */}
-          <Text style={s.sectionLabel}>Scope of Work &amp; Materials</Text>
+          <Text style={[s.sectionLabel, noUpper]}>{L.scopeAndMaterials}</Text>
 
           <View style={s.tableHeader}>
-            <Text style={[s.th, s.colDesc]}>Item / Description</Text>
-            <Text style={[s.th, s.colQty]}>Qty</Text>
-            <Text style={[s.th, s.colPrice]}>Unit Price</Text>
-            <Text style={[s.th, s.colAmt]}>Amount</Text>
+            <Text style={[s.th, s.colDesc, noUpper]}>{L.itemDescription}</Text>
+            <Text style={[s.th, s.colQty, noUpper]}>{L.qty}</Text>
+            <Text style={[s.th, s.colPrice, noUpper]}>{L.unitPrice}</Text>
+            <Text style={[s.th, s.colAmt, noUpper]}>{L.amount}</Text>
           </View>
 
           {quote.lineItems.map((item) => {
@@ -622,7 +629,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
                 <View style={s.colDesc}>
                   <Text style={s.itemName}>{item.name}</Text>
                   <Text style={s.itemDesc}>{item.description}</Text>
-                  {item.badge && <Text style={s.badge}>{item.badge.label}</Text>}
+                  {item.badge && <Text style={[s.badge, noUpper]}>{item.badge.label}</Text>}
                 </View>
                 <View style={[s.colQty, { alignItems: "center" }]}>
                   <View style={s.qtyBox}>
@@ -639,7 +646,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
           <View style={s.totalsWrap} wrap={false}>
             <View style={s.totalsBox}>
               {[
-                { label: "Subtotal",                              value: formatINR(subtotal) },
+                { label: L.subtotal,                               value: formatINR(subtotal) },
                 { label: `CGST @ ${quote.gstPercent / 2}%`,      value: formatINR(halfGst)  },
                 { label: `SGST @ ${quote.gstPercent / 2}%`,      value: formatINR(halfGst)  },
               ].map((row) => (
@@ -649,7 +656,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
                 </View>
               ))}
               <View style={s.grandRow}>
-                <Text style={s.grandLabel}>Total Payable</Text>
+                <Text style={[s.grandLabel, noUpper]}>{L.totalPayable}</Text>
                 <Text style={s.grandValue}>{formatINR(total)}</Text>
               </View>
             </View>
@@ -661,20 +668,20 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
               {
                 bg: C.goldBg,
                 icon: "W",
-                  title: "1-Year Warranty",
-                body: "All equipment + labour covered. Free replacement if defective.",
+                title: L.warranty1YrTitle,
+                body: L.warranty1YrBody,
               },
               {
                 bg: C.greenBg,
                 icon: "A",
-                title: `Flat INR 500 Advance`,
-                body: `${formatINR(advance)} required to initiate the project. 90% on delivery, 10% after completion.`,
+                title: L.advanceTitle,
+                body: L.advanceBody,
               },
               {
                 bg: C.navyBg,
                 icon: "S",
-                  title: "Support Included",
-                body: "Free remote support 12 months. On-site response within 24h.",
+                title: L.supportTitle,
+                body: L.supportBody,
               },
             ].map((t) => (
               <View key={t.title} style={s.termCard}>
@@ -692,7 +699,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
           {/* Bank Details */}
           {isInvoice && (settings?.bank_account_no || settings?.bank_details) && (
             <View style={s.bankBox}>
-              <Text style={s.bankTitle}>Bank Details for Payment</Text>
+              <Text style={[s.bankTitle, noUpper]}>{L.bankDetailsTitle}</Text>
               <Text style={s.noteBody}>
                 {settings?.bank_account_no
                   ? `Bank: ${settings.bank_name || 'Bank'} | A/c No: ${settings.bank_account_no} | IFSC: ${settings.bank_ifsc || ''}\nA/c Name: ${settings.bank_account_name || companyName}${settings.bank_upi_id ? ` | UPI ID: ${settings.bank_upi_id}` : ''}`
@@ -704,7 +711,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
           {/* Custom Terms */}
           {settings?.pdf_terms && (
             <View style={s.termsBox}>
-              <Text style={s.noteTitle}>Terms &amp; Conditions</Text>
+              <Text style={[s.noteTitle, noUpper]}>{L.termsTitle}</Text>
               <Text style={s.termsBody}>{settings.pdf_terms}</Text>
             </View>
           )}
@@ -712,9 +719,9 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
           {/* Notes */}
           {quote.notes && (
             <View style={s.noteBox}>
-              <Text style={s.noteTitle}>Important Note</Text>
+              <Text style={[s.noteTitle, noUpper]}>{L.importantNoteTitle}</Text>
               <Text style={s.noteBody}>
-                {quote.notes}
+                {L.gstInclusiveBadge}
                 {"\n"}{gstinDisplay}
               </Text>
             </View>
@@ -723,10 +730,10 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
           {/* Signature lines */}
           <View style={s.signatureRow}>
             <View style={s.sigBox}>
-              <Text style={s.sigLabel}>Customer Signature &amp; Date</Text>
+              <Text style={[s.sigLabel, noUpper]}>{L.customerSignature}</Text>
             </View>
             <View style={s.sigBox}>
-              <Text style={s.sigLabel}>{settings?.authorized_signatory_label || `Authorised Signatory — ${companyName}`}</Text>
+              <Text style={[s.sigLabel, noUpper]}>{settings?.authorized_signatory_label || `${L.authorisedSignatory} — ${companyName}`}</Text>
             </View>
           </View>
 
@@ -736,7 +743,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
         <View style={s.footer} fixed>
           <Text style={s.footerLeft}>
             <Text style={s.footerBrand}>{companyName}</Text>
-            {" "}· {gstinDisplay}
+            {" "}· {gstinDisplay} · {webDisplay}
           </Text>
           <View style={s.footerRight}>
             <Text style={s.footerContact}>{phoneDisplay}</Text>
@@ -747,7 +754,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
         {/* Page number */}
         <Text
           style={s.pageNum}
-          render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
+          render={({ pageNumber, totalPages }) => `${L.pageLabel} ${pageNumber} ${L.ofLabel} ${totalPages}`}
           fixed
         />
 
@@ -773,8 +780,8 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
  *     },
  *   });
  */
-export async function generateQuotePdfBuffer(quote: QuoteData, settings?: any, isInvoice?: boolean): Promise<Buffer> {
-  const blob   = await pdf(<QuotePDF quote={quote} settings={settings} isInvoice={isInvoice} />).toBlob();
+export async function generateQuotePdfBuffer(quote: QuoteData, settings?: any, isInvoice?: boolean, locale?: string): Promise<Buffer> {
+  const blob   = await pdf(<QuotePDF quote={quote} settings={settings} isInvoice={isInvoice} locale={locale} />).toBlob();
   const arrBuf = await blob.arrayBuffer();
   return Buffer.from(arrBuf);
 }

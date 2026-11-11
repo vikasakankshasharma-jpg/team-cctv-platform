@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { FollowUpTask } from "@/types";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function SalesDashboard() {
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState<FollowUpTask[]>([]);
   const [filter, setFilter] = useState("hot");
   const [loading, setLoading] = useState(true);
@@ -20,8 +22,8 @@ export default function SalesDashboard() {
     try {
       const res = await fetch(`/api/crm/tasks?filter=${statusFilter}`);
       if (!res.ok) {
-        if (res.status === 403) throw new Error("Unauthorized access to CRM");
-        throw new Error("Failed to load tasks");
+        if (res.status === 403) throw new Error(t("crm_err_unauth", "Unauthorized access to CRM"));
+        throw new Error(t("crm_err_load", "Failed to load tasks"));
       }
       const json = await res.json();
       setTasks(json.data || []);
@@ -37,25 +39,25 @@ export default function SalesDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl font-semibold">Follow-up Queues</h2>
-        <div className="flex bg-white rounded-lg shadow-sm p-1 border">
+        <h2 className="text-2xl font-semibold">{t("crm_queues_title", "Follow-up Queues")}</h2>
+        <div className="flex flex-wrap bg-white rounded-lg shadow-sm p-1 border gap-1">
           <button 
             onClick={() => setFilter("hot")} 
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === "hot" ? "bg-red-100 text-red-700" : "text-gray-600 hover:bg-gray-50"}`}
           >
-            Hot & Warm
+            {t("crm_q_hot_warm", "Hot & Warm")}
           </button>
           <button 
             onClick={() => setFilter("nurture")} 
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === "nurture" ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-50"}`}
           >
-            Nurture
+            {t("crm_q_nurture", "Nurture")}
           </button>
           <button 
             onClick={() => setFilter("manual")} 
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === "manual" ? "bg-orange-100 text-orange-700" : "text-gray-600 hover:bg-gray-50"}`}
           >
-            Needs Manual Call
+            {t("crm_q_manual_call", "Needs Manual Call")}
           </button>
         </div>
       </div>
@@ -72,7 +74,7 @@ export default function SalesDashboard() {
         </div>
       ) : tasks.length === 0 ? (
         <div className="bg-white p-5 md:p-12 text-center rounded-lg shadow-sm border border-gray-200 text-gray-500">
-          No active tasks in this queue. You're all caught up!
+          {t("crm_empty_queue", "No active tasks in this queue. You're all caught up!")}
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -80,11 +82,11 @@ export default function SalesDashboard() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lead Info</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due At</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("crm_th_priority", "Priority")}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("crm_th_lead_info", "Lead Info")}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("crm_th_status", "Status")}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("crm_th_due_at", "Due At")}</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t("crm_th_actions", "Actions")}</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -108,7 +110,7 @@ export default function SalesDashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span className={overdue ? "text-red-600 font-medium flex items-center gap-1" : "text-gray-500"}>
-                          {overdue && <span className="text-xl leading-none" title="Overdue">⚠️</span>}
+                          {overdue && <span className="text-xl leading-none" title={t("crm_overdue", "Overdue")}>⚠️</span>}
                           {new Date(task.due_at).toLocaleString()}
                         </span>
                       </td>
@@ -117,7 +119,7 @@ export default function SalesDashboard() {
                           href={`/sales/lead/${task.lead_id}`} 
                           className="text-blue-600 hover:text-blue-900"
                         >
-                          View 360 &rarr;
+                          {t("crm_view_360", "View 360")} &rarr;
                         </Link>
                       </td>
                     </tr>

@@ -38,7 +38,7 @@ export function FaqAccordion() {
                   onClick={() => toggle(i)}
                   className="w-full flex items-center justify-between p-5 text-left focus:outline-none"
                 >
-                  <span className={`text-base sm:text-lg font-bold transition-colors ${isOpen ? 'text-blue-600 dark:text-blue-400' : 'text-slate-800 dark:text-slate-200'}`}>
+                  <span className={`pr-3 text-base sm:text-lg font-bold transition-colors ${isOpen ? 'text-blue-600 dark:text-blue-400' : 'text-slate-800 dark:text-slate-200'}`}>
                     {t(item.qKey, item.defaultQ)}
                   </span>
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400'}`}>
@@ -46,7 +46,7 @@ export function FaqAccordion() {
                   </div>
                 </button>
                 <div 
-                  className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
+                  className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[900px] opacity-100' : 'max-h-0 opacity-0'}`}
                 >
                   <p className="p-5 pt-0 text-sm sm:text-base leading-relaxed text-slate-600 dark:text-slate-400">
                     {t(item.aKey, item.defaultA)}

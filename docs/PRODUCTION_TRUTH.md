@@ -1,6 +1,6 @@
 # Production Truth & Credential Tracking
 
-> **Last Updated:** November 8, 2026  
+> **Last Updated:** November 11, 2026  
 > **Production Domain:** `https://cctvquotation.com`  
 > **Vercel Project:** `secure-easy` / `team-cctv-platform`  
 > **Rule:** Never mark a credential as `ROTATED` or `VERIFIED` based solely on local files. Evidence from the actual deployment/environment is mandatory.
@@ -20,7 +20,13 @@
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`| Secondary fallback mapping | Public (Client) | `ACTIVE` | Fallback geocoder restricted by HTTP referrer. |
 | `RAZORPAY_KEY_ID` | Payment gateway client identifier | Public (Client) | `ACTIVE` | Linked to active payment modal. |
 | `RAZORPAY_KEY_SECRET` | Payment order creation & verification | Server-only | `ACTIVE` | Kept strictly server-side (no `NEXT_PUBLIC_`). |
-| `RAZORPAY_WEBHOOK_SECRET` | HMAC signature verification | Server-only | `ACTIVE` | Verified against incoming webhooks; fallback API attached. |
+| `RAZORPAY_WEBHOOK_SECRET` | HMAC signature verification | Server-only | `ACTIVE` | Verified against incoming webhooks; fallback API attached. (Sanitized via `cleanEnvVar`). |
+| `MSG91_AUTH_KEY` | WhatsApp OTP & SMS template dispatch via MSG91 | Server-only | `ACTIVE` | Kept strictly server-side; sanitized via `cleanEnvVar()`. |
+| `MSG91_WHATSAPP_NUMBER` | Integrated WhatsApp Business sender number for MSG91 OTPs | Server-only | `ACTIVE` | Normalized/digit-stripped via `cleanPhoneEnvVar()`; CRLF-cleaned in Vercel Production (Nov 11, 2026). |
+| `WHATSAPP_PROVIDER` | Primary WhatsApp transport selector (`msg91` / `meta`) | Server-only | `ACTIVE` | Sanitized via `cleanEnvVar()`; CRLF-cleaned in Vercel Production. |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Customer support & `"Open WhatsApp App"` launcher target | Public (Client) | `ACTIVE` | Digit-stripped (`919982549315`) via `cleanPhoneEnvVar` / `lib/whatsapp.ts`; CRLF-cleaned in Vercel Production. |
+| `RESEND_API_KEY` | Transactional email OTP & alerts | Server-only | `ACTIVE` | Sanitized via `cleanEnvVar()`; CRLF-cleaned in Vercel Production. |
+| `GEMINI_API_KEY` | AI catalog enrichment & geo/tehsil assistants | Server-only | `ACTIVE` | Sanitized via `cleanEnvVar()`; CRLF-cleaned in Vercel Production. |
 
 ---
 
@@ -253,3 +259,19 @@
   - `[ ✏️ Change Qty ]` (`wf_change_qty`)
 - **Non-Destructive Camera Quantity Editor (`ASK_CAMERA_EDIT_CHOICE`):**
   - Tapping `[ ✏️ Change Qty ]` allows modifying counts per camera bucket without resetting customer session data (Language, Property Type, Pincode preserved).
+
+### 23. Error Formatting, Environment Variable Hygiene, MSG91 OTP Dispatch & Cross-Device WhatsApp Launcher (Nov 11, 2026)
+- **Zero `[object Object]` Client & Server Sanitization (`lib/utils.ts`):**
+  - UI components across Wizard, Pro Builder, Configurator, Customer Login/Portal, Refer & Earn, Checkout/Site Survey, Installer/Partner logins, and Operations unwrap errors via `extractErrorMessage()` so nested error objects never render as `"[object Object]"`.
+- **Runtime CRLF Env Sanitization (`lib/env-utils.ts`):**
+  - Clean `cleanEnvVar()` / `cleanPhoneEnvVar()` readers strip trailing `\r`, `\n`, and whitespace (and non-digit characters for phone/sender numbers) across WhatsApp/MSG91/OTP providers, webhook HMAC secrets, Resend email routes, Meta Pixel IDs, and Gemini helpers, paired with CRLF-clean Vercel Production env vars.
+- **Unified MSG91 OTP Transport (`lib/whatsapp/msg91-provider.ts`):**
+  - `/api/auth/otp/whatsapp`, `/api/auth/otp/sms`, and `/api/refer-and-earn/otp/send` share `Msg91WhatsAppProvider.sendOtpTemplate()` with non-JSON-safe `response.text()` parsing.
+- **Cross-Device `"Open WhatsApp App"` Deep-Linking (`lib/whatsapp.ts`, `components/shared/WhatsAppOtpNotice.tsx`):**
+  - Replaces bare `whatsapp://` URIs and browser-blocked hidden `<iframe>` elements with a synchronous native `<a href="whatsapp://send?phone=...">` anchor (without `target="_blank"`), iPadOS touch detection, and device-adaptive fallback (`https://wa.me/...` mobile / `https://web.whatsapp.com` desktop post-mount) plus a `1600ms` non-blocking inline fallback notice.
+
+### 24. Profit Waterfall Audit, Services Accounting (AMC & Referral Commission) & Overhead Reserves (Nov 11, 2026)
+- **Classification Precedence & Item Audit (`lib/quotation-profit.ts`):** Fixed `classifyItem()` so `"3+1 HD Camera Cable"` classifies under `cable`, `"Camera Junction Box"` under `accessory`, and `"Installation & Commissioning"` under `service` rather than leaking into `camera` or `commission`.
+- **Unified Referral Commission Settlement & Deduction (`lib/commission.ts`, `app/actions/leads.ts`, `app/api/quotes/route.ts`):** `resolvePromoterCommission()` resolves `promoter_incentive_type` (when value > 0), `commission_slabs` (B2C ₹500 / B2B 2%), legacy partner rates, and global fallback %. Quotes persist `promoter_id` and `referral_code_used`, and all referral/sales commissions deduct inside the **Services** bucket.
+- **Paid AMC & Promo Free AMC in Services (`lib/pricing-engine.ts`, `lib/profit-context.ts`, `lib/quotation-profit.ts`):** Counts quote add-ons (`amc_1yr`/`amc_2yr`/`amc_3yr`, `promo_free_amc` PM visit liability) and deduplicated standalone `amc_subscriptions`/`amc_contracts` directly inside Services.
+- **True Net Pocket Profit Overheads (`lib/cached-settings.ts`, `SettingsForm.tsx`, `QuotationProfitBreakupCard.tsx`, `ProfitabilityAnalyticsClient.tsx`):** Exposes editable admin settings (`amc_fulfillment_cost_percent`, `payment_gateway_fee_percent`, `warranty_reserve_percent`, `logistics_consumables_per_job`, `travel_fee_payout_percent`), surfaces the 4-card operating overhead waterfall & CSV/table breakdown, and leaves customer `total_payable` untouched.

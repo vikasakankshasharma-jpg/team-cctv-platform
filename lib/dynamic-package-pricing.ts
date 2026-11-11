@@ -474,7 +474,7 @@ const FALLBACK_PACKAGES: DynamicPackageMap = {
       },
       hik: {
         brandKey: "hik",
-        brandName: "HIKVISION Corporate Elite",
+        brandName: "HIKVISION Ultra HD Multi-Floor",
         tag: "World #1 Leader",
         tagColor: "bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300",
         cameraCount: 16,
@@ -487,7 +487,7 @@ const FALLBACK_PACKAGES: DynamicPackageMap = {
       },
       prama: {
         brandKey: "prama",
-        brandName: "PRAMA Corporate Elite",
+        brandName: "PRAMA ColorPro Multi-Floor",
         tag: "Make In India 🇮🇳",
         tagColor: "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300",
         cameraCount: 16,

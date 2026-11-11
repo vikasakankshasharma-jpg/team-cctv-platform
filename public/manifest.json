@@ -1,7 +1,10 @@
 {
   "name": "CCTVQuotation",
   "short_name": "CCTVQuotation",
-  "description": "Enterprise-Grade Security Systems & Quotes",
+  "description": "Smart CCTV Quotation, Booking & GST Invoice Platform",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "id": "/",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

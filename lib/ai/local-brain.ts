@@ -1,4 +1,6 @@
 import { adminDb } from "@/lib/firebase-admin";
+import { LocaleCode } from "@/lib/i18n/mapping";
+import { LOCALIZED_KNOWLEDGE, MULTILINGUAL_KEYWORDS } from "./local-brain-i18n";
 
 export interface BrainQAPair {
   id: string;
@@ -120,24 +122,33 @@ export const CANONICAL_KNOWLEDGE: BrainQAPair[] = [
  * Calculates keyword-semantic match score between user query and knowledge base.
  */
 function scoreMatch(query: string, item: BrainQAPair): number {
-  const qClean = query.toLowerCase().replace(/[^a-z0-9\s]/g, " ");
-  const qWords = qClean.split(/\s+/).filter(w => w.length > 2);
+  const qClean = query.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ");
+  const qWords = qClean.split(/\s+/).filter(w => w.length > 1);
+  const localKws = MULTILINGUAL_KEYWORDS[item.id] || [];
 
   let score = 0;
 
-  // Exact keyword phrase matching (high priority)
+  // Exact keyword phrase matching (high priority, ASCII + regional scripts)
   for (const kw of item.keywords) {
     if (qClean.includes(kw)) {
+      score += 40;
+    }
+  }
+  for (const kw of localKws) {
+    if (query.toLowerCase().includes(kw.toLowerCase())) {
       score += 40;
     }
   }
 
   // Word token overlap
   for (const word of qWords) {
-    if (item.keywords.some(kw => kw.includes(word))) {
+    if (word.length > 2 && item.keywords.some(kw => kw.includes(word))) {
       score += 10;
     }
-    if (item.question.toLowerCase().includes(word)) {
+    if (localKws.some(kw => kw.toLowerCase().includes(word) || word.includes(kw.toLowerCase()))) {
+      score += 12;
+    }
+    if (word.length > 2 && item.question.toLowerCase().includes(word)) {
       score += 5;
     }
   }
@@ -148,7 +159,7 @@ function scoreMatch(query: string, item: BrainQAPair): number {
 /**
  * Queries the Local Autonomous Brain with ZERO external API calls and ₹0 cost.
  */
-export async function queryLocalBrain(userQuery: string): Promise<{
+export async function queryLocalBrain(userQuery: string, locale?: string): Promise<{
   matched: boolean;
   answer?: string;
   source?: string;
@@ -173,10 +184,12 @@ export async function queryLocalBrain(userQuery: string): Promise<{
 
   // Confidence threshold: Score >= 25 is a confident match
   if (highestScore >= 25 && bestMatch) {
+    const cleanLocale = (locale || "en").toLowerCase().trim() as Exclude<LocaleCode, "en">;
+    const localized = cleanLocale !== ("en" as string) ? LOCALIZED_KNOWLEDGE[cleanLocale]?.[bestMatch.id] : undefined;
     return {
       matched: true,
-      answer: bestMatch.answer,
-      source: bestMatch.source,
+      answer: localized?.answer || bestMatch.answer,
+      source: localized?.source || bestMatch.source,
       quickActions: bestMatch.quickActions,
       score: highestScore,
     };

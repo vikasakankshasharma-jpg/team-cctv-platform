@@ -1,20 +1,23 @@
 import { NextResponse } from "next/server";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 import { adminDb, adminAuth } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
 import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+  let locale = resolveRequestLocale(req);
   const { success } = await rateLimit(req);
   if (!success) {
-    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    return NextResponse.json({ error: getApiMessage(locale, "too_many_requests") }, { status: 429 });
   }
 
   try {
     const body = await req.json();
+    locale = resolveRequestLocale(req, body);
     const { phone, otp } = body;
 
     if (!phone || !otp) {
-      return NextResponse.json({ error: "Phone and OTP are required." }, { status: 400 });
+      return NextResponse.json({ error: getApiMessage(locale, "phone_otp_required") }, { status: 400 });
     }
 
     const cleanPhone = phone.replace(/\D/g, "");
@@ -25,24 +28,24 @@ export async function POST(req: Request) {
     const otpDoc = await adminDb.collection(COLLECTIONS.OTP_VERIFICATIONS).doc(docId).get();
 
     if (!otpDoc.exists) {
-      return NextResponse.json({ error: "OTP expired or not found. Please request a new one." }, { status: 404 });
+      return NextResponse.json({ error: getApiMessage(locale, "otp_not_found") }, { status: 404 });
     }
 
     const data = otpDoc.data()!;
     
     if (data.type !== "sms") {
-      return NextResponse.json({ error: "Invalid verification method." }, { status: 400 });
+      return NextResponse.json({ error: getApiMessage(locale, "otp_invalid_method") }, { status: 400 });
     }
 
     const now = new Date();
     const expiry = data.expiresAt?.toDate();
     if (expiry && now > expiry) {
       await otpDoc.ref.delete();
-      return NextResponse.json({ error: "OTP has expired." }, { status: 400 });
+      return NextResponse.json({ error: getApiMessage(locale, "otp_expired") }, { status: 400 });
     }
 
     if (data.otp !== otp.toString().trim()) {
-      return NextResponse.json({ error: "Incorrect OTP code." }, { status: 400 });
+      return NextResponse.json({ error: getApiMessage(locale, "otp_incorrect") }, { status: 400 });
     }
 
     // OTP matches! Delete it.
@@ -84,6 +87,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, customToken, role });
   } catch (error: any) {
     console.error("WhatsApp OTP Verify Error:", error);
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    return NextResponse.json({ error: getApiMessage(locale, "internal_error") }, { status: 500 });
   }
 }

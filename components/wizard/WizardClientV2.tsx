@@ -14,7 +14,8 @@ import { auth } from "@/lib/firebase-client";
 import { createLeadAction } from "@/app/actions/lead";
 import { ShieldCheck, Loader2, Sparkles, Wrench, MapPin, CheckCircle2, HelpCircle, ChevronDown, ChevronUp, Plus, Minus } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { LocaleCode } from "@/lib/i18n/mapping";
+import { LocaleCode, getStateLanguage } from "@/lib/i18n/mapping";
+import { useI18nStore } from "@/lib/i18n/store";
 import { PlacesAutocomplete } from "@/components/shared/PlacesAutocomplete";
 import { useJsApiLoader, GoogleMap, Marker } from "@react-google-maps/api";
 import { buildMixedCameraRequirements } from "@/lib/camera-requirements";
@@ -31,7 +32,8 @@ interface WizardClientV2Props {
 }
 
 export function WizardClientV2({ searchParams: serverSearchParams }: WizardClientV2Props = {}) {
-  const { t, setLocale } = useTranslation();
+  const { t, locale, setLocale } = useTranslation();
+  const setLocaleFromPincode = useI18nStore((state) => state.setLocaleFromPincode);
   const router = useRouter();
     const [sessionId] = useState(() => {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -99,7 +101,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
           size: "invisible",
           callback: () => {},
           "expired-callback": () => {
-            toast.error("reCAPTCHA expired. Please try again.");
+            toast.error(t("wz_toast_recaptcha_exp", "reCAPTCHA expired. Please try again."));
           },
         });
       } catch (err) {
@@ -349,6 +351,9 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
             } else if (data.areas && data.areas.length > 0) {
               setLocalities(data.areas);
             }
+            if (data.state) {
+              setLocaleFromPincode(getStateLanguage(data.state));
+            }
             if (data.lat && data.lng) {
               setMapCenter({ lat: data.lat, lng: data.lng });
               setReq(prev => ({ ...prev, lat: prev.lat || data.lat, lng: prev.lng || data.lng }));
@@ -467,10 +472,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
         },
         property_type: req.property_type || "home",
         technology_choice: (() => {
+          const pref = String(req.technology_preference || "HD");
+          const prefLower = pref.toLowerCase();
+          const isPureWirelessPref = prefLower === "wireless" || prefLower === "wifi" || prefLower === "4g_solar";
           const wifiCount = Number(req.wifi_camera_count) || 0;
-          const splitTotal = (Number(req.outdoor_camera_count) || 0) + (Number(req.indoor_camera_count) || 0);
-          const wiredCount = splitTotal > wifiCount ? (splitTotal - wifiCount) : 0;
-          return (wifiCount > 0 && wiredCount > 0) ? "Hybrid" : (req.technology_preference || "HD");
+          const wiredCount = isPureWirelessPref ? 0 : ((Number(req.outdoor_camera_count) || 0) + (Number(req.indoor_camera_count) || 0));
+          const mixedReqs = Array.isArray((req as any).mixed_camera_requirements) ? (req as any).mixed_camera_requirements : [];
+          const hasMixedHybrid = mixedReqs.some((m: any) => m?.technology === "Wireless") && mixedReqs.some((m: any) => m?.technology && m.technology !== "Wireless");
+          return ((wifiCount > 0 && wiredCount > 0) || hasMixedHybrid || (req as any).is_hybrid === true || prefLower === "hybrid") ? "Hybrid" : pref;
         })(),
         cabling_done: req.cabling_done || false,
         camera_count: (() => {
@@ -487,8 +496,11 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
       const isCallbackScenario = req.installation_type === "addon" && req.existing_system_known === false;
       const newLeadId = await createLeadAction({
         ...payload,
+        preferred_language: locale,
         wizard_answers: {
           ...payload.wizard_answers,
+          locale,
+          preferred_language: locale,
           callback_requested: isCallbackScenario,
           callback_reason: isCallbackScenario ? "addon_compatibility_check" : undefined
         }
@@ -507,11 +519,11 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
         return;
       } else {
         console.error("Failed to save lead: ", (newLeadId as any)?.error, (newLeadId as any)?.details);
-        toast.error(extractErrorMessage(newLeadId, "Failed to save lead. Please try again."));
+        toast.error(extractErrorMessage(newLeadId, t("wz_toast_save_lead_err", "Failed to save lead. Please try again.")));
       }
     } catch (error: any) {
       console.error("Lead submission error:", error);
-      toast.error(extractErrorMessage(error, "Failed to generate quotation. Please try again."));
+      toast.error(extractErrorMessage(error, t("wz_toast_gen_err", "Failed to generate quotation. Please try again.")));
     } finally {
       setLoading(false);
     }
@@ -554,7 +566,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
       const data = await res.json();
       
       if (!res.ok) {
-        toast.error(extractErrorMessage(data, "Failed to send WhatsApp OTP."));
+        toast.error(extractErrorMessage(data, t("wz_toast_wa_otp_err", "Failed to send WhatsApp OTP.")));
         return;
       }
       
@@ -590,7 +602,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
       const data = await res.json();
       
       if (!res.ok) {
-        throw new Error(extractErrorMessage(data, "Invalid OTP code."));
+        throw new Error(extractErrorMessage(data, t("wz_err_invalid_otp", "Invalid OTP code.")));
       }
       
       // We get a custom token back, sign in with it!
@@ -598,12 +610,12 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
         await signInWithCustomToken(auth, data.customToken);
       }
       
-      toast.success("Verification successful!");
+      toast.success(t("wz_toast_verify_ok", "Verification successful!"));
       setOtpSent(false);
       await submitLeadAndNavigate(cleanMobile, false);
     } catch (error: any) {
       console.error("OTP verification error:", error);
-      toast.error(extractErrorMessage(error, "Please check the code and try again."));
+      toast.error(extractErrorMessage(error, t("wz_toast_check_code", "Please check the code and try again.")));
     } finally {
       setLoading(false);
     }
@@ -650,11 +662,11 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
           customer_pincode: foundPincode
         }));
         
-        toast.success("Location pinned successfully!");
+        toast.success(t("wz_toast_loc_pinned", "Location pinned successfully!"));
       }
     } catch (err) {
       console.error("Geocoding failed:", err);
-      toast.error("Failed to lookup this area.");
+      toast.error(t("wz_toast_loc_err", "Failed to lookup this area."));
     } finally {
       setIsGeocoding(false);
     }
@@ -669,7 +681,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
     const name = quoteResult.requirement.customer_name;
     
     if (!mobile) {
-      toast.error("Mobile number is required.");
+      toast.error(t("wz_toast_mobile_req", "Mobile number is required."));
       return;
     }
     
@@ -708,11 +720,11 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
         router.push(`/quote/${targetId}`);
         return;
       } else {
-        toast.error(extractErrorMessage(data, "Failed to save quote."));
+        toast.error(extractErrorMessage(data, t("wz_toast_save_quote_err", "Failed to save quote.")));
       }
     } catch (e) {
       console.error(e);
-      toast.error(extractErrorMessage(e, "Failed to save quote."));
+      toast.error(extractErrorMessage(e, t("wz_toast_save_quote_err", "Failed to save quote.")));
     }
     setLoading(false);
   };
@@ -823,16 +835,16 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
               <button onClick={() => { updateReq({ installation_type: "new", technology_preference: "HD", is_4g: false, property_type: req.property_type || "home" }); handleNext(); }}
                 className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left hover:border-blue-500 transition-all cursor-pointer group ${req.installation_type === "new" && req.technology_preference !== "Wireless" ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40 shadow-sm" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
                 <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-                  <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">Wired Setup</span>
-                  <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">+ Wi-Fi Support</span>
-                  <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-200 ml-auto">Popular</span>
+                  <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">{t("wz_wired_setup_tag")}</span>
+                  <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">{t("wz_wifi_support_tag")}</span>
+                  <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-200 ml-auto">{t("wz_dvr_nvr_tag")}</span>
                 </div>
                 <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-blue-600">{t("wz_completely_new_system")}</span>
-                <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">Central DVR/NVR with dedicated copper cabling. Zero signal drop. Option to add Wi-Fi cameras for remote gates or terrace.</span>
-                <div className="mt-2.5 flex items-center gap-2 text-[11px] font-semibold text-blue-700 dark:text-blue-300">
-                  <span>✓ 24/7 Continuous Recording</span>
+                <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">{t("wz_wired_card_desc")}</span>
+                <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-blue-700 dark:text-blue-300">
+                  <span>{t("wz_247_cont_rec")}</span>
                   <span>•</span>
-                  <span>✓ 15-60 Days Storage</span>
+                  <span>{t("wz_15_60_storage")}</span>
                 </div>
               </button>
 
@@ -854,15 +866,15 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
               }}
                 className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left hover:border-emerald-500 transition-all cursor-pointer group ${req.installation_type === "new" && req.technology_preference === "Wireless" && !req.is_4g ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 shadow-sm" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
                 <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-                  <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300">Smart Wireless</span>
-                  <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">Wi-Fi & Standalone</span>
+                  <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300">{t("wz_c_wf_tag", "Smart Wireless")}</span>
+                  <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">{t("wz_c_wf_badge", "Wi-Fi & Standalone")}</span>
                 </div>
-                <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-emerald-600">Smart Wireless CCTV Cameras</span>
-                <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">Zero video cabling. Flexible placement for rooms, shops & gates with 360° Pan-Tilt, Fixed views, MicroSD recording & live phone app.</span>
-                <div className="mt-2.5 flex items-center gap-2 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
-                  <span>✓ 360° Pan-Tilt & 2-Way Talk</span>
+                <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-emerald-600">{t("wz_c_wf_title", "Smart Wireless CCTV Cameras")}</span>
+                <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">{t("wz_c_wf_desc", "Zero video cabling. Flexible placement for rooms, shops & gates with 360° Pan-Tilt, Fixed views, MicroSD recording & live phone app.")}</span>
+                <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                  <span>{t("wz_c_wf_p1", "✓ 360° Pan-Tilt & 2-Way Talk")}</span>
                   <span>•</span>
-                  <span>✓ Dedicated SD Card Storage</span>
+                  <span>{t("wz_c_wf_p2", "✓ Dedicated SD Card Storage")}</span>
                 </div>
               </button>
 
@@ -885,31 +897,31 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
               }}
                 className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left hover:border-amber-500 transition-all cursor-pointer group relative ${req.installation_type === "new" && req.is_4g ? "border-amber-500 bg-amber-50/60 dark:bg-amber-950/40 shadow-sm" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
                 <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-                  <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-100 dark:bg-amber-900/80 text-amber-800 dark:text-amber-200">4G SIM & Solar</span>
-                  <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-amber-200/80 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200">No Wi-Fi Needed</span>
-                  <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 ml-auto">Farm / Remote</span>
+                  <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-100 dark:bg-amber-900/80 text-amber-800 dark:text-amber-200">{t("wz_c_4g_tag", "4G SIM & Solar")}</span>
+                  <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-amber-200/80 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200">{t("wz_c_4g_badge", "No Wi-Fi Needed")}</span>
+                  <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 ml-auto">{t("wz_c_4g_loc", "Farm / Remote")}</span>
                 </div>
-                <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-amber-600">4G SIM / Solar Standalone Cameras</span>
-                <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">Designed for farmhouses, empty plots, boundary walls, and remote sites where broadband does not exist. Runs on 4G SIM & optional solar/battery.</span>
-                <div className="mt-2.5 flex items-center gap-2 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
-                  <span>✓ In-built 4G SIM Slot</span>
+                <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-amber-600">{t("wz_c_4g_title", "4G SIM / Solar Standalone Cameras")}</span>
+                <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">{t("wz_c_4g_desc", "Designed for farmhouses, empty plots, boundary walls, and remote sites where broadband does not exist. Runs on 4G SIM & optional solar/battery.")}</span>
+                <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
+                  <span>{t("wz_c_4g_p1", "✓ In-built 4G SIM Slot")}</span>
                   <span>•</span>
-                  <span>✓ Weatherproof IP66 & Solar Ready</span>
+                  <span>{t("wz_c_4g_p2", "✓ Weatherproof IP66 & Solar Ready")}</span>
                 </div>
               </button>
 
               <button onClick={() => { updateReq({ installation_type: "addon", existing_system_known: undefined }); handleNext(); }}
                 className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left hover:border-blue-500 transition-all cursor-pointer group ${req.installation_type === "addon" ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40 shadow-sm" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
                 <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-                  <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">Expansion</span>
-                  <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">Compatibility Checked</span>
+                  <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">{t("wz_c_exp_tag", "Expansion")}</span>
+                  <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">{t("wz_c_exp_badge", "Compatibility Checked")}</span>
                 </div>
                 <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-blue-600">{t("wz_add_to_existing_system")}</span>
                 <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">{t("wz_i_already_have_a_cctv_system_a")}</span>
-                <div className="mt-2.5 flex items-center gap-2 text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">
-                  <span>✓ Free Tech Assessment</span>
+                <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">
+                  <span>{t("wz_c_exp_p1", "✓ Free Tech Assessment")}</span>
                   <span>•</span>
-                  <span>✓ 100% Guaranteed</span>
+                  <span>{t("wz_c_exp_p2", "✓ 100% Guaranteed")}</span>
                 </div>
               </button>
             </div>
@@ -929,13 +941,13 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                <div className="space-y-4 sm:space-y-6 animate-in fade-in">
                  <div>
                    <span className="inline-block px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 mb-2">
-                     Add-on Compatibility
+                     {t("wz_addon_badge", "Add-on Compatibility")}
                    </span>
                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">
                      {t("wz_do_you_know_the_technical_spec")}
                    </h2>
                    <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">
-                     To ensure your new cameras are 100% compatible with your existing recorder.
+                     {t("wz_addon_sub", "To ensure your new cameras are 100% compatible with your existing recorder.")}
                    </p>
                  </div>
 
@@ -994,17 +1006,17 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
 
                    <div>
                      <span className="inline-block px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 mb-2">
-                       Callback Confirmed • 15 Min SLA
+                       {t("wz_cb_badge", "Callback Confirmed • 15 Min SLA")}
                      </span>
                      <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
-                       We'll Call You Shortly!
+                       {t("wz_cb_title", "We'll Call You Shortly!")}
                      </h2>
                      <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
-                       Thank you, <strong className="text-slate-900 dark:text-white">{req.customer_name}</strong>. Our senior CCTV engineer will call you on <strong className="text-slate-900 dark:text-white">+91 {req.customer_mobile}</strong> within 15 minutes to verify your existing DVR/NVR specifications.
+                       {t("wz_cb_body", "Thank you, {name}. Our senior CCTV engineer will call you on +91 {mobile} within 15 minutes to verify your existing DVR/NVR specifications.", { name: req.customer_name || "", mobile: req.customer_mobile || "" })}
                      </p>
                      {createdCallbackLeadId && (
                        <p className="text-[11px] text-slate-400 dark:text-zinc-500 font-mono mt-1.5">
-                         Reference ID: #{createdCallbackLeadId.slice(-6).toUpperCase()}
+                         {t("wz_cb_ref", "Reference ID: #{id}", { id: createdCallbackLeadId.slice(-6).toUpperCase() })}
                        </p>
                      )}
                    </div>
@@ -1015,10 +1027,10 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                        <span className="text-xl shrink-0">📸</span>
                        <div>
                          <h4 className="font-bold text-xs sm:text-sm text-amber-900 dark:text-amber-200">
-                           Helpful Tip For the Call
+                           {t("wz_cb_tip_t", "Helpful Tip For the Call")}
                          </h4>
                          <p className="text-[11px] sm:text-xs text-amber-800 dark:text-amber-300 mt-0.5 leading-relaxed">
-                           If you are near your DVR/NVR recorder, keep a quick photo of the <strong>back panel (where camera cables connect)</strong> or <strong>brand model sticker</strong> ready. Our engineer will immediately identify compatibility.
+                           {t("wz_cb_tip_d", "If you are near your DVR/NVR recorder, keep a quick photo of the back panel (where camera cables connect) or brand model sticker ready. Our engineer will immediately identify compatibility.")}
                          </p>
                        </div>
                      </div>
@@ -1032,16 +1044,16 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                         )}`}
                         target="_blank"
                        rel="noopener noreferrer"
-                       className="w-full h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer text-sm"
+                       className="w-full min-h-12 h-auto py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer text-sm text-center whitespace-normal"
                      >
-                       <span>💬 Chat with Engineer on WhatsApp</span>
+                       <span>{t("wz_cb_wa_btn", "💬 Chat with Engineer on WhatsApp")}</span>
                      </a>
 
                      <Link
                        href="/"
-                       className="w-full h-11 rounded-xl border-2 border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-bold flex items-center justify-center transition-all text-xs sm:text-sm"
+                       className="w-full min-h-11 h-auto py-2 px-4 rounded-xl border-2 border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-bold flex items-center justify-center transition-all text-xs sm:text-sm whitespace-normal"
                      >
-                       Back to Home
+                       {t("wz_cb_home_btn", "Back to Home")}
                      </Link>
                    </div>
                  </div>
@@ -1084,14 +1096,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                    >
                      {loading ? (
                        <span className="flex items-center gap-2 justify-center">
-                         <Loader2 className="w-4 h-4 animate-spin" /> Verifying...
+                         <Loader2 className="w-4 h-4 animate-spin" /> {t("wz_verifying_btn", "Verifying...")}
                        </span>
                      ) : (
-                       "Verify & Confirm Callback Request"
+                       t("wz_verify_cb_btn", "Verify & Confirm Callback Request")
                      )}
                    </Button>
 
-                   <div className="flex items-center justify-between pt-1 text-xs sm:text-sm">
+                   <div className="flex items-center justify-between pt-1 text-xs sm:text-sm gap-2 flex-wrap">
                      <button
                        type="button"
                        onClick={() => {
@@ -1100,7 +1112,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                        }}
                        className="text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200 font-semibold transition-colors"
                      >
-                       ← Change Number
+                       {t("wz_change_num_arrow", "← Change Number")}
                      </button>
 
                      <button
@@ -1113,7 +1125,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                            : "text-blue-600 hover:text-blue-700 hover:underline"
                        }`}
                      >
-                       {countdown > 0 ? `Resend in ${countdown}s` : "Resend OTP"}
+                       {countdown > 0 ? t("pb_resend_in", "Resend OTP in {s}s", { s: String(countdown) }) : t("pb_resend_otp", "Resend OTP")}
                      </button>
                    </div>
                  </div>
@@ -1125,7 +1137,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                <div className="space-y-4 sm:space-y-6 animate-in fade-in">
                  <div className="p-5 sm:p-6 border rounded-2xl bg-white dark:bg-zinc-900 shadow-sm border-gray-200 dark:border-zinc-800">
                    <span className="inline-block px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 mb-2">
-                     Free Compatibility Check
+                     {t("wz_free_compat_tag", "Free Compatibility Check")}
                    </span>
                    <h3 className="font-bold text-xl sm:text-2xl mb-2 text-slate-900 dark:text-white">
                      {t("wz_we_need_to_check_your_systems_")}
@@ -1136,7 +1148,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                    <div className="space-y-3 mb-4">
                      <input
                        type="text"
-                       placeholder="Your Name"
+                       placeholder={t("wz_ph_your_name", "Your Name")}
                        value={req.customer_name || ''}
                        onChange={(e) => setReq(prev => ({ ...prev, customer_name: e.target.value }))}
                        className="w-full p-3 sm:p-3.5 border rounded-xl bg-slate-50 dark:bg-zinc-800 dark:border-zinc-700 text-slate-900 dark:text-white"
@@ -1154,16 +1166,16 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                    <Button
                      onClick={handleFinishWizard}
                      disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10}
-                     className={`w-full h-12 rounded-xl text-base font-bold text-white transition-all ${
+                     className={`w-full min-h-12 h-auto py-2.5 px-4 whitespace-normal leading-snug rounded-xl text-base font-bold text-white transition-all ${
                         isPhonePreVerified ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20" : "bg-blue-600 hover:bg-blue-700"
                       }`}
                    >
                      {loading ? (
                        <span className="flex items-center gap-2 justify-center">
-                         <Loader2 className="w-4 h-4 animate-spin" /> {isPhonePreVerified ? "Submitting Request..." : "Sending OTP..."}
+                         <Loader2 className="w-4 h-4 animate-spin" /> {isPhonePreVerified ? t("wz_submitting_req", "Submitting Request...") : t("wz_sending_otp", "Sending OTP...")}
                        </span>
                      ) : (
-                       isPhonePreVerified ? "⚡ Request Free Callback (Instant)" : t("wz_request_a_free_callback")
+                       isPhonePreVerified ? t("wz_req_cb_instant", "⚡ Request Free Callback (Instant)") : t("wz_request_a_free_callback")
                      )}
                    </Button>
                    <div className="mt-5 p-4 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900">
@@ -1205,7 +1217,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white mt-6">{t("wz_2_existing_recorder_channels")}</h3>
                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[4, 8, 16, 32].map(ch => (
-                    <button key={ch} onClick={() => setReq(prev => ({ ...prev, existing_recorder_channels: ch }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_recorder_channels === ch ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300' : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 hover:border-blue-300'}`}>{ch} Ch</button>
+                    <button key={ch} onClick={() => setReq(prev => ({ ...prev, existing_recorder_channels: ch }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_recorder_channels === ch ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300' : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 hover:border-blue-300'}`}>{t("wz_ch_short", "{ch} Ch", { ch: String(ch) })}</button>
                   ))}
                </div>
                
@@ -1256,42 +1268,42 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
            const wirelessVariants = [
              {
                key: "wifi_indoor_ptz_count",
-               name: "Indoor 360° Pan-Tilt (Wi-Fi)",
+               name: t("wz_wv_in_ptz_n", "Indoor 360° Pan-Tilt (Wi-Fi)"),
                icon: "🏠",
-               desc: "Living room, bedroom, baby room, cashier counter",
-               badge: "360° Motorized View & 2-Way Audio",
+               desc: t("wz_wv_in_ptz_d", "Living room, bedroom, baby room, cashier counter"),
+               badge: t("wz_wv_in_ptz_b", "360° Motorized View & 2-Way Audio"),
                count: inPtzCount
              },
              {
                key: "wifi_indoor_fixed_count",
-               name: "Indoor Fixed Dome / Cube (Wi-Fi)",
+               name: t("wz_wv_in_fix_n", "Indoor Fixed Dome / Cube (Wi-Fi)"),
                icon: "🏢",
-               desc: "Hallways, corridors, reception desk, billing desk",
-               badge: "Fixed Angle • Compact • Tamper Resistant",
+               desc: t("wz_wv_in_fix_d", "Hallways, corridors, reception desk, billing desk"),
+               badge: t("wz_wv_in_fix_b", "Fixed Angle • Compact • Tamper Resistant"),
                count: inFixedCount
              },
              {
                key: "wifi_outdoor_bullet_count",
-               name: "Outdoor Fixed Weatherproof Bullet (Wi-Fi)",
+               name: t("wz_wv_out_bul_n", "Outdoor Fixed Weatherproof Bullet (Wi-Fi)"),
                icon: "🌧️",
-               desc: "Main gate, porch, driveway, perimeter wall",
-               badge: "Weatherproof IP66 • Night Color Vision",
+               desc: t("wz_wv_out_bul_d", "Main gate, porch, driveway, perimeter wall"),
+               badge: t("wz_wv_out_bul_b", "Weatherproof IP66 • Night Color Vision"),
                count: outBulletCount
              },
              {
                key: "wifi_outdoor_ptz_count",
-               name: "Outdoor 360° Pan-Tilt PTZ (Wi-Fi)",
+               name: t("wz_wv_out_ptz_n", "Outdoor 360° Pan-Tilt PTZ (Wi-Fi)"),
                icon: "🔄",
-               desc: "Open courtyard, terrace, front garden, yard",
-               badge: "360° Remote Sweep via Phone App • IP66",
+               desc: t("wz_wv_out_ptz_d", "Open courtyard, terrace, front garden, yard"),
+               badge: t("wz_wv_out_ptz_b", "360° Remote Sweep via Phone App • IP66"),
                count: outPtzCount
              },
              {
                key: "wifi_4g_count",
-               name: "4G SIM / Solar Standalone Camera",
+               name: t("wz_wv_4g_n", "4G SIM / Solar Standalone Camera"),
                icon: "📡",
-               desc: "Farmhouse, empty plot, remote gate, construction site",
-               badge: "No Broadband Wi-Fi Needed • In-built 4G SIM",
+               desc: t("wz_wv_4g_d", "Farmhouse, empty plot, remote gate, construction site"),
+               badge: t("wz_wv_4g_b", "No Broadband Wi-Fi Needed • In-built 4G SIM"),
                count: sim4gCount
              }
            ];
@@ -1353,11 +1365,11 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
             <div className="space-y-3 sm:space-y-5 animate-in fade-in">
               <div>
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">
-                  {isPureWireless ? "Choose Your Smart Wireless Cameras" : t("wz_how_many_cameras_do_you_need")}
+                  {isPureWireless ? t("wz_wf_choose_t", "Choose Your Smart Wireless Cameras") : t("wz_how_many_cameras_do_you_need")}
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">
                   {isPureWireless 
-                    ? "Select quantity for each camera type below. Dedicated MicroSD storage and mobile viewing included." 
+                    ? t("wz_wf_choose_d", "Select quantity for each camera type below. Dedicated MicroSD storage and mobile viewing included.") 
                     : t("wz_select_number_cameras")}
                 </p>
               </div>
@@ -1518,14 +1530,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                           <div className="space-y-0.5">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                Add Smart Wireless Cameras (Wi-Fi / 4G SIM)
+                                {t("wz_hyb_add_t", "Add Smart Wireless Cameras (Wi-Fi / 4G SIM)")}
                               </h4>
                               <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">
-                                Optional • Hybrid
+                                {t("wz_hyb_opt_b", "Optional • Hybrid")}
                               </span>
                             </div>
                             <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                              For remote gate, terrace, baby room, or farm corners without video cables.
+                              {t("wz_hyb_add_d", "For remote gate, terrace, baby room, or farm corners without video cables.")}
                             </p>
                           </div>
                         </div>
@@ -1536,7 +1548,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                           className="h-8 px-3 rounded-lg border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 font-bold text-xs shrink-0 flex items-center gap-1 group-hover:bg-blue-600 group-hover:text-white transition-all pointer-events-none"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          <span>Add</span>
+                          <span>{t("wz_hyb_add_btn", "Add")}</span>
                         </Button>
                       </div>
                     ) : !isWirelessExpanded && totalWireless > 0 ? (
@@ -1552,20 +1564,20 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                           <div className="space-y-0.5">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="font-bold text-xs sm:text-sm text-blue-950 dark:text-blue-100">
-                                Smart Wireless Cameras
+                                {t("wz_hyb_wf_cams", "Smart Wireless Cameras")}
                               </h4>
                               <span className="text-[10px] bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full">
-                                {totalWireless} Added
+                                {t("wz_hyb_n_added", "{n} Added", { n: String(totalWireless) })}
                               </span>
                             </div>
                             <p className="text-[11px] text-blue-700/80 dark:text-blue-300/80">
                               {[
-                                inPtzCount > 0 ? `${inPtzCount}x 360° PTZ` : null,
-                                inFixedCount > 0 ? `${inFixedCount}x Indoor Fixed` : null,
-                                outBulletCount > 0 ? `${outBulletCount}x Outdoor Bullet` : null,
-                                outPtzCount > 0 ? `${outPtzCount}x Outdoor PTZ` : null,
-                                sim4gCount > 0 ? `${sim4gCount}x 4G SIM` : null,
-                              ].filter(Boolean).join(" • ") || "Click to edit selection"}
+                                inPtzCount > 0 ? t("wz_hyb_s_in_ptz", "{n}x 360° PTZ", { n: String(inPtzCount) }) : null,
+                                inFixedCount > 0 ? t("wz_hyb_s_in_fix", "{n}x Indoor Fixed", { n: String(inFixedCount) }) : null,
+                                outBulletCount > 0 ? t("wz_hyb_s_out_bul", "{n}x Outdoor Bullet", { n: String(outBulletCount) }) : null,
+                                outPtzCount > 0 ? t("wz_hyb_s_out_ptz", "{n}x Outdoor PTZ", { n: String(outPtzCount) }) : null,
+                                sim4gCount > 0 ? t("wz_hyb_s_4g", "{n}x 4G SIM", { n: String(sim4gCount) }) : null,
+                              ].filter(Boolean).join(" • ") || t("wz_hyb_click_edit", "Click to edit selection")}
                             </p>
                           </div>
                         </div>
@@ -1575,7 +1587,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                           variant="ghost"
                           className="h-8 px-2.5 rounded-lg text-blue-700 dark:text-blue-300 font-bold text-xs shrink-0 flex items-center gap-1 hover:bg-blue-100 dark:hover:bg-blue-900/50 pointer-events-none"
                         >
-                          <span>Edit</span>
+                          <span>{t("wz_hyb_edit_btn", "Edit")}</span>
                           <ChevronDown className="w-4 h-4" />
                         </Button>
                       </div>
@@ -1583,21 +1595,21 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                       /* Expanded State: 5 Variants open with counters & Collapse button */
                       <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-blue-200 dark:border-blue-900/60 bg-blue-50/20 dark:bg-zinc-900/50 shadow-sm space-y-3 transition-all animate-in fade-in duration-200">
                         <div 
-                          className="flex items-center justify-between cursor-pointer select-none pb-2 border-b border-blue-100 dark:border-zinc-800"
+                          className="flex items-center justify-between gap-2 cursor-pointer select-none pb-2 border-b border-blue-100 dark:border-zinc-800"
                           onClick={() => setIsWirelessExpanded(false)}
                         >
                           <div className="space-y-0.5">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-base">📡</span>
                               <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">
-                                Smart Wireless Cameras (Wi-Fi & 4G SIM)
+                                {t("wz_hyb_panel_t", "Smart Wireless Cameras (Wi-Fi & 4G SIM)")}
                               </h3>
                               <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">
-                                {totalWireless > 0 ? `${totalWireless} Selected` : "Optional • Hybrid"}
+                                {totalWireless > 0 ? t("wz_hyb_n_selected", "{n} Selected", { n: String(totalWireless) }) : t("wz_hyb_opt_b", "Optional • Hybrid")}
                               </span>
                             </div>
                             <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                              For remote gate, terrace, baby room, or farm corners without video cables.
+                              {t("wz_hyb_add_d", "For remote gate, terrace, baby room, or farm corners without video cables.")}
                             </p>
                           </div>
                           <button
@@ -1607,9 +1619,9 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                               e.stopPropagation();
                               setIsWirelessExpanded(false);
                             }}
-                            title="Collapse wireless cameras"
+                            title={t("wz_hyb_collapse_tip", "Collapse wireless cameras")}
                           >
-                            <span className="hidden sm:inline">Done</span>
+                            <span className="hidden sm:inline">{t("wz_hyb_done_btn", "Done")}</span>
                             <ChevronUp className="w-4 h-4" />
                           </button>
                         </div>
@@ -1671,15 +1683,15 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                   </span>
                   {isPureWireless ? (
                     <span className="text-[10px] bg-blue-200 dark:bg-blue-900/80 text-blue-900 dark:text-blue-200 font-bold px-2 py-0.5 rounded-md">
-                      📡 Smart Wireless ({totalWireless} Cameras)
+                      {t("wz_sum_wf_pill", "📡 Smart Wireless ({n} Cameras)", { n: String(totalWireless) })}
                     </span>
                   ) : totalWireless > 0 ? (
                     <span className="text-[10px] bg-blue-200 dark:bg-blue-900/80 text-blue-900 dark:text-blue-200 font-bold px-2 py-0.5 rounded-md">
-                      ⚡ Hybrid Setup ({currentOutdoor + currentIndoor} Wired + {totalWireless} Smart Wireless)
+                      {t("wz_sum_hyb_pill", "⚡ Hybrid Setup ({wired} Wired + {wireless} Smart Wireless)", { wired: String(currentOutdoor + currentIndoor), wireless: String(totalWireless) })}
                     </span>
                   ) : (
                     <span className="text-[10px] bg-blue-200 dark:bg-blue-900/80 text-blue-900 dark:text-blue-200 font-bold px-2 py-0.5 rounded-md">
-                      🔌 Wired DVR Setup ({currentOutdoor + currentIndoor} Cameras)
+                      {t("wz_sum_wired_pill", "🔌 Wired DVR Setup ({n} Cameras)", { n: String(currentOutdoor + currentIndoor) })}
                     </span>
                   )}
                 </div>
@@ -1688,17 +1700,17 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
 
               {/* 5. When do you plan to start work at your site? */}
                 <div className="pt-3 border-t border-gray-100 dark:border-zinc-800">
-                  <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
                     <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
                       <span>⏱️</span>
-                      <span>When do you want work done on your site?</span>
+                      <span>{t("wz_tl_heading", "When do you want work done on your site?")}</span>
                     </h3>
                     <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full">
-                      Priority Dispatch
+                      {t("wz_tl_badge", "Priority Dispatch")}
                     </span>
                   </div>
                   <p className="text-[11px] text-gray-500 dark:text-zinc-400 mb-2.5">
-                    Helps us schedule certified technician availability and prioritize your site survey.
+                    {t("wz_tl_sub", "Helps us schedule certified technician availability and prioritize your site survey.")}
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
                     <button
@@ -1710,13 +1722,13 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                           : "border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300"
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">⚡ ASAP</span>
+                      <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
+                        <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_tl_asap_t", "⚡ ASAP")}</span>
                         <span className="text-[9px] bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 font-bold px-1.5 py-0.5 rounded">
-                          1-2 Days
+                          {t("wz_tl_asap_b", "1-2 Days")}
                         </span>
                       </div>
-                      <p className="text-[10px] text-gray-500 dark:text-zinc-400">Ready for instant site survey & work</p>
+                      <p className="text-[10px] text-gray-500 dark:text-zinc-400">{t("wz_tl_asap_d", "Ready for instant site survey & work")}</p>
                     </button>
 
                     <button
@@ -1729,9 +1741,9 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">📅 Within a Week</span>
+                        <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_tl_week_t", "📅 Within a Week")}</span>
                       </div>
-                      <p className="text-[10px] text-gray-500 dark:text-zinc-400">Finalizing quotation & setup</p>
+                      <p className="text-[10px] text-gray-500 dark:text-zinc-400">{t("wz_tl_week_d", "Finalizing quotation & setup")}</p>
                     </button>
 
                     <button
@@ -1744,9 +1756,9 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">🗓️ This Month</span>
+                        <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_tl_month_t", "🗓️ This Month")}</span>
                       </div>
-                      <p className="text-[10px] text-gray-500 dark:text-zinc-400">Site currently under construction</p>
+                      <p className="text-[10px] text-gray-500 dark:text-zinc-400">{t("wz_tl_month_d", "Site currently under construction")}</p>
                     </button>
 
                     <button
@@ -1759,21 +1771,21 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">🔍 Just Planning</span>
+                        <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_tl_plan_t", "🔍 Just Planning")}</span>
                       </div>
-                      <p className="text-[10px] text-gray-500 dark:text-zinc-400">Comparing prices & options</p>
+                      <p className="text-[10px] text-gray-500 dark:text-zinc-400">{t("wz_tl_plan_d", "Comparing prices & options")}</p>
                     </button>
                   </div>
                 </div>
               
               <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
-                <Button variant="outline" onClick={handlePrev} className="h-11 sm:h-12 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
+                <Button variant="outline" onClick={handlePrev} className="min-h-[44px] h-auto py-2.5 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2 shrink-0">
                   {t("wz_back")}
                 </Button>
                 <Button 
                   onClick={handleNext} 
                   disabled={totalCams === 0 || req.indoor_camera_count === undefined || req.outdoor_camera_count === undefined} 
-                  className={`flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white rounded-xl whitespace-nowrap overflow-hidden text-ellipsis px-2 transition-all duration-500 ${(totalCams === 0 || req.indoor_camera_count === undefined || req.outdoor_camera_count === undefined) ? 'bg-blue-600/70' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_25px_rgba(59,130,246,0.8)] ring-2 ring-blue-400 scale-[1.02] animate-pulse'}`}
+                  className={`flex-1 min-h-[44px] h-auto py-2.5 sm:py-3 text-[13px] sm:text-base font-bold text-white rounded-xl whitespace-normal text-center leading-snug px-3 transition-all duration-500 ${(totalCams === 0 || req.indoor_camera_count === undefined || req.outdoor_camera_count === undefined) ? 'bg-blue-600/70' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_25px_rgba(59,130,246,0.8)] ring-2 ring-blue-400 scale-[1.02] animate-pulse'}`}
                 >
                   {t("wz_confirm_cameras")}
                 </Button>
@@ -1904,13 +1916,13 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
               </div>
               
               <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
-                <Button variant="outline" onClick={handlePrev} className="h-11 sm:h-12 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
+                <Button variant="outline" onClick={handlePrev} className="min-h-[44px] h-auto py-2.5 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2 shrink-0">
                   {t("wz_back")}
                 </Button>
                 <Button 
                   onClick={handleNext} 
                   disabled={req.recording_days === undefined || !req.recording_mode}
-                  className={`flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white rounded-xl whitespace-nowrap overflow-hidden text-ellipsis px-2 transition-all duration-500 ${(req.recording_days === undefined || !req.recording_mode) ? 'bg-blue-600/70' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_25px_rgba(59,130,246,0.8)] ring-2 ring-blue-400 scale-[1.02] animate-pulse'}`}
+                  className={`flex-1 min-h-[44px] h-auto py-2.5 sm:py-3 text-[13px] sm:text-base font-bold text-white rounded-xl whitespace-normal text-center leading-snug px-3 transition-all duration-500 ${(req.recording_days === undefined || !req.recording_mode) ? 'bg-blue-600/70' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_25px_rgba(59,130,246,0.8)] ring-2 ring-blue-400 scale-[1.02] animate-pulse'}`}
                 >
                   {t("wz_confirm_recording")}
                 </Button>
@@ -1964,8 +1976,8 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
           return (
             <div className="space-y-3.5 sm:space-y-5 animate-in fade-in">
               <div>
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">Site & Mounting Conditions</h2>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">Help us prepare the right mounting hardware and cabling length for your site.</p>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{t("wz_site_t", "Site & Mounting Conditions")}</h2>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{t("wz_site_d", "Help us prepare the right mounting hardware and cabling length for your site.")}</p>
               </div>
               
               <div className="space-y-3 sm:space-y-4">
@@ -2011,38 +2023,38 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
 
                 {req.technology_preference === "Wireless" ? (
                   <div>
-                    <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">3. Installation & Setup Preference</h3>
+                    <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">{t("wz_ins_h", "3. Installation & Setup Preference")}</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
                       <button type="button" onClick={() => updateReq({ installation_preference: "pro", cabling_done: false })}
                         className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${(req.installation_preference || "pro") === "pro" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Pro Installation Fitting</span>
-                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">Full Service</span>
+                        <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
+                          <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_ins_pro_t", "Pro Installation Fitting")}</span>
+                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">{t("wz_ins_pro_b", "Full Service")}</span>
                         </div>
-                        <p className="text-[11px] text-gray-500 dark:text-zinc-400">Certified technician visits for physical drill mounting & phone app setup.</p>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400">{t("wz_ins_pro_d", "Certified technician visits for physical drill mounting & phone app setup.")}</p>
                       </button>
                       <button type="button" onClick={() => updateReq({ installation_preference: "diy", cabling_done: false })}
                         className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.installation_preference === "diy" ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">DIY Self-Installation</span>
-                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">Self Setup</span>
+                        <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
+                          <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_ins_diy_t", "DIY Self-Installation")}</span>
+                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">{t("wz_ins_diy_b", "Self Setup")}</span>
                         </div>
-                        <p className="text-[11px] text-gray-500 dark:text-zinc-400">Delivered to your doorstep. Plug into power and pair via mobile app.</p>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400">{t("wz_ins_diy_d", "Delivered to your doorstep. Plug into power and pair via mobile app.")}</p>
                       </button>
                     </div>
 
                     {/* Camera Power & Electrical Cabling Requirement */}
                     <div className="mt-4">
-                      <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
                         <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider">
-                          4. Camera Power Point Availability
+                          {t("wz_pwr_h", "4. Camera Power Point Availability")}
                         </h3>
                         <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full">
-                          Zero Video Cabling
+                          {t("wz_pwr_badge", "Zero Video Cabling")}
                         </span>
                       </div>
                       <p className="text-[11px] text-gray-500 dark:text-zinc-400 mb-2">
-                        Cameras connect to Wi-Fi/4G wirelessly, but each requires electrical power. Select your site condition:
+                        {t("wz_pwr_sub", "Cameras connect to Wi-Fi/4G wirelessly, but each requires electrical power. Select your site condition:")}
                       </p>
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
@@ -2056,14 +2068,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                               : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
                           }`}
                         >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Power Socket Nearby</span>
+                          <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
+                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_pwr_sock_t", "Power Socket Nearby")}</span>
                             <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">
-                              No Extra Wire
+                              {t("wz_pwr_sock_b", "No Extra Wire")}
                             </span>
                           </div>
                           <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                            Power socket within 1.5m of each camera. Simply plug adapter into socket.
+                            {t("wz_pwr_sock_d", "Power socket within 1.5m of camera spot. Standard adapter cable reaches directly.")}
                           </p>
                         </button>
 
@@ -2085,14 +2097,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                               : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
                           }`}
                         >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Need Power Cabling</span>
+                          <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
+                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_pwr_need_t", "Need Power Cabling")}</span>
                             <span className="text-[9px] bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 font-bold px-1.5 py-0.5 rounded">
-                              Custom Meters
+                              {t("wz_pwr_need_b", "Custom Meters")}
                             </span>
                           </div>
                           <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                            No socket nearby. Install 2-core copper electrical wire from switchboard to camera points.
+                            {t("wz_pwr_need_d", "No socket nearby. Install 2-core copper electrical wire from nearest power point.")}
                           </p>
                         </button>
 
@@ -2106,14 +2118,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                               : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
                           }`}
                         >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Decide on Site Visit</span>
+                          <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
+                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_pwr_surv_t", "Decide on Site Visit")}</span>
                             <span className="text-[9px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">
-                              Pay on Actuals
+                              {t("wz_pwr_surv_b", "Pay on Actuals")}
                             </span>
                           </div>
                           <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                            Technician inspects site power points and quotes wire as per actual length needed.
+                            {t("wz_pwr_surv_d", "Technician inspects site power points and lays only required wire meters.")}
                           </p>
                         </button>
                       </div>
@@ -2128,10 +2140,10 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                           <div className="mt-2.5 p-3 rounded-xl border bg-amber-50/70 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in">
                             <div>
                               <span className="block font-bold text-gray-900 dark:text-white text-xs">
-                                Estimated 2-Core Electrical Power Wire Required
+                                {t("wz_pwr_est_t", "Estimated 2-Core Electrical Power Wire Required")}
                               </span>
                               <span className="block text-[11px] text-amber-800 dark:text-amber-300 font-medium">
-                                ~{Math.round(selectedPowerMeters / wirelessCams)}m / camera ({selectedPowerMeters}m total power wire)
+                                {t("wz_pwr_est_d", "~{perCam}m / camera ({total}m total power wire)", { perCam: String(Math.round(selectedPowerMeters / wirelessCams)), total: String(selectedPowerMeters) })}
                               </span>
                             </div>
 
@@ -2211,16 +2223,16 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                       {isAddonFlow ? (
                         <div>
                           <div className="mb-2">
-                            <div className="flex items-center justify-between mb-1">
+                            <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                               <h3 className="text-xs sm:text-sm font-bold text-gray-800 dark:text-zinc-200 uppercase tracking-wider">
-                                3. Cabling for NEW Add-on Cameras ({wiredCameraCount} Camera{wiredCameraCount > 1 ? 's' : ''})
+                                {t("wz_addon_cbl_h", "3. Cabling for NEW Add-on Cameras ({n} {camWord})", { n: String(wiredCameraCount), camWord: wiredCameraCount > 1 ? t("wz_cam_word_many", "Cameras") : t("wz_cam_word_one", "Camera") })}
                               </h3>
                               <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full">
-                                System Expansion
+                                {t("wz_addon_exp_b", "System Expansion")}
                               </span>
                             </div>
                             <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                              Do you have working cables already pre-laid to the new spots, or does our technician need to route new wire from your recorder?
+                              {t("wz_addon_cbl_q", "Do you have working cables already routed up to these new camera spots?")}
                             </p>
                           </div>
 
@@ -2240,14 +2252,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                                   : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'
                               }`}
                             >
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Need New Cables</span>
+                              <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                                <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_need_new_cables")}</span>
                                 <span className="text-[9px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">
-                                  Recommended
+                                  {t("wz_std_cable_tag")}
                                 </span>
                               </div>
                               <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                                Technician routes fresh cables from recorder to each new spot. Includes free cable allowance (~15m/cam) & full wiring.
+                                {t("wz_need_new_cables_desc")}
                               </p>
                             </button>
 
@@ -2266,14 +2278,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                                   : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'
                               }`}
                             >
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">All Cables Pre-Laid</span>
+                              <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
+                                <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_prelaid_t", "All Cables Pre-Laid")}</span>
                                 <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">
-                                  Fitting Only
+                                  {t("wz_prelaid_b", "Fitting Only")}
                                 </span>
                               </div>
                               <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                                Working cables already reach every spot (or replacing old/faulty cameras at existing spots).
+                                {t("wz_prelaid_d", "Working cables already reach every new camera spot. Just mount & connect.")}
                               </p>
                             </button>
 
@@ -2293,14 +2305,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                                     : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'
                                 }`}
                               >
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Mixed Setup</span>
+                                <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
+                                  <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_mixed_t", "Mixed Setup")}</span>
                                   <span className="text-[9px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 font-bold px-1.5 py-0.5 rounded">
-                                    Custom
+                                    {t("wz_mixed_b", "Custom")}
                                   </span>
                                 </div>
                                 <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                                  Replacing faulty cameras on existing wires AND laying new cables to new camera spots.
+                                  {t("wz_mixed_d", "Replacing faulty cameras on old wire + running new cable to some spots.")}
                                 </p>
                               </button>
                             )}
@@ -2311,11 +2323,11 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                             <div className="mt-2.5 p-3 rounded-xl border bg-purple-50/70 dark:bg-purple-950/40 border-purple-200 dark:border-purple-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in">
                               <div>
                                 <span className="block font-bold text-gray-900 dark:text-white text-xs">
-                                  How many cameras need NEW cables routed?
+                                  {t("wz_mixed_q", "How many cameras need NEW cables routed?")}
                                 </span>
                                 <span className="block text-[11px] text-purple-800 dark:text-purple-300 font-medium mt-0.5">
-                                  • <strong>{currentCablingNeeded} camera{currentCablingNeeded > 1 ? 's' : ''}</strong> will get fresh wire & full installation (~{currentCablingNeeded * 15}m included)<br />
-                                  • <strong>{wiredCameraCount - currentCablingNeeded} camera{wiredCameraCount - currentCablingNeeded > 1 ? 's' : ''}</strong> will reuse existing cables (mounting/fitting only)
+                                  • <strong>{currentCablingNeeded} {currentCablingNeeded > 1 ? t("wz_cam_word_many", "Cameras") : t("wz_cam_word_one", "Camera")}</strong> {t("wz_mixed_new_note", "will get fresh wire & full installation")} (~{currentCablingNeeded * 15}{t("wz_m")})<br />
+                                  • <strong>{wiredCameraCount - currentCablingNeeded} {(wiredCameraCount - currentCablingNeeded) > 1 ? t("wz_cam_word_many", "Cameras") : t("wz_cam_word_one", "Camera")}</strong> {t("wz_mixed_reuse_note", "will reuse existing cables (mounting/fitting only)")}
                                 </span>
                               </div>
                               <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 px-2.5 py-1 rounded-xl border border-purple-200 dark:border-zinc-700 shadow-sm self-start sm:self-auto shrink-0">
@@ -2357,9 +2369,9 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                             <div className="mt-2.5 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2 animate-in fade-in">
                               <span className="text-base shrink-0">⚠️</span>
                               <div>
-                                <p className="font-bold">Existing Cables Verification Notice</p>
+                                <p className="font-bold">{t("wz_exist_notice_t", "Existing Cables Verification Notice")}</p>
                                 <p className="text-[10px] opacity-90 mt-0.5">
-                                  You selected that working cables are already present at every camera location. If new wire routing is required on-site, cable and routing labor will be charged on actuals.
+                                  {t("wz_exist_notice_d", "You selected that working cables already exist at your site. Our technician will test continuity during fitting; faulty old wire can be replaced on actuals.")}
                                 </p>
                               </div>
                             </div>
@@ -2374,7 +2386,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                               </h3>
                             </div>
                             <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                              Is your property already pre-wired with CCTV cables, or do we need to lay new cables?
+                              {t("wz_prewired_q", "Is your property already pre-wired with CCTV cables inside the walls?")}
                             </p>
                           </div>
 
@@ -2393,14 +2405,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                                   : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'
                               }`}
                             >
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">No (Need New Cabling)</span>
+                              <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
+                                <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_no_new_t", "No (Need New Cabling)")}</span>
                                 <span className="text-[9px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">
-                                  Standard
+                                  {t("wz_no_new_b", "Standard")}
                                 </span>
                               </div>
                               <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                                Technician brings wire and routes cables across the property. Includes ~15m wire per camera.
+                                {t("wz_no_new_d", "Technician brings cable and does neat PVC pipe / clip wiring on site.")}
                               </p>
                             </button>
 
@@ -2418,14 +2430,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                                   : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'
                               }`}
                             >
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Yes (Pre-Wired Site)</span>
+                              <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
+                                <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_yes_pre_t", "Yes (Pre-Wired Site)")}</span>
                                 <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">
-                                  Fitting Only
+                                  {t("wz_prelaid_b", "Fitting Only")}
                                 </span>
                               </div>
                               <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                                Cables are already concealed/pulled by electrician during construction.
+                                {t("wz_prelaid_d", "Working cables already reach every new camera spot. Just mount & connect.")}
                               </p>
                             </button>
                           </div>
@@ -2434,9 +2446,9 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                             <div className="mt-2.5 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2 animate-in fade-in">
                               <span className="text-base shrink-0">⚠️</span>
                               <div>
-                                <p className="font-bold">Pre-Wired Site Notice</p>
+                                <p className="font-bold">{t("wz_pre_notice_t", "Pre-Wired Site Notice")}</p>
                                 <p className="text-[10px] opacity-90 mt-0.5">
-                                  Please ensure that pre-laid cables are tested and reach each camera spot and the central recorder location.
+                                  {t("wz_pre_notice_d", "Please ensure pre-laid cables inside walls are working and reachable at both ends. Technician will verify before mounting.")}
                                 </p>
                               </div>
                             </div>
@@ -2447,7 +2459,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                       {/* Cable Meter Adjuster when Cabling is Required */}
                       {req.cabling_done === false && (
                         <div className="mt-2.5 space-y-2 animate-in fade-in">
-                          <div className={`p-2.5 sm:p-3 rounded-xl border flex items-center justify-between gap-2 transition-all ${
+                          <div className={`p-2.5 sm:p-3 rounded-xl border flex flex-wrap items-center justify-between gap-2 transition-all ${
                             isExceeded 
                               ? 'bg-red-50/80 dark:bg-red-950/40 border-red-200 dark:border-red-900/60' 
                               : 'bg-blue-50/70 dark:bg-blue-950/40 border-blue-100 dark:border-blue-900'
@@ -2455,7 +2467,11 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                             <div>
                               <span className="block font-bold text-gray-900 dark:text-white text-xs">
                                 {isAddonFlow && currentMode === "mixed"
-                                  ? `Approx. Total Cable for ${activeCablingCameras} New Spot${activeCablingCameras > 1 ? 's' : ''} (${wiredCameraCount - activeCablingCameras} Reusing Wire)`
+                                  ? t("wz_approx_new_cbl", "Approx. Total Cable for {newSpots} New {spotWord} ({reuseCount} Reusing Wire)", {
+                                      newSpots: String(activeCablingCameras),
+                                      spotWord: activeCablingCameras > 1 ? t("wz_spot_word_many", "Spots") : t("wz_spot_word_one", "Spot"),
+                                      reuseCount: String(wiredCameraCount - activeCablingCameras),
+                                    })
                                   : t("wz_approx_total_cable_required")
                                 }
                               </span>
@@ -2463,7 +2479,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                                 {t("wz_free_included_text")}: {freeLimitMeters}{t("wz_m")} ({activeCablingCameras} {t("wz_cameras_x_15m")})
                                 {wifiCameraCount > 0 && (
                                   <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1">
-                                    • {wifiCameraCount} Smart Wi-Fi {wifiCameraCount === 1 ? 'camera uses' : 'cameras use'} zero video cable
+                                    {t("wz_wf_zero_cbl_note", "• {n} Smart Wi-Fi {camWord} — zero video cable", { n: String(wifiCameraCount), camWord: wifiCameraCount === 1 ? t("wz_cam_word_one", "Camera") : t("wz_cam_word_many", "Cameras") })}
                                   </span>
                                 )}
                               </span>
@@ -2540,7 +2556,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                                 {t("wz_exceeds_free_limit")} (+{excessMeters} {t("wz_meters")})
                               </p>
                               <p className="text-[10px] opacity-90 mt-0.5">
-                                Your base package includes free installation for up to <strong className="font-bold">{freeLimitMeters}{t("wz_m")}</strong> of cabling. Extra cable beyond this limit will be itemized on your final quote.
+                                {t("wz_base_pkg_cbl", "Your base package includes free installation for up to {meters} of cabling. Extra cable beyond this limit will be itemized on your final quote.", { meters: `${freeLimitMeters}${t("wz_m")}` })}
                               </p>
                             </div>
                           </div>
@@ -2561,17 +2577,17 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
 
                     return (
                       <div className="mt-3 p-3 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/40 dark:bg-amber-950/20 animate-in fade-in">
-                        <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
                           <h3 className="text-xs sm:text-sm font-bold text-gray-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
                             <span>⚡</span>
-                            <span>Power Availability for {wifiCount} Smart Wi-Fi {wifiCount === 1 ? 'Camera' : 'Cameras'}</span>
+                            <span>{t("wz_hyb_pwr_h", "Power Availability for {n} Smart Wi-Fi {camWord}", { n: String(wifiCount), camWord: wifiCount === 1 ? t("wz_cam_word_one", "Camera") : t("wz_cam_word_many", "Cameras") })}</span>
                           </h3>
                           <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full">
-                            Zero Video Cable
+                            {t("wz_hyb_pwr_b", "Zero Video Cable")}
                           </span>
                         </div>
                         <p className="text-[11px] text-gray-600 dark:text-zinc-400 mb-2">
-                          Your wired cameras connect to the DVR with video cable. For your {wifiCount} Smart Wi-Fi {wifiCount === 1 ? 'camera' : 'cameras'}, choose power availability:
+                          {t("wz_hyb_pwr_sub", "Your wired cameras connect to the DVR via CCTV cable, while Wi-Fi cameras only need an electrical power point:")}
                         </p>
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
@@ -2585,14 +2601,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                                 : 'border-gray-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60'
                             }`}
                           >
-                            <div className="flex items-center justify-between mb-0.5">
-                              <span className="font-bold text-gray-900 dark:text-white text-xs">Socket Nearby</span>
+                            <div className="flex flex-wrap items-center justify-between gap-1 mb-0.5">
+                              <span className="font-bold text-gray-900 dark:text-white text-xs">{t("wz_hyb_sock_t", "Socket Nearby")}</span>
                               <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.2 rounded">
-                                No Extra Wire
+                                {t("wz_pwr_sock_b", "No Extra Wire")}
                               </span>
                             </div>
                             <p className="text-[10px] text-gray-500 dark:text-zinc-400">
-                              Power socket within 1.5m of each Wi-Fi camera. Plug adapter directly.
+                              {t("wz_hyb_sock_d", "Power socket within 1.5m of each Wi-Fi camera spot.")}
                             </p>
                           </button>
 
@@ -2612,14 +2628,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                                 : 'border-gray-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60'
                             }`}
                           >
-                            <div className="flex items-center justify-between mb-0.5">
-                              <span className="font-bold text-gray-900 dark:text-white text-xs">Need Power Wire</span>
+                            <div className="flex flex-wrap items-center justify-between gap-1 mb-0.5">
+                              <span className="font-bold text-gray-900 dark:text-white text-xs">{t("wz_hyb_need_t", "Need Power Wire")}</span>
                               <span className="text-[9px] bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 font-bold px-1.5 py-0.2 rounded">
-                                Custom Meters
+                                {t("wz_pwr_need_b", "Custom Meters")}
                               </span>
                             </div>
                             <p className="text-[10px] text-gray-500 dark:text-zinc-400">
-                              Install 2-core copper electrical wire from switchboard to Wi-Fi camera.
+                              {t("wz_hyb_need_d", "Install 2-core copper electrical wire from the nearest power point.")}
                             </p>
                           </button>
 
@@ -2633,14 +2649,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                                 : 'border-gray-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60'
                             }`}
                           >
-                            <div className="flex items-center justify-between mb-0.5">
-                              <span className="font-bold text-gray-900 dark:text-white text-xs">Site Visit</span>
+                            <div className="flex flex-wrap items-center justify-between gap-1 mb-0.5">
+                              <span className="font-bold text-gray-900 dark:text-white text-xs">{t("wz_hyb_surv_t", "Site Visit")}</span>
                               <span className="text-[9px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.2 rounded">
-                                Pay on Actuals
+                                {t("wz_pwr_surv_b", "Pay on Actuals")}
                               </span>
                             </div>
                             <p className="text-[10px] text-gray-500 dark:text-zinc-400">
-                              Technician checks power points during install & quotes on actuals.
+                              {t("wz_hyb_surv_d", "Technician checks power points and lays only required wire meters.")}
                             </p>
                           </button>
                         </div>
@@ -2650,10 +2666,10 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                           <div className="mt-2 p-2.5 rounded-xl border bg-white dark:bg-zinc-900 border-amber-200 dark:border-zinc-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-in fade-in">
                             <div>
                               <span className="block font-bold text-gray-900 dark:text-white text-xs">
-                                Estimated 2-Core Electrical Power Wire Required
+                                {t("wz_pwr_est_t", "Estimated 2-Core Electrical Power Wire Required")}
                               </span>
                               <span className="block text-[11px] text-amber-800 dark:text-amber-300 font-medium">
-                                ~{Math.round(selectedPowerMeters / wifiCount)}m / camera ({selectedPowerMeters}m total power wire)
+                                {t("wz_pwr_est_d", "~{perCam}m / camera ({total}m total power wire)", { perCam: String(Math.round(selectedPowerMeters / wifiCount)), total: String(selectedPowerMeters) })}
                               </span>
                             </div>
 
@@ -2713,15 +2729,15 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
               </div>
 
               <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
-                <Button variant="outline" onClick={handlePrev} className="h-11 sm:h-12 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
+                <Button variant="outline" onClick={handlePrev} className="min-h-[44px] h-auto py-2.5 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2 shrink-0">
                   {t("wz_back")}
                 </Button>
                 <Button 
                   onClick={handleNext} 
                   disabled={!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || (req.technology_preference !== "Wireless" && req.cabling_done === undefined)}
-                  className={`flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white rounded-xl whitespace-nowrap overflow-hidden text-ellipsis px-2 transition-all duration-500 ${(!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || (req.technology_preference !== "Wireless" && req.cabling_done === undefined)) ? 'bg-blue-600/70' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_25px_rgba(59,130,246,0.8)] ring-2 ring-blue-400 scale-[1.02] animate-pulse'}`}
+                  className={`flex-1 min-h-[44px] h-auto py-2.5 sm:py-3 text-[13px] sm:text-base font-bold text-white rounded-xl whitespace-normal text-center leading-snug px-3 transition-all duration-500 ${(!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || (req.technology_preference !== "Wireless" && req.cabling_done === undefined)) ? 'bg-blue-600/70' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_25px_rgba(59,130,246,0.8)] ring-2 ring-blue-400 scale-[1.02] animate-pulse'}`}
                 >
-                  <span>Continue to Mobile & Internet →</span>
+                  <span>{t("wz_btn_cont_mobile")}</span>
                 </Button>
               </div>
             </div>
@@ -2732,13 +2748,13 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
             <div className="space-y-4 sm:space-y-6 animate-in fade-in">
               <div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-[11px] font-black uppercase tracking-wider mb-2">
-                  <span>📱 Remote Phone Viewing</span>
+                  <span>{t("wz_remote_phone_pill")}</span>
                 </div>
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">
-                  Mobile App & Internet Connection
+                  {t("wz_mobile_app_title")}
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">
-                  Choose how you want to watch live camera video on your smartphone.
+                  {t("wz_net_sub", "Choose how you want to watch live camera video on your smartphone.")}
                 </p>
               </div>
 
@@ -2746,7 +2762,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
               <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50/60 dark:from-blue-950/40 dark:to-indigo-950/30 border border-blue-100 dark:border-blue-900/40 text-xs text-blue-900 dark:text-blue-200 flex items-center gap-2.5">
                 <span className="text-lg shrink-0">✨</span>
                 <span className="font-medium">
-                  All packages include <strong>free lifetime mobile app setup</strong> (Android & iOS) with multi-phone access for your family or staff.
+                  {t("wz_net_app_note", "All packages include free lifetime mobile app setup (Android & iOS) with multi-phone access for your family or staff.")}
                 </span>
               </div>
 
@@ -2763,14 +2779,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                           onClick={() => updateReq({ broadband_status: "yes", wants_remote_viewing: true })}
                           className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${(req.broadband_status || "yes") === "yes" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'}`}
                         >
-                          <div className="flex items-center justify-between mb-1">
+                          <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
                             <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
                               <span>📶</span>
-                              <span>Have Wi-Fi (Full Coverage)</span>
+                              <span>{t("wz_wf_full_t", "Have Wi-Fi (Full Coverage)")}</span>
                             </span>
-                            <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">Included</span>
+                            <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">{t("cmp_included", "Included")}</span>
                           </div>
-                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">JioFiber, Airtel, or local Wi-Fi reaches all camera spots clearly.</p>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">{t("wz_wf_full_d", "Strong Wi-Fi signal reaches every camera spot. Direct connect, no extra gear.")}</p>
                         </button>
 
                         {/* 2. Have Wi-Fi, but Outer Spots are Far (Need Extender) */}
@@ -2779,14 +2795,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                           onClick={() => updateReq({ broadband_status: "wifi_extender", wants_remote_viewing: true })}
                           className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "wifi_extender" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'}`}
                         >
-                          <div className="flex items-center justify-between mb-1">
+                          <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
                             <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
                               <span>📡</span>
-                              <span>Have Wi-Fi, but Far Spots</span>
+                              <span>{t("wz_wf_far_t", "Have Wi-Fi, but Far Spots")}</span>
                             </span>
-                            <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-bold px-1.5 py-0.5 rounded">Extender Included</span>
+                            <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-bold px-1.5 py-0.5 rounded">{t("wz_ext_incl_b", "Extender Included")}</span>
                           </div>
-                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">Router is inside, but gate/parking has weak signal. Includes Wi-Fi Range Extender.</p>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">{t("wz_wf_far_d", "Router is far from camera spots. We include a Wi-Fi Range Extender for smooth video.")}</p>
                         </button>
 
                         {/* 3. No Wi-Fi (Close Spots - Central 4G Router) */}
@@ -2795,14 +2811,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                           onClick={() => updateReq({ broadband_status: "sim_router", wants_remote_viewing: true })}
                           className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "sim_router" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'}`}
                         >
-                          <div className="flex items-center justify-between mb-1">
+                          <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
                             <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
                               <span>🌐</span>
-                              <span>No Wi-Fi (Spots Within 20m)</span>
+                              <span>{t("wz_no_wf_20m_t", "No Wi-Fi (Spots Within 20m)")}</span>
                             </span>
-                            <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">Router Included</span>
+                            <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">{t("wz_sim_rtr_incl_b", "Router Included")}</span>
                           </div>
-                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">Cameras are close together. 1 Central 4G Router connects all cameras (1 SIM recharge).</p>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">{t("wz_no_wf_20m_d", "We include a 4G SIM Wi-Fi Router so all nearby cameras connect online smoothly.")}</p>
                         </button>
 
                         {/* 4. No Wi-Fi (Spots Far Apart / Farm / Yard - Independent 4G SIM Cameras) */}
@@ -2811,14 +2827,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                           onClick={() => updateReq({ broadband_status: "independent_4g", wants_remote_viewing: true })}
                           className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "independent_4g" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'}`}
                         >
-                          <div className="flex items-center justify-between mb-1">
+                          <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
                             <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
                               <span>🛰️</span>
-                              <span>No Wi-Fi (Spots Far Apart / Farm)</span>
+                              <span>{t("wz_no_wf_far_t", "No Wi-Fi (Spots Far Apart / Farm)")}</span>
                             </span>
-                            <span className="text-[10px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 font-bold px-1.5 py-0.5 rounded">Direct 4G SIM</span>
+                            <span className="text-[10px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 font-bold px-1.5 py-0.5 rounded">{t("wz_ind_4g_b", "Direct 4G SIM")}</span>
                           </div>
-                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">Spots are 50m-200m+ apart (farm/yard). Central router not feasible. Each camera gets its own 4G SIM.</p>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">{t("wz_no_wf_far_d", "Spots are far apart without broadband. Uses standalone 4G SIM cameras directly.")}</p>
                         </button>
                       </div>
 
@@ -2827,28 +2843,28 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                         <div className="p-2.5 bg-purple-50/80 dark:bg-purple-950/40 rounded-xl border border-purple-200 dark:border-purple-900/60 text-[11px] text-purple-900 dark:text-purple-200 flex items-start gap-2">
                           <span className="text-sm shrink-0">🛰️</span>
                           <span>
-                            <strong>Independent 4G SIM Cameras Selected:</strong> Ideal for large farmhouses, warehouses, or distant gates where Wi-Fi cannot reach. Each camera operates independently on 4G mobile network towers. No router or cabling required between camera points!
+                            {t("wz_info_ind_4g", "Each camera works independently with its own 4G SIM card — ideal for farms, plots & gates.")}
                           </span>
                         </div>
                       ) : req.broadband_status === "wifi_extender" ? (
                         <div className="p-2.5 bg-indigo-50/80 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-900/60 text-[11px] text-indigo-900 dark:text-indigo-200 flex items-start gap-2">
                           <span className="text-sm shrink-0">📡</span>
                           <span>
-                            <strong>Wi-Fi Range Extender Included:</strong> We've included a high-gain Wi-Fi Range Extender to repeat your home Wi-Fi signal to distant outdoor spots like your main gate or porch.
+                            {t("wz_info_wf_far", "A high-gain Wi-Fi Range Extender will be added so far corners never drop video.")}
                           </span>
                         </div>
                       ) : req.broadband_status === "sim_router" ? (
                         <div className="p-2.5 bg-blue-50/80 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-900/60 text-[11px] text-blue-900 dark:text-blue-200 flex items-start gap-2">
                           <span className="text-sm shrink-0">🌐</span>
                           <span>
-                            <strong>Central 4G Router Included:</strong> We've included a 4G SIM Wi-Fi Router. All your cameras will connect to this single Wi-Fi hotspot, so you only have to recharge 1 SIM card per month.
+                            {t("wz_info_sim_rtr", "A 4G SIM Wi-Fi Router will be included (supports Jio, Airtel, Vi) for all cameras.")}
                           </span>
                         </div>
                       ) : (
                         <div className="p-2.5 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-900/60 text-[11px] text-emerald-900 dark:text-emerald-200 flex items-start gap-2">
                           <span className="text-sm shrink-0">✓</span>
                           <span>
-                            <strong>Existing Wi-Fi Coverage:</strong> Standard Smart Wi-Fi cameras will connect directly to your home/office Wi-Fi router. No extra networking hardware needed!
+                            {t("wz_info_wf_full", "Your cameras connect directly to your existing Wi-Fi router for 24/7 mobile viewing.")}
                           </span>
                         </div>
                       )}
@@ -2860,14 +2876,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                         onClick={() => updateReq({ broadband_status: "yes", wants_remote_viewing: true })}
                         className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer ${(req.broadband_status || "yes") === "yes" ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/50 shadow-sm ring-1 ring-blue-500/30' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'}`}
                       >
-                        <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1.5">
                           <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
                             <span>📶</span>
-                            <span>Have Wi-Fi Router</span>
+                            <span>{t("wz_w_wifi_t", "Have Wi-Fi Router")}</span>
                           </span>
-                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full">Included</span>
+                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full">{t("cmp_included", "Included")}</span>
                         </div>
-                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-relaxed">Connect DVR to your Wi-Fi router via LAN cable for 24/7 mobile live view on phone.</p>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-relaxed">{t("wz_w_wifi_d", "Connect DVR/NVR to your existing router for live phone & PC view.")}</p>
                       </button>
 
                       <button
@@ -2875,14 +2891,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                         onClick={() => updateReq({ broadband_status: "sim_router", wants_remote_viewing: true })}
                         className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "sim_router" ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/50 shadow-sm ring-1 ring-blue-500/30' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'}`}
                       >
-                        <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1.5">
                           <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
                             <span>🌐</span>
-                            <span>Add 4G SIM Router</span>
+                            <span>{t("wz_w_sim_t", "Add 4G SIM Router")}</span>
                           </span>
-                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full">Router Included</span>
+                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full">{t("wz_sim_rtr_incl_b", "Router Included")}</span>
                         </div>
-                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-relaxed">No broadband at site. Include 4G SIM Wi-Fi router so you can still view live on mobile.</p>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-relaxed">{t("wz_w_sim_d", "No broadband? Add a 4G SIM Wi-Fi router so your DVR/NVR goes online anywhere.")}</p>
                       </button>
 
                       <button
@@ -2890,28 +2906,28 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                         onClick={() => updateReq({ broadband_status: "no", wants_remote_viewing: false })}
                         className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "no" ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/50 shadow-sm ring-1 ring-blue-500/30' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'}`}
                       >
-                        <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1.5">
                           <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
                             <span>📺</span>
-                            <span>Offline / TV Only</span>
+                            <span>{t("wz_w_off_t", "Offline / TV Only")}</span>
                           </span>
-                          <span className="text-[10px] bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 font-bold px-2 py-0.5 rounded-full">Offline</span>
+                          <span className="text-[10px] bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 font-bold px-2 py-0.5 rounded-full">{t("wz_w_off_b", "Offline")}</span>
                         </div>
-                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-relaxed">Local recording only. Connect directly to TV or LED monitor with HDMI/VGA cable.</p>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-relaxed">{t("wz_w_off_d", "Record 24/7 locally on HDD and watch on your TV/Monitor without internet.")}</p>
                       </button>
                     </div>
                   )}
               </div>
 
               <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
-                <Button variant="outline" onClick={handlePrev} className="h-11 sm:h-12 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
+                <Button variant="outline" onClick={handlePrev} className="min-h-[44px] h-auto py-2.5 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2 shrink-0">
                   {t("wz_back")}
                 </Button>
                 <Button 
                   onClick={handleNext} 
-                  className="flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 rounded-xl whitespace-nowrap overflow-hidden text-ellipsis px-2"
+                  className="flex-1 min-h-[44px] h-auto py-2.5 sm:py-3 text-[13px] sm:text-base font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 rounded-xl whitespace-normal text-center leading-snug px-3"
                 >
-                  <span>Continue to Instant Quote →</span>
+                  <span>{t("wz_btn_cont_quote")}</span>
                 </Button>
               </div>
             </div>
@@ -2949,14 +2965,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                   onClick={() => handleVerifyOtp()}
                   disabled={loading || otp.join("").length !== 4}
                   size="lg"
-                  className="w-full text-sm sm:text-base h-12 sm:h-14 font-bold shadow-md bg-blue-600 hover:bg-blue-700 rounded-xl text-white"
+                  className="w-full text-sm sm:text-base min-h-12 sm:min-h-14 h-auto py-2.5 px-4 whitespace-normal leading-snug font-bold shadow-md bg-blue-600 hover:bg-blue-700 rounded-xl text-white"
                 >
                   {loading ? (
                     <span className="flex items-center gap-2 justify-center">
                       <Loader2 className="w-4 h-4 animate-spin" /> {t("wz_verifying_otp")}
                     </span>
                   ) : (
-                    "Submit OTP & View Quotation"
+                    t("wz_submit_otp_btn", "Submit OTP & View Quotation")
                   )}
                 </Button>
 
@@ -2982,7 +2998,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                         : "text-blue-600 hover:text-blue-700 hover:underline"
                     }`}
                   >
-                    {countdown > 0 ? `Resend OTP in ${countdown}s` : "Resend OTP"}
+                    {countdown > 0 ? t("pb_resend_in", "Resend OTP in {s}s", { s: String(countdown) }) : t("pb_resend_otp", "Resend OTP")}
                   </button>
                 </div>
               </div>
@@ -2992,8 +3008,8 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
           return (
             <div className="space-y-3.5 sm:space-y-5 animate-in fade-in">
               <div>
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{isProBuilderFlow ? "Contact Info & Verification" : t("wz_final_step_get_your_quotation")}</h2>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{isProBuilderFlow ? "Please verify your mobile number before accessing the advanced builder." : t("wz_please_enter_your_details_to_v")}</p>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{isProBuilderFlow ? t("wz_pb_contact_t", "Contact Info & Verification") : t("wz_final_step_get_your_quotation")}</h2>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{isProBuilderFlow ? t("wz_pb_contact_d", "Please verify your mobile number before accessing the advanced builder.") : t("wz_please_enter_your_details_to_v")}</p>
               </div>
               
               <div className="space-y-2.5 sm:space-y-3.5">
@@ -3001,13 +3017,13 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                 {/* Blueprint Summary Card for Guided Setup (Relieves Step 6 OTP Friction) */}
                 {!isProBuilderFlow && (
                   <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-blue-50/90 via-indigo-50/40 to-white dark:from-blue-950/40 dark:via-zinc-900/60 dark:to-zinc-900 border border-blue-200/80 dark:border-blue-900/60 shadow-sm space-y-2.5">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span>Security Blueprint Configured</span>
+                        <span>{t("wz_bp_title", "Security Blueprint Configured")}</span>
                       </span>
                       <span className="text-[10px] bg-blue-100 dark:bg-blue-900/70 text-blue-800 dark:text-blue-200 font-bold px-2 py-0.5 rounded-full">
-                        7-Day Price Lock
+                        {t("wz_bp_lock", "7-Day Price Lock")}
                       </span>
                     </div>
 
@@ -3026,19 +3042,19 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                         let breakdown = "";
                         if (isPureWireless) {
                           if (outCount > 0 && inCount > 0) {
-                            breakdown = ` (${outCount} Out + ${inCount} In Wireless)`;
+                            breakdown = t("wz_bp_out_in_wf", " ({out} Out + {in} In Wireless)", { out: String(outCount), in: String(inCount) });
                           } else {
-                            breakdown = ` (${totalCams} Wireless)`;
+                            breakdown = t("wz_bp_wf_only", " ({n} Wireless)", { n: String(totalCams) });
                           }
                         } else {
                           const parts: string[] = [];
-                          if (outCount > 0) parts.push(`${outCount} Out`);
-                          else if (inCount > 0) parts.push("0 Out");
+                          if (outCount > 0) parts.push(t("wz_bp_out_n", "{n} Out", { n: String(outCount) }));
+                          else if (inCount > 0) parts.push(t("wz_bp_out_n", "{n} Out", { n: "0" }));
 
-                          if (inCount > 0) parts.push(`${inCount} In`);
-                          else if (outCount > 0) parts.push("0 In");
+                          if (inCount > 0) parts.push(t("wz_bp_in_n", "{n} In", { n: String(inCount) }));
+                          else if (outCount > 0) parts.push(t("wz_bp_in_n", "{n} In", { n: "0" }));
 
-                          if (wifiCount > 0) parts.push(`${wifiCount} Smart Wireless`);
+                          if (wifiCount > 0) parts.push(t("wz_bp_smart_wf_n", "{n} Smart Wireless", { n: String(wifiCount) }));
 
                           if (parts.length > 0) {
                             breakdown = ` (${parts.join(" + ")})`;
@@ -3047,24 +3063,24 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
 
                         return (
                           <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-2xs">
-                            📹 {totalCams} Cameras{breakdown}
+                            {t("wz_bp_cams", "📹 {total} Cameras{breakdown}", { total: String(totalCams), breakdown })}
                           </span>
                         );
                       })()}
                       <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-2xs">
-                        💾 {req.recording_days ?? 7} Days Backup
+                        {t("wz_bp_backup", "💾 {days} Days Backup", { days: String(req.recording_days ?? 7) })}
                       </span>
                       <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-2xs">
-                        🔌 {req.cabling_done ? "Pre-Wired Site" : "15m Free Wire/Cam"}
+                        {req.cabling_done ? t("wz_bp_prewired", "🔌 Pre-Wired Site") : t("wz_bp_free_wire", "🔌 15m Free Wire/Cam")}
                       </span>
                       <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-2xs">
-                        📱 Mobile Live View
+                        {t("wz_bp_mobile", "📱 Mobile Live View")}
                       </span>
                     </div>
 
-                    <div className="pt-1.5 border-t border-blue-100 dark:border-zinc-800/80 flex items-center justify-between text-[11px] text-slate-600 dark:text-zinc-400">
-                      <span>Includes 18% GST bill & doorstep fitting.</span>
-                      <span className="font-bold text-blue-700 dark:text-blue-400">Compare All Brands Next →</span>
+                    <div className="pt-1.5 border-t border-blue-100 dark:border-zinc-800/80 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600 dark:text-zinc-400">
+                      <span>{t("wz_bp_gst_note", "Includes 18% GST bill & doorstep fitting.")}</span>
+                      <span className="font-bold text-blue-700 dark:text-blue-400">{t("wz_bp_next_brands", "Compare All Brands Next →")}</span>
                     </div>
                   </div>
                 )}
@@ -3081,14 +3097,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                   />
                 </div>
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
                     <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300">
                       {t("wz_mobile_number_")}
                     </label>
                     {isPhonePreVerified && (
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800 animate-in fade-in">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                        Verified via WhatsApp
+                        {t("wz_wa_verified", "Verified via WhatsApp")}
                       </span>
                     )}
                   </div>
@@ -3096,7 +3112,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                     <input 
                       type="tel" 
                       required
-                      placeholder="10-digit mobile number" 
+                      placeholder={t("pb_ph_mobile", "10-digit mobile number")} 
                       maxLength={10}
                       value={req.customer_mobile || ''} 
                       onChange={(e) => {
@@ -3110,7 +3126,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                       }} 
                       className={`w-full py-2.5 px-3.5 sm:p-3.5 text-sm border rounded-xl focus:ring-2 outline-none transition-all bg-white dark:bg-zinc-800 text-gray-900 dark:text-white ${
                         isPhonePreVerified 
-                          ? "border-emerald-400 dark:border-emerald-700 focus:ring-emerald-500 focus:border-emerald-500 pr-20" 
+                          ? "border-emerald-400 dark:border-emerald-700 focus:ring-emerald-500 focus:border-emerald-500 pr-24" 
                           : "border-gray-200 dark:border-zinc-700 focus:ring-blue-500 focus:border-blue-500"
                       }`}
                     />
@@ -3123,13 +3139,13 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                         }}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
                       >
-                        Change
+                        {t("wz_change_btn", "Change")}
                       </button>
                     )}
                   </div>
                   {isPhonePreVerified && (
                     <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                      <span>✓ Mobile pre-verified from WhatsApp — instant quotation unlock (no OTP SMS needed).</span>
+                      <span>{t("wz_wa_preverified_note", "✓ Mobile pre-verified from WhatsApp — instant quotation unlock (no OTP SMS needed).")}</span>
                     </p>
                   )}
                 </div>
@@ -3189,14 +3205,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
               </div>
 
               <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
-                <Button variant="outline" onClick={handlePrev} className="h-11 sm:h-12 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2" disabled={loading}>
+                <Button variant="outline" onClick={handlePrev} className="min-h-[44px] h-auto py-2.5 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2 shrink-0" disabled={loading}>
                   {t("wz_back")}
                 </Button>
                 <Button 
                   onClick={handleFinishWizard} 
                   disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10} 
                   size="lg" 
-                  className={`flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white rounded-xl shadow-md whitespace-nowrap overflow-hidden text-ellipsis px-2 transition-all ${
+                  className={`flex-1 min-h-[44px] h-auto py-2.5 sm:py-3 text-[13px] sm:text-base font-bold text-white rounded-xl shadow-md whitespace-normal text-center leading-snug px-3 transition-all ${
                     isPhonePreVerified
                       ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/20"
                       : "bg-blue-600 hover:bg-blue-700 shadow-blue-500/20"
@@ -3204,12 +3220,12 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                 >
                   {loading ? (
                     <span className="flex items-center gap-2 justify-center">
-                      <Loader2 className="w-4 h-4 animate-spin" /> {isPhonePreVerified ? "Unlocking Quotation..." : t("wz_sending_otp")}
+                      <Loader2 className="w-4 h-4 animate-spin" /> {isPhonePreVerified ? t("wz_unlocking_quote") : t("wz_sending_otp")}
                     </span>
                   ) : (
                     isPhonePreVerified
-                      ? (isProBuilderFlow ? "⚡ Access Pro Builder (Instant) →" : "⚡ View My CCTV Options (Instant) →")
-                      : (isProBuilderFlow ? "Access Pro Builder" : t("wz_view_cctv_options"))
+                      ? (isProBuilderFlow ? t("wz_btn_pro_instant") : t("wz_btn_view_instant"))
+                      : (isProBuilderFlow ? t("wz_btn_access_pro") : t("wz_view_cctv_options"))
                   )}
                 </Button>
               </div>
@@ -3233,7 +3249,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
             <div className="h-1.5 sm:h-2 bg-gray-100 dark:bg-zinc-800 rounded-full w-full overflow-hidden">
               <div className="h-1.5 sm:h-2 bg-blue-600 rounded-full transition-all duration-300" style={{ width: `${(Math.min(step, totalSteps) / totalSteps) * 100}%` }}></div>
             </div>
-            <p className="text-xs text-gray-400 dark:text-zinc-500 mt-1 sm:mt-1.5 text-right font-medium">{t("wz_step")} {Math.min(step, totalSteps)} of {totalSteps}</p>
+            <p className="text-xs text-gray-400 dark:text-zinc-500 mt-1 sm:mt-1.5 text-right font-medium">{t("wz_step_of_total", "Step {curr} of {total}", { curr: String(Math.min(step, totalSteps)), total: String(totalSteps) })}</p>
           </div>
         )}
 

@@ -2,14 +2,17 @@ import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { Product } from "@/types";
 import { generatePricingSnapshot } from "@/lib/pricing-engine";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 
 export async function POST(request: Request) {
+  let locale = resolveRequestLocale(request);
   try {
-    const body = await request.json() as { selections: any[], existingEquipment?: { cameras: number, recorderChannels: number } };
+    const body = await request.json() as { selections: any[], existingEquipment?: { cameras: number, recorderChannels: number }, preferred_language?: string, locale?: string };
+    locale = resolveRequestLocale(request, body);
     const { selections, existingEquipment = { cameras: 0, recorderChannels: 0 } } = body;
     
     if (!selections || selections.length === 0) {
-      return NextResponse.json({ success: false, message: "No products selected" }, { status: 400 });
+      return NextResponse.json({ success: false, message: getApiMessage(locale, "build_no_products") }, { status: 400 });
     }
 
     // Fetch all products from DB for safety
@@ -63,11 +66,11 @@ export async function POST(request: Request) {
     
     // Validation: Only require a recorder if there are wired cameras!
     if (totalWiredCameras > 0 && totalRecorderChannels === 0) {
-      const msg = "Compatibility Error: You have wired cameras but no recorder selected.";
+      const msg = getApiMessage(locale, "build_no_recorder");
       await adminDb.collection("analytics_rejections").add({
         type: "build_rejection",
         reason: "NO_RECORDER",
-        message: msg,
+        message: "Compatibility Error: You have wired cameras but no recorder selected.",
         timestamp: new Date().toISOString()
       });
       return NextResponse.json({
@@ -75,11 +78,14 @@ export async function POST(request: Request) {
         message: msg,
       }, { status: 400 });
     } else if (totalWiredCameras > totalRecorderChannels) {
-      const msg = `Compatibility Error: Your recorder(s) only support ${totalRecorderChannels} wired cameras, but you will have ${totalWiredCameras} wired cameras. Please upgrade your recorder.`;
+      const msg = getApiMessage(locale, "build_recorder_capacity", {
+        channels: totalRecorderChannels,
+        cameras: totalWiredCameras,
+      });
       await adminDb.collection("analytics_rejections").add({
         type: "build_rejection",
         reason: "RECORDER_CAPACITY_EXCEEDED",
-        message: msg,
+        message: `Compatibility Error: Your recorder(s) only support ${totalRecorderChannels} wired cameras, but you will have ${totalWiredCameras} wired cameras.`,
         timestamp: new Date().toISOString()
       });
       return NextResponse.json({
@@ -102,16 +108,27 @@ export async function POST(request: Request) {
     }
     
     if (totalWiredCameras > 0 && totalStorageTb === 0) {
-      warnings.push("You haven't selected any Surveillance HDD storage. Wired cameras will not record video to your recorder.");
+      warnings.push(getApiMessage(locale, "build_no_hdd_warning"));
     } else if (totalStorageTb > 0 && totalWiredCameras > 0) {
       const estimatedDays = Math.floor((totalStorageTb * 30) / totalWiredCameras);
-      warnings.push(`Note: Your selected ${totalStorageTb}TB storage will provide approximately ${estimatedDays} days of recording for ${totalWiredCameras} wired cameras.`);
+      warnings.push(
+        getApiMessage(locale, "build_hdd_days_note", {
+          tb: totalStorageTb,
+          days: estimatedDays,
+          cameras: totalWiredCameras,
+        })
+      );
     }
 
     if (wirelessCameraCount > 0 && totalSdCards === 0) {
-      warnings.push("You have wireless cameras but no MicroSD cards selected. Wireless cameras will only support live viewing without local recording.");
+      warnings.push(getApiMessage(locale, "build_no_sd_warning"));
     } else if (wirelessCameraCount > 0 && totalSdCards < wirelessCameraCount) {
-      warnings.push(`Note: You have selected ${totalSdCards} MicroSD card(s) for ${wirelessCameraCount} wireless cameras (recommended: 1 card per camera).`);
+      warnings.push(
+        getApiMessage(locale, "build_sd_count_note", {
+          sd: totalSdCards,
+          cameras: wirelessCameraCount,
+        })
+      );
     }
 
     // Auto-complete (mocking basic connector addition for wired cameras only)
@@ -170,7 +187,7 @@ export async function POST(request: Request) {
     });
   } catch (error: any) {
     console.error("Builder calculate error:", error);
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: getApiMessage(locale, "internal_error") }, { status: 500 });
   }
 }
 

@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import CityLandingPage from "@/components/shared/CityLandingPage";
 import { getCityData, cityDatabase } from "@/lib/city-data";
 import { getDynamicPackageCatalog } from "@/lib/dynamic-package-pricing";
+import { getServerTranslations } from "@/lib/i18n/server-locale";
+import { buildCitySeoMetadata } from "@/lib/i18n/seo-metadata";
+import { SPEECH_LOCALE_MAP } from "@/lib/i18n/mapping";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -46,18 +49,21 @@ function parseSeoSlug(slug: string) {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { city } = await params;
   const { citySlug, brand, intent } = parseSeoSlug(city);
-  const data = getCityData(citySlug);
+  const { locale, t } = await getServerTranslations();
+  const data = getCityData(citySlug, locale);
   
   const brandPrefix = brand ? `${brand} ` : "";
   const locationText = data.name;
   
-  let title = `${brandPrefix}CCTV Installation in ${locationText} | Transparent Pricing`;
-  let description = `Professional ${brandPrefix}CCTV installation in ${locationText}. See exact prices, compare IP vs HD packages, and book a professional survey across ${locationText}.`;
-  
-  if (intent === "quotation") {
-    title = `Get ${brandPrefix}CCTV Quotation in ${locationText} | Instant Estimator`;
-    description = `Compare ${brandPrefix}CCTV camera price and installation costs in ${locationText}. Get a free, transparent quotation for your home or business in under 2 minutes.`;
-  }
+  const { title, description } = buildCitySeoMetadata({
+    locale,
+    cityName: locationText,
+    brandPrefix,
+    intent,
+    installDesc: t("city_hero_desc_install"),
+    quoteDesc: t("city_hero_desc_quote"),
+  });
+  const ogLocale = (SPEECH_LOCALE_MAP[locale] || "en-IN").replace("-", "_");
   
   return {
     title,
@@ -65,6 +71,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title,
       description,
+      locale: ogLocale,
     },
     twitter: {
       card: "summary_large_image",
@@ -83,7 +90,8 @@ export default async function DynamicCityLandingPage({ params }: PageProps) {
     notFound();
   }
 
-  const data = getCityData(citySlug);
+  const { locale } = await getServerTranslations();
+  const data = getCityData(citySlug, locale);
   const dynamicPackages = await getDynamicPackageCatalog();
   const residentialPrice = dynamicPackages?.home?.[4]?.cpplus?.price ?? 17999;
   const commercialPrice = dynamicPackages?.shop?.[8]?.cpplus?.price ?? 32999;

@@ -97,12 +97,12 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to generate payment link"));
+      if (!res.ok) throw new Error(extractErrorMessage(data, t("psw_err_link", "Failed to generate payment link")));
       if (data.payment_url) {
         window.location.href = data.payment_url;
       }
     } catch (error: any) {
-      toast.error(extractErrorMessage(error, "Failed to generate payment link"));
+      toast.error(extractErrorMessage(error, t("psw_err_link", "Failed to generate payment link")));
     } finally {
       setLoadingType(null);
     }
@@ -120,10 +120,10 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to resend payment link"));
-      toast.success(isAdmin ? "Link sent to customer via WhatsApp" : "Payment link sent to your WhatsApp");
+      if (!res.ok) throw new Error(extractErrorMessage(data, t("psw_err_resend", "Failed to resend payment link")));
+      toast.success(isAdmin ? t("psw_sent_cust", "Link sent to customer via WhatsApp") : t("psw_sent_you", "Payment link sent to your WhatsApp"));
     } catch (error: any) {
-      toast.error(extractErrorMessage(error, "Failed to resend payment link"));
+      toast.error(extractErrorMessage(error, t("psw_err_resend", "Failed to resend payment link")));
     } finally {
       setLoadingType(null);
     }
@@ -245,23 +245,23 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
           <div className="flex justify-between items-start mb-2">
             <div>
               <div className="flex items-center gap-2">
-                {isStage1Paid ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <div className="w-5 h-5 rounded-full border-2 border-blue-400" />}
-                <h3 className={`font-semibold ${!isStage1Paid ? 'text-zinc-900 dark:text-white' : 'text-zinc-900 dark:text-white'}`}>Stage 1: Booking Amount</h3>
+                {isStage1Paid ? <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> : <div className="w-5 h-5 rounded-full border-2 border-blue-400 shrink-0" />}
+                <h3 className={`font-semibold ${!isStage1Paid ? 'text-zinc-900 dark:text-white' : 'text-zinc-900 dark:text-white'}`}>{t("psw_s1_title", "Stage 1: Booking Amount")}</h3>
               </div>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 ml-7 mt-0.5">Locks your price and initiates dispatch.</p>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 ml-7 mt-0.5">{t("psw_s1_desc", "Locks your price and initiates dispatch.")}</p>
             </div>
-            <div className="text-right">
+            <div className="text-right shrink-0 ml-2">
               <span className="font-bold text-zinc-900 dark:text-white">{formatCurrency(stage1Amount)}</span>
               {isStage1Paid ? (
-                <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">PAID</div>
+                <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">{t("psw_paid_badge", "PAID")}</div>
               ) : (
-                <div className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-1 uppercase tracking-wide">Due Now</div>
+                <div className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-1 uppercase">{t("psw_due_now", "Due Now")}</div>
               )}
             </div>
           </div>
           {isStage1Paid && stage1History?.razorpay_payment_id && (
             <div className="ml-7 mt-2 text-xs text-zinc-500 bg-white dark:bg-zinc-950 px-3 py-1.5 rounded-lg inline-block border border-zinc-100 dark:border-zinc-800">
-              Txn: {stage1History.razorpay_payment_id}
+              {t("psw_txn", "Txn:")} {stage1History.razorpay_payment_id}
             </div>
           )}
           
@@ -270,18 +270,18 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
               <button 
                 onClick={() => handlePayNow('advance_500_cod')}
                 disabled={loadingType !== null}
-                className="flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 whitespace-normal text-center leading-snug"
               >
-                {loadingType === 'pay_advance_500_cod' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                Pay {formatCurrency(stage1Amount)} Now
+                {loadingType === 'pay_advance_500_cod' ? <RefreshCw className="w-4 h-4 animate-spin shrink-0" /> : <ExternalLink className="w-4 h-4 shrink-0" />}
+                {t("psw_pay_amt", "Pay {amt} Now", { amt: formatCurrency(stage1Amount) })}
               </button>
               <button 
                 onClick={() => handleResendLink('advance_500_cod')}
                 disabled={loadingType !== null}
-                className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 whitespace-normal text-center leading-snug"
               >
-                {loadingType === 'resend_advance_500_cod' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                {isAdmin ? "Send Link to Customer" : "Resend Link"}
+                {loadingType === 'resend_advance_500_cod' ? <RefreshCw className="w-4 h-4 animate-spin shrink-0" /> : <Send className="w-4 h-4 shrink-0" />}
+                {isAdmin ? t("psw_send_cust", "Send Link to Customer") : t("psw_resend_btn", "Resend Link")}
               </button>
             </div>
           )}
@@ -293,35 +293,35 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
             <div>
               <div className="flex items-center gap-2">
                 {isStage2Paid ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
                 ) : !isStage2Unlocked ? (
-                  <Lock className="w-5 h-5 text-zinc-400" />
+                  <Lock className="w-5 h-5 text-zinc-400 shrink-0" />
                 ) : (
-                  <div className="w-5 h-5 rounded-full border-2 border-blue-400" />
+                  <div className="w-5 h-5 rounded-full border-2 border-blue-400 shrink-0" />
                 )}
                 <h3 className={`font-semibold ${!isStage2Unlocked && !isStage2Paid ? 'text-zinc-500' : 'text-zinc-900 dark:text-white'}`}>
-                  Stage 2: Material Delivery
+                  {t("psw_s2_title", "Stage 2: Material Delivery")}
                 </h3>
               </div>
               <p className="text-sm text-zinc-500 dark:text-zinc-400 ml-7 mt-0.5">
-                {!isStage2Unlocked ? 'Unlocks when material is dispatched.' : 'Pay 90% of remaining balance to receive delivery OTP.'}
+                {!isStage2Unlocked ? t("psw_s2_locked", "Unlocks when material is dispatched.") : t("psw_s2_open", "Pay 90% of remaining balance to receive delivery OTP.")}
               </p>
             </div>
-            <div className="text-right">
+            <div className="text-right shrink-0 ml-2">
               <span className={`font-bold ${!isStage2Unlocked && !isStage2Paid ? 'text-zinc-500' : 'text-zinc-900 dark:text-white'}`}>
                 {formatCurrency(stage2Amount)}
               </span>
               {isStage2Paid ? (
-                <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">PAID</div>
+                <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">{t("psw_paid_badge", "PAID")}</div>
               ) : isStage2Unlocked ? (
-                <div className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-1 uppercase tracking-wide">Due Now</div>
+                <div className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-1 uppercase">{t("psw_due_now", "Due Now")}</div>
               ) : null}
             </div>
           </div>
           
           {isStage2Paid && stage2History?.razorpay_payment_id && (
             <div className="ml-7 mt-2 text-xs text-zinc-500 bg-white dark:bg-zinc-950 px-3 py-1.5 rounded-lg inline-block border border-zinc-100 dark:border-zinc-800">
-              Txn: {stage2History.razorpay_payment_id}
+              {t("psw_txn", "Txn:")} {stage2History.razorpay_payment_id}
             </div>
           )}
 
@@ -330,18 +330,18 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
               <button 
                 onClick={() => handlePayNow('delivery_90')}
                 disabled={loadingType !== null}
-                className="flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 whitespace-normal text-center leading-snug"
               >
-                {loadingType === 'pay_delivery_90' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                Pay {formatCurrency(stage2Amount)} Now
+                {loadingType === 'pay_delivery_90' ? <RefreshCw className="w-4 h-4 animate-spin shrink-0" /> : <ExternalLink className="w-4 h-4 shrink-0" />}
+                {t("psw_pay_amt", "Pay {amt} Now", { amt: formatCurrency(stage2Amount) })}
               </button>
               <button 
                 onClick={() => handleResendLink('delivery_90')}
                 disabled={loadingType !== null}
-                className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 whitespace-normal text-center leading-snug"
               >
-                {loadingType === 'resend_delivery_90' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                {isAdmin ? "Send Link to Customer" : "Resend Link"}
+                {loadingType === 'resend_delivery_90' ? <RefreshCw className="w-4 h-4 animate-spin shrink-0" /> : <Send className="w-4 h-4 shrink-0" />}
+                {isAdmin ? t("psw_send_cust", "Send Link to Customer") : t("psw_resend_btn", "Resend Link")}
               </button>
             </div>
           )}
@@ -353,35 +353,35 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
             <div>
               <div className="flex items-center gap-2">
                 {isStage3Paid ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
                 ) : !isStage3Unlocked ? (
-                  <Lock className="w-5 h-5 text-zinc-400" />
+                  <Lock className="w-5 h-5 text-zinc-400 shrink-0" />
                 ) : (
-                  <div className="w-5 h-5 rounded-full border-2 border-blue-400" />
+                  <div className="w-5 h-5 rounded-full border-2 border-blue-400 shrink-0" />
                 )}
                 <h3 className={`font-semibold ${!isStage3Unlocked && !isStage3Paid ? 'text-zinc-500' : 'text-zinc-900 dark:text-white'}`}>
-                  Stage 3: Installation Complete
+                  {t("psw_s3_title", "Stage 3: Installation Complete")}
                 </h3>
               </div>
               <p className="text-sm text-zinc-500 dark:text-zinc-400 ml-7 mt-0.5">
-                {!isStage3Unlocked && !isStage2Paid ? 'Completes after Stage 2 payment is confirmed. Paid offline? Contact us to unlock.' : !isStage3Unlocked ? 'Unlocks after successful installation.' : 'Final 10% payment for installation & warranty.'}
+                {!isStage3Unlocked && !isStage2Paid ? t("psw_s3_wait_s2", "Completes after Stage 2 payment is confirmed. Paid offline? Contact us to unlock.") : !isStage3Unlocked ? t("psw_s3_locked", "Unlocks after successful installation.") : t("psw_s3_open", "Final 10% payment for installation & warranty.")}
               </p>
             </div>
-            <div className="text-right">
+            <div className="text-right shrink-0 ml-2">
               <span className={`font-bold ${!isStage3Unlocked && !isStage3Paid ? 'text-zinc-500' : 'text-zinc-900 dark:text-white'}`}>
                 {formatCurrency(stage3Amount)}
               </span>
               {isStage3Paid ? (
-                <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">PAID</div>
+                <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">{t("psw_paid_badge", "PAID")}</div>
               ) : isStage3Unlocked ? (
-                <div className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-1 uppercase tracking-wide">Due Now</div>
+                <div className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-1 uppercase">{t("psw_due_now", "Due Now")}</div>
               ) : null}
             </div>
           </div>
 
           {isStage3Paid && stage3History?.razorpay_payment_id && (
             <div className="ml-7 mt-2 text-xs text-zinc-500 bg-white dark:bg-zinc-950 px-3 py-1.5 rounded-lg inline-block border border-zinc-100 dark:border-zinc-800">
-              Txn: {stage3History.razorpay_payment_id}
+              {t("psw_txn", "Txn:")} {stage3History.razorpay_payment_id}
             </div>
           )}
 
@@ -390,18 +390,18 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
               <button 
                 onClick={() => handlePayNow('installation_final')}
                 disabled={loadingType !== null}
-                className="flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 whitespace-normal text-center leading-snug"
               >
-                {loadingType === 'pay_installation_final' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                Pay {formatCurrency(stage3Amount)} Now
+                {loadingType === 'pay_installation_final' ? <RefreshCw className="w-4 h-4 animate-spin shrink-0" /> : <ExternalLink className="w-4 h-4 shrink-0" />}
+                {t("psw_pay_amt", "Pay {amt} Now", { amt: formatCurrency(stage3Amount) })}
               </button>
               <button 
                 onClick={() => handleResendLink('installation_final')}
                 disabled={loadingType !== null}
-                className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 whitespace-normal text-center leading-snug"
               >
-                {loadingType === 'resend_installation_final' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                {isAdmin ? "Send Link to Customer" : "Resend Link"}
+                {loadingType === 'resend_installation_final' ? <RefreshCw className="w-4 h-4 animate-spin shrink-0" /> : <Send className="w-4 h-4 shrink-0" />}
+                {isAdmin ? t("psw_send_cust", "Send Link to Customer") : t("psw_resend_btn", "Resend Link")}
               </button>
             </div>
           )}

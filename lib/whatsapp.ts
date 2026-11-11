@@ -1,105 +1,148 @@
 /**
  * Universal WhatsApp Helper
  * Handles smart redirection:
- * - On Mobile (iOS / Android): Directly opens the installed WhatsApp native app.
+ * - On Mobile (iOS / Android): Opens the installed native app directly via `whatsapp://send?phone=...`
+ *   (or universal `wa.me` links) with top-level user activation.
  * - On Desktop (Windows / Mac / Linux):
- *   1. Tries to open the local desktop application via `whatsapp://`.
- *   2. If not found or window does not blur within timeout, falls back smoothly to WhatsApp Web.
- *   3. Also provides explicit web URLs for direct browser access.
+ *   1. Launches the local desktop application directly via top-level `whatsapp://send?phone=...`
+ *      navigation (never via hidden iframe, which modern browsers block).
+ *   2. Falls back cleanly via listener detection if the desktop app does not open.
  */
 
-export const SUPPORT_WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "917357612865";
+export const SUPPORT_WHATSAPP_NUMBER =
+  (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "917357612865").replace(/\D/g, "") || "917357612865";
+
+export const OTP_WHATSAPP_SENDER_NUMBER =
+  (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919982549315").replace(/\D/g, "") || "919982549315";
 
 export function isMobileDevice(): boolean {
   if (typeof window === "undefined" || typeof navigator === "undefined") return false;
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const ua = navigator.userAgent || "";
+  const isIpadOs = navigator.maxTouchPoints > 1 && /Macintosh/i.test(ua);
+  return (
+    isIpadOs ||
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)
+  );
 }
 
 /**
- * Specifically for opening WhatsApp to view an incoming OTP or message.
- * - On Mobile: Opens native WhatsApp app directly.
- * - On Desktop: Attempts native desktop app protocol with automatic fallback to Web WhatsApp.
+ * Builds a valid custom-scheme URI (`whatsapp://send?...`) that Android Intent filters,
+ * iOS URL handlers, and Desktop WhatsApp clients actually register.
+ * Bare `whatsapp://` (empty host) is ignored on Android and many browsers.
  */
-export function openWhatsAppApp(): void {
-  if (typeof window === "undefined") return;
+export function getWhatsAppAppUrl(
+  phone: string = OTP_WHATSAPP_SENDER_NUMBER,
+  text: string = ""
+): string {
+  const cleanPhone = String(phone).replace(/\D/g, "") || OTP_WHATSAPP_SENDER_NUMBER;
+  const encodedText = text ? `&text=${encodeURIComponent(text)}` : "";
+  return `whatsapp://send?phone=${cleanPhone}${encodedText}`;
+}
 
-  if (isMobileDevice()) {
-    // Mobile always opens the native app
-    window.location.href = "whatsapp://";
-    return;
-  }
+export function getWhatsAppUniversalUrl(
+  phone: string = OTP_WHATSAPP_SENDER_NUMBER,
+  text: string = ""
+): string {
+  const cleanPhone = String(phone).replace(/\D/g, "") || OTP_WHATSAPP_SENDER_NUMBER;
+  const encoded = text ? `?text=${encodeURIComponent(text)}` : "";
+  return `https://wa.me/${cleanPhone}${encoded}`;
+}
 
-  // Desktop: Try local desktop app first
+function trackWhatsAppLaunch(onFallback?: () => void, timeoutMs: number = 1500): void {
+  if (typeof window === "undefined" || typeof document === "undefined" || !onFallback) return;
+
   let appOpened = false;
+  let timer: ReturnType<typeof setTimeout> | null = null;
 
-  const handleBlur = () => {
-    appOpened = true;
-    window.removeEventListener("blur", handleBlur);
+  const cleanup = () => {
+    window.removeEventListener("blur", markOpened);
+    window.removeEventListener("pagehide", markOpened);
+    document.removeEventListener("visibilitychange", handleVisibility);
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
   };
 
-  window.addEventListener("blur", handleBlur);
+  const markOpened = () => {
+    appOpened = true;
+    cleanup();
+  };
 
-  // Attempt to invoke local desktop application
-  const iframe = document.createElement("iframe");
-  iframe.style.display = "none";
-  iframe.src = "whatsapp://";
-  document.body.appendChild(iframe);
+  const handleVisibility = () => {
+    if (document.hidden) markOpened();
+  };
 
-  // Fallback to WhatsApp Web if app did not take focus
-  setTimeout(() => {
-    window.removeEventListener("blur", handleBlur);
-    if (document.body.contains(iframe)) {
-      document.body.removeChild(iframe);
-    }
+  window.addEventListener("blur", markOpened);
+  window.addEventListener("pagehide", markOpened);
+  document.addEventListener("visibilitychange", handleVisibility);
 
+  timer = setTimeout(() => {
+    cleanup();
     if (!appOpened && !document.hidden) {
-      window.open("https://web.whatsapp.com", "_blank", "noopener,noreferrer");
+      onFallback();
     }
-  }, 1200);
+  }, timeoutMs);
+}
+
+export interface OpenWhatsAppAppOptions {
+  phone?: string;
+  /** Set false when triggered from a native `<a href="whatsapp://send?...">` element. */
+  navigate?: boolean;
+  /** Called if browser stays focused/visible after launch attempt (e.g. app not installed). */
+  onFallback?: () => void;
+}
+
+/**
+ * Opens the installed WhatsApp app (Mobile or Desktop) straight into the OTP chat.
+ * Uses top-level protocol navigation instead of a hidden iframe so Chrome/Edge/Firefox/Safari
+ * and Android/iOS permit the OS app launch.
+ */
+export function openWhatsAppApp(options: OpenWhatsAppAppOptions = {}): void {
+  if (typeof window === "undefined") return;
+
+  const targetPhone = options.phone || OTP_WHATSAPP_SENDER_NUMBER;
+  const protocolUrl = getWhatsAppAppUrl(targetPhone);
+
+  const fallback =
+    options.onFallback ??
+    (() => {
+      if (isMobileDevice()) {
+        window.location.href = getWhatsAppUniversalUrl(targetPhone);
+      } else {
+        window.open("https://web.whatsapp.com", "_blank", "noopener,noreferrer");
+      }
+    });
+
+  trackWhatsAppLaunch(fallback, 1600);
+
+  if (options.navigate !== false) {
+    window.location.href = protocolUrl;
+  }
 }
 
 /**
  * Initiates a pre-filled chat with a number (e.g. customer support or sharing a quote).
- * - On Mobile: Opens native WhatsApp app with contact & message.
- * - On Desktop: Attempts native app first, falls back to WhatsApp Web with pre-filled message.
+ * - On Mobile: Opens `https://wa.me/...` universal link cleanly with user activation.
+ * - On Desktop: Attempts top-level `whatsapp://send?...` first, falling back to WhatsApp Web.
  */
 export function openWhatsAppChat(phone: string = SUPPORT_WHATSAPP_NUMBER, text: string = ""): void {
   if (typeof window === "undefined") return;
 
-  const cleanPhone = phone.replace(/\D/g, "");
-  const encoded = encodeURIComponent(text);
+  const cleanPhone = String(phone).replace(/\D/g, "") || SUPPORT_WHATSAPP_NUMBER;
 
   if (isMobileDevice()) {
-    // wa.me universal link opens the native app seamlessly on iOS & Android
-    window.open(`https://wa.me/${cleanPhone}${encoded ? `?text=${encoded}` : ""}`, "_blank");
+    window.open(getWhatsAppUniversalUrl(cleanPhone, text), "_blank", "noopener,noreferrer");
     return;
   }
 
-  // Desktop:
-  const appProtocolUrl = `whatsapp://send?phone=${cleanPhone}${encoded ? `&text=${encoded}` : ""}`;
+  const appProtocolUrl = getWhatsAppAppUrl(cleanPhone, text);
+  const encoded = encodeURIComponent(text);
   const webUrl = `https://web.whatsapp.com/send?phone=${cleanPhone}${encoded ? `&text=${encoded}` : ""}`;
 
-  let appOpened = false;
-  const handleBlur = () => {
-    appOpened = true;
-    window.removeEventListener("blur", handleBlur);
-  };
+  trackWhatsAppLaunch(() => {
+    window.open(webUrl, "_blank", "noopener,noreferrer");
+  }, 1500);
 
-  window.addEventListener("blur", handleBlur);
-
-  const iframe = document.createElement("iframe");
-  iframe.style.display = "none";
-  iframe.src = appProtocolUrl;
-  document.body.appendChild(iframe);
-
-  setTimeout(() => {
-    window.removeEventListener("blur", handleBlur);
-    if (document.body.contains(iframe)) {
-      document.body.removeChild(iframe);
-    }
-
-    if (!appOpened && !document.hidden) {
-      window.open(webUrl, "_blank", "noopener,noreferrer");
-    }
-  }, 1200);
+  window.location.href = appProtocolUrl;
 }

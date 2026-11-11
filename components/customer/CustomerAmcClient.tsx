@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Loader2, ShieldCheck, Clock, AlertTriangle, CheckCircle2, ShieldAlert, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function CustomerAmcClient() {
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "en" ? "en-IN" : `${locale}-IN`;
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
@@ -19,7 +21,7 @@ export function CustomerAmcClient() {
         if (res.success) {
           setData(res.data);
         } else {
-          toast.error(res.message || "Failed to load AMC data");
+          toast.error(res.message || t("amc_err_load", "Failed to load AMC data"));
         }
       })
       .catch(e => toast.error(e.message))
@@ -37,7 +39,7 @@ export function CustomerAmcClient() {
       });
       const result = await res.json();
       if (result.success) {
-        toast.success("AMC Activated Successfully!");
+        toast.success(t("amc_ok", "AMC Activated Successfully!"));
         // Refresh data
         window.location.reload();
       } else {
@@ -51,7 +53,7 @@ export function CustomerAmcClient() {
   };
 
   if (loading) return <div className="flex justify-center p-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
-  if (!data) return <div className="text-center p-10 text-muted-foreground">No data found.</div>;
+  if (!data) return <div className="text-center p-10 text-muted-foreground">{t("amc_no_data", "No data found.")}</div>;
 
   const { warranties, amcSubscriptions, availablePlans } = data;
 
@@ -62,7 +64,7 @@ export function CustomerAmcClient() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="bg-primary/5 border-primary/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active AMCs</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("amc_active_amcs", "Active AMCs")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-foreground">
@@ -72,7 +74,7 @@ export function CustomerAmcClient() {
         </Card>
         <Card className="bg-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Hardware Warranties</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("amc_warranties", "Hardware Warranties")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-foreground">{warranties.length}</div>
@@ -82,13 +84,13 @@ export function CustomerAmcClient() {
 
       {/* Warranties & AMC List */}
       <div className="space-y-6">
-        <h3 className="text-lg font-bold">Your Systems & Coverage</h3>
+        <h3 className="text-lg font-bold">{t("amc_heading", "Your Systems & Coverage")}</h3>
         
         {warranties.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center p-10 text-muted-foreground">
               <ShieldCheck className="w-12 h-12 mb-4 opacity-20" />
-              <p>No active systems or warranties found.</p>
+              <p>{t("amc_none_found", "No active systems or warranties found.")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -115,61 +117,63 @@ export function CustomerAmcClient() {
                         </div>
                       )}
                       <div>
-                        <h4 className="font-bold text-lg">System Coverage: {warranty.certNumber}</h4>
-                        <p className="text-sm text-muted-foreground">Installed on {format(new Date(warranty.installationDate), "PPP")}</p>
+                        <h4 className="font-bold text-lg">{t("amc_sys_cov", "System Coverage:")} {warranty.certNumber}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {t("amc_installed_on", "Installed on")} {new Date(warranty.installationDate).toLocaleDateString(dateLocale, { day: "numeric", month: "long", year: "numeric" })}
+                        </p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                       <div className="p-3 bg-background rounded-lg border border-border text-center">
-                        <span className="block text-xs font-medium text-muted-foreground mb-1">Status</span>
+                        <span className="block text-xs font-medium text-muted-foreground mb-1">{t("amc_status", "Status")}</span>
                         <span className={`font-semibold text-sm ${warranty.isExpired ? "text-red-500" : "text-emerald-500"}`}>
-                          {warranty.isExpired ? "Expired" : "Active Warranty"}
+                          {warranty.isExpired ? t("amc_expired", "Expired") : t("amc_active_war", "Active Warranty")}
                         </span>
                       </div>
                       <div className="p-3 bg-background rounded-lg border border-border text-center">
-                        <span className="block text-xs font-medium text-muted-foreground mb-1">Expires</span>
+                        <span className="block text-xs font-medium text-muted-foreground mb-1">{t("amc_expires", "Expires")}</span>
                         <span className="font-semibold text-sm">
-                          {warranty.latestExpiry ? format(new Date(warranty.latestExpiry), "MMM d, yyyy") : "N/A"}
+                          {warranty.latestExpiry ? new Date(warranty.latestExpiry).toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" }) : "—"}
                         </span>
                       </div>
                       <div className="p-3 bg-background rounded-lg border border-border text-center">
-                        <span className="block text-xs font-medium text-muted-foreground mb-1">AMC Status</span>
+                        <span className="block text-xs font-medium text-muted-foreground mb-1">{t("amc_amc_status", "AMC Status")}</span>
                         <span className={`font-semibold text-sm ${hasActiveAmc ? "text-emerald-500" : "text-muted-foreground"}`}>
-                          {hasActiveAmc ? "Protected" : "None"}
+                          {hasActiveAmc ? t("amc_protected", "Protected") : t("amc_none", "None")}
                         </span>
                       </div>
                       <div className="p-3 bg-background rounded-lg border border-border text-center">
-                        <span className="block text-xs font-medium text-muted-foreground mb-1">Assets</span>
-                        <span className="font-semibold text-sm">{warranty.assets.length} items</span>
+                        <span className="block text-xs font-medium text-muted-foreground mb-1">{t("amc_assets", "Assets")}</span>
+                        <span className="font-semibold text-sm">{warranty.assets.length} {t("amc_items", "items")}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Renew Section */}
                   {!hasActiveAmc && (
-                    <div className="w-full md:w-80 bg-muted/30 p-6 border-l border-border flex flex-col justify-center">
+                    <div className="w-full md:w-80 bg-muted/30 p-6 border-t md:border-t-0 md:border-l border-border flex flex-col justify-center">
                       {(warranty.isExpired || isExpiringSoon) ? (
                         <>
                           <div className="flex items-center gap-2 text-amber-600 mb-3">
-                            <AlertTriangle className="w-5 h-5" />
-                            <span className="font-bold">System Unprotected</span>
+                            <AlertTriangle className="w-5 h-5 shrink-0" />
+                            <span className="font-bold">{t("amc_unprot", "System Unprotected")}</span>
                           </div>
                           <p className="text-sm text-muted-foreground mb-4">
-                            Extend your peace of mind. Get priority support and free maintenance visits with an AMC plan.
+                            {t("amc_extend_desc", "Extend your peace of mind. Get priority support and free maintenance visits with an AMC plan.")}
                           </p>
                           <div className="space-y-3">
                             {availablePlans.map((plan: any) => (
                               <Button 
                                 key={plan.id} 
-                                className="w-full justify-between"
+                                className="w-full justify-between h-auto py-2.5 gap-2 whitespace-normal text-left leading-snug"
                                 onClick={() => handlePurchase(plan.id, warranty.id)}
                                 disabled={purchasing !== null}
                               >
                                 {purchasing === plan.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                                   <>
                                     <span>{plan.name}</span>
-                                    <span className="font-bold">₹{plan.price}</span>
+                                    <span className="font-bold shrink-0">₹{plan.price}</span>
                                   </>
                                 )}
                               </Button>
@@ -179,17 +183,17 @@ export function CustomerAmcClient() {
                       ) : (
                         <div className="text-center text-muted-foreground flex flex-col items-center">
                           <CheckCircle2 className="w-8 h-8 text-emerald-500 mb-2 opacity-50" />
-                          <p className="text-sm font-medium">Your system is fully covered under the manufacturer warranty.</p>
+                          <p className="text-sm font-medium">{t("amc_covered_war", "Your system is fully covered under the manufacturer warranty.")}</p>
                         </div>
                       )}
                     </div>
                   )}
                   
                   {hasActiveAmc && (
-                    <div className="w-full md:w-80 bg-emerald-500/10 p-6 border-l border-emerald-500/20 flex flex-col justify-center text-center">
+                    <div className="w-full md:w-80 bg-emerald-500/10 p-6 border-t md:border-t-0 md:border-l border-emerald-500/20 flex flex-col justify-center text-center">
                        <ShieldCheck className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
-                       <h4 className="font-bold text-emerald-700 dark:text-emerald-400 mb-1">AMC Active</h4>
-                       <p className="text-xs text-emerald-600/70 font-medium">Your system is fully protected with priority support.</p>
+                       <h4 className="font-bold text-emerald-700 dark:text-emerald-400 mb-1">{t("amc_active_lbl", "AMC Active")}</h4>
+                       <p className="text-xs text-emerald-600/70 font-medium">{t("amc_covered_amc", "Your system is fully protected with priority support.")}</p>
                     </div>
                   )}
 

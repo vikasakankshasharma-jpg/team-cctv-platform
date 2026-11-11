@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface QuotationRevisionModalProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ export function QuotationRevisionModal({
   initialFlags,
   onSuccess
 }: QuotationRevisionModalProps) {
+  const { t } = useTranslation();
   const nextVersion = currentVersion + 1;
 
   const [cameraCount, setCameraCount] = useState<number>(initialRequirements?.camera_count || 4);
@@ -65,7 +67,7 @@ export function QuotationRevisionModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!revisionNotes.trim()) {
-      toast.error("Please enter a revision reason/note to track why this change was made.");
+      toast.error(t("adm_qm_rev_err_note", "Please enter a revision reason/note to track why this change was made."));
       return;
     }
 
@@ -95,15 +97,20 @@ export function QuotationRevisionModal({
 
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`Quotation Version ${nextVersion} created! Total: ₹${data.data?.total_payable?.toLocaleString("en-IN")}`);
+        toast.success(
+          t("adm_qm_rev_ok", "Quotation Version {ver} created! Total: ₹{total}", {
+            ver: String(nextVersion),
+            total: String(data.data?.total_payable?.toLocaleString("en-IN") || 0)
+          })
+        );
         onSuccess(data.data);
         onClose();
       } else {
-        toast.error(data.message || data.error || "Failed to create revised quotation");
+        toast.error(data.message || data.error || t("adm_qm_rev_err", "Failed to create revised quotation"));
       }
     } catch (err: any) {
       console.error("Revision error:", err);
-      toast.error(err.message || "Network error while creating revision");
+      toast.error(err.message || t("adm_qm_rev_net_err", "Network error while creating revision"));
     } finally {
       setSubmitting(false);
     }
@@ -114,22 +121,22 @@ export function QuotationRevisionModal({
       <div className="relative w-full max-w-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="p-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-800/40">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-900/40">
+        <div className="p-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-800/40">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 shrink-0 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-900/40">
               <Layers className="w-5 h-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-zinc-900 dark:text-white">
-                  Create Quotation Revision
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base font-bold text-zinc-900 dark:text-white leading-snug">
+                  {t("adm_qm_rev_title", "Create Quotation Revision")}
                 </h2>
-                <Badge className="bg-indigo-600 text-white font-bold text-[10px]">
-                  Version {nextVersion}
+                <Badge className="bg-indigo-600 text-white font-bold text-[10px] whitespace-normal leading-snug shrink-0">
+                  {t("adm_qm_rev_ver", "Version {ver}", { ver: String(nextVersion) })}
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Deriving immutable new version from Quote v{currentVersion}
+              <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
+                {t("adm_qm_rev_sub", "Deriving immutable new version from Quote v{ver}", { ver: String(currentVersion) })}
               </p>
             </div>
           </div>
@@ -148,25 +155,28 @@ export function QuotationRevisionModal({
           {/* Audit Notice */}
           <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 rounded-xl border border-indigo-200 dark:border-indigo-900/40 text-indigo-900 dark:text-indigo-200">
             <p className="font-bold flex items-center gap-1.5 text-xs">
-              <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-              Immutable Version Tracking
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-indigo-600" />
+              <span>{t("adm_qm_rev_aud_t", "Immutable Version Tracking")}</span>
             </p>
             <p className="mt-0.5 text-[11px] opacity-90 leading-relaxed">
-              Completed and booked quotes are protected. This will not overwrite the previous baseline v{currentVersion}; it creates a new <strong>Version {nextVersion}</strong> with a permanent change audit trail.
+              {t("adm_qm_rev_aud_d", "Completed and booked quotes are protected. This will not overwrite the previous baseline v{prev}; it creates a new Version {next} with a permanent change audit trail.", {
+                prev: String(currentVersion),
+                next: String(nextVersion)
+              })}
             </p>
           </div>
 
           {/* Mandatory Revision Notes */}
           <div>
             <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1">
-              Revision Reason / What Changed * (Mandatory for Audit Trail):
+              {t("adm_qm_rev_reason_lbl", "Revision Reason / What Changed * (Mandatory for Audit Trail):")}
             </label>
             <Input
               type="text"
               required
               value={revisionNotes}
               onChange={(e) => setRevisionNotes(e.target.value)}
-              placeholder="e.g. Added 2 outdoor cameras and 30m extra cabling after site survey"
+              placeholder={t("adm_qm_rev_reason_ph", "e.g. Added 2 outdoor cameras and 30m extra cabling after site survey")}
               className="h-10 text-xs font-medium"
             />
           </div>
@@ -175,7 +185,7 @@ export function QuotationRevisionModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1.5">
-                Cameras Count:
+                {t("adm_qm_rev_cam_cnt", "Cameras Count:")}
               </label>
               <div className="flex items-center gap-2">
                 <Input
@@ -205,24 +215,24 @@ export function QuotationRevisionModal({
 
             <div>
               <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1.5">
-                Technology Tier:
+                {t("adm_qm_comp_tech_lbl", "Camera Technology:")}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   type="button"
                   variant={technology === "HD" ? "default" : "outline"}
                   onClick={() => setTechnology("HD")}
-                  className={`h-10 text-xs font-bold ${technology === "HD" ? "bg-blue-600 hover:bg-blue-700" : ""}`}
+                  className={`min-h-[2.5rem] h-auto py-2 px-2 text-xs font-bold whitespace-normal leading-snug ${technology === "HD" ? "bg-blue-600 hover:bg-blue-700" : ""}`}
                 >
-                  HD (Analog)
+                  {t("adm_qm_rev_hd", "HD (Analog)")}
                 </Button>
                 <Button
                   type="button"
                   variant={technology === "IP" ? "default" : "outline"}
                   onClick={() => setTechnology("IP")}
-                  className={`h-10 text-xs font-bold ${technology === "IP" ? "bg-indigo-600 hover:bg-indigo-700" : ""}`}
+                  className={`min-h-[2.5rem] h-auto py-2 px-2 text-xs font-bold whitespace-normal leading-snug ${technology === "IP" ? "bg-indigo-600 hover:bg-indigo-700" : ""}`}
                 >
-                  IP (Digital)
+                  {t("adm_qm_rev_ip", "IP (Digital)")}
                 </Button>
               </div>
             </div>
@@ -231,7 +241,7 @@ export function QuotationRevisionModal({
           {/* Recording Days */}
           <div>
             <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1.5">
-              Recording Days / HDD Sizing:
+              {t("adm_qm_rev_rec", "Recording Days / HDD Sizing:")}
             </label>
             <div className="grid grid-cols-3 gap-2">
               {[7, 15, 30].map((days) => (
@@ -240,9 +250,9 @@ export function QuotationRevisionModal({
                   type="button"
                   variant={recordingDays === days ? "default" : "outline"}
                   onClick={() => setRecordingDays(days)}
-                  className="h-9 text-xs font-bold"
+                  className="min-h-[2.25rem] h-auto py-1.5 px-2 text-xs font-bold whitespace-normal leading-snug"
                 >
-                  {days} Days
+                  {t("adm_qm_days_suffix", "{days} Days", { days: String(days) })}
                 </Button>
               ))}
             </div>
@@ -251,7 +261,7 @@ export function QuotationRevisionModal({
           {/* Site Conditions & Difficulties */}
           <div className="space-y-2">
             <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block">
-              Physical Site Difficulties Observed (0% Margin Surcharges):
+              {t("adm_qm_rev_flags_lbl", "Physical Site Difficulties Observed (0% Margin Surcharges):")}
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
               <label 
@@ -261,10 +271,10 @@ export function QuotationRevisionModal({
                 }`}
               >
                 <input type="checkbox" checked={flags.requiresLadderFee} onChange={() => {}} className="hidden" />
-                <div className={`w-4 h-4 rounded flex items-center justify-center border ${flags.requiresLadderFee ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
+                <div className={`w-4 h-4 shrink-0 rounded flex items-center justify-center border ${flags.requiresLadderFee ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
                   {flags.requiresLadderFee && <Check className="w-3 h-3 stroke-[3]" />}
                 </div>
-                <span>Ladder / High Ceiling (&gt;12ft)</span>
+                <span className="leading-snug">{t("adm_qm_flag_ladder", "Ladder / High Ceiling (>12ft)")}</span>
               </label>
 
               <label 
@@ -274,10 +284,10 @@ export function QuotationRevisionModal({
                 }`}
               >
                 <input type="checkbox" checked={flags.requiresMarbleSurcharge} onChange={() => {}} className="hidden" />
-                <div className={`w-4 h-4 rounded flex items-center justify-center border ${flags.requiresMarbleSurcharge ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
+                <div className={`w-4 h-4 shrink-0 rounded flex items-center justify-center border ${flags.requiresMarbleSurcharge ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
                   {flags.requiresMarbleSurcharge && <Check className="w-3 h-3 stroke-[3]" />}
                 </div>
-                <span>Marble / Italian Core Drill</span>
+                <span className="leading-snug">{t("adm_qm_flag_marble", "Marble / Italian Core Drill")}</span>
               </label>
 
               <label 
@@ -287,10 +297,10 @@ export function QuotationRevisionModal({
                 }`}
               >
                 <input type="checkbox" checked={flags.requiresFurnishedSurcharge} onChange={() => {}} className="hidden" />
-                <div className={`w-4 h-4 rounded flex items-center justify-center border ${flags.requiresFurnishedSurcharge ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
+                <div className={`w-4 h-4 shrink-0 rounded flex items-center justify-center border ${flags.requiresFurnishedSurcharge ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
                   {flags.requiresFurnishedSurcharge && <Check className="w-3 h-3 stroke-[3]" />}
                 </div>
-                <span>Concealed Interior Routing</span>
+                <span className="leading-snug">{t("adm_qm_flag_concealed", "Concealed Interior Routing")}</span>
               </label>
 
               <label 
@@ -300,39 +310,39 @@ export function QuotationRevisionModal({
                 }`}
               >
                 <input type="checkbox" checked={flags.requiresHeavyDrillingSurcharge} onChange={() => {}} className="hidden" />
-                <div className={`w-4 h-4 rounded flex items-center justify-center border ${flags.requiresHeavyDrillingSurcharge ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
+                <div className={`w-4 h-4 shrink-0 rounded flex items-center justify-center border ${flags.requiresHeavyDrillingSurcharge ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
                   {flags.requiresHeavyDrillingSurcharge && <Check className="w-3 h-3 stroke-[3]" />}
                 </div>
-                <span>Heavy Concrete Core Cutting</span>
+                <span className="leading-snug">{t("adm_qm_flag_heavy", "Heavy Concrete Core Cutting")}</span>
               </label>
             </div>
           </div>
 
           {/* Submit Actions */}
-          <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-end gap-3">
+          <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-end gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               disabled={submitting}
-              className="text-xs font-semibold"
+              className="min-h-[2.25rem] h-auto py-2 text-xs font-semibold whitespace-normal leading-snug"
             >
-              Cancel
+              {t("adm_qm_del_cancel", "Cancel")}
             </Button>
             <Button
               type="submit"
               disabled={submitting}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-2 px-5"
+              className="min-h-[2.25rem] h-auto py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-2 px-5 whitespace-normal leading-snug"
             >
               {submitting ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Generating Version {nextVersion}...</span>
+                  <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" />
+                  <span>{t("adm_qm_rev_gen", "Generating Version {ver}...", { ver: String(nextVersion) })}</span>
                 </>
               ) : (
                 <>
-                  <Layers className="w-3.5 h-3.5" />
-                  <span>Save as Version {nextVersion}</span>
+                  <Layers className="w-3.5 h-3.5 shrink-0" />
+                  <span>{t("adm_qm_rev_save", "Save as Version {ver}", { ver: String(nextVersion) })}</span>
                 </>
               )}
             </Button>

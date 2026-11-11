@@ -73,7 +73,7 @@ export function ShareDialog({
 
       setShared(true);
     } catch (err) {
-      setError("Could not record share. Opening WhatsApp anyway...");
+      setError(t("share_err_wa", "Could not record share. Opening WhatsApp anyway..."));
       // Still open WhatsApp even if recording fails
       window.open(`https://wa.me/91${number}?text=${buildMessage()}`, "_blank");
     } finally {
@@ -83,7 +83,7 @@ export function ShareDialog({
 
   const handleShareToOther = () => {
     if (!/^[6-9]\d{9}$/.test(otherNumber)) {
-      setError("Please enter a valid 10-digit mobile number.");
+      setError(t("share_err_mobile", "Please enter a valid 10-digit mobile number."));
       return;
     }
     shareToNumber(otherNumber, true);

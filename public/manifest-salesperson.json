@@ -2,6 +2,8 @@
   "name": "CCTVQuotation Sales Portal",
   "short_name": "CCTV Sales",
   "description": "CCTVQuotation - Sales Dashboard",
+  "lang": "en-IN",
+  "dir": "ltr",
   "start_url": "/salesperson/dashboard",
   "display": "standalone",
   "background_color": "#ffffff",

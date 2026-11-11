@@ -17,6 +17,7 @@ import {
 import HybridMap from "../maps/HybridMap";
 import { getPincodeCoordinates, resolvePincodeFromCoordinates, Coordinates } from "@/lib/geo-utils";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface LocationMeta {
   pincode?: string;
@@ -43,6 +44,7 @@ export function LocationPickerModal({
   initialCoords,
   addressContext = ""
 }: LocationPickerModalProps) {
+  const { t, locale } = useTranslation();
   const [coords, setCoords] = useState<Coordinates>(() => {
     if (initialCoords && initialCoords.lat && initialCoords.lng) {
       return initialCoords;
@@ -109,7 +111,7 @@ export function LocationPickerModal({
   // One-click GPS Location Grabber
   const handleUseCurrentGPS = () => {
     if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by your browser");
+      toast.error(t("loc_no_geo", "Geolocation is not supported by your browser"));
       return;
     }
 
@@ -122,15 +124,15 @@ export function LocationPickerModal({
           lng: position.coords.longitude
         };
         setCoords(newCoords);
-        toast.success("Locked to your current GPS location!");
+        toast.success(t("loc_gps_locked", "Locked to your current GPS location!"));
       },
       (error) => {
         setIsLocatingGPS(false);
         console.warn("GPS error:", error);
         if (error.code === error.PERMISSION_DENIED) {
-          toast.error("Location permission denied. Please allow location access or drag the map pin.");
+          toast.error(t("loc_gps_denied", "Location permission denied. Please allow location access or drag the map pin."));
         } else {
-          toast.error("Unable to retrieve GPS coordinates. Please drag the pin on map.");
+          toast.error(t("loc_gps_err", "Unable to retrieve GPS coordinates. Please drag the pin on map."));
         }
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -155,7 +157,7 @@ export function LocationPickerModal({
     }
 
     const timer = setTimeout(() => {
-      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${coords.lat}&lon=${coords.lng}&format=json&addressdetails=1`)
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${coords.lat}&lon=${coords.lng}&format=json&addressdetails=1&accept-language=${encodeURIComponent(locale || "en")}`)
         .then(res => res.json())
         .then(data => {
           if (data && data.address) {
@@ -232,7 +234,7 @@ export function LocationPickerModal({
     };
 
     onConfirm(coords, googleMapsUrl, finalMeta);
-    toast.success("Installation location pinned successfully!");
+    toast.success(t("loc_pinned_ok", "Installation location pinned successfully!"));
     onClose();
   };
 
@@ -265,9 +267,9 @@ export function LocationPickerModal({
                 <MapPin className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-white">Pin Your Installation Location</h3>
+                <h3 className="text-sm sm:text-base font-bold text-white">{t("loc_title", "Pin Your Installation Location")}</h3>
                 <p className="text-[11px] text-slate-300">
-                  {initialPincode ? `Default centered on PIN: ${initialPincode}` : "Drag pin to your exact building or gate"}
+                  {initialPincode ? t("loc_pin_sub", "Default centered on PIN: {pin}", { pin: initialPincode }) : t("loc_drag_sub", "Drag pin to your exact building or gate")}
                 </p>
               </div>
             </div>
@@ -285,9 +287,9 @@ export function LocationPickerModal({
               <Compass className="w-3.5 h-3.5 text-blue-600 shrink-0" />
               <span>
                 {initialPincode ? (
-                  <>Referred from Pincode: <strong>{initialPincode}</strong></>
+                  <>{t("loc_ref_pin", "Referred from Pincode:")} <strong>{initialPincode}</strong></>
                 ) : (
-                  "Drag pin to pinpoint entrance"
+                  t("loc_drag_gate", "Drag pin to pinpoint entrance")
                 )}
               </span>
             </div>
@@ -296,15 +298,15 @@ export function LocationPickerModal({
               type="button"
               onClick={handleUseCurrentGPS}
               disabled={isLocatingGPS}
-              className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold text-[11px] shadow-xs active:scale-95 transition-all disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold text-[11px] shadow-xs active:scale-95 transition-all disabled:opacity-50 whitespace-normal text-center leading-snug"
             >
               {isLocatingGPS ? (
                 <>
-                  <Loader2 className="w-3 h-3 animate-spin" /> Locating...
+                  <Loader2 className="w-3 h-3 animate-spin shrink-0" /> {t("loc_locating", "Locating...")}
                 </>
               ) : (
                 <>
-                  <Crosshair className="w-3 h-3" /> Use My Current GPS
+                  <Crosshair className="w-3 h-3 shrink-0" /> {t("loc_use_gps", "Use My Current GPS")}
                 </>
               )}
             </button>
@@ -342,7 +344,7 @@ export function LocationPickerModal({
                   rel="noreferrer"
                   className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 shrink-0 ml-2"
                 >
-                  <span>Preview</span>
+                  <span>{t("loc_preview", "Preview")}</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
@@ -356,13 +358,13 @@ export function LocationPickerModal({
               <div className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 flex items-center justify-between text-slate-700">
                 <div className="flex items-center gap-2 min-w-0">
                   <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                  <span className="truncate font-medium text-[11px] sm:text-xs">
-                    {isResolvingAddress ? "Detecting area & address..." : resolvedAddress?.formattedAddress}
+                  <span className="font-medium text-[11px] sm:text-xs break-words">
+                    {isResolvingAddress ? t("loc_detecting", "Detecting area & address...") : resolvedAddress?.formattedAddress}
                   </span>
                 </div>
                 {resolvedAddress?.pincode && (
                   <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-md shrink-0 ml-2">
-                    PIN: {resolvedAddress.pincode}
+                    {t("loc_pin_prefix", "PIN: {pin}", { pin: resolvedAddress.pincode })}
                   </span>
                 )}
               </div>
@@ -372,18 +374,18 @@ export function LocationPickerModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors"
+                className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors whitespace-normal leading-snug"
               >
-                Cancel
+                {t("loc_cancel", "Cancel")}
               </button>
 
               <button
                 type="button"
                 onClick={handleConfirmLocation}
-                className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center justify-center gap-2 min-h-[44px] h-auto whitespace-normal text-center leading-snug"
               >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Confirm This Pinpoint</span>
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>{t("loc_confirm", "Confirm This Pinpoint")}</span>
               </button>
             </div>
           </div>

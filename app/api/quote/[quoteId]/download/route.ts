@@ -3,6 +3,8 @@ import { renderToStream } from "@react-pdf/renderer";
 import { QuotePDFDocument } from "@/lib/pdf/quote-pdf";
 import { getCachedAdminSettings } from "@/lib/cached-settings";
 import { getOrCreateLeadQuote } from "@/lib/baseline-quote";
+import { resolveRequestLocale } from "@/lib/i18n/api-messages";
+import { resolveCustomerLocale } from "@/lib/whatsapp/customer-notifications-i18n";
 import React from "react";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +24,16 @@ export async function GET(
       return new NextResponse("Quote not found", { status: 404 });
     }
 
+    const reqLocale = resolveRequestLocale(request);
+    const pdfLocale =
+      reqLocale !== "en"
+        ? reqLocale
+        : await resolveCustomerLocale({
+            quoteData,
+            leadData,
+            phone: quoteData.customer_mobile || leadData.mobile_number,
+          });
+
     const quote = {
       id: quoteData.id || quoteId,
       customer_name: quoteData.customer_name || quoteData.billing_details?.customer_name || leadData.customer_name || "Valued Client",
@@ -32,7 +44,7 @@ export async function GET(
     const settings = await getCachedAdminSettings();
 
     // Generate PDF directly in memory
-    const pdfStream = await renderToStream(React.createElement(QuotePDFDocument, { quote, settings }) as any);
+    const pdfStream = await renderToStream(React.createElement(QuotePDFDocument, { quote, settings, locale: pdfLocale }) as any);
     
     // Convert Node.js stream to Web ReadableStream
     const readableStream = new ReadableStream({

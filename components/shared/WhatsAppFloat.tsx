@@ -25,7 +25,7 @@ export function WhatsAppFloat() {
     <motion.aside 
       drag
       dragMomentum={false}
-      aria-label="WhatsApp Support"
+      aria-label={t('wa_support_aria', 'WhatsApp Support')}
       style={{ zIndex: 49, position: "fixed", bottom: "88px", left: "16px" }}
       className="md:bottom-[28px] md:left-[28px]"
     >
@@ -33,7 +33,7 @@ export function WhatsAppFloat() {
         href={waHref}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Chat with us on WhatsApp"
+        aria-label={t('wa_chat_aria', 'Chat with us on WhatsApp')}
         className="whatsapp-float"
         id="whatsapp-float-btn"
       >

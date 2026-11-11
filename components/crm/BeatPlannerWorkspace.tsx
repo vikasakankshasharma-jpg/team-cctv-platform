@@ -30,16 +30,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { LatLng } from "@/lib/routing/optimizer";
+import { useTranslation } from "@/hooks/useTranslation";
 import type { BeatStop } from "@/types";
 
 interface BeatPlannerWorkspaceProps {
   isAdmin?: boolean;
 }
 
-const TIME_SLOT_CONFIG: Record<string, { label: string; time: string; color: string; icon: string }> = {
-  morning: { label: "Morning Slot", time: "09:30 AM – 01:00 PM", color: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800", icon: "🌅" },
-  afternoon: { label: "Afternoon Slot", time: "01:30 PM – 05:00 PM", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800", icon: "☀️" },
-  evening: { label: "Evening Slot", time: "05:30 PM – 08:00 PM", color: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-800", icon: "🌆" },
+const TIME_SLOT_CONFIG: Record<string, { key: string; fallback: string; time: string; color: string; icon: string }> = {
+  morning: { key: "del_slot_morning", fallback: "Morning Slot", time: "09:30 AM – 01:00 PM", color: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800", icon: "🌅" },
+  afternoon: { key: "del_slot_afternoon", fallback: "Afternoon Slot", time: "01:30 PM – 05:00 PM", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800", icon: "☀️" },
+  evening: { key: "del_slot_evening", fallback: "Evening Slot", time: "05:30 PM – 08:00 PM", color: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-800", icon: "🌆" },
 };
 
 const mapContainerStyle = {
@@ -72,6 +73,7 @@ function shiftDateString(dateStr: string, daysDelta: number): string {
 }
 
 export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspaceProps) {
+  const { t } = useTranslation();
   const todayStr = useMemo(() => getISTDateString(), []);
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [scheduledStops, setScheduledStops] = useState<BeatStop[]>([]);
@@ -106,14 +108,14 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
         setNearbyB2BPartners(data.nearbyB2BPartners || []);
         setSummary(data.summary || {});
       } else {
-        toast.error(data.error || "Failed to load Beat Plan");
+        toast.error(data.error || t("beat_err_load", "Failed to load Beat Plan"));
       }
     } catch {
-      toast.error("Failed to connect to Beat Plan service");
+      toast.error(t("beat_err_conn", "Failed to connect to Beat Plan service"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchBeatPlan(selectedDate);
@@ -142,13 +144,13 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
     handleLogTouchpoint(stop, "whatsapp");
     const phone = (stop.mobile_number || "").replace(/\D/g, "");
     if (!phone) {
-      toast.error("No phone number available");
+      toast.error(t("beat_err_no_phone", "No phone number available"));
       return;
     }
     const msg = encodeURIComponent(
       stop.entity_type === "b2b_partner"
-        ? `Namaste ${stop.title}, I am planning our regular CCTV partner check-in. Looking forward to meeting you today!`
-        : `Hello ${stop.title}, regarding your CCTV installation survey inquiry with TEAM CCTV, I am your allocated site executive.`
+        ? t("beat_wa_partner", "Namaste {name}, I am planning our regular CCTV partner check-in. Looking forward to meeting you today!", { name: stop.title })
+        : t("beat_wa_lead", "Hello {name}, regarding your CCTV installation survey inquiry with TEAM CCTV, I am your allocated site executive.", { name: stop.title })
     );
     window.open(`https://wa.me/91${phone}?text=${msg}`, "_blank");
   };
@@ -183,9 +185,9 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
           reorderedStops: updated,
         }),
       });
-      toast.success("Stop sequence updated");
+      toast.success(t("beat_seq_ok", "Stop sequence updated"));
     } catch {
-      toast.error("Failed to save reordered stops");
+      toast.error(t("beat_seq_err", "Failed to save reordered stops"));
       fetchBeatPlan(selectedDate);
     }
   };
@@ -202,10 +204,10 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
           entity_id: stop.id,
         }),
       });
-      toast.success(`Removed ${stop.title} from today's beat`);
+      toast.success(t("beat_rem_ok", "Removed {title} from today's beat", { title: stop.title }));
       fetchBeatPlan(selectedDate);
     } catch {
-      toast.error("Failed to unschedule stop");
+      toast.error(t("beat_rem_err", "Failed to unschedule stop"));
     }
   };
 
@@ -224,17 +226,19 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
           route_order: scheduledStops.length + 1,
         }),
       });
-      toast.success(`Added ${stop.title} to ${slot} slot!`);
+      const slotCfg = TIME_SLOT_CONFIG[slot];
+      const slotLabel = slotCfg ? t(slotCfg.key, slotCfg.fallback) : slot;
+      toast.success(t("beat_add_ok", "Added {title} to {slot} slot!", { title: stop.title, slot: slotLabel }));
       fetchBeatPlan(selectedDate);
     } catch {
-      toast.error("Failed to add stop to Beat Plan");
+      toast.error(t("beat_add_err", "Failed to add stop to Beat Plan"));
     }
   };
 
   // Smart-Fill Beat with top priority backlog items
   const handleSmartFillBeat = async (countToSchedule: number = 5) => {
     if (overdueBacklog.length === 0) {
-      toast.info("No overdue accounts in backlog to schedule.");
+      toast.info(t("beat_none_overdue", "No overdue accounts in backlog to schedule."));
       return;
     }
     setIsSmartFilling(true);
@@ -260,14 +264,14 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(`⚡ Added ${stopsToSchedule.length} overdue accounts to Beat Plan!`);
+        toast.success(t("beat_batch_ok", "⚡ Added {count} overdue accounts to Beat Plan!", { count: String(stopsToSchedule.length) }));
         await fetchBeatPlan(selectedDate);
         setActiveTab("schedule");
       } else {
-        toast.error(data.error || "Failed to batch schedule stops");
+        toast.error(data.error || t("beat_batch_err", "Failed to batch schedule stops"));
       }
     } catch {
-      toast.error("Failed to connect to Beat Plan service");
+      toast.error(t("beat_err_conn", "Failed to connect to Beat Plan service"));
     } finally {
       setIsSmartFilling(false);
     }
@@ -276,7 +280,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
   // Auto-optimize route
   const handleAutoOptimize = async () => {
     if (scheduledStops.length <= 1) {
-      toast.info("Add at least 2 stops to optimize route");
+      toast.info(t("beat_min2_err", "Add at least 2 stops to optimize route"));
       return;
     }
     setIsOptimizing(true);
@@ -305,13 +309,18 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(`Route optimized! Shortest round trip: ${data.result?.totalDistanceKm} km (~${data.result?.estimatedDriveMinutes} mins drive)`);
+        toast.success(
+          t("beat_opt_ok", "Route optimized! Shortest round trip: {km} km (~{mins} mins drive)", {
+            km: String(data.result?.totalDistanceKm ?? ""),
+            mins: String(data.result?.estimatedDriveMinutes ?? ""),
+          })
+        );
         fetchBeatPlan(selectedDate);
       } else {
-        toast.error(data.error || "Optimization failed");
+        toast.error(data.error || t("del_opt_fail", "Optimization failed"));
       }
     } catch {
-      toast.error("Failed to optimize route");
+      toast.error(t("beat_opt_err", "Failed to optimize route"));
     } finally {
       setIsOptimizing(false);
     }
@@ -333,12 +342,12 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
           coordinates: technicianLocation,
         }),
       });
-      toast.success(`Visit check-in recorded for ${checkInStop.title}!`);
+      toast.success(t("beat_checkin_ok", "Visit check-in recorded for {title}!", { title: checkInStop.title }));
       setCheckInStop(null);
       setCheckInNotes("");
       fetchBeatPlan(selectedDate);
     } catch {
-      toast.error("Failed to record visit check-in");
+      toast.error(t("beat_checkin_err", "Failed to record visit check-in"));
     } finally {
       setIsSubmittingCheckIn(false);
     }
@@ -347,16 +356,16 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
   // Locate technician via GPS
   const handleLocateMe = () => {
     if (!navigator.geolocation) {
-      toast.error("Geolocation not supported by browser");
+      toast.error(t("del_geo_unsupported", "Geolocation not supported by browser"));
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setTechnicianLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        toast.success("GPS Location captured as route starting point!");
+        toast.success(t("beat_gps_ok", "GPS Location captured as route starting point!"));
       },
       (err) => {
-        toast.error("GPS error: " + err.message);
+        toast.error(t("del_gps_err", "GPS error: {msg}", { msg: err.message }));
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -430,25 +439,25 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
             <span className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <Navigation className="w-6 h-6" />
             </span>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-              {isAdmin ? "Admin Territory Beat Planner" : "My Daily Beat Plan & Client Route"}
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight leading-snug text-zinc-900 dark:text-zinc-100">
+              {isAdmin ? t("beat_admin_title", "Admin Territory Beat Planner") : t("beat_sales_title", "My Daily Beat Plan & Client Route")}
             </h1>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            Unified route optimization for Customer Site Surveys (Leads) & Regular B2B Partner Engagement Visits
+            {t("beat_subtitle", "Unified route optimization for Customer Site Surveys (Leads) & Regular B2B Partner Engagement Visits")}
           </p>
         </div>
 
         {/* Date Selector & Auto-Optimize */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center bg-zinc-100 dark:bg-zinc-800 rounded-xl p-1 border border-zinc-200 dark:border-zinc-700">
+          <div className="flex flex-wrap items-center bg-zinc-100 dark:bg-zinc-800 rounded-xl p-1 border border-zinc-200 dark:border-zinc-700">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSelectedDate((prev) => shiftDateString(prev, -1))}
               className="h-8 px-2 text-xs"
             >
-              ◀ Prev
+              {t("beat_prev", "◀ Prev")}
             </Button>
             <input
               type="date"
@@ -462,7 +471,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
               onClick={() => setSelectedDate((prev) => shiftDateString(prev, 1))}
               className="h-8 px-2 text-xs"
             >
-              Next ▶
+              {t("beat_next", "Next ▶")}
             </Button>
           </div>
 
@@ -472,7 +481,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
             onClick={() => setSelectedDate(todayStr)}
             className={`text-xs font-semibold ${selectedDate === todayStr ? "border-blue-500 text-blue-600" : ""}`}
           >
-            Today
+            {t("del_today", "Today")}
           </Button>
 
           {scheduledStops.length === 0 && overdueBacklog.length > 0 && (
@@ -482,8 +491,8 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
               disabled={isSmartFilling}
               className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs gap-1.5 shadow-xs"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              {isSmartFilling ? "Filling..." : "⚡ Quick-Fill Beat (5)"}
+              <Sparkles className="w-3.5 h-3.5 shrink-0" />
+              {isSmartFilling ? t("beat_filling", "Filling...") : t("beat_quick_fill", "⚡ Quick-Fill Beat (5)")}
             </Button>
           )}
 
@@ -493,15 +502,15 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
             disabled={isOptimizing || scheduledStops.length <= 1}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs gap-1.5"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            {isOptimizing ? "Optimizing..." : "Auto-Optimize Beat"}
+            <Sparkles className="w-3.5 h-3.5 shrink-0" />
+            {isOptimizing ? t("del_optimizing", "Optimizing...") : t("beat_auto_opt", "Auto-Optimize Beat")}
           </Button>
 
           {summary?.googleNavigationUrl && (
             <a href={summary.googleNavigationUrl} target="_blank" rel="noopener noreferrer">
               <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs gap-1.5">
-                <Car className="w-3.5 h-3.5" />
-                Navigate in Google Maps
+                <Car className="w-3.5 h-3.5 shrink-0" />
+                {t("beat_nav_gmaps", "Navigate in Google Maps")}
               </Button>
             </a>
           )}
@@ -511,25 +520,25 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
       {/* KPI METRIC STRIP */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <Card className="p-4 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Scheduled Stops</p>
-          <div className="flex items-baseline gap-2 mt-1">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t("beat_sched_stops", "Scheduled Stops")}</p>
+          <div className="flex flex-wrap items-baseline gap-2 mt-1">
             <span className="text-2xl font-black text-zinc-900 dark:text-zinc-100">{summary?.total_stops || 0}</span>
             <span className="text-xs text-muted-foreground">
-              ({summary?.leads_count || 0} Leads • {summary?.partners_count || 0} B2B)
+              ({t("beat_leads_b2b", "{leads} Leads • {b2b} B2B", { leads: String(summary?.leads_count || 0), b2b: String(summary?.partners_count || 0) })})
             </span>
           </div>
         </Card>
 
         <Card className="p-4 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Overdue Backlog</p>
-          <div className="flex items-baseline gap-2 mt-1">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t("beat_overdue_back", "Overdue Backlog")}</p>
+          <div className="flex flex-wrap items-baseline gap-2 mt-1">
             <span className="text-2xl font-black text-red-600 dark:text-red-400">{summary?.overdue_backlog_count || 0}</span>
-            <span className="text-xs text-red-500/80 font-semibold">Needs Touchpoint</span>
+            <span className="text-xs text-red-500/80 font-semibold">{t("beat_needs_touch", "Needs Touchpoint")}</span>
           </div>
         </Card>
 
         <Card className="p-4 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Beat Pipeline Value</p>
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t("beat_pipe_val", "Beat Pipeline Value")}</p>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
               ₹{(summary?.total_pipeline_value || 0).toLocaleString("en-IN")}
@@ -537,22 +546,22 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
           </div>
         </Card>
 
-        <Card className="p-4 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+        <Card className="p-4 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">GPS Origin</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t("beat_gps_orig", "GPS Origin")}</p>
             <p className="text-xs font-semibold mt-1">
-              {technicianLocation ? `${technicianLocation.lat.toFixed(4)}, ${technicianLocation.lng.toFixed(4)}` : "Not captured"}
+              {technicianLocation ? `${technicianLocation.lat.toFixed(4)}, ${technicianLocation.lng.toFixed(4)}` : t("beat_not_cap", "Not captured")}
             </p>
           </div>
           <Button variant="ghost" size="sm" onClick={handleLocateMe} className="text-xs h-8 px-2 gap-1 text-blue-600">
-            <Locate className="w-3.5 h-3.5" />
-            Locate Me
+            <Locate className="w-3.5 h-3.5 shrink-0" />
+            {t("del_locate_me", "Locate Me")}
           </Button>
         </Card>
       </div>
 
       {/* VIEW TABS */}
-      <div className="flex border-b border-zinc-200 dark:border-zinc-800 gap-2">
+      <div className="flex flex-wrap border-b border-zinc-200 dark:border-zinc-800 gap-2">
         <button
           onClick={() => setActiveTab("schedule")}
           className={`pb-3 px-4 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors ${
@@ -561,8 +570,8 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
-          <Calendar className="w-4 h-4" />
-          Day Beat Schedule ({scheduledStops.length})
+          <Calendar className="w-4 h-4 shrink-0" />
+          {t("beat_tab_sched", "Day Beat Schedule ({count})", { count: String(scheduledStops.length) })}
         </button>
 
         <button
@@ -573,8 +582,8 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
-          <AlertTriangle className="w-4 h-4" />
-          Overdue Accounts Backlog ({overdueBacklog.length})
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          {t("beat_tab_backlog", "Overdue Accounts Backlog ({count})", { count: String(overdueBacklog.length) })}
         </button>
 
         <button
@@ -585,8 +594,8 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
-          <MapPin className="w-4 h-4" />
-          Territory Route Map ({scheduledStops.length + nearbyB2BPartners.length})
+          <MapPin className="w-4 h-4 shrink-0" />
+          {t("beat_tab_map", "Territory Route Map ({count})", { count: String(scheduledStops.length + nearbyB2BPartners.length) })}
         </button>
       </div>
 
@@ -595,9 +604,9 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
         <div className="space-y-6">
           {scheduledStops.length === 0 ? (
             <Card className="p-8 text-center bg-white dark:bg-zinc-900 border-dashed">
-              <p className="text-muted-foreground text-sm font-medium">No stops scheduled for {selectedDate}.</p>
+              <p className="text-muted-foreground text-sm font-medium">{t("beat_no_stops", "No stops scheduled for {date}", { date: selectedDate })}.</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Switch to the <strong>Overdue Accounts Backlog</strong> tab to add pending customer leads or B2B partners to today&apos;s beat, or use Quick-Fill below!
+                {t("beat_no_stops_hint1", "Switch to the")} <strong>{t("beat_no_stops_hint_tab", "Overdue Accounts Backlog")}</strong> {t("beat_no_stops_hint2", "tab to add pending customer leads or B2B partners to today's beat, or use Quick-Fill below!")}
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
                 {overdueBacklog.length > 0 && (
@@ -607,8 +616,8 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                     disabled={isSmartFilling}
                     className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold gap-1.5"
                   >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    {isSmartFilling ? "Filling Beat..." : "⚡ Smart-Fill Today's Beat (5 Accounts)"}
+                    <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                    {isSmartFilling ? t("beat_filling_beat", "Filling Beat...") : t("beat_smart_fill", "⚡ Smart-Fill Today's Beat (5 Accounts)")}
                   </Button>
                 )}
                 <Button
@@ -617,7 +626,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                   onClick={() => setActiveTab("backlog")}
                   className="text-xs font-semibold"
                 >
-                  Browse Overdue Backlog ({overdueBacklog.length})
+                  {t("beat_browse_back", "Browse Overdue Backlog ({count})", { count: String(overdueBacklog.length) })}
                 </Button>
               </div>
             </Card>
@@ -625,27 +634,30 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
             ["morning", "afternoon", "evening"].map((slotKey) => {
               const slotStops = stopsBySlot[slotKey] || [];
               const slotConfig = TIME_SLOT_CONFIG[slotKey];
+              const slotLabel = t(slotConfig.key, slotConfig.fallback);
 
               return (
                 <div key={slotKey} className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="text-lg">{slotConfig.icon}</span>
                       <h3 className="font-bold text-sm tracking-tight text-zinc-900 dark:text-zinc-100">
-                        {slotConfig.label}
+                        {slotLabel}
                       </h3>
                       <span className="text-xs text-muted-foreground font-mono">
                         ({slotConfig.time})
                       </span>
                     </div>
                     <Badge variant="outline" className={`text-[10px] font-bold ${slotConfig.color}`}>
-                      {slotStops.length} Stop{slotStops.length !== 1 ? "s" : ""}
+                      {slotStops.length === 1
+                        ? t("beat_slot_stop_cnt", "{count} Stop", { count: "1" })
+                        : t("beat_slot_stops_cnt", "{count} Stops", { count: String(slotStops.length) })}
                     </Badge>
                   </div>
 
                   {slotStops.length === 0 ? (
                     <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-xs text-muted-foreground text-center">
-                      No visits scheduled for {slotConfig.label}.
+                      {t("beat_no_slot_visits", "No visits scheduled for {slot}", { slot: slotLabel })}.
                     </div>
                   ) : (
                     <div className="grid gap-3">
@@ -658,20 +670,20 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                             className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs hover:border-blue-400 transition-colors"
                           >
                             {/* LEFT: Stop Order & Entity Info */}
-                            <div className="flex items-start gap-3.5">
+                            <div className="flex items-start gap-3.5 min-w-0">
                               <span className="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
                                 #{stop.route_order}
                               </span>
 
-                              <div>
+                              <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
                                   {stop.entity_type === "b2b_partner" ? (
                                     <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold">
-                                      🏢 B2B Partner
+                                      {t("beat_badge_b2b", "🏢 B2B Partner")}
                                     </Badge>
                                   ) : (
                                     <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold">
-                                      👤 Customer Lead
+                                      {t("beat_badge_lead", "👤 Customer Lead")}
                                     </Badge>
                                   )}
 
@@ -688,13 +700,13 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                                   {/* Inactivity Health Badge */}
                                   <Badge variant="outline" className="text-[10px] font-semibold border">
                                     {stop.days_since_last_visit !== null
-                                      ? `Last Visit: ${stop.days_since_last_visit}d ago`
-                                      : "⚠️ Never Visited"}
+                                      ? t("beat_last_visit", "Last Visit: {days}d ago", { days: String(stop.days_since_last_visit) })
+                                      : t("beat_never_visited", "⚠️ Never Visited")}
                                   </Badge>
 
                                   {stop.checkin_at && (
                                     <Badge className="bg-emerald-600 text-white text-[10px] font-bold gap-1">
-                                      <CheckCircle className="w-3 h-3" /> Checked In
+                                      <CheckCircle className="w-3 h-3" /> {t("beat_checked_in", "Checked In")}
                                     </Badge>
                                   )}
                                 </div>
@@ -704,19 +716,19 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                                 </p>
 
                                 <p className="text-xs text-zinc-500 flex items-center gap-1 mt-1">
-                                  <MapPin className="w-3.5 h-3.5 text-zinc-400" />
-                                  {stop.address?.full_address || "Jaipur Territory"}
+                                  <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                                  {stop.address?.full_address || t("beat_def_city", "Jaipur Territory")}
                                 </p>
                               </div>
                             </div>
 
                             {/* RIGHT: Quick Action Buttons */}
-                            <div className="flex items-center gap-1.5 self-end sm:self-center shrink-0">
+                            <div className="flex flex-wrap items-center gap-1.5 self-end sm:self-center shrink-0">
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleCallClick(stop)}
-                                title="Call Customer / Partner"
+                                title={t("beat_tt_call", "Call Customer / Partner")}
                                 className="h-8 w-8 p-0 text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
                               >
                                 <Phone className="w-3.5 h-3.5" />
@@ -726,7 +738,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleWhatsAppClick(stop)}
-                                title="Open WhatsApp Chat (Auto-logs touchpoint)"
+                                title={t("beat_tt_wa", "Open WhatsApp Chat (Auto-logs touchpoint)")}
                                 className="h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
                               >
                                 <MessageSquare className="w-3.5 h-3.5" />
@@ -738,8 +750,8 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                                 onClick={() => setCheckInStop(stop)}
                                 className="h-8 px-2.5 text-xs font-semibold gap-1 text-purple-700 bg-purple-50 dark:bg-purple-950/30 border-purple-200"
                               >
-                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                Check In
+                                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                                {t("beat_check_in_btn", "Check In")}
                               </Button>
 
                               {/* Reorder Buttons */}
@@ -767,7 +779,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => handleUnschedule(stop)}
-                                title="Remove from today"
+                                title={t("beat_tt_remove", "Remove from today")}
                                 className="h-8 w-7 p-0 text-red-500 hover:bg-red-50"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -790,11 +802,11 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
         <div className="space-y-4">
           <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
             <h3 className="text-sm font-bold text-amber-800 dark:text-amber-400 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" />
-              Neglected Accounts Requiring Relationship Visits ({overdueBacklog.length})
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              {t("beat_neglected_title", "Neglected Accounts Requiring Relationship Visits ({count})", { count: String(overdueBacklog.length) })}
             </h3>
             <p className="text-xs text-amber-700 dark:text-amber-300/80 mt-1">
-              These Customer Leads and B2B Channel Partners have not been visited or contacted in 14+ days. Add them to today&apos;s or tomorrow&apos;s Beat Plan to prevent partner churn and lost inquiries.
+              {t("beat_neglected_desc", "These Customer Leads and B2B Channel Partners have not been visited or contacted in 14+ days. Add them to today's or tomorrow's Beat Plan to prevent partner churn and lost inquiries.")}
             </p>
           </div>
 
@@ -807,9 +819,9 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     {account.entity_type === "b2b_partner" ? (
-                      <Badge className="bg-amber-500 text-white text-[10px] font-bold">🏢 B2B Partner</Badge>
+                      <Badge className="bg-amber-500 text-white text-[10px] font-bold">{t("beat_badge_b2b", "🏢 B2B Partner")}</Badge>
                     ) : (
-                      <Badge className="bg-blue-600 text-white text-[10px] font-bold">👤 Customer Lead</Badge>
+                      <Badge className="bg-blue-600 text-white text-[10px] font-bold">{t("beat_badge_lead", "👤 Customer Lead")}</Badge>
                     )}
 
                     <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">{account.title}</span>
@@ -819,8 +831,8 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
 
                     <Badge variant="destructive" className="text-[10px] font-bold">
                       {account.days_since_last_contact !== null
-                        ? `🔴 ${account.days_since_last_contact} Days Inactive`
-                        : "⚠️ Never Contacted"}
+                        ? t("beat_inactive_days", "🔴 {days} Days Inactive", { days: String(account.days_since_last_contact) })
+                        : t("beat_never_contacted", "⚠️ Never Contacted")}
                     </Badge>
                   </div>
 
@@ -829,14 +841,14 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleScheduleFromBacklog(account, "morning")}
                     className="h-8 text-xs font-semibold"
                   >
-                    + Morning
+                    {t("beat_add_morn", "+ Morning")}
                   </Button>
                   <Button
                     size="sm"
@@ -844,7 +856,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                     onClick={() => handleScheduleFromBacklog(account, "afternoon")}
                     className="h-8 text-xs font-semibold"
                   >
-                    + Afternoon
+                    {t("beat_add_aft", "+ Afternoon")}
                   </Button>
                   <Button
                     size="sm"
@@ -852,7 +864,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                     onClick={() => handleScheduleFromBacklog(account, "evening")}
                     className="h-8 text-xs font-semibold"
                   >
-                    + Evening
+                    {t("beat_add_eve", "+ Evening")}
                   </Button>
                 </div>
               </div>
@@ -865,24 +877,27 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
       {activeTab === "map" && (
         <div className="space-y-4">
           <Card className="overflow-hidden bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
-            <CardHeader className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex flex-row items-center justify-between">
+            <CardHeader className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <CardTitle className="text-base font-bold">Territory Beat Route & Nearby B2B Partners</CardTitle>
+                <CardTitle className="text-base font-bold">{t("beat_map_title", "Territory Beat Route & Nearby B2B Partners")}</CardTitle>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Showing {scheduledStops.length} scheduled stops in route order + {nearbyB2BPartners.length} nearby B2B partner locations
+                  {t("beat_map_desc", "Showing {stops} scheduled stops in route order + {partners} nearby B2B partner locations", {
+                    stops: String(scheduledStops.length),
+                    partners: String(nearbyB2BPartners.length),
+                  })}
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 text-xs">
+              <div className="flex flex-wrap items-center gap-3 text-xs">
                 <span className="flex items-center gap-1.5 font-medium">
-                  <span className="w-3 h-3 rounded-full bg-blue-600 inline-block" /> Customer Leads
+                  <span className="w-3 h-3 rounded-full bg-blue-600 inline-block" /> {t("beat_leg_leads", "Customer Leads")}
                 </span>
                 <span className="flex items-center gap-1.5 font-medium">
-                  <span className="w-3 h-3 rounded-full bg-amber-500 inline-block" /> B2B Partners
+                  <span className="w-3 h-3 rounded-full bg-amber-500 inline-block" /> {t("beat_leg_b2b", "B2B Partners")}
                 </span>
                 {technicianLocation && (
                   <span className="flex items-center gap-1.5 font-medium text-sky-600 dark:text-sky-400">
-                    <span className="w-3 h-3 rounded-full bg-sky-500 inline-block" /> GPS Origin
+                    <span className="w-3 h-3 rounded-full bg-sky-500 inline-block" /> {t("beat_gps_orig", "GPS Origin")}
                   </span>
                 )}
                 <Button
@@ -891,7 +906,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                   onClick={fitMapToBounds}
                   className="h-7 px-2 text-xs font-semibold gap-1 text-zinc-700 dark:text-zinc-300"
                 >
-                  <Locate className="w-3 h-3 text-blue-600" /> Fit View
+                  <Locate className="w-3 h-3 text-blue-600" /> {t("beat_fit_view", "Fit View")}
                 </Button>
               </div>
             </CardHeader>
@@ -915,9 +930,9 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                   {technicianLocation?.lat && technicianLocation?.lng && (
                     <MarkerF
                       position={technicianLocation}
-                      title="Route Origin (Technician Location)"
+                      title={t("beat_tt_origin", "Route Origin (Technician Location)")}
                       label={{
-                        text: "📍 START",
+                        text: t("beat_start_pin", "📍 START"),
                         color: "#0369a1",
                         fontWeight: "bold",
                         fontSize: "11px",
@@ -968,7 +983,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                       <MarkerF
                         key={`nearby-${partner.id}`}
                         position={partner.coordinates}
-                        title={`B2B Partner: ${partner.title}`}
+                        title={`${t("beat_b2b_short", "B2B Partner")}: ${partner.title}`}
                         label={{
                           text: "🏢",
                           fontSize: "12px",
@@ -1010,7 +1025,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                         <div className="flex items-center gap-1.5">
                           <span className="font-bold text-sm">{selectedMarker.title}</span>
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 font-semibold">
-                            {selectedMarker.entity_type === "b2b_partner" ? "B2B Partner" : "Lead"}
+                            {selectedMarker.entity_type === "b2b_partner" ? t("beat_b2b_short", "B2B Partner") : t("beat_lead_short", "Lead")}
                           </span>
                         </div>
                         {selectedMarker.business_name && (
@@ -1023,7 +1038,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                             onClick={() => handleScheduleFromBacklog(selectedMarker, "afternoon")}
                             className="text-[11px] font-bold text-blue-600 hover:underline"
                           >
-                            + Add to Beat
+                            {t("beat_add_to_beat", "+ Add to Beat")}
                           </button>
                           <a
                             href={`https://wa.me/91${(selectedMarker.mobile_number || "").replace(/\D/g, "")}`}
@@ -1031,7 +1046,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                             rel="noopener noreferrer"
                             className="text-[11px] font-bold text-emerald-600 hover:underline"
                           >
-                            WhatsApp
+                            {t("beat_wa_btn", "WhatsApp")}
                           </a>
                         </div>
                       </div>
@@ -1040,7 +1055,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
                 </GoogleMap>
               ) : (
                 <div className="h-[550px] flex items-center justify-center text-sm text-muted-foreground">
-                  Loading Google Maps...
+                  {t("del_loading_gmaps", "Loading Google Maps...")}
                 </div>
               )}
             </CardContent>
@@ -1053,25 +1068,25 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-purple-600" />
-              Record Visit Check-In: {checkInStop?.title}
+              <CheckCircle2 className="w-5 h-5 text-purple-600 shrink-0" />
+              <span>{t("beat_modal_title", "Record Visit Check-In:")} {checkInStop?.title}</span>
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div>
-              <p className="text-xs text-muted-foreground font-semibold">Account / Business</p>
+              <p className="text-xs text-muted-foreground font-semibold">{t("beat_acct_biz", "Account / Business")}</p>
               <p className="text-sm font-bold">{checkInStop?.business_name || checkInStop?.title}</p>
               <p className="text-xs text-zinc-500">{checkInStop?.address?.full_address}</p>
             </div>
 
             <div>
               <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
-                Meeting / Survey Outcome Notes:
+                {t("beat_notes_lbl", "Meeting / Survey Outcome Notes:")}
               </label>
               <textarea
                 rows={3}
-                placeholder="e.g. Handed 10 QR leaflets to partner. Promised 2 upcoming commercial villa CCTV projects next week."
+                placeholder={t("beat_notes_ph", "e.g. Handed 10 QR leaflets to partner. Promised 2 upcoming commercial villa CCTV projects next week.")}
                 value={checkInNotes}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCheckInNotes(e.target.value)}
                 className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/50 p-3 text-xs outline-none focus:border-blue-500 transition-colors"
@@ -1081,7 +1096,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
 
           <DialogFooter className="gap-2">
             <Button variant="outline" size="sm" onClick={() => setCheckInStop(null)}>
-              Cancel
+              {t("del_cancel", "Cancel")}
             </Button>
             <Button
               size="sm"
@@ -1089,7 +1104,7 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
               disabled={isSubmittingCheckIn}
               className="bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs"
             >
-              {isSubmittingCheckIn ? "Saving..." : "Confirm Visit Check-In"}
+              {isSubmittingCheckIn ? t("crm_saving", "Saving...") : t("beat_confirm_checkin", "Confirm Visit Check-In")}
             </Button>
           </DialogFooter>
         </DialogContent>

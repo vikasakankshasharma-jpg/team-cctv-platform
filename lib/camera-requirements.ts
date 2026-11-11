@@ -1,4 +1,4 @@
-import { CCTVRequirement } from "@/types";
+import { CCTVRequirement } from "../types";
 
 export interface CameraRequirementItem {
   type: string;

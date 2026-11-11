@@ -7,6 +7,8 @@ import { auth } from "@/lib/firebase-client";
 import { toast } from "sonner";
 import { useOmniSearchStore } from "@/store/omni-search";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   LayoutDashboard, Users, Package, Settings, LogOut,
   FileBox, BadgeDollarSign, TrendingUp, Workflow, ShieldCheck,
@@ -19,69 +21,83 @@ import {
 // ─── REORGANIZED 7-PILLAR NAVIGATION STRUCTURE ────────────────────────────────
 const NAV_GROUPS = [
   {
-    label: "Overview & Pipeline",
+    id: "overview",
+    labelKey: "adm_nav_grp_overview",
+    defaultLabel: "Overview & Pipeline",
     items: [
-      { name: "Executive Dashboard", href: "/admin", icon: LayoutDashboard },
-      { name: "Quote Funnel", href: "/admin/analytics/funnel", icon: Filter },
-      { name: "Analytics Trends", href: "/admin/analytics", icon: TrendingUp },
+      { nameKey: "adm_nav_dashboard", defaultName: "Executive Dashboard", href: "/admin", icon: LayoutDashboard },
+      { nameKey: "adm_nav_funnel", defaultName: "Quote Funnel", href: "/admin/analytics/funnel", icon: Filter },
+      { nameKey: "adm_nav_analytics", defaultName: "Analytics Trends", href: "/admin/analytics", icon: TrendingUp },
     ],
   },
   {
-    label: "Sales & CRM",
+    id: "sales",
+    labelKey: "adm_nav_grp_sales",
+    defaultLabel: "Sales & CRM",
     items: [
-      { name: "Leads Pipeline", href: "/admin/leads", icon: Users },
-      { name: "Site Visits & Surveys", href: "/admin/bookings", icon: Calendar },
-      { name: "AMC Contracts", href: "/admin/amc", icon: ShieldCheck },
-      { name: "Sales Representatives", href: "/admin/salespersons", icon: Navigation },
+      { nameKey: "adm_nav_leads", defaultName: "Leads Pipeline", href: "/admin/leads", icon: Users },
+      { nameKey: "adm_nav_bookings", defaultName: "Site Visits & Surveys", href: "/admin/bookings", icon: Calendar },
+      { nameKey: "adm_nav_amc", defaultName: "AMC Contracts", href: "/admin/amc", icon: ShieldCheck },
+      { nameKey: "adm_nav_salespersons", defaultName: "Sales Representatives", href: "/admin/salespersons", icon: Navigation },
     ],
   },
   {
-    label: "Pricing & Margins",
+    id: "pricing",
+    labelKey: "adm_nav_grp_pricing",
+    defaultLabel: "Pricing & Margins",
     items: [
-      { name: "Quotation Matrices", href: "/admin/pricing/matrices", icon: Grid3x3 },
-      { name: "Geo-Surge & Pincodes", href: "/admin/pricing/geo-rules", icon: MapPin },
-      { name: "Add-ons & Options", href: "/admin/addons", icon: Zap },
-      { name: "Recommendation Logic", href: "/admin/rules", icon: Workflow },
-      { name: "Compatibility Matrix", href: "/admin/compatibility", icon: Link2 },
-      { name: "Live Pricing Engine", href: "/admin/pricing", icon: IndianRupee },
+      { nameKey: "adm_nav_matrices", defaultName: "Quotation Matrices", href: "/admin/pricing/matrices", icon: Grid3x3 },
+      { nameKey: "adm_nav_geo_rules", defaultName: "Geo-Surge & Pincodes", href: "/admin/pricing/geo-rules", icon: MapPin },
+      { nameKey: "adm_nav_addons", defaultName: "Add-ons & Options", href: "/admin/addons", icon: Zap },
+      { nameKey: "adm_nav_rules", defaultName: "Smart Suggestion Rules", href: "/admin/rules", icon: Workflow },
+      { nameKey: "adm_nav_compatibility", defaultName: "Compatibility Matrix", href: "/admin/compatibility", icon: Link2 },
+      { nameKey: "adm_nav_pricing", defaultName: "Live Pricing Engine", href: "/admin/pricing", icon: IndianRupee },
     ],
   },
   {
-    label: "Hardware Catalog",
+    id: "catalog",
+    labelKey: "adm_nav_grp_catalog",
+    defaultLabel: "Hardware Catalog",
     items: [
-      { name: "Product Master", href: "/admin/products", icon: Package },
-      { name: "Warehouse Stock & POs", href: "/admin/inventory", icon: Database },
-      { name: "Vendor Price Import", href: "/admin/vendor-import", icon: FileSpreadsheet },
-      { name: "Catalog Quality Health", href: "/admin/products/health", icon: HeartPulse },
+      { nameKey: "adm_nav_products", defaultName: "Product Master", href: "/admin/products", icon: Package },
+      { nameKey: "adm_nav_inventory", defaultName: "Warehouse Stock & POs", href: "/admin/inventory", icon: Database },
+      { nameKey: "adm_nav_vendor_import", defaultName: "Vendor Price Import", href: "/admin/vendor-import", icon: FileSpreadsheet },
+      { nameKey: "adm_nav_catalog_health", defaultName: "Catalog Quality Health", href: "/admin/products/health", icon: HeartPulse },
     ],
   },
   {
-    label: "Field Operations",
+    id: "field",
+    labelKey: "adm_nav_grp_field",
+    defaultLabel: "Field Operations",
     items: [
-      { name: "Dispatch & Live Jobs", href: "/admin/dispatch", icon: Workflow },
-      { name: "Verified Technicians", href: "/admin/installers", icon: ShieldCheck },
-      { name: "City Inventory Hubs", href: "/admin/hubs", icon: Building2 },
-      { name: "Territory Beat Plans", href: "/admin/beat-plans", icon: Navigation },
+      { nameKey: "adm_nav_dispatch", defaultName: "Dispatch & Live Jobs", href: "/admin/dispatch", icon: Workflow },
+      { nameKey: "adm_nav_installers", defaultName: "Verified Technicians", href: "/admin/installers", icon: ShieldCheck },
+      { nameKey: "adm_nav_hubs", defaultName: "City Inventory Hubs", href: "/admin/hubs", icon: Building2 },
+      { nameKey: "adm_nav_beat_plans", defaultName: "Territory Beat Plans", href: "/admin/beat-plans", icon: Navigation },
     ],
   },
   {
-    label: "Promoters & Growth",
+    id: "growth",
+    labelKey: "adm_nav_grp_growth",
+    defaultLabel: "Promoters & Growth",
     items: [
-      { name: "Promoter Network", href: "/admin/promoters", icon: BadgeDollarSign },
-      { name: "Follow-Up Campaigns", href: "/admin/campaigns", icon: Sparkles },
-      { name: "Marketing Collaterals", href: "/admin/marketing", icon: Megaphone },
-      { name: "Regional Expansion", href: "/admin/expansion", icon: MapPin },
+      { nameKey: "adm_nav_promoters", defaultName: "Promoter Network", href: "/admin/promoters", icon: BadgeDollarSign },
+      { nameKey: "adm_nav_campaigns", defaultName: "Follow-Up Campaigns", href: "/admin/campaigns", icon: Sparkles },
+      { nameKey: "adm_nav_marketing", defaultName: "Marketing Collaterals", href: "/admin/marketing", icon: Megaphone },
+      { nameKey: "adm_nav_expansion", defaultName: "Regional Expansion", href: "/admin/expansion", icon: MapPin },
     ],
   },
   {
-    label: "Finance & System",
+    id: "finance",
+    labelKey: "adm_nav_grp_finance",
+    defaultLabel: "Finance & System",
     items: [
-      { name: "Profitability Heatmaps", href: "/admin/analytics/profitability", icon: TrendingUp },
-      { name: "Accounts Payable", href: "/admin/finance", icon: IndianRupee },
-      { name: "Cloud Costs & Budgets", href: "/admin/finance/billing", icon: CreditCard },
-      { name: "All Reports & Export", href: "/admin/reports", icon: FileBox },
-      { name: "Global Settings", href: "/admin/settings", icon: Settings },
-      { name: "Staff & Audit Trail", href: "/admin/staff", icon: ShieldCheck },
+      { nameKey: "adm_nav_profitability", defaultName: "Profitability Heatmaps", href: "/admin/analytics/profitability", icon: TrendingUp },
+      { nameKey: "adm_nav_finance", defaultName: "Accounts Payable", href: "/admin/finance", icon: IndianRupee },
+      { nameKey: "adm_nav_billing", defaultName: "Cloud Costs & Budgets", href: "/admin/finance/billing", icon: CreditCard },
+      { nameKey: "adm_nav_reports", defaultName: "All Reports & Export", href: "/admin/reports", icon: FileBox },
+      { nameKey: "adm_nav_settings", defaultName: "Global Settings", href: "/admin/settings", icon: Settings },
+      { nameKey: "adm_nav_staff", defaultName: "Staff & Audit Trail", href: "/admin/staff", icon: ShieldCheck },
     ],
   },
 ];
@@ -91,7 +107,7 @@ function NavTooltip({ label, children }: { label: string; children: React.ReactN
   return (
     <div className="relative group/tooltip">
       {children}
-      <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 bg-[var(--surface)] text-[var(--text)] text-xs font-medium px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg border border-[var(--border2)] opacity-0 group-hover/tooltip:opacity-100 scale-95 group-hover/tooltip:scale-100 transition-all duration-200 origin-left">
+      <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 bg-[var(--surface)] text-[var(--text)] text-xs font-medium px-3 py-1.5 rounded-lg max-w-[220px] whitespace-normal leading-snug shadow-lg border border-[var(--border2)] opacity-0 group-hover/tooltip:opacity-100 scale-95 group-hover/tooltip:scale-100 transition-all duration-200 origin-left">
         {label}
       </div>
     </div>
@@ -102,6 +118,7 @@ function NavTooltip({ label, children }: { label: string; children: React.ReactN
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -116,7 +133,7 @@ export function Sidebar() {
       router.refresh();
     } catch (error) {
       console.error("Logout failed", error);
-      toast.error("Logout failed. Please try again.");
+      toast.error(t("adm_sb_logout_err", "Logout failed. Please try again."));
       setLoggingOut(false);
     }
   };
@@ -141,34 +158,35 @@ export function Sidebar() {
   const currentNavName = (() => {
     for (const grp of NAV_GROUPS) {
       for (const itm of grp.items) {
-        if (isActive(itm.href)) return itm.name;
+        if (isActive(itm.href)) return t(itm.nameKey, itm.defaultName);
       }
     }
-    return "Admin";
+    return t("adm_sb_admin_fallback", "Admin");
   })();
 
   const desktopSidebarContent = (
     <div
-      className={`sidebar ${isCollapsed ? "w-[72px]" : "w-[230px]"} transition-all duration-300 admin-theme h-screen flex flex-col`}
+      className={`sidebar ${isCollapsed ? "w-[72px]" : "w-[248px]"} transition-all duration-300 admin-theme h-screen flex flex-col`}
       style={isCollapsed ? { width: "72px" } : {}}
     >
       {/* ── BRAND HEADER ──────────────────────────────────────────────────── */}
       <div className="sb-logo flex items-center justify-between shrink-0">
         {!isCollapsed ? (
           <>
-            <div className="sb-brand">
-              <div className="sb-icon">
+            <div className="sb-brand min-w-0">
+              <div className="sb-icon shrink-0">
                 <ShieldCheck className="w-4 h-4 text-white" />
               </div>
               <div className="min-w-0">
                 <div className="sb-name truncate">CCTVQuotation</div>
-                <div className="sb-sub truncate">Admin Console</div>
+                <div className="sb-sub leading-snug">{t("adm_sb_console", "Admin Console")}</div>
               </div>
             </div>
             <button
               onClick={() => setIsCollapsed(true)}
-              className="p-1.5 rounded-md hover:bg-[var(--surface2)] text-[var(--muted)] hover:text-[var(--text)] transition-all ml-1"
-              title="Collapse sidebar"
+              className="p-1.5 rounded-md hover:bg-[var(--surface2)] text-[var(--muted)] hover:text-[var(--text)] transition-all ml-1 shrink-0"
+              title={t("adm_sb_collapse", "Collapse sidebar")}
+              aria-label={t("adm_sb_collapse", "Collapse sidebar")}
             >
               <PanelLeftClose className="w-4 h-4" />
             </button>
@@ -178,7 +196,8 @@ export function Sidebar() {
             <button
               onClick={() => setIsCollapsed(false)}
               className="p-2 rounded-md hover:bg-[var(--surface2)] text-[var(--muted)] hover:text-[var(--text)] transition-all"
-              title="Expand sidebar"
+              title={t("adm_sb_expand", "Expand sidebar")}
+              aria-label={t("adm_sb_expand", "Expand sidebar")}
             >
               <PanelLeftOpen className="w-5 h-5" />
             </button>
@@ -188,57 +207,65 @@ export function Sidebar() {
 
       {/* ── NAVIGATION GROUPS ─────────────────────────────────────────────── */}
       <nav className="flex-1 min-h-0 overflow-y-auto py-2 scrollbar-none space-y-4">
-        {NAV_GROUPS.map((group) => (
-          <div key={group.label} className="space-y-1">
-            {!isCollapsed ? (
-              <div className="sb-section px-3 text-[10px] uppercase font-bold tracking-wider text-[var(--muted)]">
-                {group.label}
-              </div>
-            ) : (
-              group.label !== "Overview & Pipeline" && (
-                <div className="h-px bg-[var(--border)] my-2 mx-3" />
-              )
-            )}
+        {NAV_GROUPS.map((group) => {
+          const groupLabel = t(group.labelKey, group.defaultLabel);
+          return (
+            <div key={group.id} className="space-y-1">
+              {!isCollapsed ? (
+                <div className="sb-section px-3 text-[10px] uppercase font-bold tracking-wider text-[var(--muted)] leading-snug">
+                  {groupLabel}
+                </div>
+              ) : (
+                group.id !== "overview" && (
+                  <div className="h-px bg-[var(--border)] my-2 mx-3" />
+                )
+              )}
 
-            <div className="space-y-[1px]">
-              {group.items.map((item) => {
-                const active = isActive(item.href);
-                const Icon = item.icon;
+              <div className="space-y-[1px]">
+                {group.items.map((item) => {
+                  const active = isActive(item.href);
+                  const Icon = item.icon;
+                  const itemLabel = t(item.nameKey, item.defaultName);
 
-                const linkContent = (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`sb-item ${active ? "active font-semibold" : ""} ${
-                      isCollapsed ? "justify-center px-0 mx-2" : ""
-                    }`}
-                  >
-                    <Icon
-                      className={`w-[15px] h-[15px] shrink-0 transition-transform duration-200 ${
-                        active ? "scale-105 text-primary" : ""
+                  const linkContent = (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`sb-item ${active ? "active font-semibold" : ""} ${
+                        isCollapsed ? "justify-center px-0 mx-2" : ""
                       }`}
-                    />
-                    {!isCollapsed && <span className="truncate flex-1">{item.name}</span>}
-                  </Link>
-                );
+                    >
+                      <Icon
+                        className={`w-[15px] h-[15px] shrink-0 transition-transform duration-200 ${
+                          active ? "scale-105 text-primary" : ""
+                        }`}
+                      />
+                      {!isCollapsed && (
+                        <span className="whitespace-normal leading-snug text-left flex-1">
+                          {itemLabel}
+                        </span>
+                      )}
+                    </Link>
+                  );
 
-                return isCollapsed ? (
-                  <NavTooltip key={item.name} label={item.name}>
-                    {linkContent}
-                  </NavTooltip>
-                ) : (
-                  <div key={item.name}>{linkContent}</div>
-                );
-              })}
+                  return isCollapsed ? (
+                    <NavTooltip key={item.href} label={itemLabel}>
+                      {linkContent}
+                    </NavTooltip>
+                  ) : (
+                    <div key={item.href}>{linkContent}</div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
       <div className="shrink-0 border-t border-[var(--border)] pt-2 pb-2">
         {isCollapsed ? (
-          <NavTooltip label="Secure Logout">
+          <NavTooltip label={t("adm_sb_logout", "Secure Logout")}>
             <div
               className="sb-user justify-center cursor-pointer"
               onClick={handleLogout}
@@ -255,14 +282,14 @@ export function Sidebar() {
             className="sb-user cursor-pointer hover:bg-[var(--surface2)] transition-colors"
             onClick={handleLogout}
           >
-            <div className="sb-avatar">A</div>
+            <div className="sb-avatar shrink-0">A</div>
             <div className="flex-1 min-w-0">
-              <div className="sb-user-name truncate">Admin User</div>
-              <div className="sb-user-role truncate">
-                {loggingOut ? "Signing out..." : "Secure Logout"}
+              <div className="sb-user-name leading-snug">{t("adm_sb_user", "Admin User")}</div>
+              <div className="sb-user-role leading-snug">
+                {loggingOut ? t("adm_sb_signing_out", "Signing out...") : t("adm_sb_logout", "Secure Logout")}
               </div>
             </div>
-            <LogOut className="w-[14px] h-[14px] text-[var(--dim)]" />
+            <LogOut className="w-[14px] h-[14px] text-[var(--dim)] shrink-0" />
           </div>
         )}
       </div>
@@ -279,11 +306,11 @@ export function Sidebar() {
           borderBottom: "1px solid var(--border)",
         }}
       >
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
           <button
             onClick={() => setMobileOpen(true)}
-            className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-[var(--surface2)] active:scale-95 transition-all text-foreground"
-            aria-label="Open Navigation Menu"
+            className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-[var(--surface2)] active:scale-95 transition-all text-foreground shrink-0"
+            aria-label={t("adm_sb_open_menu", "Open Navigation Menu")}
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -295,22 +322,29 @@ export function Sidebar() {
             >
               <ShieldCheck className="w-4 h-4" style={{ color: "var(--gold)" }} />
             </div>
-            <span className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[130px] sm:max-w-[200px]">
+            <span className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[115px] sm:max-w-[200px] leading-snug">
               {currentNavName}
             </span>
           </Link>
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Quick Search on Mobile */}
           <button
             onClick={() => setOmniSearchOpen(true)}
             className="h-8 px-2.5 rounded-lg flex items-center gap-1 text-xs bg-[var(--surface2)] text-muted-foreground hover:text-foreground active:scale-95 transition-all"
-            title="Search Leads, Quotes & Products"
+            title={t("adm_sb_search_title", "Search Leads, Quotes & Products")}
+            aria-label={t("adm_sb_search_title", "Search Leads, Quotes & Products")}
           >
             <Search className="w-3.5 h-3.5" />
-            <span className="hidden xs:inline text-[11px] font-medium">Search</span>
+            <span className="hidden sm:inline text-[11px] font-medium">{t("adm_sb_search", "Search")}</span>
           </button>
+
+          {/* Language Switcher on Mobile */}
+          <LanguageSwitcher
+            compact
+            className="!bg-[var(--surface2)] !border-[var(--border2)] !text-[var(--text)] !h-8 !px-2 !py-0 !text-[11px]"
+          />
 
           {/* Theme switcher */}
           <div className="scale-90">
@@ -334,22 +368,22 @@ export function Sidebar() {
           >
             {/* Drawer Header */}
             <div className="h-14 px-4 flex items-center justify-between border-b border-[var(--border)] shrink-0 bg-[var(--surface)]">
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2.5 min-w-0">
                 <div
-                  className="w-8 h-8 rounded-xl flex items-center justify-center"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: "var(--gold-dim)" }}
                 >
                   <ShieldCheck className="w-4 h-4" style={{ color: "var(--gold)" }} />
                 </div>
-                <div>
-                  <div className="text-xs font-bold text-foreground">CCTVQuotation</div>
-                  <div className="text-[10px] text-muted-foreground">Admin Console</div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-foreground truncate">CCTVQuotation</div>
+                  <div className="text-[10px] text-muted-foreground leading-snug">{t("adm_sb_console", "Admin Console")}</div>
                 </div>
               </div>
               <button
                 onClick={() => setMobileOpen(false)}
-                className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-[var(--surface2)] active:scale-95 transition-all text-muted-foreground hover:text-foreground"
-                aria-label="Close navigation"
+                className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-[var(--surface2)] active:scale-95 transition-all text-muted-foreground hover:text-foreground shrink-0"
+                aria-label={t("adm_sb_close_menu", "Close navigation")}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -358,9 +392,9 @@ export function Sidebar() {
             {/* Drawer Navigation List */}
             <nav className="flex-1 overflow-y-auto p-3 space-y-4">
               {NAV_GROUPS.map((group) => (
-                <div key={group.label} className="space-y-1">
-                  <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {group.label}
+                <div key={group.id} className="space-y-1">
+                  <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground leading-snug">
+                    {t(group.labelKey, group.defaultLabel)}
                   </div>
                   <div className="space-y-0.5">
                     {group.items.map((item) => {
@@ -368,7 +402,7 @@ export function Sidebar() {
                       const Icon = item.icon;
                       return (
                         <Link
-                          key={item.name}
+                          key={item.href}
                           href={item.href}
                           onClick={() => setMobileOpen(false)}
                           className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all active:scale-[0.98] ${
@@ -378,7 +412,9 @@ export function Sidebar() {
                           }`}
                         >
                           <Icon className={`w-4 h-4 shrink-0 ${active ? "text-primary-foreground" : "text-muted-foreground"}`} />
-                          <span className="truncate flex-1">{item.name}</span>
+                          <span className="whitespace-normal leading-snug flex-1 text-left">
+                            {t(item.nameKey, item.defaultName)}
+                          </span>
                         </Link>
                       );
                     })}
@@ -393,16 +429,16 @@ export function Sidebar() {
                 onClick={handleLogout}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-destructive/10 text-foreground hover:text-destructive cursor-pointer transition-colors active:scale-95"
               >
-                <div className="w-7 h-7 rounded-lg bg-[var(--surface2)] flex items-center justify-center font-bold text-xs">
+                <div className="w-7 h-7 rounded-lg bg-[var(--surface2)] flex items-center justify-center font-bold text-xs shrink-0">
                   A
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-bold truncate">Admin User</div>
-                  <div className="text-[10px] text-muted-foreground truncate">
-                    {loggingOut ? "Signing out..." : "Tap to Secure Logout"}
+                  <div className="text-xs font-bold leading-snug">{t("adm_sb_user", "Admin User")}</div>
+                  <div className="text-[10px] text-muted-foreground leading-snug">
+                    {loggingOut ? t("adm_sb_signing_out", "Signing out...") : t("adm_sb_tap_logout", "Tap to Secure Logout")}
                   </div>
                 </div>
-                <LogOut className="w-4 h-4 text-muted-foreground" />
+                <LogOut className="w-4 h-4 text-muted-foreground shrink-0" />
               </div>
             </div>
           </div>

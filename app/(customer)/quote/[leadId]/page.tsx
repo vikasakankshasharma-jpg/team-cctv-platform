@@ -8,6 +8,8 @@ import type { Metadata } from "next";
 import { WaitlistBanner } from "@/components/quotation/WaitlistBanner";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 import { getPincodeCoordinates, findNearestHub, HubWithCoordinates } from "@/lib/geo-utils";
+import { getServerLocale, getServerTranslations } from "@/lib/i18n/server-locale";
+import { buildQuotePageMetadata } from "@/lib/i18n/seo-metadata";
 
 export const dynamic = "force-dynamic";
 
@@ -17,18 +19,16 @@ export async function generateMetadata({
   params: Promise<{ leadId: string }>
 }): Promise<Metadata> {
   const { leadId } = await params;
+  const locale = await getServerLocale();
   
   if (leadId === "mock-e2e-lead" || leadId === "mock-lead") {
-    return { title: "CCTV Quote Preview | TEAM CCTV" };
+    return buildQuotePageMetadata(locale, "preview");
   }
 
   const doc = await adminDb.collection("leads").doc(leadId).get();
   const data = doc.data() as Lead;
 
-  return {
-    title: `Quotation for ${data?.customer_name || "Client"} - TEAM CCTV`,
-    description: `Your customized security system quote. Compare simple packages and build your perfect setup.`,
-  };
+  return buildQuotePageMetadata(locale, "named", data?.customer_name);
 }
 
 export default async function QuoteResultPage({ 
@@ -40,6 +40,7 @@ export default async function QuoteResultPage({
 }) {
   const { leadId } = await params;
   const { name, mobile } = await searchParams;
+  const { t } = await getServerTranslations();
 
   // 1. DATA ENRICHMENT & FETCHING ─────────────────────────────────────────────
   
@@ -179,7 +180,7 @@ export default async function QuoteResultPage({
         const qData = quoteSnap.data() as any;
         lead = serializeDoc({
           id: qData.leadId || qData.lead_id || leadId,
-          customer_name: qData.customer_name || "Valued Customer",
+          customer_name: qData.customer_name || t("qrc_valued_customer", "Valued Customer"),
           mobile_number: qData.customer_mobile || "",
           property_type: qData.requirementSnapshot?.property_type || "home",
           technology_choice: qData.requirementSnapshot?.technology_preference || "HD",
@@ -276,7 +277,7 @@ export default async function QuoteResultPage({
       if (leadPincode.startsWith("342")) unservedCityName = "Jodhpur";
       else if (leadPincode.startsWith("324")) unservedCityName = "Kota";
       else if (leadPincode.startsWith("305")) unservedCityName = "Ajmer";
-      else unservedCityName = (lead.wizard_answers?.lead_city as string) || "Your Area";
+      else unservedCityName = (lead.wizard_answers?.lead_city as string) || t("qrc_your_area", "Your Area");
     }
   }
 
@@ -303,7 +304,7 @@ export default async function QuoteResultPage({
              
              <div className="inline-flex items-center gap-1.5 mb-1.5 sm:mb-2 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800 text-[10px] sm:text-[11px] font-semibold shadow-xs">
                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-               <span>Official Quotation • 7 Days Price Lock Guarantee</span>
+               <span><TranslatedText tKey="qrev_lock_badge" defaultText="Official Quotation • 7 Days Price Lock Guarantee" /></span>
              </div>
 
              <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">
@@ -322,10 +323,10 @@ export default async function QuoteResultPage({
            {lead.status === "pending_customer_approval" && (
              <div className="max-w-3xl mx-auto px-4 mb-6">
                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
-                 <h3 className="text-lg font-bold text-yellow-900 mb-2">Revised Quotation Ready for Review</h3>
-                 <p className="text-yellow-800 text-sm mb-4">Your salesperson has suggested a revised quotation. Please review the changes and approve.</p>
+                 <h3 className="text-lg font-bold text-yellow-900 mb-2"><TranslatedText tKey="qrev_revised_title" defaultText="Revised Quotation Ready for Review" /></h3>
+                 <p className="text-yellow-800 text-sm mb-4"><TranslatedText tKey="qrev_revised_desc" defaultText="Your salesperson has suggested a revised quotation. Please review the changes and approve." /></p>
                  <a href={`/quote/${lead.id}/review/${(lead as any).last_quote_id || lead.latest_quote_id || 'unknown'}`} className="inline-block bg-yellow-600 text-white font-bold px-6 py-2 rounded-lg hover:bg-yellow-700">
-                   Review & Approve
+                   <TranslatedText tKey="qrev_review_approve" defaultText="Review & Approve" />
                  </a>
                </div>
              </div>

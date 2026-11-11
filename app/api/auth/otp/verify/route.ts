@@ -4,13 +4,15 @@ import { COLLECTIONS } from "@/lib/constants";
 import { z } from "zod";
 import { rateLimit } from "@/lib/rate-limit";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 
 export async function POST(req: NextRequest) {
+  let locale = resolveRequestLocale(req);
   try {
     // 1. Enterprise Throttling
     const limit = await rateLimit(req, 5, 60_000);
     if (!limit.success) {
-      return NextResponse.json({ error: "Too many verification attempts. Please try again shortly." }, { status: 429 });
+      return NextResponse.json({ error: getApiMessage(locale, "too_many_attempts") }, { status: 429 });
     }
 
     // 2. Strict Request Validation
@@ -20,9 +22,11 @@ export async function POST(req: NextRequest) {
       type: z.enum(["email", "mobile"]),
     });
 
-    const parsed = bodySchema.safeParse(await req.json());
+    const rawBody = await req.json();
+    locale = resolveRequestLocale(req, rawBody);
+    const parsed = bodySchema.safeParse(rawBody);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid request payload." }, { status: 400 });
+      return NextResponse.json({ error: getApiMessage(locale, "missing_fields") }, { status: 400 });
     }
 
     const { identifier, otp, type } = parsed.data;
@@ -33,7 +37,7 @@ export async function POST(req: NextRequest) {
       const otpDoc = await adminDb.collection(COLLECTIONS.OTP_VERIFICATIONS).doc(email).get();
 
       if (!otpDoc.exists) {
-        return NextResponse.json({ error: "OTP not found or expired." }, { status: 404 });
+        return NextResponse.json({ error: getApiMessage(locale, "otp_not_found") }, { status: 404 });
       }
 
       const data = otpDoc.data()!;
@@ -42,7 +46,7 @@ export async function POST(req: NextRequest) {
 
       if (expiry && now > expiry) {
         await otpDoc.ref.delete();
-        return NextResponse.json({ error: "OTP has expired." }, { status: 400 });
+        return NextResponse.json({ error: getApiMessage(locale, "otp_expired") }, { status: 400 });
       }
 
       if (data?.otp !== otp) {
@@ -54,7 +58,7 @@ export async function POST(req: NextRequest) {
           metadata: { reason: "INVALID_OTP", type: "email" },
           ...getRequestMetadata(req)
         });
-        return NextResponse.json({ error: "Invalid OTP code." }, { status: 400 });
+        return NextResponse.json({ error: getApiMessage(locale, "otp_incorrect") }, { status: 400 });
       }
 
       // Cleanup OTP after successful verification
@@ -96,7 +100,7 @@ export async function POST(req: NextRequest) {
       const otpDoc = await adminDb.collection(COLLECTIONS.OTP_VERIFICATIONS).doc(normalized).get();
 
       if (!otpDoc.exists) {
-        return NextResponse.json({ error: "Unauthorized or OTP expired." }, { status: 403 });
+        return NextResponse.json({ error: getApiMessage(locale, "otp_not_found") }, { status: 403 });
       }
 
       const data = otpDoc.data()!;
@@ -160,7 +164,7 @@ export async function POST(req: NextRequest) {
             metadata: { reason: "INVALID_TOKEN", type: "mobile" },
             ...getRequestMetadata(req)
           });
-          return NextResponse.json({ error: "Invalid OTP code or token." }, { status: 400 });
+          return NextResponse.json({ error: getApiMessage(locale, "otp_invalid_token") }, { status: 400 });
         }
       }
 
@@ -200,10 +204,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, customToken, role });
     }
 
-    return NextResponse.json({ error: "Invalid OTP type." }, { status: 400 });
+    return NextResponse.json({ error: getApiMessage(locale, "otp_invalid_method") }, { status: 400 });
 
   } catch (error) {
     console.error("🔥 [Admin OTP Verify] Enterprise Security Boundary Error:", error);
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    return NextResponse.json({ error: getApiMessage(locale, "internal_error") }, { status: 500 });
   }
 }

@@ -1,6 +1,10 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { AppSettings } from '@/types';
+import { ensurePdfFontsForLocale, normalizePdfLocale } from '@/lib/pdf/pdf-fonts-indic';
+import { resolvePdfImageSrc } from '@/lib/pdf/pdf-image';
+import { getPdfLabels } from '@/lib/pdf/pdf-i18n';
+import { SPEECH_LOCALE_MAP } from '@/lib/i18n/mapping';
 
 // Create styles optimized for professional single-page layout
 const styles = StyleSheet.create({
@@ -346,12 +350,19 @@ function getHsnSacCode(item: any): string {
   return '8525';
 }
 
-export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?: AppSettings }) => {
+export const InvoicePDFDocument = ({ quote, settings, locale }: { quote: any; settings?: AppSettings; locale?: string }) => {
   const {
     id = '',
     customer_name = '',
     customer_mobile = '',
   } = quote || {};
+
+  const pdfLocale = normalizePdfLocale(locale ?? quote?.preferred_language ?? quote?.language ?? quote?.locale);
+  const pdfFont = ensurePdfFontsForLocale(pdfLocale);
+  const isEn = pdfLocale === 'en';
+  const noUpper = isEn ? {} : { textTransform: 'none' as const, letterSpacing: 0 };
+  const L = getPdfLabels(pdfLocale);
+  const dateLocale = SPEECH_LOCALE_MAP[pdfLocale] || 'en-IN';
 
   const companyName = settings?.company_legal_name || settings?.company_name || "TEAM CCTV";
   const tagline = settings?.company_tagline || "Security Systems & Surveillance Automation";
@@ -380,13 +391,13 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
         ? dateVal.toDate()
         : new Date(dateVal);
       if (isNaN(d.getTime())) return 'N/A';
-      return d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: '2-digit' });
+      return d.toLocaleDateString(dateLocale, { year: 'numeric', month: 'short', day: '2-digit' });
     } catch {
       return 'N/A';
     }
   };
 
-  const createdDate = formatDate(createdAt) !== 'N/A' ? formatDate(createdAt) : new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: '2-digit' });
+  const createdDate = formatDate(createdAt) !== 'N/A' ? formatDate(createdAt) : new Date().toLocaleDateString(dateLocale, { year: 'numeric', month: 'short', day: '2-digit' });
   const paidDate = formatDate(paidAt) !== 'N/A' ? formatDate(paidAt) : createdDate;
 
   const rawItems = 
@@ -520,7 +531,7 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
     gst_amount: gstAmount,
   };
 
-  const formatCurrency = (amount: number) => 'Rs. ' + (Number(amount) || 0).toLocaleString('en-IN');
+  const formatCurrency = (amount: number) => '₹' + Math.round(Number(amount) || 0).toLocaleString('en-IN');
 
   const totalGstRate = pricing.gst_rate || 18;
   const cgstRate = totalGstRate / 2;
@@ -554,7 +565,7 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
   const placeOfSupply = `${billing.state || sellerState} (${stateCode})`;
 
   // Authoritative document title, badges and status
-  let documentTitle = 'TAX INVOICE';
+  let documentTitle = L.invoiceTitle;
   let badgeText = 'PAID';
   let invoiceStatusColor = '#16a34a';
   let invoiceStatusBorder = '#15803d';
@@ -562,51 +573,39 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
   let invoiceTypeDesc = isBusiness ? 'GST Input Credit Eligible' : 'Standard Retail Invoice';
 
   if (isAdvancePaid) {
-    documentTitle = 'ADVANCE RECEIPT';
+    documentTitle = isEn ? 'ADVANCE RECEIPT' : L.bookingAdvance500;
     badgeText = 'ADVANCE PAID';
     invoiceStatusColor = '#d97706'; // Amber / Warning
     invoiceStatusBorder = '#b45309';
     supplyTypeLabel = isBusiness ? 'B2B (Advance Booking Receipt)' : 'B2C (Advance Booking Receipt)';
-    invoiceTypeDesc = `Booking Advance (₹${pricing.amount_paid.toLocaleString('en-IN')} Received - Balance Due on Delivery)`;
+    invoiceTypeDesc = `${L.bookingAdvance500} (₹${pricing.amount_paid.toLocaleString('en-IN')})`;
   } else if (!isFullyPaid) {
-    documentTitle = 'PROFORMA INVOICE';
+    documentTitle = isEn ? 'PROFORMA INVOICE' : L.quotationTitle;
     badgeText = 'UNPAID';
     invoiceStatusColor = '#dc2626';
     invoiceStatusBorder = '#b91c1c';
     supplyTypeLabel = isBusiness ? 'B2B (Proforma Quotation)' : 'B2C (Proforma Quotation)';
     invoiceTypeDesc = 'Payment Pending';
   } else if (discountAmount > 0) {
-    invoiceTypeDesc = `Full Payment (₹${pricing.amount_paid.toLocaleString('en-IN')} Received - 2% Smart Pay Instant Discount Applied)`;
+    invoiceTypeDesc = `Full Payment (₹${pricing.amount_paid.toLocaleString('en-IN')} - 2% Smart Pay Discount)`;
   }
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={[styles.page, { fontFamily: pdfFont }]}>
         {/* Watermark */}
-        <Text style={[styles.watermark, { color: invoiceStatusColor }]}>{badgeText}</Text>
+        <Text style={[styles.watermark, noUpper, { color: invoiceStatusColor }]}>{badgeText}</Text>
 
         {/* Top-Right Stamp Badge */}
         <View style={[styles.paidBadge, { backgroundColor: invoiceStatusColor, borderColor: invoiceStatusBorder }]}>
-          <Text style={styles.paidBadgeText}>{badgeText}</Text>
+          <Text style={[styles.paidBadgeText, noUpper]}>{badgeText}</Text>
         </View>
 
         {/* Header */}
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
             {(() => {
-              const rawLogo = settings?.pdf_logo_url || settings?.company_logo_url || "/logo-horizontal.jpg";
-              const logoUrl = (rawLogo && !rawLogo.startsWith("C:") && !rawLogo.includes("\\")) ? rawLogo : "/logo-horizontal.jpg";
-              let resolvedLogo = logoUrl;
-              if (typeof window === "undefined" && logoUrl.startsWith("/")) {
-                try {
-                  const pathMod = require("path");
-                  const fsMod = require("fs");
-                  const localPath = pathMod.join(process.cwd(), "public", logoUrl.replace(/^\/+/, ""));
-                  if (fsMod.existsSync(localPath)) {
-                    resolvedLogo = localPath;
-                  }
-                } catch (_) {}
-              }
+              const resolvedLogo = resolvePdfImageSrc(settings?.pdf_logo_url || settings?.company_logo_url, '/logo-horizontal.jpg');
               return resolvedLogo ? (
                 <Image src={resolvedLogo} style={styles.headerLogo} />
               ) : (
@@ -616,19 +615,19 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
             {tagline ? <Text style={styles.companyInfo}>{tagline}</Text> : null}
             {sellerAddress ? <Text style={styles.companyInfo}>{sellerAddress}</Text> : null}
             <Text style={styles.companyInfo}>
-              {sellerGstin ? `GSTIN: ${sellerGstin}` : 'GST Registration Pending'} | State: {sellerState} ({sellerStateCode})
+              {sellerGstin ? `${L.gstinPrefix}: ${sellerGstin}` : L.gstPending} | State: {sellerState} ({sellerStateCode})
             </Text>
             <Text style={styles.companyInfo}>Email: {sellerEmail}{sellerPhone} | Web: {sellerWeb}</Text>
           </View>
           <View style={styles.headerRight}>
-            <Text style={[styles.invoiceTitle, { color: invoiceStatusColor }]}>{documentTitle}</Text>
+            <Text style={[styles.invoiceTitle, { color: invoiceStatusColor }, noUpper]}>{documentTitle}</Text>
             <View style={styles.quoteMetaGrid}>
               <View style={styles.quoteMetaRow}>
-                <Text style={styles.quoteMetaLabel}>{isAdvancePaid ? 'Receipt Ref:' : 'Invoice Ref:'}</Text>
+                <Text style={styles.quoteMetaLabel}>{L.invoiceNo}:</Text>
                 <Text style={styles.quoteMetaValue}>{invoiceRef}</Text>
               </View>
               <View style={styles.quoteMetaRow}>
-                <Text style={styles.quoteMetaLabel}>{isAdvancePaid ? 'Receipt Date:' : 'Invoice Date:'}</Text>
+                <Text style={styles.quoteMetaLabel}>{L.dateIssued}:</Text>
                 <Text style={styles.quoteMetaValue}>{createdDate}</Text>
               </View>
               <View style={styles.quoteMetaRow}>
@@ -648,21 +647,21 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
         {/* Customer and Payment Details Section */}
         <View style={styles.customerSection}>
           <View style={styles.customerInfoCol}>
-            <Text style={styles.sectionHeading}>BILLED TO (BUYER DETAILS):</Text>
+            <Text style={[styles.sectionHeading, noUpper]}>{L.billTo}:</Text>
             <Text style={styles.customerName}>{billedName}</Text>
             {contactPerson && isBusiness && (
               <Text style={styles.customerPhone}>Attn: {contactPerson}</Text>
             )}
             <Text style={styles.customerPhone}>
-              <Text style={{ fontWeight: 'bold' }}>GSTIN: </Text>{buyerGstin}
+              <Text style={{ fontWeight: 'bold' }}>{L.gstinPrefix}: </Text>{buyerGstin}
             </Text>
             <Text style={styles.customerPhone}>Place of Supply: {placeOfSupply}</Text>
             {addressLine1 ? <Text style={styles.customerPhone}>{addressLine1}</Text> : null}
             {cityStateZip ? <Text style={styles.customerPhone}>{cityStateZip}</Text> : null}
-            <Text style={styles.customerPhone}>Phone: {phoneVal} {emailVal ? `| ${emailVal}` : ''}</Text>
+            <Text style={styles.customerPhone}>Phone / Mobile: {phoneVal} {emailVal ? `| ${emailVal}` : ''}</Text>
           </View>
           <View style={styles.paymentInfoCol}>
-            <Text style={styles.sectionHeading}>PAYMENT DETAILS:</Text>
+            <Text style={[styles.sectionHeading, noUpper]}>{L.paymentMilestones}:</Text>
             <View style={styles.paymentRow}>
               <Text style={styles.paymentLabel}>Payment ID:</Text>
               <Text style={styles.paymentValue}>
@@ -670,11 +669,11 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
               </Text>
             </View>
             <View style={styles.paymentRow}>
-              <Text style={styles.paymentLabel}>Payment Method:</Text>
+              <Text style={styles.paymentLabel}>Method:</Text>
               <Text style={styles.paymentValue}>{quote?.payment_method || quote?.paymentMethod || 'Online / Razorpay'}</Text>
             </View>
             <View style={styles.paymentRow}>
-              <Text style={styles.paymentLabel}>Paid On:</Text>
+              <Text style={styles.paymentLabel}>{L.dateIssued}:</Text>
               <Text style={styles.paymentValue}>{paidDate}</Text>
             </View>
             <View style={styles.paymentRow}>
@@ -687,11 +686,11 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
         {/* Line Items Table */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={styles.colDesc}>Description</Text>
+            <Text style={styles.colDesc}>{L.itemDescription}</Text>
             <Text style={styles.colHsn}>HSN/SAC</Text>
-            <Text style={styles.colQty}>Qty</Text>
-            <Text style={styles.colUnit}>Unit Price</Text>
-            <Text style={styles.colTotal}>Total</Text>
+            <Text style={styles.colQty}>{L.qty}</Text>
+            <Text style={styles.colUnit}>{L.unitPrice}</Text>
+            <Text style={styles.colTotal}>{L.amount}</Text>
           </View>
 
           {pricing.items.map((item: any, i: number) => {
@@ -747,22 +746,22 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
         {/* Bottom Section */}
         <View style={styles.bottomSection} wrap={false}>
           <View style={styles.termsBox}>
-            <Text style={styles.termsTitle}>{isAdvancePaid ? 'Booking Confirmation Terms' : 'Terms & Confirmation'}</Text>
+            <Text style={styles.termsTitle}>{L.termsTitle}</Text>
             <Text style={[styles.termsHighlight, isAdvancePaid ? { color: '#d97706' } : { color: '#16a34a' }]}>
               {isAdvancePaid
-                ? `Booking confirmed with ₹${pricing.amount_paid.toLocaleString('en-IN')} advance! Remaining balance of ${formatCurrency(pricing.amount_due)} is payable on delivery/installation.`
+                ? `${L.bookingAdvance500}: ₹${pricing.amount_paid.toLocaleString('en-IN')} | ${L.deliveryPayment90}: ${formatCurrency(pricing.amount_due)}`
                 : (discountAmount > 0
-                    ? 'Thank you for your full payment! 2% Smart Pay discount applied. Your installation will be scheduled within 48 hours.'
-                    : 'Thank you for your payment! Installation will be scheduled within 48 hours.')}
+                    ? `${L.gstInclusiveBadge} (2% Smart Pay Discount applied)`
+                    : L.gstInclusiveBadge)}
             </Text>
-            <Text style={styles.termsText}>1. Standard 1-Year Warranty on all hardware items unless specified otherwise.</Text>
-            <Text style={styles.termsText}>2. 1-Year Free AMC (Annual Maintenance Contract) included covering 2 free service visits.</Text>
-            <Text style={styles.termsText}>3. Our installation team will contact you shortly to coordinate site arrival time.</Text>
-            <Text style={styles.termsText}>4. For any questions or support, please contact us at {sellerEmail}.</Text>
+            <Text style={styles.termsText}>1. {L.warranty1YrTitle}: {L.warranty1YrBody}</Text>
+            <Text style={styles.termsText}>2. {L.supportTitle}: {L.supportBody}</Text>
+            <Text style={styles.termsText}>3. {L.deliveryPayment90} · {L.finalPayment10}</Text>
+            <Text style={styles.termsText}>4. Support: {sellerEmail}</Text>
             {settings?.bank_account_no && (
               <View style={{ marginTop: 4, paddingTop: 4, borderTopWidth: 1, borderTopColor: '#e5e7eb' }}>
                 <Text style={[styles.termsText, { fontWeight: 'bold', color: '#1f2937' }]}>
-                  Bank Details: {settings.bank_name || 'Bank'} | A/c: {settings.bank_account_no} | IFSC: {settings.bank_ifsc || ''}
+                  {L.bankDetailsTitle}: {settings.bank_name || 'Bank'} | A/c: {settings.bank_account_no} | IFSC: {settings.bank_ifsc || ''}
                 </Text>
                 <Text style={styles.termsText}>
                   A/c Name: {settings.bank_account_name || companyName} {settings.bank_upi_id ? `| UPI: ${settings.bank_upi_id}` : ''}
@@ -773,11 +772,11 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
 
           <View style={styles.totalsBox}>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Subtotal:</Text>
+              <Text style={styles.totalLabel}>{L.subtotal}:</Text>
               <Text style={styles.totalValue}>{formatCurrency(pricing.gross_subtotal)}</Text>
             </View>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Taxable Amount:</Text>
+              <Text style={styles.totalLabel}>{L.taxableValue}:</Text>
               <Text style={styles.totalValue}>{formatCurrency(pricing.gross_subtotal)}</Text>
             </View>
             {isInterState ? (
@@ -801,7 +800,7 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
             {pricing.discount_amount > 0 && (
               <>
                 <View style={[styles.totalRow, { marginTop: 2, paddingTop: 2, borderTopWidth: 0.5, borderTopColor: '#e2e8f0' }]}>
-                  <Text style={styles.totalLabel}>Quotation Total:</Text>
+                  <Text style={styles.totalLabel}>{L.quotationTitle}:</Text>
                   <Text style={styles.totalValue}>{formatCurrency(pricing.raw_total)}</Text>
                 </View>
                 <View style={styles.totalRow}>
@@ -812,12 +811,12 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
             )}
 
             <View style={[styles.grandTotalRow, { paddingBottom: 4, borderBottomWidth: pricing.amount_due > 0 ? 1 : 0, borderBottomColor: '#e5e7eb' }]}>
-              <Text style={styles.grandTotalLabel}>Grand Total:</Text>
+              <Text style={styles.grandTotalLabel}>{L.totalPayable}:</Text>
               <Text style={styles.grandTotalValue}>{formatCurrency(pricing.total_payable)}</Text>
             </View>
             <View style={[styles.grandTotalRow, { marginTop: 4, paddingTop: 4, borderTopWidth: 0 }]}>
               <Text style={[styles.grandTotalLabel, { color: isAdvancePaid ? '#d97706' : '#16a34a', fontSize: 9 }]}>
-                {isAdvancePaid ? 'Booking Advance Paid:' : 'Amount Paid (Fully Paid):'}
+                {isAdvancePaid ? L.bookingAdvance500 : 'Amount Paid:'}
               </Text>
               <Text style={[styles.grandTotalValue, { color: isAdvancePaid ? '#d97706' : '#16a34a', fontSize: 10 }]}>
                 {formatCurrency(pricing.amount_paid)}
@@ -825,7 +824,7 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
             </View>
             {pricing.amount_due > 0 && (
               <View style={[styles.grandTotalRow, { marginTop: 4, paddingTop: 4, borderTopWidth: 0 }]}>
-                <Text style={[styles.grandTotalLabel, { color: '#dc2626' }]}>Balance Due on Delivery:</Text>
+                <Text style={[styles.grandTotalLabel, { color: '#dc2626' }]}>{L.deliveryPayment90}:</Text>
                 <Text style={[styles.grandTotalValue, { color: '#dc2626' }]}>{formatCurrency(pricing.amount_due)}</Text>
               </View>
             )}
@@ -834,19 +833,19 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
 
         {quote?.payment_history && Array.isArray(quote.payment_history) && quote.payment_history.length > 0 && (
           <View style={styles.paymentHistoryBox}>
-            <Text style={styles.phTitle}>Payment Stages Breakdown</Text>
+            <Text style={styles.phTitle}>{L.paymentMilestones}</Text>
             <View style={[styles.phRow, { backgroundColor: '#f9fafb', padding: 4 }]}>
-              <Text style={[styles.phColStage, { fontWeight: 'bold' }]}>Payment Stage</Text>
-              <Text style={[styles.phColDate, { fontWeight: 'bold' }]}>Date</Text>
+              <Text style={[styles.phColStage, { fontWeight: 'bold' }]}>{L.paymentMilestones}</Text>
+              <Text style={[styles.phColDate, { fontWeight: 'bold' }]}>{L.dateIssued}</Text>
               <Text style={[styles.phColMethod, { fontWeight: 'bold' }]}>Method</Text>
-              <Text style={[styles.phColAmount, { fontWeight: 'bold' }]}>Amount</Text>
+              <Text style={[styles.phColAmount, { fontWeight: 'bold' }]}>{L.amount}</Text>
             </View>
             {quote.payment_history.map((ph: any, idx: number) => {
-               const stageLabel = ph.stage === 'booking' ? 'Stage 1: Advance Booking' :
-                                  ph.stage === 'delivery_90' ? 'Stage 2: Delivery Payment' :
-                                  ph.stage === 'installation_final' ? 'Stage 3: Final Installation' : 
-                                  'Full Payment';
-               const dateStr = ph.captured_at ? new Date(ph.captured_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+               const stageLabel = ph.stage === 'booking' ? L.bookingAdvance500 :
+                                  ph.stage === 'delivery_90' ? L.deliveryPayment90 :
+                                  ph.stage === 'installation_final' ? L.finalPayment10 : 
+                                  L.totalPayable;
+               const dateStr = ph.captured_at ? new Date(ph.captured_at).toLocaleDateString(dateLocale, { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
                
                return (
                  <View key={idx} style={styles.phRow}>

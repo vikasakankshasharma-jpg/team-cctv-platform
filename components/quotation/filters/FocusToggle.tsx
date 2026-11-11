@@ -22,7 +22,7 @@ export function FocusToggle() {
               : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400"
           }`}
         >
-          <IndianRupee className="w-3 h-3" /> {t('opt_best_price', 'Best Price')}
+          <IndianRupee className="w-3 h-3" /> {t('opt_best_price', 'Lowest Price Option')}
         </button>
         <button
           onClick={() => updateSelection({ focus_point: "quality", max_budget: null })}

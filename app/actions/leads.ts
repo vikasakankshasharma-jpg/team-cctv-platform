@@ -5,6 +5,7 @@ import { requireAdmin, verifySession } from "@/lib/auth-server";
 import { revalidatePath } from "next/cache";
 import { COLLECTIONS, SUBCOLLECTIONS } from "@/lib/constants";
 import { UpdateLeadStatusSchema } from "@/lib/validators";
+import { calculateCommission, resolvePromoterCommission } from "@/lib/commission";
 import type { Lead, Promoter } from "@/types";
 
 /**
@@ -63,22 +64,11 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
               
               let commissionAmount = 0;
               if (userType === "promoter") {
-                const p = user as any;
-                if (p.promoter_incentive_type === "flat") {
-                  // Type 2: Flat Incentive (₹)
-                  commissionAmount = Number(p.promoter_incentive_value) || 0;
-                } else if (p.promoter_incentive_type === "percent") {
-                  // Type 1: % Incentive
-                  commissionAmount = netTaxable * ((Number(p.promoter_incentive_value) || 0) / 100);
-                } else if (p.partner_type === "flat" && p.discount_value) {
-                  commissionAmount = Number(p.discount_value) || 0;
-                } else if (p.discount_type === "percent" && p.discount_value) {
-                  commissionAmount = netTaxable * ((Number(p.discount_value) || 0) / 100);
-                } else {
-                  // Fallback: global setting
-                  const commissionPercent = settings?.promoter_commission_percent ?? 2;
-                  commissionAmount = netTaxable * (commissionPercent / 100);
-                }
+                commissionAmount = resolvePromoterCommission(
+                  netTaxable,
+                  user as any,
+                  settings?.promoter_commission_percent ?? 2
+                ).amount;
               } else if (user.use_global_commission && user.commission_slabs) {
                 const slab = user.commission_slabs.find((s: any) => 
                   netTaxable >= s.from && (s.to === null || netTaxable <= s.to)
@@ -340,9 +330,13 @@ export async function resendCompletionPin(leadId: string) {
     throw new Error("No PIN or mobile number found for this customer.");
   }
 
+  const { resolveCustomerLocale, getCustomerNotifications } = await import("@/lib/whatsapp/customer-notifications-i18n");
+  const custLocale = await resolveCustomerLocale({ leadData, leadId, phone: leadData.mobile_number });
+  const notif = getCustomerNotifications(custLocale);
+
   await sendCustomerWhatsApp(
     leadData.mobile_number,
-    `🔔 *Installation Reminder*\n\nHi ${leadData.customer_name || 'Customer'},\nYour installer is currently at your site.\nOnce the installation is fully complete to your satisfaction, please provide them with this secure Completion PIN: *${leadData.completion_pin}* to officially close the job.\n\nThank you for choosing TEAM CCTV! 🛡️`
+    notif.completionPinReminder({ name: leadData.customer_name || "", pin: String(leadData.completion_pin) })
   );
 
   return { success: true };

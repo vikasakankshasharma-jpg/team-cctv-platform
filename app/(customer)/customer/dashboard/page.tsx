@@ -3,11 +3,12 @@ import { redirect } from "next/navigation";
 import { adminDb, adminAuth } from "@/lib/firebase-admin";
 import { CustomerDashboardClient, type CustomerQuoteItem } from "@/components/customer/CustomerDashboardClient";
 import type { Metadata } from "next";
+import { getServerLocale, getServerTranslations } from "@/lib/i18n/server-locale";
+import { buildPageMetadata } from "@/lib/i18n/seo-metadata";
 
-export const metadata: Metadata = {
-  title: "My Dashboard | TEAM CCTV",
-  description: "View your CCTV quotations, installation progress, and invoices.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata("customer_dashboard", await getServerLocale());
+}
 
 export const dynamic = "force-dynamic";
 
@@ -69,10 +70,11 @@ export default async function CustomerDashboardPage() {
 
   const rawMobile = phoneNumber ? String(phoneNumber).replace(/\D/g, "").slice(-10) : "";
 
+  const { t } = await getServerTranslations();
   const leadDocsMap = new Map<string, any>();
   const quoteDocsMap = new Map<string, any>();
   const quotesList: CustomerQuoteItem[] = [];
-  let customerName = session.user?.name || "Valued Client";
+  let customerName = session.user?.name || "";
 
   try {
     // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -120,13 +122,16 @@ export default async function CustomerDashboardPage() {
     // Prefer the name they entered in their actual quotations/leads over their auth profile name
     if (allLeads.length > 0) {
       // Find the most recently updated lead/quote with a real name
-      const bestName = allLeads.map(l => l.customer_name || l.billing_details?.customer_name || l.name).find(n => n && typeof n === "string" && !n.toLowerCase().includes("admin") && n !== "Valued Client");
+      const bestName = allLeads.map(l => l.customer_name || l.billing_details?.customer_name || l.name).find(n => n && typeof n === "string" && !n.toLowerCase().includes("admin") && n !== "Valued Client" && n !== "Valued Customer");
       if (bestName) {
         customerName = bestName;
       }
     }
-    if (customerName === "Valued Client" && allLeads.length > 0) {
-      customerName = allLeads[0].customer_name || allLeads[0].name || "Valued Client";
+    if ((!customerName || customerName === "Valued Client" || customerName === "Valued Customer") && allLeads.length > 0) {
+      customerName = allLeads[0].customer_name || allLeads[0].name || "";
+    }
+    if (!customerName || customerName === "Valued Client" || customerName === "Valued Customer") {
+      customerName = t("dash_valued_client", "Valued Client");
     }
 
     // Extract quote IDs explicitly attached to leads
@@ -277,7 +282,7 @@ export default async function CustomerDashboardPage() {
         qData.requirementSnapshot?.property_type ||
         qData.property_type ||
         matchingLead?.property_type ||
-        "Residential / Commercial";
+        `${t("qrc_prop_residential", "Residential")} / ${t("qrc_prop_commercial", "Commercial")}`;
 
       const siteAddress =
         qData.address?.street ||
@@ -285,7 +290,7 @@ export default async function CustomerDashboardPage() {
         matchingLead?.address?.full_address ||
         matchingLead?.address?.street ||
         matchingLead?.detected_city ||
-        "Jaipur";
+        t("bo_city_ph", "Jaipur");
 
       quotesList.push({
         quoteId,

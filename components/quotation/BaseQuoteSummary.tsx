@@ -6,6 +6,7 @@ import type { PricingResult, QuoteLineItem, QuoteAddon } from "@/types";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { TranslatedText } from "@/components/shared/TranslatedText";
+import { useTranslation } from "@/hooks/useTranslation";
 import { TranslationKey } from "@/lib/i18n/translations";
 
 const formatCurrency = (val: number) =>
@@ -109,6 +110,7 @@ interface BaseQuoteSummaryProps {
 }
 
 export function BaseQuoteSummary({ activePricing }: BaseQuoteSummaryProps) {
+  const { t } = useTranslation();
   const { is_compare_mode, base_quote_pricing, base_tier_name, exitCompareMode } = useConfiguratorStore();
 
   if (!is_compare_mode || !base_quote_pricing || !activePricing) return null;
@@ -132,7 +134,7 @@ export function BaseQuoteSummary({ activePricing }: BaseQuoteSummaryProps) {
         <button 
           onClick={exitCompareMode}
           className="p-2 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors shadow-sm"
-          title="Exit Compare Mode"
+          title={t("bqs_exit_compare")}
         >
           <X className="w-5 h-5" />
         </button>
@@ -143,7 +145,7 @@ export function BaseQuoteSummary({ activePricing }: BaseQuoteSummaryProps) {
           <div>
             <h4 className="text-sm font-semibold text-red-800 dark:text-red-400 mb-1 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              Configuration Error
+              <TranslatedText tKey="bqs_config_error" defaultText="Configuration Error" />
             </h4>
             <p className="text-xs text-red-600 dark:text-red-300">
               {activePricing.error_message}
@@ -153,7 +155,7 @@ export function BaseQuoteSummary({ activePricing }: BaseQuoteSummaryProps) {
             onClick={exitCompareMode}
             className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-full transition-colors shrink-0 shadow-sm"
           >
-            Revert to Base
+            <TranslatedText tKey="bqs_revert_base" defaultText="Revert to Original" />
           </button>
         </div>
       )}
@@ -208,7 +210,7 @@ export function BaseQuoteSummary({ activePricing }: BaseQuoteSummaryProps) {
                   {/* Base Column */}
                   <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700/50">
                     <div className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2.5">
-                      {base_tier_name} <TranslatedText tKey="tier" defaultText="Tier" />
+                      {base_tier_name} <TranslatedText tKey="wz_setup" defaultText="Setup" />
                     </div>
                     <div className="space-y-2">
                       {bItems.length > 0 ? bItems.map(i => (

@@ -7,9 +7,14 @@ import {
   CheckCircle2, 
   Loader2, 
   Compass, 
-  AlertCircle 
+  AlertCircle,
+  Mic,
+  MicOff
 } from "lucide-react";
 import { LocationPickerModal, LocationMeta } from "@/components/checkout/LocationPickerModal";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useI18nStore } from "@/lib/i18n/store";
+import { getStateLanguage, SPEECH_LOCALE_MAP, languageNames } from "@/lib/i18n/mapping";
 
 export interface QuadrantInfo {
   zone: string;
@@ -61,9 +66,61 @@ export function SmartAddressInput({
   initialCoords,
   onCoordinatesChange,
 }: SmartAddressInputProps) {
+  const { t, locale } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [isListeningAddress, setIsListeningAddress] = useState(false);
+  const addressRecognitionRef = useRef<any>(null);
   const [pinnedCoords, setPinnedCoords] = useState<{ lat?: number; lng?: number } | undefined>(initialCoords);
+
+  useEffect(() => {
+    return () => {
+      try {
+        addressRecognitionRef.current?.stop();
+      } catch {
+        // Ignore cleanup errors
+      }
+    };
+  }, []);
+
+  const toggleStreetVoiceInput = () => {
+    if (isListeningAddress) {
+      try {
+        addressRecognitionRef.current?.stop();
+      } catch {
+        // Ignore
+      }
+      setIsListeningAddress(false);
+      return;
+    }
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setError(t("ai_voice_unsupported"));
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    addressRecognitionRef.current = recognition;
+    recognition.lang = SPEECH_LOCALE_MAP[locale] || "en-IN";
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => setIsListeningAddress(true);
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((res: any) => res[0].transcript)
+        .join("");
+      if (transcript && onStreetAddressChange) {
+        onStreetAddressChange(transcript);
+      }
+    };
+    recognition.onerror = () => setIsListeningAddress(false);
+    recognition.onend = () => setIsListeningAddress(false);
+    try {
+      recognition.start();
+    } catch {
+      setIsListeningAddress(false);
+    }
+  };
 
   useEffect(() => {
     if (initialCoords?.lat && initialCoords?.lng) {
@@ -92,10 +149,13 @@ export function SmartAddressInput({
 
       fetch(`/api/pincode/${cleanPin}`)
         .then(async (res) => {
-          if (!res.ok) throw new Error("Pincode lookup failed");
+          if (!res.ok) throw new Error(t("addr_err_lookup", "Pincode lookup failed"));
           return res.json();
         })
         .then((data) => {
+          if (data.state) {
+            useI18nStore.getState().setLocaleFromPincode(getStateLanguage(data.state));
+          }
           setGeoInfo({
             district: data.district || data.city,
             state: data.state,
@@ -111,7 +171,7 @@ export function SmartAddressInput({
         })
         .catch((err) => {
           console.warn("Pincode API failed:", err);
-          setError("Could not resolve location details for this PIN.");
+          setError(t("addr_err_pin", "Could not resolve location details for this PIN."));
         })
         .finally(() => {
           setLoading(false);
@@ -128,7 +188,7 @@ export function SmartAddressInput({
   // GPS Current Location Grabber
   const handleUseCurrentGPS = () => {
     if (!navigator.geolocation) {
-      setError("Geolocation not supported by this browser.");
+      setError(t("addr_err_geo", "Geolocation not supported by this browser."));
       return;
     }
     setGpsLoading(true);
@@ -140,9 +200,9 @@ export function SmartAddressInput({
           onCoordinatesChange({ lat: latitude, lng: longitude });
         }
         try {
-          // Reverse geocode via OpenStreetMap Nominatim
+          // Reverse geocode via OpenStreetMap Nominatim localized in user's active language
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=${encodeURIComponent(locale || "en")}`
           );
           if (res.ok) {
             const data = await res.json();
@@ -163,7 +223,7 @@ export function SmartAddressInput({
       },
       (err) => {
         setGpsLoading(false);
-        setError("Location permission denied. Please enter PINCODE manually or use Select on Map.");
+        setError(t("addr_err_perm", "Location permission denied. Please enter PINCODE manually or use Select on Map."));
       },
       { timeout: 10000, enableHighAccuracy: true }
     );
@@ -190,8 +250,8 @@ export function SmartAddressInput({
     }
 
     if (onQuadrantChange) {
-      onQuadrantChange(selectedQuadrant || meta?.locality || "Pinned Location", {
-        anchor: meta?.locality || "Map Pinpoint",
+      onQuadrantChange(selectedQuadrant || meta?.locality || t("addr_pinned_loc", "Pinned Location"), {
+        anchor: meta?.locality || t("addr_map_pin", "Map Pinpoint"),
         lat: coords.lat,
         lng: coords.lng,
       });
@@ -202,20 +262,20 @@ export function SmartAddressInput({
     <div className={`space-y-3.5 ${className}`}>
       {/* Pincode & City/State badge row */}
       <div>
-        <div className="flex items-center justify-between mb-1 gap-2">
+        <div className="flex flex-wrap items-center justify-between mb-1 gap-2">
           <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300">
-            PINCODE {required && <span className="text-red-500">*</span>}
+            {t("addr_pin_lbl", "PINCODE")} {required && <span className="text-red-500">*</span>}
           </label>
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             {allowMapSelection && (
               <button
                 type="button"
                 onClick={() => setIsMapModalOpen(true)}
                 disabled={disabled}
-                className="text-[11px] text-blue-600 hover:text-blue-700 dark:text-blue-400 font-bold flex items-center gap-1 bg-blue-50 hover:bg-blue-100/80 dark:bg-blue-950/40 dark:hover:bg-blue-900/50 border border-blue-200/80 dark:border-blue-800/80 px-2 sm:px-2.5 py-0.5 rounded-full transition-all active:scale-95 shadow-2xs"
+                className="text-[11px] text-blue-600 hover:text-blue-700 dark:text-blue-400 font-bold flex items-center gap-1 bg-blue-50 hover:bg-blue-100/80 dark:bg-blue-950/40 dark:hover:bg-blue-900/50 border border-blue-200/80 dark:border-blue-800/80 px-2 sm:px-2.5 py-0.5 rounded-full transition-all active:scale-95 shadow-2xs whitespace-normal text-center leading-snug"
               >
-                <MapPin className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-                <span>{pinnedCoords?.lat ? "Change Map Pin" : "Select on Map"}</span>
+                <MapPin className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span>{pinnedCoords?.lat ? t("addr_chg_pin", "Change Map Pin") : t("addr_sel_map", "Select on Map")}</span>
               </button>
             )}
             {mode !== "compact" && (
@@ -230,7 +290,7 @@ export function SmartAddressInput({
                 ) : (
                   <Navigation className="w-3 h-3" />
                 )}
-                <span>{gpsLoading ? "GPS..." : "Use GPS"}</span>
+                <span>{gpsLoading ? t("addr_getting_gps", "GPS...") : t("addr_use_gps", "Use GPS")}</span>
               </button>
             )}
           </div>
@@ -251,7 +311,7 @@ export function SmartAddressInput({
           {loading ? (
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
               <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-              <span>Checking...</span>
+              <span>{t("addr_checking", "Checking...")}</span>
             </div>
           ) : geoInfo?.district ? (
             <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs font-bold animate-in fade-in">
@@ -272,8 +332,8 @@ export function SmartAddressInput({
           <div className="mt-2 flex items-center justify-between bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 px-3 py-1.5 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 animate-in fade-in">
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span className="font-bold text-[11px] truncate">
-                Exact Location Pinned ({pinnedCoords.lat.toFixed(4)}°N, {pinnedCoords.lng.toFixed(4)}°E)
+              <span className="font-bold text-[11px] break-words">
+                {t("addr_exact_pin", "Exact Location Pinned")} ({pinnedCoords.lat.toFixed(4)}°N, {pinnedCoords.lng.toFixed(4)}°E)
               </span>
             </div>
             <button
@@ -281,7 +341,7 @@ export function SmartAddressInput({
               onClick={() => setIsMapModalOpen(true)}
               className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline shrink-0 ml-2"
             >
-              Edit Pin
+              {t("addr_edit_pin", "Edit Pin")}
             </button>
           </div>
         )}
@@ -290,11 +350,11 @@ export function SmartAddressInput({
       {/* Delivery Hub / Area Selector Chips */}
       {geoInfo?.quadrants && geoInfo.quadrants.length > 0 && (
         <div className="animate-in slide-in-from-top-1 duration-200 space-y-1.5 bg-slate-50/70 dark:bg-zinc-900/50 p-2.5 sm:p-3 rounded-2xl border border-slate-200/70 dark:border-zinc-800">
-          <div className="flex items-center justify-between">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-[#9b8cff]" /> Select Your Local Area / Delivery Hub
+          <div className="flex flex-wrap items-center justify-between gap-1">
+            <label className="text-[11px] font-bold uppercase text-slate-600 dark:text-zinc-400 flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5 text-[#9b8cff] shrink-0" /> {t("addr_hub_lbl", "Select Your Local Area / Delivery Hub")}
             </label>
-            <span className="text-[10px] text-muted-foreground">Helps assign nearest technician</span>
+            <span className="text-[10px] text-muted-foreground">{t("addr_hub_help", "Helps assign nearest technician")}</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -329,7 +389,7 @@ export function SmartAddressInput({
                       <CheckCircle2 className="w-3.5 h-3.5 text-[#9b8cff] shrink-0" />
                     )}
                   </div>
-                  <p className="text-[10px] text-gray-500 dark:text-zinc-400 truncate mt-1 leading-normal" title={q.coverage}>
+                  <p className="text-[10px] text-gray-500 dark:text-zinc-400 line-clamp-2 whitespace-normal mt-1 leading-normal" title={q.coverage}>
                     {q.coverage}
                   </p>
                 </button>
@@ -343,7 +403,7 @@ export function SmartAddressInput({
       {(mode === "full" || mode === "survey") && (
         <div className="animate-in fade-in duration-200">
           <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-            Flat / House No., Building or Street Name {required && <span className="text-red-500">*</span>}
+            {t("addr_street_lbl", "Flat / House No., Building or Street Name")} {required && <span className="text-red-500">*</span>}
           </label>
           <div className="relative">
             <MapPin className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -351,11 +411,26 @@ export function SmartAddressInput({
               type="text"
               required={required}
               disabled={disabled}
-              placeholder="e.g. Flat 302, Royal Residency, MI Road"
+              placeholder={t("addr_street_ph", "e.g. Flat 302, Royal Residency, MI Road")}
               value={streetAddress}
               onChange={(e) => onStreetAddressChange && onStreetAddressChange(e.target.value)}
-              className="w-full py-2.5 pl-9 pr-3.5 text-sm border border-gray-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-[#9b8cff] focus:border-[#9b8cff] outline-none transition-all bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
+              className="w-full py-2.5 pl-9 pr-11 text-sm border border-gray-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-[#9b8cff] focus:border-[#9b8cff] outline-none transition-all bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
             />
+            {onStreetAddressChange && !disabled && (
+              <button
+                type="button"
+                onClick={toggleStreetVoiceInput}
+                aria-label={t("ai_voice_input", { lang: languageNames[locale] || locale })}
+                title={t("ai_voice_input", { lang: languageNames[locale] || locale })}
+                className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors ${
+                  isListeningAddress
+                    ? "bg-red-500 text-white animate-pulse"
+                    : "text-gray-400 hover:text-[#9b8cff] hover:bg-gray-100 dark:hover:bg-zinc-700"
+                }`}
+              >
+                {isListeningAddress ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </button>
+            )}
           </div>
         </div>
       )}

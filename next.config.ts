@@ -99,14 +99,14 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: blob: https: http:",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://apis.mappls.com https://*.mappls.com",
               "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://apis.mappls.com https://*.mappls.com",
-              "font-src 'self' https://fonts.gstatic.com https://apis.mappls.com https://*.mappls.com",
+              "font-src 'self' data: https://fonts.gstatic.com https://apis.mappls.com https://*.mappls.com",
               "worker-src 'self' blob:",
             ].join("; ")
           },
           {
             key: 'Permissions-Policy',
             // Block microphone/camera; allow geolocation for site map feature
-            value: 'camera=(), microphone=(), geolocation=(self)',
+            value: 'camera=(), microphone=(self), geolocation=(self)',
           },
         ],
       },

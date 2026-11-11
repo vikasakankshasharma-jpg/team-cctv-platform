@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { LucideIcon } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   Grid3x3, MapPin, Zap, Workflow, Link2, IndianRupee,
   Package, Database, FileSpreadsheet, HeartPulse,
@@ -40,13 +41,13 @@ export function AdminSubNavStrip({ items }: { items: SubNavItem[] }) {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 active:scale-95 ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap leading-snug transition-all shrink-0 active:scale-95 ${
                 isActive
                   ? "bg-primary text-primary-foreground shadow-xs font-bold"
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
               }`}
             >
-              {Icon && <Icon className="w-3.5 h-3.5" />}
+              {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
               <span>{item.name}</span>
               {item.badge && (
                 <span
@@ -69,85 +70,92 @@ export function AdminSubNavStrip({ items }: { items: SubNavItem[] }) {
 
 // ─── 1. PRICING & MARGINS SUB-NAV ─────────────────────────────────────────────
 export function PricingSubNav() {
+  const { t } = useTranslation();
   const items: SubNavItem[] = [
-    { name: "Live Simulator", href: "/admin/pricing", icon: IndianRupee },
-    { name: "Quotation Matrices", href: "/admin/pricing/matrices", icon: Grid3x3 },
-    { name: "Geo-Surge & Pincodes", href: "/admin/pricing/geo-rules", icon: MapPin },
-    { name: "Add-ons & Options", href: "/admin/addons", icon: Zap },
-    { name: "Recommendation Logic", href: "/admin/rules", icon: Workflow },
-    { name: "Comparison Layouts", href: "/admin/card-layouts", icon: LayoutGrid },
-    { name: "Compatibility Matrix", href: "/admin/compatibility", icon: Link2 },
-    { name: "Global Pricing Engine", href: "/admin/settings?tab=pricing", icon: BadgePercent },
+    { name: t("adm_sub_live_sim", "Live Simulator"), href: "/admin/pricing", icon: IndianRupee },
+    { name: t("adm_nav_matrices", "Quotation Matrices"), href: "/admin/pricing/matrices", icon: Grid3x3 },
+    { name: t("adm_nav_geo_rules", "Geo-Surge & Pincodes"), href: "/admin/pricing/geo-rules", icon: MapPin },
+    { name: t("adm_nav_addons", "Add-ons & Options"), href: "/admin/addons", icon: Zap },
+    { name: t("adm_nav_rules", "Smart Suggestion Rules"), href: "/admin/rules", icon: Workflow },
+    { name: t("adm_sub_comp_layouts", "Comparison Layouts"), href: "/admin/card-layouts", icon: LayoutGrid },
+    { name: t("adm_nav_compatibility", "Compatibility Matrix"), href: "/admin/compatibility", icon: Link2 },
+    { name: t("adm_sub_global_pricing", "Global Pricing Engine"), href: "/admin/settings?tab=pricing", icon: BadgePercent },
   ];
   return <AdminSubNavStrip items={items} />;
 }
 
 // ─── 2. HARDWARE & CATALOG SUB-NAV ────────────────────────────────────────────
 export function CatalogSubNav() {
+  const { t } = useTranslation();
   const items: SubNavItem[] = [
-    { name: "Product Master", href: "/admin/products", icon: Package },
-    { name: "Warehouse Stock & POs", href: "/admin/inventory", icon: Database },
-    { name: "Vendor Price Import", href: "/admin/vendor-import", icon: FileSpreadsheet },
-    { name: "Catalog Quality Health", href: "/admin/products/health", icon: HeartPulse },
-    { name: "Brand & Tier Config", href: "/admin/settings?tab=catalog", icon: Grid3x3 },
+    { name: t("adm_nav_products", "Product Master"), href: "/admin/products", icon: Package },
+    { name: t("adm_nav_inventory", "Warehouse Stock & POs"), href: "/admin/inventory", icon: Database },
+    { name: t("adm_nav_vendor_import", "Vendor Price Import"), href: "/admin/vendor-import", icon: FileSpreadsheet },
+    { name: t("adm_nav_catalog_health", "Catalog Quality Health"), href: "/admin/products/health", icon: HeartPulse },
+    { name: t("adm_sub_brand_matrix", "Brand & Matrix Config"), href: "/admin/settings?tab=catalog", icon: Grid3x3 },
   ];
   return <AdminSubNavStrip items={items} />;
 }
 
 // ─── 3. SALES & CRM SUB-NAV ───────────────────────────────────────────────────
 export function CrmSubNav() {
+  const { t } = useTranslation();
   const items: SubNavItem[] = [
-    { name: "Leads Pipeline", href: "/admin/leads", icon: Users },
-    { name: "Site Visits & Surveys", href: "/admin/bookings", icon: Calendar },
-    { name: "AMC Contracts", href: "/admin/amc", icon: ShieldCheck },
-    { name: "Sales Representatives", href: "/admin/salespersons", icon: Navigation },
-    { name: "Territory Beat Plans", href: "/admin/beat-plans", icon: Navigation },
+    { name: t("adm_nav_leads", "Leads Pipeline"), href: "/admin/leads", icon: Users },
+    { name: t("adm_nav_bookings", "Site Visits & Surveys"), href: "/admin/bookings", icon: Calendar },
+    { name: t("adm_nav_amc", "AMC Contracts"), href: "/admin/amc", icon: ShieldCheck },
+    { name: t("adm_nav_salespersons", "Sales Representatives"), href: "/admin/salespersons", icon: Navigation },
+    { name: t("adm_nav_beat_plans", "Territory Beat Plans"), href: "/admin/beat-plans", icon: Navigation },
   ];
   return <AdminSubNavStrip items={items} />;
 }
 
 // ─── 4. FINANCE & PROFITABILITY SUB-NAV ───────────────────────────────────────
 export function FinanceSubNav() {
+  const { t } = useTranslation();
   const items: SubNavItem[] = [
-    { name: "Profitability Heatmaps", href: "/admin/analytics/profitability", icon: TrendingUp },
-    { name: "Accounts Payable", href: "/admin/finance", icon: IndianRupee },
-    { name: "Cloud Costs & Budgets", href: "/admin/finance/billing", icon: CreditCard },
-    { name: "All Reports & Export", href: "/admin/reports", icon: FileBox },
-    { name: "Security Audit Trail", href: "/admin/reports/logs", icon: ShieldCheck },
+    { name: t("adm_nav_profitability", "Profitability Heatmaps"), href: "/admin/analytics/profitability", icon: TrendingUp },
+    { name: t("adm_nav_finance", "Accounts Payable"), href: "/admin/finance", icon: IndianRupee },
+    { name: t("adm_nav_billing", "Cloud Costs & Budgets"), href: "/admin/finance/billing", icon: CreditCard },
+    { name: t("adm_nav_reports", "All Reports & Export"), href: "/admin/reports", icon: FileBox },
+    { name: t("adm_sub_audit_trail", "Security Audit Trail"), href: "/admin/reports/logs", icon: ShieldCheck },
   ];
   return <AdminSubNavStrip items={items} />;
 }
 
 // ─── 5. OPERATIONS & EXPANSION SUB-NAV ────────────────────────────────────────
 export function OperationsSubNav() {
+  const { t } = useTranslation();
   const items: SubNavItem[] = [
-    { name: "Dispatch Center", href: "/admin/dispatch", icon: Truck },
-    { name: "Verified Technicians", href: "/admin/installers", icon: HardHat },
-    { name: "City Inventory Hubs", href: "/admin/hubs", icon: Database },
-    { name: "Territory Beat Plans", href: "/admin/beat-plans", icon: Navigation },
-    { name: "Regional Expansion", href: "/admin/expansion", icon: MapPin },
-    { name: "Operating Hours & SLA", href: "/admin/settings?tab=sla", icon: Clock },
+    { name: t("adm_sub_dispatch_ctr", "Dispatch Center"), href: "/admin/dispatch", icon: Truck },
+    { name: t("adm_nav_installers", "Verified Technicians"), href: "/admin/installers", icon: HardHat },
+    { name: t("adm_nav_hubs", "City Inventory Hubs"), href: "/admin/hubs", icon: Database },
+    { name: t("adm_nav_beat_plans", "Territory Beat Plans"), href: "/admin/beat-plans", icon: Navigation },
+    { name: t("adm_nav_expansion", "Regional Expansion"), href: "/admin/expansion", icon: MapPin },
+    { name: t("adm_sub_hours_sla", "Operating Hours & SLA"), href: "/admin/settings?tab=sla", icon: Clock },
   ];
   return <AdminSubNavStrip items={items} />;
 }
 
 // ─── 6. OVERVIEW & PIPELINE SUB-NAV ───────────────────────────────────────────
 export function PipelineSubNav() {
+  const { t } = useTranslation();
   const items: SubNavItem[] = [
-    { name: "Executive Dashboard", href: "/admin", icon: TrendingUp },
-    { name: "Quote Funnel", href: "/admin/analytics/funnel", icon: Zap },
-    { name: "Analytics Trends", href: "/admin/analytics", icon: TrendingUp },
+    { name: t("adm_nav_dashboard", "Executive Dashboard"), href: "/admin", icon: TrendingUp },
+    { name: t("adm_nav_funnel", "Quote Funnel"), href: "/admin/analytics/funnel", icon: Zap },
+    { name: t("adm_nav_analytics", "Analytics Trends"), href: "/admin/analytics", icon: TrendingUp },
   ];
   return <AdminSubNavStrip items={items} />;
 }
 
 // ─── 7. PROMOTERS & GROWTH SUB-NAV ────────────────────────────────────────────
 export function GrowthSubNav() {
+  const { t } = useTranslation();
   const items: SubNavItem[] = [
-    { name: "Promoter Network", href: "/admin/promoters", icon: BadgePercent },
-    { name: "Follow-Up Campaigns", href: "/admin/campaigns", icon: Zap },
-    { name: "Marketing Collaterals", href: "/admin/marketing", icon: FileBox },
-    { name: "Regional Expansion", href: "/admin/expansion", icon: MapPin },
+    { name: t("adm_nav_promoters", "Promoter Network"), href: "/admin/promoters", icon: BadgePercent },
+    { name: t("adm_nav_campaigns", "Follow-Up Campaigns"), href: "/admin/campaigns", icon: Zap },
+    { name: t("adm_nav_marketing", "Marketing Collaterals"), href: "/admin/marketing", icon: FileBox },
+    { name: t("adm_nav_expansion", "Regional Expansion"), href: "/admin/expansion", icon: MapPin },
   ];
   return <AdminSubNavStrip items={items} />;
 }

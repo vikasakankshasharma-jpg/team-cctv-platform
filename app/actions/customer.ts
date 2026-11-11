@@ -3,6 +3,7 @@
 import { adminDb, adminAuth } from "@/lib/firebase-admin";
 import { verifySession } from "@/lib/auth-server";
 import { revalidatePath } from "next/cache";
+import { getActionLocale, getApiMessage } from "@/lib/i18n/api-messages";
 
 export async function updateCustomerProfile(data: { 
   name: string; 
@@ -14,10 +15,11 @@ export async function updateCustomerProfile(data: {
   lat?: number;
   lng?: number;
 }) {
+  const locale = await getActionLocale();
   try {
     const session = await verifySession();
     if (!session.isAuthenticated || !session.uid) {
-      return { success: false, error: "Unauthorized" };
+      return { success: false, error: getApiMessage(locale, "unauthorized") };
     }
 
     const { name, email } = data;
@@ -62,6 +64,6 @@ export async function updateCustomerProfile(data: {
     return { success: true };
   } catch (error: any) {
     console.error("Profile update error:", error);
-    return { success: false, error: error.message || "Failed to update profile" };
+    return { success: false, error: getApiMessage(locale, "profile_update_failed") };
   }
 }

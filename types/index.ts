@@ -539,6 +539,7 @@ export interface QuoteLineItem {
   unit_price: number;
   line_total: number;
   base_cost_at_quote?: number;
+  category?: string;
   hsn_code?: string;
   gst_rate?: number;
 }
@@ -548,6 +549,8 @@ export interface QuoteAddon {
   display_name: string;
   price: number;
   qty?: number; // Added qty for multipliers
+  base_cost_at_quote?: number;
+  category?: string;
   hsn_code?: string;
   gst_rate?: number;
 }
@@ -724,6 +727,11 @@ export interface AppSettings {
   // NEW: Referral & Commission System
   promoter_commission_percent?: number;
   customer_referral_discount_percent?: number;
+  amc_fulfillment_cost_percent?: number;   // Est. technician visit & support cost % for Paid/Free AMC (default 35%)
+  payment_gateway_fee_percent?: number;    // Est. PG MDR + GST on online payments (default 2.36%)
+  warranty_reserve_percent?: number;       // Est. 1st-year onsite care/RMA visit reserve % on hardware (default 2%)
+  logistics_consumables_per_job?: number;  // Est. fasteners, tape, local porter/consumables per installation job (default 150)
+  travel_fee_payout_percent?: number;      // % of travel_fee paid to technician for conveyance (default 85%)
 
   updated_at?: unknown;
   updated_by?: string | null;

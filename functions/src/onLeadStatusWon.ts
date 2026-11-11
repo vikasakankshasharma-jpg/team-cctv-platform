@@ -26,7 +26,7 @@ export const onLeadStatusWon = functions.firestore
 
     const promoterId = afterData.promoter_id;
     if (!promoterId) {
-      console.log(`[Elite Intelligence] Lead ${leadId} won. No promoter attached. Payout bypassed.`);
+      console.log(`[Commission Engine] Lead ${leadId} won. No promoter attached. Payout bypassed.`);
       return null;
     }
 
@@ -122,7 +122,7 @@ export const onLeadStatusWon = functions.firestore
           updated_at: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        console.log(`[Elite Sync] Atomic payout created: ${recordRef.id} for Promoter ${promoterId}`);
+        console.log(`[Commission Sync] Atomic payout created: ${recordRef.id} for Promoter ${promoterId}`);
       });
       
       // 3. Dispatch Success Notification to Admin

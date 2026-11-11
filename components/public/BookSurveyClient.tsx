@@ -7,8 +7,11 @@ import { Calendar as CalendarIcon, Clock, MapPin, User, Phone, CheckCircle2, Loa
 import { useRouter } from "next/navigation";
 
 import { SmartAddressInput } from "@/components/shared/SmartAddressInput";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function BookSurveyClient() {
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "en" ? "en-IN" : `${locale}-IN`;
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -45,7 +48,7 @@ export function BookSurveyClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.date) {
-      toast.error("Please select a date for the visit.");
+      toast.error(t("bs_err_date", "Please select a date for the visit."));
       return;
     }
     
@@ -61,10 +64,10 @@ export function BookSurveyClient() {
       if (data.success) {
         setIsSuccess(true);
       } else {
-        toast.error(extractErrorMessage(data, "Failed to book survey."));
+        toast.error(extractErrorMessage(data, t("bs_err_fail", "Failed to book survey.")));
       }
     } catch (e) {
-      toast.error(extractErrorMessage(e, "An error occurred. Please try again."));
+      toast.error(extractErrorMessage(e, t("bs_err_gen", "An error occurred. Please try again.")));
     } finally {
       setIsSubmitting(false);
     }
@@ -76,15 +79,17 @@ export function BookSurveyClient() {
         <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-500 mb-6">
           <CheckCircle2 className="w-10 h-10" />
         </div>
-        <h3 className="text-2xl font-black text-gray-900 mb-2">Visit Scheduled!</h3>
+        <h3 className="text-2xl font-black text-gray-900 mb-2">{t("bs_ok_title", "Visit Scheduled!")}</h3>
         <p className="text-gray-500 font-medium mb-8">
-          Thank you, {formData.customer_name}. Your site survey is confirmed. We just sent you a WhatsApp confirmation with the details.
+          {t("bs_ok_desc", "Thank you, {name}. Your site survey is confirmed. We just sent you a WhatsApp confirmation with the details.", {
+            name: formData.customer_name
+          })}
         </p>
         <button 
           onClick={() => router.push("/")}
           className="bg-zinc-900 text-white font-bold px-8 py-3 rounded-xl hover:bg-zinc-800 transition-colors"
         >
-          Return to Home
+          {t("bs_ret_home", "Return to Home")}
         </button>
       </div>
     );
@@ -93,15 +98,15 @@ export function BookSurveyClient() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <h3 className="text-2xl font-black text-gray-900">Schedule Visit</h3>
-        <p className="text-sm font-medium text-gray-500 mt-1">Pick a time that works best for you.</p>
+        <h3 className="text-2xl font-black text-gray-900">{t("bs_title", "Schedule Visit")}</h3>
+        <p className="text-sm font-medium text-gray-500 mt-1">{t("bs_sub", "Pick a time that works best for you.")}</p>
       </div>
 
       <div className="space-y-4">
         {/* Date Selection */}
         <div>
           <label className="text-xs font-bold text-gray-700 uppercase tracking-widest mb-2 flex items-center gap-1">
-            <CalendarIcon className="w-3 h-3" /> Select Date
+            <CalendarIcon className="w-3 h-3" /> {t("bs_sel_date", "Select Date")}
           </label>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {availableDates.map((date, idx) => {
@@ -114,7 +119,7 @@ export function BookSurveyClient() {
                   className={`border-2 rounded-xl p-2 text-center cursor-pointer transition-all ${isSelected ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-200'}`}
                 >
                   <div className={`text-xs font-bold uppercase ${isSelected ? 'text-blue-600' : 'text-gray-400'}`}>
-                    {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                    {date.toLocaleDateString(dateLocale, { weekday: 'short' })}
                   </div>
                   <div className={`text-lg font-black ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
                     {date.getDate()}
@@ -134,18 +139,18 @@ export function BookSurveyClient() {
                   value={(!availableDates.map(d=>d.toISOString().split("T")[0]).includes(formData.date)) ? formData.date : ""}
                   onChange={(e) => setFormData({...formData, date: e.target.value})}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                  title="Select Custom Date"
+                  title={t("bs_sel_cust_date", "Select Custom Date")}
                 />
                 {(!availableDates.map(d=>d.toISOString().split("T")[0]).includes(formData.date) && formData.date !== "") ? (
                     <>
-                       <div className="text-[10px] font-bold uppercase text-blue-600">Custom</div>
+                       <div className="text-[10px] font-bold uppercase text-blue-600">{t("bs_custom", "Custom")}</div>
                        <div className="text-sm font-black text-blue-900 leading-tight mt-0.5">
-                         {new Date(formData.date).getDate()} {new Date(formData.date).toLocaleDateString('en-US', {month: 'short'})}
+                         {new Date(formData.date).getDate()} {new Date(formData.date).toLocaleDateString(dateLocale, {month: 'short'})}
                        </div>
                     </>
                 ) : (
                     <>
-                       <div className="text-[10px] font-bold uppercase text-gray-400">Custom</div>
+                       <div className="text-[10px] font-bold uppercase text-gray-400">{t("bs_custom", "Custom")}</div>
                        <CalendarIcon className="w-5 h-5 text-gray-400 mt-0.5" />
                     </>
                 )}
@@ -156,13 +161,13 @@ export function BookSurveyClient() {
         {/* Time Selection */}
         <div>
           <label className="text-xs font-bold text-gray-700 uppercase tracking-widest mb-2 flex items-center gap-1">
-            <Clock className="w-3 h-3" /> Time Slot
+            <Clock className="w-3 h-3" /> {t("bs_time_slot", "Time Slot")}
           </label>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
-              { id: 'morning_10_1', label: '10 AM - 1 PM' },
-              { id: 'afternoon_2_5', label: '2 PM - 5 PM' },
-              { id: 'evening_5_7', label: '5 PM - 7 PM' },
+              { id: 'morning_10_1', label: t("bs_s1", "10 AM - 1 PM") },
+              { id: 'afternoon_2_5', label: t("bs_s2", "2 PM - 5 PM") },
+              { id: 'evening_5_7', label: t("bs_s3", "5 PM - 7 PM") },
             ].map(slot => (
               <div 
                 key={slot.id}
@@ -176,10 +181,10 @@ export function BookSurveyClient() {
         </div>
       </div>
 
-      <div className="pt-4 border-t border-gray-100 grid grid-cols-2 gap-4">
+      <div className="pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-bold text-gray-700 flex items-center gap-1 mb-1">
-            <User className="w-3 h-3" /> Full Name
+            <User className="w-3 h-3" /> {t("prof_full_name", "Full Name")}
           </label>
           <input 
             required
@@ -187,12 +192,12 @@ export function BookSurveyClient() {
             value={formData.customer_name}
             onChange={e => setFormData({...formData, customer_name: e.target.value})}
             className="w-full text-sm p-3 border-2 border-gray-200 rounded-xl outline-none focus:border-blue-500 font-medium"
-            placeholder="John Doe"
+            placeholder={t("prof_name_ph", "e.g. Rahul Sharma")}
           />
         </div>
         <div>
           <label className="text-xs font-bold text-gray-700 flex items-center gap-1 mb-1">
-            <Phone className="w-3 h-3" /> Mobile Number
+            <Phone className="w-3 h-3" /> {t("pcm_mob", "Mobile Number")}
           </label>
           <input 
             required
@@ -226,9 +231,9 @@ export function BookSurveyClient() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 whitespace-normal text-center leading-snug"
       >
-        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirm Site Survey"}
+        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : t("bs_confirm", "Confirm Site Survey")}
       </button>
     </form>
   );

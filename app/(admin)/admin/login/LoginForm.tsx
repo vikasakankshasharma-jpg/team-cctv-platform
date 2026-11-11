@@ -10,6 +10,8 @@ import {
   BarChart2, Users, ArrowRight, CheckCircle2, AlertCircle, ArrowLeft,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
+import { useTranslation } from "@/hooks/useTranslation";
 import { extractErrorMessage } from "@/lib/utils";
 
 // ─── Animated Background Ambient Glow ──────────────────────────────────────────
@@ -75,6 +77,7 @@ function OtpInput({
 }
 
 export default function AdminLoginForm() {
+  const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/admin/leads";
@@ -124,7 +127,7 @@ export default function AdminLoginForm() {
           body: JSON.stringify({ email: identifier }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to send code."));
+        if (!res.ok) throw new Error(extractErrorMessage(data, t("adm_login_err_send", "Failed to send code.")));
       } else {
         const res = await fetch("/api/auth/otp/mobile", {
           method: "POST",
@@ -132,7 +135,7 @@ export default function AdminLoginForm() {
           body: JSON.stringify({ mobile: identifier }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(extractErrorMessage(data, "Unauthorized mobile number."));
+        if (!res.ok) throw new Error(extractErrorMessage(data, t("adm_login_err_mob", "Unauthorized mobile number.")));
         const appVerifier = (window as any).recaptchaVerifier;
         const confirmationResult = await signInWithPhoneNumber(auth, data.e164Mobile, appVerifier);
         (window as any).confirmationResult = confirmationResult;
@@ -141,11 +144,11 @@ export default function AdminLoginForm() {
       setTimeLeft(120);
     } catch (err: any) {
       if (err.code === "auth/invalid-app-credential" || err.message?.includes("invalid-app-credential")) {
-        setError("Mobile OTP unavailable in this environment. Please use Email.");
+        setError(t("adm_login_err_mob_otp", "Mobile OTP unavailable in this environment. Please use Email."));
       } else if (err.code === "auth/internal-error" || err.message?.includes("internal-error")) {
         setError(`Firebase error: Ensure '${window.location.hostname}' is in Authorized Domains.`);
       } else {
-        setError(extractErrorMessage(err, "An unexpected error occurred."));
+        setError(extractErrorMessage(err, t("adm_login_err_unexpected", "An unexpected error occurred.")));
       }
     } finally {
       setLoading(false);
@@ -167,12 +170,12 @@ export default function AdminLoginForm() {
           body: JSON.stringify({ identifier, otp: code, type: "email" }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(extractErrorMessage(data, "Invalid verification code."));
+        if (!res.ok) throw new Error(extractErrorMessage(data, t("adm_login_err_code", "Invalid verification code.")));
         customToken = data.customToken;
         if (customToken !== "mock-custom-token") await signInWithCustomToken(auth, customToken);
       } else {
         const confirmationResult = (window as any).confirmationResult;
-        if (!confirmationResult) throw new Error("Verification session expired.");
+        if (!confirmationResult) throw new Error(t("adm_login_err_session", "Verification session expired."));
         const result = await confirmationResult.confirm(code);
         const idToken = await result.user.getIdToken();
         const res = await fetch("/api/auth/otp/verify", {
@@ -181,7 +184,7 @@ export default function AdminLoginForm() {
           body: JSON.stringify({ identifier, otp: idToken, type: "mobile" }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(extractErrorMessage(data, "Failed to upgrade session."));
+        if (!res.ok) throw new Error(extractErrorMessage(data, t("adm_login_err_session", "Verification session expired.")));
         customToken = data.customToken;
         if (customToken !== "mock-custom-token") await signInWithCustomToken(auth, customToken);
       }
@@ -198,7 +201,7 @@ export default function AdminLoginForm() {
       
       if (!sessionRes.ok) {
         const errData = await sessionRes.json().catch(() => ({}));
-        throw new Error(extractErrorMessage(errData, "Failed to establish secure session."));
+        throw new Error(extractErrorMessage(errData, t("adm_login_err_session", "Verification session expired.")));
       }
 
       setSuccess(true);
@@ -209,7 +212,7 @@ export default function AdminLoginForm() {
     } catch (err: any) {
       console.error(err);
       setOtpError(true);
-      setError(extractErrorMessage(err, "Verification failed."));
+      setError(extractErrorMessage(err, t("adm_login_err_code", "Invalid verification code.")));
     } finally {
       setLoading(false);
     }
@@ -273,7 +276,7 @@ export default function AdminLoginForm() {
               </div>
               <div>
                 <p className="text-[11px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.3em]">TEAM CCTV</p>
-                <p className="text-base font-black text-slate-900 dark:text-white leading-tight">Command Centre</p>
+                <p className="text-base font-black text-slate-900 dark:text-white leading-tight">{t("adm_login_cmd_centre", "Command Centre")}</p>
               </div>
             </Link>
           </div>
@@ -281,29 +284,29 @@ export default function AdminLoginForm() {
           {/* Main Headline */}
           <div className="relative z-10 my-auto py-8">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-[10px] font-black uppercase tracking-[0.25em] mb-6">
-              <Zap className="w-3.5 h-3.5" /> Enterprise Control Hub
+              <Zap className="w-3.5 h-3.5 shrink-0" /> {t("adm_login_hub_badge", "Enterprise Control Hub")}
             </div>
             
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-[1.12] mb-6">
-              Intelligence<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 dark:from-blue-400 dark:via-indigo-300 dark:to-cyan-400 relative">
-                Command
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.2] mb-6">
+              {t("adm_login_hero_line1", "Intelligence")}<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 dark:from-blue-400 dark:via-indigo-300 dark:to-cyan-400 relative inline-block">
+                {t("adm_login_hero_line2", "Command")}
                 <span className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-cyan-400 rounded-full" />
               </span><br />
-              Platform.
+              {t("adm_login_hero_line3", "Platform.")}
             </h1>
             
             <p className="text-slate-600 dark:text-slate-300 font-medium text-base sm:text-lg leading-relaxed max-w-sm">
-              Real-time CRM, AI-assisted quotations, and sales analytics — all in one unified secure environment.
+              {t("adm_login_hero_desc", "Real-time CRM, AI-assisted quotations, and sales analytics — all in one unified secure environment.")}
             </p>
           </div>
 
           {/* Feature Badges */}
           <div className="relative z-10 space-y-3.5">
             {[
-              { icon: BarChart2, label: "Live Sales Intelligence", sub: "Real-time KPIs and trend analytics" },
-              { icon: Users, label: "Referral Network CRM", sub: "Full promoter commission pipeline" },
-              { icon: Zap, label: "Automated Quote Engine", sub: "IP & HD hardware topology calculator" },
+              { icon: BarChart2, label: t("adm_login_feat1_t", "Live Sales Intelligence"), sub: t("adm_login_feat1_s", "Real-time KPIs and trend analytics") },
+              { icon: Users, label: t("adm_login_feat2_t", "Referral Network CRM"), sub: t("adm_login_feat2_s", "Full promoter commission pipeline") },
+              { icon: Zap, label: t("adm_login_feat3_t", "Automated Quote Engine"), sub: t("adm_login_feat3_s", "IP & HD hardware topology calculator") },
             ].map(({ icon: Icon, label, sub }) => (
               <div 
                 key={label} 
@@ -327,16 +330,19 @@ export default function AdminLoginForm() {
           <DotGrid />
 
           {/* Top Controls Header */}
-          <div className="relative z-20 flex items-center justify-between w-full mb-6">
+          <div className="relative z-20 flex flex-wrap items-center justify-between gap-2 w-full mb-6">
             <Link 
               href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors leading-snug"
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to CCTVQuotation</span>
+              <ArrowLeft className="w-4 h-4 shrink-0" />
+              <span>{t("adm_login_back_site", "Back to CCTVQuotation")}</span>
             </Link>
 
-            <ThemeToggle />
+            <div className="flex items-center gap-2 shrink-0">
+              <LanguageSwitcher compact />
+              <ThemeToggle />
+            </div>
           </div>
 
           {/* Form Container */}
@@ -345,20 +351,24 @@ export default function AdminLoginForm() {
             {/* Header */}
             <div className="mb-8">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-500/30 mb-4 shadow-sm">
-                <Lock className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                <span className="text-[10px] font-black text-blue-700 dark:text-blue-300 uppercase tracking-[0.25em]">Staff Access Portal</span>
+                <Lock className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span className="text-[10px] font-black text-blue-700 dark:text-blue-300 uppercase tracking-[0.2em] leading-snug">{t("adm_login_staff_portal", "Staff Access Portal")}</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
-                {step === 1 ? "Secure Sign In" : "Verify Identity"}
+              <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight mb-2">
+                {step === 1 ? t("adm_login_signin_title", "Secure Sign In") : t("adm_login_verify_title", "Verify Identity")}
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">
-                {step === 1 ? "Authorized personnel only. All access sessions are logged." : `A 4-digit code was dispatched to your ${method}.`}
+              <p className="text-slate-500 dark:text-slate-400 font-medium text-sm leading-relaxed">
+                {step === 1
+                  ? t("adm_login_signin_sub", "Authorized personnel only. All access sessions are logged.")
+                  : method === "mobile"
+                    ? t("adm_login_otp_sent_mob", "A 4-digit code was dispatched to your mobile.")
+                    : t("adm_login_otp_sent_email", "A 4-digit code was dispatched to your email.")}
               </p>
             </div>
 
             {/* Error Banner */}
             {error && (
-              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-400 px-4 py-3 rounded-2xl flex items-start gap-3 mb-6 animate-in fade-in slide-in-from-top-2 text-xs font-semibold">
+              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-400 px-4 py-3 rounded-2xl flex items-start gap-3 mb-6 animate-in fade-in slide-in-from-top-2 text-xs font-semibold leading-snug">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
                 <span>{error}</span>
               </div>
@@ -366,9 +376,9 @@ export default function AdminLoginForm() {
 
             {/* Success State */}
             {success && (
-              <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 px-4 py-3 rounded-2xl flex items-center gap-3 mb-6 animate-in fade-in slide-in-from-bottom-2 text-xs font-bold">
+              <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 px-4 py-3 rounded-2xl flex items-center gap-3 mb-6 animate-in fade-in slide-in-from-bottom-2 text-xs font-bold leading-snug">
                 <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                <span>Access verified! Entering Command Centre...</span>
+                <span>{t("adm_login_ok_banner", "Access verified! Entering Command Centre...")}</span>
               </div>
             )}
 
@@ -384,14 +394,14 @@ export default function AdminLoginForm() {
                       key={m}
                       type="button"
                       onClick={() => { setMethod(m); setIdentifier(""); setError(""); }}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-normal leading-snug ${
                         method === m
                           ? "bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-sm font-bold"
                           : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
-                      {m === "mobile" ? <Smartphone className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
-                      {m}
+                      {m === "mobile" ? <Smartphone className="w-4 h-4 shrink-0" /> : <Mail className="w-4 h-4 shrink-0" />}
+                      <span>{m === "mobile" ? t("adm_login_m_mobile", "Mobile") : t("adm_login_m_email", "Email")}</span>
                     </button>
                   ))}
                 </div>
@@ -399,7 +409,7 @@ export default function AdminLoginForm() {
                 {/* Input Field */}
                 <div className="space-y-2">
                   <label className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider ml-1">
-                    {method === "mobile" ? "Mobile Number" : "Email Address"}
+                    {method === "mobile" ? t("adm_login_lbl_mob", "Mobile Number") : t("adm_login_lbl_email", "Email Address")}
                   </label>
                   <div className="relative">
                     {method === "mobile"
@@ -422,14 +432,14 @@ export default function AdminLoginForm() {
                 <button
                   type="submit"
                   disabled={loading || !identifier}
-                  className="group relative w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black uppercase text-xs tracking-widest rounded-2xl transition-all shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                  className="group relative w-full min-h-[3.5rem] h-auto py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black uppercase text-xs tracking-widest rounded-2xl transition-all shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer whitespace-normal leading-snug text-center"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
                     <>
-                      <span>Send Auth Code</span>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      <span>{t("adm_login_send_code", "Send Auth Code")}</span>
+                      <ArrowRight className="w-4 h-4 shrink-0 group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
                 </button>
@@ -441,9 +451,9 @@ export default function AdminLoginForm() {
               <form onSubmit={handleVerifyCode} className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
                 <OtpInput otp={otp} onChange={handleOtpChange} onKeyDown={handleKeyDown} error={otpError} />
 
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className={`text-xs font-bold tabular-nums ${timeLeft < 30 ? "text-red-500" : "text-slate-500 dark:text-slate-400"}`}>
-                    {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")} remaining
+                    {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")} {t("adm_login_remaining", "remaining")}
                   </span>
                   <button
                     type="button"
@@ -451,7 +461,7 @@ export default function AdminLoginForm() {
                     disabled={timeLeft > 0 || loading}
                     className="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider disabled:opacity-40 hover:underline cursor-pointer"
                   >
-                    Resend Code
+                    {t("adm_login_resend", "Resend Code")}
                   </button>
                 </div>
 
@@ -459,19 +469,19 @@ export default function AdminLoginForm() {
                   id="verify-btn"
                   type="submit"
                   disabled={loading || otp.join("").length < 4 || success}
-                  className="group relative w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black uppercase text-xs tracking-widest rounded-2xl transition-all shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                  className="group relative w-full min-h-[3.5rem] h-auto py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black uppercase text-xs tracking-widest rounded-2xl transition-all shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer whitespace-normal leading-snug text-center"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : success ? (
                     <>
-                      <CheckCircle2 className="w-5 h-5" />
-                      <span>Access Granted</span>
+                      <CheckCircle2 className="w-5 h-5 shrink-0" />
+                      <span>{t("adm_login_granted", "Access Granted")}</span>
                     </>
                   ) : (
                     <>
-                      <span>Verify Securely</span>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      <span>{t("adm_login_verify_btn", "Verify Securely")}</span>
+                      <ArrowRight className="w-4 h-4 shrink-0 group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
                 </button>
@@ -480,31 +490,31 @@ export default function AdminLoginForm() {
                   <button
                     type="button"
                     onClick={() => { setStep(1); setError(""); }}
-                    className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+                    className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors leading-snug"
                   >
-                    ← Change login method / number
+                    {t("adm_login_change_method", "← Change login method / number")}
                   </button>
                 </div>
               </form>
             )}
 
             {/* Footer Badges */}
-            <div className="mt-8 flex items-center justify-center gap-3">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">End-to-end encrypted</span>
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider leading-snug">{t("adm_login_e2e", "End-to-end encrypted")}</span>
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400 animate-pulse" />
-                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Firebase Auth</span>
+                <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400 animate-pulse shrink-0" />
+                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider leading-snug">Firebase Auth</span>
               </div>
             </div>
           </div>
 
           {/* Bottom Copyright */}
           <div className="text-center pt-4 relative z-10">
-            <p className="text-[11px] text-slate-400 dark:text-slate-600">
-              © {new Date().getFullYear()} TEAM CCTV Command Centre. All rights reserved.
+            <p className="text-[11px] text-slate-400 dark:text-slate-600 leading-snug">
+              © {new Date().getFullYear()} {t("adm_login_rights", "TEAM CCTV Command Centre. All rights reserved.")}
             </p>
           </div>
         </div>

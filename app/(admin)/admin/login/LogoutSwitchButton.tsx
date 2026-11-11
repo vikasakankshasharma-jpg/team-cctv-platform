@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function LogoutSwitchButton() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -40,9 +42,9 @@ export default function LogoutSwitchButton() {
     <button 
       onClick={handleLogout}
       disabled={loading}
-      className="px-6 py-3 bg-[var(--gold)] text-[#0A0E1A] font-bold rounded-xl mt-4 ml-4"
+      className="px-6 py-3 bg-[var(--gold)] text-[#0A0E1A] font-bold rounded-xl leading-snug"
     >
-      {loading ? "Logging out..." : "Logout & Switch Account"}
+      {loading ? t("adm_sb_signing_out", "Signing out...") : t("adm_login_switch", "Logout & Switch Account")}
     </button>
   );
 }

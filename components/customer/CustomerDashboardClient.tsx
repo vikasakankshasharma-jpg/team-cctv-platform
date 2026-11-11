@@ -62,8 +62,9 @@ import { SupportChatbot } from "@/components/customer/SupportChatbot";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps) {
-  const { t } = useTranslation();
-  const safeUser = user || { uid: "", name: "Valued Client", mobile: "" };
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "en" ? "en-IN" : `${locale}-IN`;
+  const safeUser = user || { uid: "", name: "", mobile: "" };
   const safeQuotes = Array.isArray(quotes) ? quotes : [];
   const router = useRouter();
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -114,15 +115,15 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-lg sm:text-2xl font-black text-zinc-900 dark:text-white truncate">
-                  {safeUser.name || "Valued Client"}
+                <h1 className="text-lg sm:text-2xl font-black text-zinc-900 dark:text-white break-words leading-snug">
+                  {safeUser.name || t("dash_valued_client", "Valued Client")}
                 </h1>
                 <span className="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900 text-[10px] sm:text-xs font-black uppercase px-2 py-0.5 rounded-full whitespace-nowrap">
                   {t("dash_role_customer", "Customer")}
                 </span>
               </div>
               <p className="text-xs sm:text-sm font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
-                {safeUser.mobile ? `+91 ${safeUser.mobile}` : "Authenticated Customer"}
+                {safeUser.mobile ? `+91 ${safeUser.mobile}` : t("dash_auth_customer", "Authenticated Customer")}
               </p>
             </div>
           </div>
@@ -130,23 +131,23 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
           <div className="flex flex-row flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-start sm:justify-end">
             <Link
               href="/customer/support"
-              className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap hover:bg-emerald-100 dark:hover:bg-emerald-900"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-normal leading-snug hover:bg-emerald-100 dark:hover:bg-emerald-900"
             >
               <Headphones className="w-4 h-4 shrink-0" />
               {t("dash_nav_support", "Support")}
             </Link>
-            <Link href="/customer/profile" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap hover:bg-zinc-200 dark:hover:bg-zinc-700"><User className="w-4 h-4 shrink-0" />{t("dash_nav_profile", "Profile")}</Link>
-            <Link href="/customer/documents" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap hover:bg-indigo-100 dark:hover:bg-indigo-900"><FileText className="w-4 h-4 shrink-0" />{t("dash_nav_documents", "Documents")}</Link><Link href="/customer/amc" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap hover:bg-emerald-100 dark:hover:bg-emerald-900"><ShieldCheck className="w-4 h-4 shrink-0" />{t("dash_nav_warranties", "Warranties & AMC")}</Link>
+            <Link href="/customer/profile" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-normal leading-snug hover:bg-zinc-200 dark:hover:bg-zinc-700"><User className="w-4 h-4 shrink-0" />{t("dash_nav_profile", "Profile")}</Link>
+            <Link href="/customer/documents" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-normal leading-snug hover:bg-indigo-100 dark:hover:bg-indigo-900"><FileText className="w-4 h-4 shrink-0" />{t("dash_nav_documents", "Documents")}</Link><Link href="/customer/amc" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-normal leading-snug hover:bg-emerald-100 dark:hover:bg-emerald-900"><ShieldCheck className="w-4 h-4 shrink-0" />{t("dash_nav_warranties", "Warranties & AMC")}</Link>
             <Link
               href="/wizard"
-              className="flex-1 sm:flex-none flex items-center justify-center text-center bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm whitespace-nowrap"
+              className="flex-1 sm:flex-none flex items-center justify-center text-center bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm whitespace-normal leading-snug"
             >
               {t("dash_nav_new_quote", "+ New Quotation")}
             </Link>
             <button
               onClick={handleLogout}
               disabled={loggingOut}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-normal text-center leading-snug"
             >
               <LogOut className="w-4 h-4 shrink-0" />
               <span>{loggingOut ? t("dash_nav_logging_out", "Signing out...") : t("dash_nav_logout", "Log Out")}</span>
@@ -267,7 +268,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                 <FileText className="w-8 h-8" />
               </div>
               <h3 className="text-base font-bold text-zinc-900 dark:text-white mb-1">
-                No active bookings yet.
+                {t("dash_no_active", "No active bookings currently underway.")}
               </h3>
 
             </div>
@@ -285,8 +286,8 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           {q.quoteId}
                           <button
                             onClick={() => handleCopy(q.quoteId)}
-                            title="Copy Quote ID"
-                            aria-label="Copy Quote ID"
+                            title={t("dash_copy_qid", "Copy Quote ID")}
+                            aria-label={t("dash_copy_qid", "Copy Quote ID")}
                             className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
                           >
                             {copiedId === q.quoteId ? (
@@ -321,7 +322,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                       <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500 dark:text-zinc-400">
                         <span className="flex items-center gap-1.5">
                           <Calendar className="w-4 h-4 text-zinc-400" />
-                          {new Date(q.createdAt).toLocaleDateString("en-IN", {
+                          {new Date(q.createdAt).toLocaleDateString(dateLocale, {
                             day: "numeric",
                             month: "short",
                             year: "numeric",
@@ -356,7 +357,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                         {/* Review / View Quote */}
                         <Link
                           href={`/quote/${q.leadId}/review/${q.quoteId}`}
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-nowrap"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-normal text-center leading-snug"
                         >
                           <FileText className="w-4 h-4 text-zinc-500 shrink-0" />
                           <span>{t("dash_btn_view_quote", "View Quote")}</span>
@@ -367,7 +368,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           href={`/api/quote/${q.quoteId}/download`}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-nowrap"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-normal text-center leading-snug"
                         >
                           <Download className="w-4 h-4 text-zinc-500 shrink-0" />
                           <span>{t("dash_btn_download_pdf", "Download PDF")}</span>
@@ -378,7 +379,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                       {q.isPaid && (
                         <Link
                           href={`/track/${q.leadId}`}
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 text-xs font-black transition-all whitespace-nowrap"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 text-xs font-black transition-all whitespace-normal text-center leading-snug"
                         >
                           <Truck className="w-4 h-4 shrink-0" />
                           <span>{t("dash_btn_track_status", "Track Status")}</span>
@@ -393,7 +394,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           href={`/api/invoice/${q.quoteId}/download`}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all whitespace-nowrap"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all whitespace-normal text-center leading-snug"
                         >
                           <Download className="w-4 h-4 shrink-0" />
                           <span>{(q.amountDue ?? 0) > 0 ? t("dash_btn_booking_receipt", "Booking Receipt") : t("dash_btn_tax_invoice", "Tax Invoice")}</span>
@@ -418,7 +419,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                 onClick={() => setVisibleBooked(prev => prev + 5)}
                 className="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-6 py-2.5 rounded-xl font-bold text-xs transition-colors"
               >
-                Load More Bookings ({bookedQuotes.length - visibleBooked} remaining)
+                {t("dash_load_more_bookings", "Load More Bookings ({count} remaining)", { count: String(bookedQuotes.length - visibleBooked) })}
               </button>
             </div>
           )}
@@ -441,14 +442,14 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                 <FileText className="w-8 h-8" />
               </div>
               <h3 className="text-base font-bold text-zinc-900 dark:text-white mb-1">
-                No pending quotations.
+                {t("dash_no_pending_short", "No pending quotations.")}
               </h3>
               <Link
                 href="/wizard"
-                className="inline-flex items-center gap-2 mt-4 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all"
+                className="inline-flex items-center gap-2 mt-4 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all whitespace-normal text-center leading-snug"
               >
-                Get Free Instant Quote
-                <ChevronRight className="w-4 h-4" />
+                {t("dash_get_free_quote", "Get Free Instant Quote")}
+                <ChevronRight className="w-4 h-4 shrink-0" />
               </Link>
             </div>
           ) : (
@@ -465,8 +466,8 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           {q.quoteId}
                           <button
                             onClick={() => handleCopy(q.quoteId)}
-                            title="Copy Quote ID"
-                            aria-label="Copy Quote ID"
+                            title={t("dash_copy_qid", "Copy Quote ID")}
+                            aria-label={t("dash_copy_qid", "Copy Quote ID")}
                             className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
                           >
                             {copiedId === q.quoteId ? (
@@ -501,7 +502,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                       <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500 dark:text-zinc-400">
                         <span className="flex items-center gap-1.5">
                           <Calendar className="w-4 h-4 text-zinc-400" />
-                          {new Date(q.createdAt).toLocaleDateString("en-IN", {
+                          {new Date(q.createdAt).toLocaleDateString(dateLocale, {
                             day: "numeric",
                             month: "short",
                             year: "numeric",
@@ -528,7 +529,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                         {/* Review / View Quote */}
                         <Link
                           href={`/quote/${q.leadId}/review/${q.quoteId}`}
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-nowrap"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-normal text-center leading-snug"
                         >
                           <FileText className="w-4 h-4 text-zinc-500 shrink-0" />
                           <span>{t("dash_btn_view_quote", "View Quote")}</span>
@@ -539,7 +540,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           href={`/api/quote/${q.quoteId}/download`}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-nowrap"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-normal text-center leading-snug"
                         >
                           <Download className="w-4 h-4 text-zinc-500 shrink-0" />
                           <span>{t("dash_btn_download_pdf", "Download PDF")}</span>
@@ -550,7 +551,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                       {q.isPaid && (
                         <Link
                           href={`/track/${q.leadId}`}
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 text-xs font-black transition-all whitespace-nowrap"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 text-xs font-black transition-all whitespace-normal text-center leading-snug"
                         >
                           <Truck className="w-4 h-4 shrink-0" />
                           <span>{t("dash_btn_track_status", "Track Status")}</span>
@@ -565,7 +566,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           href={`/api/invoice/${q.quoteId}/download`}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all whitespace-nowrap"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all whitespace-normal text-center leading-snug"
                         >
                           <Download className="w-4 h-4 shrink-0" />
                           <span>{(q.amountDue ?? 0) > 0 ? t("dash_btn_booking_receipt", "Booking Receipt") : t("dash_btn_tax_invoice", "Tax Invoice")}</span>
@@ -584,7 +585,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                         </span>
                       </div>
                       <h4 className="text-sm font-bold text-zinc-900 dark:text-white">{t("dash_offer_title", "Get 2% Instant Discount on Full Payment, or choose Easy EMIs!")}</h4>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{t("dash_offer_desc", "Select a payment plan that fits your budget.")}</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{t("dash_offer_desc", "Choose a payment option that suits you.")}</p>
                     </div>
                     <Link
                       href={`/quote/${q.leadId}/review/${q.quoteId}`}
@@ -603,7 +604,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                 onClick={() => setVisibleUnbooked(prev => prev + 5)}
                 className="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-6 py-2.5 rounded-xl font-bold text-xs transition-colors"
               >
-                Load More Quotations ({unbookedQuotes.length - visibleUnbooked} remaining)
+                {t("dash_load_more_quotes", "Load More Quotations ({count} remaining)", { count: String(unbookedQuotes.length - visibleUnbooked) })}
               </button>
             </div>
           )}
@@ -640,7 +641,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           <div className="flex flex-wrap items-center gap-3">
                             <span className="font-mono text-xs font-black bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-lg text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
                               {q.quoteId}
-                              <button onClick={() => handleCopy(q.quoteId)} title="Copy Quote ID" aria-label="Copy Quote ID">
+                              <button onClick={() => handleCopy(q.quoteId)} title={t("dash_copy_qid", "Copy Quote ID")} aria-label={t("dash_copy_qid", "Copy Quote ID")}>
                                 {copiedId === q.quoteId ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300" />}
                               </button>
                             </span>
@@ -662,7 +663,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500 dark:text-zinc-400">
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3.5 h-3.5" />
-                              {new Date(q.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                              {new Date(q.createdAt).toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" })}
                             </span>
                             <span className="flex items-center gap-1 font-bold text-zinc-700 dark:text-zinc-300">
                               <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
@@ -670,20 +671,20 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                             </span>
                             {q.discountAmount > 0 && (
                               <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                                Saved ₹{q.discountAmount.toLocaleString("en-IN")} (2% Off)
+                                {t("dash_saved_2pct", "Saved ₹{amt} (2% Off)", { amt: q.discountAmount.toLocaleString("en-IN") })}
                               </span>
                             )}
-                            <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded uppercase">Fully Paid</span>
+                            <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded uppercase">{t("track_fully_paid", "Fully Paid")}</span>
                           </div>
                         </div>
 
                         {/* Right Actions */}
                         <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 w-full lg:w-auto">
-                          <Link href={`/quote/${q.leadId}/review/${q.quoteId}`} className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-nowrap">
-                            <ExternalLink className="w-4 h-4" /> View Details
+                          <Link href={`/quote/${q.leadId}/review/${q.quoteId}`} className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-normal text-center leading-snug">
+                            <ExternalLink className="w-4 h-4 shrink-0" /> {t("dash_view_details", "View Details")}
                           </Link>
-                          <a href={`/api/invoice/${q.quoteId}/download`} target="_blank" rel="noreferrer" className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-xs font-black transition-all whitespace-nowrap">
-                            <Download className="w-4 h-4" /> Tax Invoice
+                          <a href={`/api/invoice/${q.quoteId}/download`} target="_blank" rel="noreferrer" className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-xs font-black transition-all whitespace-normal text-center leading-snug">
+                            <Download className="w-4 h-4 shrink-0" /> {t("dash_btn_tax_invoice", "Tax Invoice")}
                           </a>
                         </div>
                       </div>
@@ -719,7 +720,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
               {t("dash_help_call", "Call: +91 73576 12865")}
             </a>
             <a
-              href={`https://wa.me/917357612865?text=${encodeURIComponent("Hi TEAM CCTV, I need support with my CCTV installation.")}`}
+              href={`https://wa.me/917357612865?text=${encodeURIComponent(t("dash_wa_prefill", "Hi TEAM CCTV, I need support with my CCTV installation."))}`}
               target="_blank"
               rel="noreferrer"
               className="flex-1 sm:flex-none text-center bg-emerald-500 hover:bg-emerald-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-black text-xs transition-all shadow flex items-center justify-center gap-1.5"

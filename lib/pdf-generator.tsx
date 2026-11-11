@@ -1,9 +1,9 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Font } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
 import type { PricingResult, Lead, AppSettings } from '@/types';
-
-// Register a more modern font if possible, or stick to Helvetica/Bold for stability
-// Font.register({ family: 'Inter', src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff' });
+import { ensurePdfFontsForLocale, normalizePdfLocale } from '@/lib/pdf/pdf-fonts-indic';
+import { formatHardwarePackageTitle, getPdfLabels } from '@/lib/pdf/pdf-i18n';
+import { SPEECH_LOCALE_MAP } from '@/lib/i18n/mapping';
 
 const styles = StyleSheet.create({
   page: {
@@ -167,83 +167,96 @@ interface QuotePDFProps {
   settings: AppSettings;
   quoteId: string;
   sharedToNumber?: string;  // Secondary recipient number for WhatsApp share
+  locale?: string;
 }
 
-export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumber }: QuotePDFProps) {
-  const dateStr = new Date().toLocaleDateString('en-IN', {
+export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumber, locale }: QuotePDFProps) {
+  const pdfLocale = normalizePdfLocale(locale || (lead as any)?.preferred_language || (quote as any)?.preferred_language);
+  const pdfFont = ensurePdfFontsForLocale(pdfLocale);
+  const L = getPdfLabels(pdfLocale);
+  const dateStr = new Date().toLocaleDateString(SPEECH_LOCALE_MAP[pdfLocale] || 'en-IN', {
     day: '2-digit', month: 'long', year: 'numeric'
+  });
+  const hardwareTitle = formatHardwarePackageTitle({
+    ...quote,
+    ...((quote as any)?.requirement || {}),
   });
 
   return (
     <Document title={`TEAM_CCTV_Quote_${quoteId}`}>
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={[styles.page, { fontFamily: pdfFont }]}>
         
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.brandName}>{settings.company_name}</Text>
-            <Text style={styles.brandSlogan}>Professional Security Infrastructure</Text>
+            <Text style={[styles.brandName, pdfLocale !== 'en' ? { letterSpacing: 0 } : {}]}>{settings.company_name}</Text>
+            <Text style={[styles.brandSlogan, pdfLocale !== 'en' ? { letterSpacing: 0, textTransform: 'none' } : {}]}>Professional Security Infrastructure</Text>
           </View>
           <View style={styles.headerMeta}>
-            <Text style={styles.quoteTitle}>QUOTATION</Text>
+            <Text style={styles.quoteTitle}>{L.quotationTitle}</Text>
             <Text style={styles.quoteSub}>#{quoteId.toUpperCase().slice(0, 8)}</Text>
-            <Text style={[styles.quoteSub, { marginTop: 4 }]}>Date: {dateStr}</Text>
+            <Text style={[styles.quoteSub, { marginTop: 4 }]}>{L.dateIssued}: {dateStr}</Text>
           </View>
         </View>
 
         {/* Customer & Project Info */}
         <View style={styles.infoGrid}>
           <View style={styles.infoCol}>
-            <Text style={styles.infoLabel}>Prepared For</Text>
+            <Text style={[styles.infoLabel, pdfLocale !== 'en' ? { textTransform: 'none' } : {}]}>{L.preparedFor}</Text>
             <Text style={styles.infoValue}>{lead.customer_name}</Text>
             <Text style={{ fontSize: 9, color: '#64748b', marginTop: 4 }}>+91 {lead.mobile_number}</Text>
             {lead.address && (
               <View style={{ marginTop: 6, borderTop: '1px solid #e2e8f0', paddingTop: 6 }}>
-                <Text style={{ fontSize: 8, color: '#475569', fontWeight: 'bold' }}>SITE ADDRESS:</Text>
+                <Text style={{ fontSize: 8, color: '#475569', fontWeight: 'bold' }}>{L.installationSite}:</Text>
                 <Text style={{ fontSize: 8, color: '#64748b' }}>{lead.address.pincode}, {lead.address.full_address}</Text>
                 <Text style={{ fontSize: 7, color: '#888' }}>Landmark: {lead.address.landmark1}</Text>
                 <Text style={{ fontSize: 7, color: '#94a3b8' }}>{lead.address.landmark2}</Text>
                 <Text style={{ fontSize: 7, color: '#cbd5e1', marginTop: 2 }}>GPS: {lead.address.coordinates?.lat?.toFixed(4)}, {lead.address.coordinates?.lng?.toFixed(4)}</Text>
               </View>
             )}
-            {!lead.address && <Text style={{ fontSize: 9, color: '#64748b' }}>{lead.property_type.toUpperCase()} Setup</Text>}
+            {!lead.address && <Text style={{ fontSize: 9, color: '#64748b' }}>{(lead?.property_type || 'Property').toUpperCase()} Setup</Text>}
           </View>
           <View style={styles.infoCol}>
-            <Text style={styles.infoLabel}>System Details</Text>
-            <Text style={styles.infoValue}>{quote.technology} Surveillance</Text>
-            <Text style={{ fontSize: 9, color: '#64748b', marginTop: 4 }}>Level: {quote.plan_type.toUpperCase()}</Text>
-            <Text style={{ fontSize: 9, color: '#64748b' }}>Setup: {lead.property_type.toUpperCase()}</Text>
+            <Text style={[styles.infoLabel, pdfLocale !== 'en' ? { textTransform: 'none' } : {}]}>{L.systemSpecs}</Text>
+            <Text style={styles.infoValue}>{quote.technology || 'Standard HD'} Surveillance</Text>
+            <Text style={{ fontSize: 9, color: '#64748b', marginTop: 4 }}>{hardwareTitle}</Text>
+            <Text style={{ fontSize: 9, color: '#64748b' }}>Site: {(lead?.property_type || 'Property').toUpperCase()}</Text>
           </View>
         </View>
 
         {/* Main Hardware Table */}
-        <Text style={styles.sectionTitle}>Hardware & Core Components</Text>
+        <Text style={styles.sectionTitle}>{L.scopeAndMaterials}</Text>
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.colDesc, styles.headerCol]}>Description</Text>
-            <Text style={[styles.colQty, styles.headerCol]}>Qty</Text>
-            <Text style={[styles.colRate, styles.headerCol]}>Rate</Text>
-            <Text style={[styles.colTotal, styles.headerCol]}>Amount</Text>
+            <Text style={[styles.colDesc, styles.headerCol]}>{L.itemDescription}</Text>
+            <Text style={[styles.colQty, styles.headerCol]}>{L.qty}</Text>
+            <Text style={[styles.colRate, styles.headerCol]}>{L.unitPrice}</Text>
+            <Text style={[styles.colTotal, styles.headerCol]}>{L.amount}</Text>
           </View>
           
-          {quote.items.map((item, i) => (
-            <View key={i} style={styles.tableRow}>
-              <Text style={styles.colDesc}>{item.display_name}</Text>
-              <Text style={styles.colQty}>{item.qty}</Text>
-              <Text style={styles.colRate}>₹{item.unit_price.toLocaleString('en-IN')}</Text>
-              <Text style={styles.colTotal}>₹{item.line_total.toLocaleString('en-IN')}</Text>
-            </View>
-          ))}
+          {(quote.items || []).map((item: any, i: number) => {
+            const qty = Number(item.qty ?? item.quantity ?? 1);
+            const unitPrice = Number(item.unit_price ?? item.unitPrice ?? 0);
+            const lineTotal = Number(item.line_total ?? qty * unitPrice);
+            return (
+              <View key={i} style={styles.tableRow}>
+                <Text style={styles.colDesc}>{item.display_name || item.name || 'CCTV Hardware'}</Text>
+                <Text style={styles.colQty}>{qty}</Text>
+                <Text style={styles.colRate}>₹{unitPrice.toLocaleString('en-IN')}</Text>
+                <Text style={styles.colTotal}>₹{lineTotal.toLocaleString('en-IN')}</Text>
+              </View>
+            );
+          })}
 
           {/* Add-ons in same table for cleaner look */}
-          {quote.addons.map((addon, i) => (
+          {(quote.addons || []).map((addon: any, i: number) => (
             <View key={`addon-${i}`} style={[styles.tableRow, { backgroundColor: '#fcfcfc' }]}>
               <Text style={[styles.colDesc, { color: '#2563eb', fontWeight: 'bold' }]}>
                 Add-on: {addon.display_name}
               </Text>
               <Text style={styles.colQty}>{addon.qty || 1}</Text>
-              <Text style={styles.colRate}>₹{(addon.price / (addon.qty || 1)).toLocaleString('en-IN')}</Text>
-              <Text style={styles.colTotal}>₹{addon.price.toLocaleString('en-IN')}</Text>
+              <Text style={styles.colRate}>₹{Math.round(Number(addon.price || 0) / (addon.qty || 1)).toLocaleString('en-IN')}</Text>
+              <Text style={styles.colTotal}>₹{Number(addon.price || 0).toLocaleString('en-IN')}</Text>
             </View>
           ))}
         </View>
@@ -253,41 +266,42 @@ export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumbe
           <View style={styles.summaryCard}>
             <View style={styles.summaryRow}>
               <Text style={styles.summLabel}>Hardware Subtotal</Text>
-              <Text style={styles.summVal}>₹{quote.base_hardware_cost.toLocaleString('en-IN')}</Text>
+              <Text style={styles.summVal}>₹{Number(quote.base_hardware_cost ?? (quote as any).pricingSnapshot?.gross_subtotal ?? 0).toLocaleString('en-IN')}</Text>
             </View>
-            {quote.labor_cost > 0 && (
+            {(quote.labor_cost || 0) > 0 && (
               <View style={styles.summaryRow}>
                 <Text style={styles.summLabel}>Installation & Labor</Text>
                 <Text style={styles.summVal}>₹{quote.labor_cost.toLocaleString('en-IN')}</Text>
               </View>
             )}
-            {quote.cabling_cost > 0 && (
+            {(quote.cabling_cost || 0) > 0 && (
               <View style={styles.summaryRow}>
                 <Text style={styles.summLabel}>Estimated Cabling</Text>
                 <Text style={styles.summVal}>₹{quote.cabling_cost.toLocaleString('en-IN')}</Text>
               </View>
             )}
-            {quote.referral_discount > 0 && (
+            {(quote.referral_discount || 0) > 0 && (
               <View style={styles.summaryRow}>
                 <Text style={[styles.summLabel, { color: '#16a34a' }]}>Referral Discount</Text>
                 <Text style={[styles.summVal, { color: '#16a34a' }]}>-₹{quote.referral_discount.toLocaleString('en-IN')}</Text>
               </View>
             )}
             <View style={[styles.summaryRow, { marginTop: 8, paddingTop: 8, borderTop: '1px solid #e2e8f0' }]}>
-              <Text style={styles.summLabel}>GST ({quote.gst_rate}%)</Text>
-              <Text style={styles.summVal}>₹{quote.gst_amount.toLocaleString('en-IN')}</Text>
+              <Text style={styles.summLabel}>{L.gstAt18} ({quote.gst_rate ?? 18}%)</Text>
+              <Text style={styles.summVal}>₹{Number(quote.gst_amount ?? (quote as any).pricingSnapshot?.gst_amount ?? 0).toLocaleString('en-IN')}</Text>
             </View>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Grand Total</Text>
-              <Text style={styles.totalVal}>₹{quote.total_payable.toLocaleString('en-IN')}</Text>
+              <Text style={styles.totalLabel}>{L.totalPayable}</Text>
+              <Text style={styles.totalVal}>₹{Number(quote.total_payable ?? (quote as any).pricingSnapshot?.total_payable ?? 0).toLocaleString('en-IN')}</Text>
             </View>
+            <Text style={{ fontSize: 7.5, color: '#16a34a', textAlign: 'right', marginTop: 4 }}>{L.gstInclusiveBadge}</Text>
           </View>
         </View>
 
         {/* Professional T&C and Bank Details */}
         <View style={styles.infoGrid} wrap={false}>
           <View style={[styles.infoCol, { backgroundColor: '#fff' }]}>
-            <Text style={styles.infoLabel}>Terms & Conditions</Text>
+            <Text style={[styles.infoLabel, pdfLocale !== 'en' ? { textTransform: 'none' } : {}]}>{L.termsTitle}</Text>
             <Text style={[styles.blockText, { fontSize: 8 }]}>
               1. 10% as an advance.{"\n"}
               2. 80% at the time of material received at Site and before starting Installation work.{"\n"}
@@ -297,7 +311,7 @@ export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumbe
             </Text>
           </View>
           <View style={[styles.infoCol, { backgroundColor: '#fff' }]}>
-            <Text style={styles.infoLabel}>Bank / Payment Details</Text>
+            <Text style={[styles.infoLabel, pdfLocale !== 'en' ? { textTransform: 'none' } : {}]}>{L.bankDetailsTitle}</Text>
             <Text style={[styles.blockText, { fontSize: 8 }]}>
               A/c Name: TEAM CCTV SOLUTIONS{"\n"}
               A/c No: 50200062325372 (HDFC BANK){"\n"}

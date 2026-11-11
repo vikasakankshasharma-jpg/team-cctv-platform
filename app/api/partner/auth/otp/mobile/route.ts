@@ -2,16 +2,20 @@ import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
 import { generateOtp, otpExpiresAt } from "@/lib/auth-partner";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 
 export async function POST(req: Request) {
+  let locale = resolveRequestLocale(req);
   try {
-    const { mobile } = await req.json();
+    const body = await req.json();
+    locale = resolveRequestLocale(req, body);
+    const { mobile } = body;
 
     // Normalize mobile: strip +91 prefix, keep 10 digits
     const normalized = mobile?.toString().replace(/^\+?91/, "").replace(/\D/g, "").trim();
 
     if (!normalized || normalized.length !== 10) {
-      return NextResponse.json({ error: "Please enter a valid 10-digit Indian mobile number." }, { status: 400 });
+      return NextResponse.json({ error: getApiMessage(locale, "phone_invalid") }, { status: 400 });
     }
 
     // Look up promoter by mobile_number
@@ -24,7 +28,7 @@ export async function POST(req: Request) {
 
     if (promoterSnap.empty) {
       return NextResponse.json(
-        { error: "No active partner account found with this mobile number." },
+        { error: getApiMessage(locale, "partner_not_found") },
         { status: 404 }
       );
     }
@@ -56,6 +60,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("[Partner OTP Mobile] Error:", error);
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    return NextResponse.json({ error: getApiMessage(locale, "internal_error") }, { status: 500 });
   }
 }

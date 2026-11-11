@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { AlertTriangle, RefreshCcw } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Detects if the error is caused by Next.js stale JS/CSS chunks after a new
@@ -28,6 +29,8 @@ export default function ErrorBoundary({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useTranslation();
+
   useEffect(() => {
     if (isStaleChunkError(error)) {
       // New deployment detected — silently reload to get the latest chunks.
@@ -44,7 +47,7 @@ export default function ErrorBoundary({
     return (
       <div className="min-h-screen bg-white dark:bg-zinc-950 flex flex-col items-center justify-center gap-4">
         <div className="w-8 h-8 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin" />
-        <p className="text-zinc-500 text-sm font-medium">Updating to latest version…</p>
+        <p className="text-zinc-500 text-sm font-medium">{t("err_updating", "Updating to latest version…")}</p>
       </div>
     );
   }
@@ -80,14 +83,13 @@ export default function ErrorBoundary({
         <div className="space-y-4 mb-12">
           <div className="flex items-center justify-center gap-3 mb-2">
             <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
-            <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">Something Went Wrong</span>
+            <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">{t("err_wrong", "Something Went Wrong")}</span>
           </div>
-          <h1 className="text-5xl font-black text-zinc-900 dark:text-white tracking-tighter leading-none">
-            Page <span className="text-red-600 dark:text-red-500">Error.</span>
+          <h1 className="text-5xl font-black text-zinc-900 dark:text-white tracking-tight leading-[1.15]">
+            {t("err_page", "Page")} <span className="text-red-600 dark:text-red-500">{t("err_error", "Error.")}</span>
           </h1>
           <p className="text-zinc-500 dark:text-zinc-400 font-medium text-lg leading-relaxed">
-            We hit an unexpected issue. Please try refreshing the page.
-            If the problem continues, our team has been automatically notified.
+            {t("err_msg", "We hit an unexpected issue. Please try refreshing the page. If the problem continues, our team has been automatically notified.")}
           </p>
 
           {process.env.NODE_ENV === "development" && (
@@ -105,20 +107,20 @@ export default function ErrorBoundary({
             className="group relative flex items-center justify-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 px-4 md:px-10 py-5 rounded-[24px] font-black uppercase text-[11px] tracking-[0.3em] transition-all shadow-2xl hover:scale-105 active:scale-95"
           >
             <RefreshCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-            Refresh Page
+            {t("err_refresh", "Refresh Page")}
           </button>
           <button
             onClick={() => { window.location.href = "/"; }}
             className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors text-[11px] font-bold uppercase tracking-widest"
           >
-            ← Back to Home
+            {t("err_back_home", "← Back to Home")}
           </button>
         </div>
       </div>
 
       {/* Footer Signature */}
       <div className="absolute bottom-10 text-[10px] font-black text-zinc-300 dark:text-zinc-800 uppercase tracking-[0.4em] pointer-events-none">
-        Elite System Integrity Protocol
+        TEAM System Integrity Protocol
       </div>
     </div>
   );

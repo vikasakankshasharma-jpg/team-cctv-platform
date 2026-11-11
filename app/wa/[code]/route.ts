@@ -81,8 +81,9 @@ export async function GET(
   }
 
   // 2. Perform 302 redirect directly into WhatsApp
+  const cleanWaNumber = String(waNumber).replace(/\D/g, "") || "919982549315";
   const message = `Hi ${cleanCode}`;
-  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
+  const waUrl = `https://wa.me/${cleanWaNumber}?text=${encodeURIComponent(message)}`;
 
   return NextResponse.redirect(waUrl, { status: 302 });
 }

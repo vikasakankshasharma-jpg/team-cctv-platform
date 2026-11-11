@@ -5,11 +5,13 @@ import { SupportPanel } from "@/components/customer/SupportPanel";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { TranslatedText } from "@/components/shared/TranslatedText";
+import { getServerLocale, getServerTranslations } from "@/lib/i18n/server-locale";
+import { buildPageMetadata } from "@/lib/i18n/seo-metadata";
 
-export const metadata: Metadata = {
-  title: "Support | TEAM CCTV",
-  description: "Raise a support ticket, view warranty information, and get help.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata("customer_support", await getServerLocale());
+}
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +21,8 @@ export default async function CustomerSupportPage() {
   if (!session.isAuthenticated) {
     redirect("/customer/login?redirect=/customer/support");
   }
+
+  const { t } = await getServerTranslations();
 
   const uid = session.user?.uid || session.uid || "";
   let phoneNumber = session.user?.phone_number;
@@ -34,7 +38,7 @@ export default async function CustomerSupportPage() {
 
   const rawMobile = phoneNumber ? String(phoneNumber).replace(/\D/g, "").slice(-10) : "";
   
-  let customerName = session.user?.name || "Valued Client";
+  let customerName = session.user?.name || t("dash_valued_client", "Valued Client");
   let customerPhone = rawMobile;
   const warranties: any[] = [];
   const activeTickets: any[] = [];
@@ -125,7 +129,7 @@ export default async function CustomerSupportPage() {
           className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
+          <TranslatedText tKey="doc_back_dash" defaultText="Back to Dashboard" />
         </Link>
         
         <SupportPanel 

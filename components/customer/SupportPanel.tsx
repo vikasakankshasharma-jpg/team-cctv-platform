@@ -4,8 +4,11 @@ import { useState } from "react";
 import { ShieldCheck, ShieldAlert, Wrench, FileText, CheckCircle2, ChevronRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { extractErrorMessage } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function SupportPanel({ customerInfo, warranties, activeTickets }: { customerInfo: any, warranties: any[], activeTickets: any[] }) {
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "en" ? "en-IN" : `${locale}-IN`;
   const [isRaising, setIsRaising] = useState(false);
   const [selectedWarranty, setSelectedWarranty] = useState<any>(warranties[0] || null);
   const [issueCategory, setIssueCategory] = useState("camera_offline");
@@ -13,7 +16,7 @@ export function SupportPanel({ customerInfo, warranties, activeTickets }: { cust
 
   const handleSubmit = async () => {
     if (!issueDesc || issueDesc.length < 10) {
-      toast.error("Please provide a detailed description (at least 10 characters)");
+      toast.error(t("sup_err_desc", "Please provide a detailed description (at least 10 characters)"));
       return;
     }
 
@@ -35,14 +38,14 @@ export function SupportPanel({ customerInfo, warranties, activeTickets }: { cust
 
       const data = await res.json();
       if (data.success) {
-        toast.success(`Ticket Created! ID: ${data.ticketNumber}`);
+        toast.success(t("sup_ticket_created", "Ticket Created! ID: {id}", { id: data.ticketNumber }));
         setIssueDesc("");
         // In a real app, you'd trigger a router refresh or local state update here
       } else {
-        toast.error(extractErrorMessage(data, "Failed to create support ticket"));
+        toast.error(extractErrorMessage(data, t("sup_err_create", "Failed to create support ticket")));
       }
     } catch (e) {
-      toast.error(extractErrorMessage(e, "An error occurred"));
+      toast.error(extractErrorMessage(e, t("sup_err_gen", "An error occurred")));
     } finally {
       setIsRaising(false);
     }
@@ -51,12 +54,12 @@ export function SupportPanel({ customerInfo, warranties, activeTickets }: { cust
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 shrink-0">
           <Wrench className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-2xl font-black text-gray-900">Support & AMC</h2>
-          <p className="text-sm font-medium text-gray-500">Manage your warranties and request repairs</p>
+          <h2 className="text-2xl font-black text-gray-900">{t("sup_title", "Support & AMC")}</h2>
+          <p className="text-sm font-medium text-gray-500">{t("sup_sub", "Manage your warranties and request repairs")}</p>
         </div>
       </div>
 
@@ -64,11 +67,11 @@ export function SupportPanel({ customerInfo, warranties, activeTickets }: { cust
         
         {/* Left Side: Warranties */}
         <div className="space-y-4">
-          <h3 className="text-lg font-bold text-gray-900">My Active Systems</h3>
+          <h3 className="text-lg font-bold text-gray-900">{t("sup_my_sys", "My Active Systems")}</h3>
           {warranties.length === 0 ? (
             <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center">
               <ShieldAlert className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm font-bold text-gray-500">No active warranties found.</p>
+              <p className="text-sm font-bold text-gray-500">{t("sup_no_war", "No active warranties found.")}</p>
             </div>
           ) : (
             warranties.map(w => {
@@ -83,26 +86,26 @@ export function SupportPanel({ customerInfo, warranties, activeTickets }: { cust
                   onClick={() => setSelectedWarranty(w)}
                   className={`border-2 rounded-2xl p-5 cursor-pointer transition-all ${selectedWarranty?.id === w.id ? 'border-blue-500 bg-blue-50/50' : 'border-gray-100 hover:border-gray-200 bg-white'}`}
                 >
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex justify-between items-start gap-2 mb-4">
                     <div>
                       <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                        {isExpired ? <ShieldAlert className="w-4 h-4 text-red-500"/> : <ShieldCheck className="w-4 h-4 text-emerald-500"/>}
-                        System Cover (Quote #{w.quote_id.slice(-6)})
+                        {isExpired ? <ShieldAlert className="w-4 h-4 text-red-500 shrink-0"/> : <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0"/>}
+                        <span>{t("sup_cover_q", "System Cover (Quote #{id})", { id: w.quote_id.slice(-6) })}</span>
                       </h4>
-                      <p className="text-xs text-gray-500 mt-1">Expires: {new Date(w.expires_at).toLocaleDateString()}</p>
+                      <p className="text-xs text-gray-500 mt-1">{t("sup_expires", "Expires:")} {new Date(w.expires_at).toLocaleDateString(dateLocale)}</p>
                     </div>
                     {isExpired ? (
-                       <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Expired</span>
+                       <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider shrink-0">{t("sup_expired", "Expired")}</span>
                     ) : (
-                       <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Active</span>
+                       <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider shrink-0">{t("sup_active", "Active")}</span>
                     )}
                   </div>
 
                   {/* AMC Progress Bar */}
                   <div className="space-y-2 pt-4 border-t border-gray-200/60">
                     <div className="flex justify-between text-xs font-bold">
-                      <span className="text-gray-600">Free AMC Visits</span>
-                      <span className={amcLeft > 0 ? "text-emerald-600" : "text-amber-600"}>{amcLeft} Remaining</span>
+                      <span className="text-gray-600">{t("sup_free_visits", "Free AMC Visits")}</span>
+                      <span className={amcLeft > 0 ? "text-emerald-600" : "text-amber-600"}>{amcLeft} {t("sup_remaining", "Remaining")}</span>
                     </div>
                     <div className="flex gap-1 h-2">
                       {Array.from({ length: amcTotal }).map((_, i) => (
@@ -110,7 +113,7 @@ export function SupportPanel({ customerInfo, warranties, activeTickets }: { cust
                       ))}
                     </div>
                     <p className="text-[10px] text-gray-500 font-medium">
-                      {amcLeft === 0 ? "Hardware covered. Visit labor is chargeable." : "Hardware and labor are fully covered."}
+                      {amcLeft === 0 ? t("sup_hw_labor_ch", "Hardware covered. Visit labor is chargeable.") : t("sup_hw_labor_ok", "Hardware and labor are fully covered.")}
                     </p>
                   </div>
                 </div>
@@ -121,15 +124,15 @@ export function SupportPanel({ customerInfo, warranties, activeTickets }: { cust
           {/* Active Tickets Mini-View */}
           {activeTickets.length > 0 && (
              <div className="pt-6">
-                <h3 className="text-sm font-bold text-gray-900 mb-3">Recent Requests</h3>
+                <h3 className="text-sm font-bold text-gray-900 mb-3">{t("sup_recent", "Recent Requests")}</h3>
                 <div className="space-y-2">
                   {activeTickets.map(tkt => (
-                     <div key={tkt.id} className="bg-white border border-gray-100 p-3 rounded-xl flex justify-between items-center">
-                        <div>
+                     <div key={tkt.id} className="bg-white border border-gray-100 p-3 rounded-xl flex justify-between items-center gap-2">
+                        <div className="min-w-0">
                            <div className="text-xs font-bold text-gray-900">{tkt.ticket_number}</div>
                            <div className="text-[10px] text-gray-500 truncate max-w-[200px]">{tkt.issue_description}</div>
                         </div>
-                        <span className="text-[10px] font-bold uppercase bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                        <span className="text-[10px] font-bold uppercase bg-blue-100 text-blue-700 px-2 py-1 rounded shrink-0">
                            {tkt.status}
                         </span>
                      </div>
@@ -141,42 +144,42 @@ export function SupportPanel({ customerInfo, warranties, activeTickets }: { cust
 
         {/* Right Side: Raise Ticket Form */}
         <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm h-fit sticky top-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Request Service</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">{t("sup_req_svc", "Request Service")}</h3>
           
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-700">Issue Category</label>
+              <label className="text-xs font-bold text-gray-700">{t("sup_issue_cat", "Issue Category")}</label>
               <select 
                 value={issueCategory} 
                 onChange={e => setIssueCategory(e.target.value)}
                 className="w-full text-sm p-3 border-2 border-gray-100 rounded-xl outline-none focus:border-blue-500 bg-gray-50 font-medium"
               >
-                <option value="camera_offline">Camera Offline / No Signal</option>
-                <option value="dvr_beeping">DVR/NVR Beeping continuously</option>
-                <option value="app_not_working">Mobile App not working</option>
-                <option value="wiring_issue">Wiring damaged / cut</option>
-                <option value="other">Other issue</option>
+                <option value="camera_offline">{t("sup_cat_off", "Camera Offline / No Signal")}</option>
+                <option value="dvr_beeping">{t("sup_cat_beep", "DVR/NVR Beeping continuously")}</option>
+                <option value="app_not_working">{t("sup_cat_app", "Mobile App not working")}</option>
+                <option value="wiring_issue">{t("sup_cat_wire", "Wiring damaged / cut")}</option>
+                <option value="other">{t("sup_cat_other", "Other issue")}</option>
               </select>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-700">Description of Issue</label>
+              <label className="text-xs font-bold text-gray-700">{t("sup_desc_lbl", "Description of Issue")}</label>
               <textarea 
                 value={issueDesc}
                 onChange={e => setIssueDesc(e.target.value)}
-                placeholder="Please describe exactly what's wrong..."
+                placeholder={t("sup_desc_ph", "Please describe exactly what's wrong...")}
                 className="w-full text-sm p-3 border-2 border-gray-100 rounded-xl outline-none focus:border-blue-500 bg-gray-50 font-medium h-32 resize-none"
               />
             </div>
 
             {selectedWarranty && (
                <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 text-xs">
-                 <strong className="text-blue-900 block mb-1">Billing Estimate:</strong>
+                 <strong className="text-blue-900 block mb-1">{t("sup_bill_est", "Billing Estimate:")}</strong>
                  {new Date(selectedWarranty.expires_at) < new Date() 
-                   ? <span className="text-amber-700">Your system is out of warranty. Inspection & repair charges will apply.</span>
+                   ? <span className="text-amber-700">{t("sup_est_out", "Your system is out of warranty. Inspection & repair charges will apply.")}</span>
                    : (selectedWarranty.total_amc_visits_allowed - selectedWarranty.amc_visits_used) > 0
-                     ? <span className="text-emerald-700">You have a free AMC visit remaining. No visit charges will apply.</span>
-                     : <span className="text-amber-700">Your hardware is covered, but you have used all free visits. A standard visit charge (,1500) will apply.</span>
+                     ? <span className="text-emerald-700">{t("sup_est_free", "You have a free AMC visit remaining. No visit charges will apply.")}</span>
+                     : <span className="text-amber-700">{t("sup_est_paid", "Your hardware is covered, but you have used all free visits. A standard visit charge (₹1,500) will apply.")}</span>
                  }
                </div>
             )}
@@ -184,12 +187,12 @@ export function SupportPanel({ customerInfo, warranties, activeTickets }: { cust
             <button
               onClick={handleSubmit}
               disabled={isRaising}
-              className="w-full mt-4 bg-zinc-900 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-zinc-800 transition-all disabled:opacity-50 flex items-center justify-center gap-2 group"
+              className="w-full mt-4 bg-zinc-900 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-zinc-800 transition-all disabled:opacity-50 flex items-center justify-center gap-2 group whitespace-normal text-center leading-snug"
             >
               {isRaising ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                 <>
-                  Submit Request
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  {t("sup_submit", "Submit Request")}
+                  <ChevronRight className="w-4 h-4 shrink-0 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </button>

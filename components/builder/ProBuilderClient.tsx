@@ -13,6 +13,7 @@ import { WhatsAppOtpNotice } from "@/components/shared/WhatsAppOtpNotice";
 import { toast } from "sonner";
 import { extractErrorMessage } from "@/lib/utils";
 import { getUniqueCanonicalBrands, isBrandMatch } from "@/lib/brand-utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 function FilterSelect({
   value,
@@ -67,6 +68,32 @@ function FilterSelect({
 }
 
 export function ProBuilderClient() {
+  const { t } = useTranslation();
+
+  const translateNightVision = (nv: string) => {
+    const lower = nv.toLowerCase();
+    if (lower.includes("color")) return t("pb_nv_color", "Color Night Vision");
+    if (lower.includes("ir") || lower.includes("black") || lower.includes("b&w")) return t("pb_nv_bw", "IR (Black & White)");
+    return nv;
+  };
+
+  const translateCableType = (ct: string) => {
+    const lower = ct.toLowerCase();
+    if (lower.includes("coax") || lower.includes("3+1")) return t("pb_cbl_coax", "Coaxial (HD)");
+    if (lower.includes("cat6") || lower.includes("cat-6") || lower.includes("network") || lower.includes("utp")) return t("pb_cbl_cat6", "CAT6 (IP Network)");
+    if (lower.includes("electric") || lower.includes("2-core") || lower.includes("power")) return t("pb_cbl_elec", "Electric Wire");
+    if (lower.includes("fiber")) return t("pb_cbl_fiber", "Fiber Optic");
+    return ct;
+  };
+
+  const translateUpgradeType = (ut: string) => {
+    const lower = ut.toLowerCase();
+    if (lower.includes("mount") || lower.includes("bracket") || lower.includes("stand")) return t("pb_upg_mount", "Mounts & Brackets");
+    if (lower.includes("network") || lower.includes("poe") || lower.includes("switch") || lower.includes("router")) return t("pb_upg_network", "Networking & PoE");
+    if (lower.includes("rack") || lower.includes("enclosure") || lower.includes("box")) return t("pb_upg_rack", "Racks & Boxes");
+    if (lower.includes("accessor")) return t("pb_upg_acc", "Accessories");
+    return ut;
+  };
 
 const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q: number) => void, className?: string }) => {
   const [localQty, setLocalQty] = useState<string | number>(qty);
@@ -198,29 +225,29 @@ const isWirelessItem = (item: any) => {
   const STEPS = useMemo(() => {
     if (technology === "Wireless") {
       return [
-        { id: "technology", label: "Technology" },
-        { id: "camera", label: "Cameras" },
-        { id: "recorder", label: "Recorders", badge: "Optional" },
-        { id: "storage", label: "Storage", badge: "MicroSD" },
-        { id: "connector", label: "Connectors", badge: "N/A" },
-        { id: "cable", label: "Cables", badge: "Optional" },
-        { id: "power", label: "Power Device", badge: "Included" },
-        { id: "upgrades", label: "Optional Upgrades" },
-        { id: "installation", label: "Installation" }
+        { id: "technology", label: t("fcp_technology", "Technology") },
+        { id: "camera", label: t("bld_st_cameras", "Cameras") },
+        { id: "recorder", label: t("pb_step_recorders", "Recorders"), badge: t("pb_badge_opt", "Optional") },
+        { id: "storage", label: t("fcp_tab_storage", "Storage"), badge: "MicroSD" },
+        { id: "connector", label: t("pb_step_connectors", "Connectors"), badge: t("pb_badge_na", "N/A") },
+        { id: "cable", label: t("pb_step_cables", "Cables"), badge: t("pb_badge_opt", "Optional") },
+        { id: "power", label: t("pb_step_power", "Power Device"), badge: t("cmp_included", "Included") },
+        { id: "upgrades", label: t("pb_step_upgrades", "Optional Upgrades") },
+        { id: "installation", label: t("pb_step_install", "Installation") }
       ];
     }
     return [
-      { id: "technology", label: "Technology" },
-      { id: "camera", label: "Cameras", badge: wirelessCamCount > 0 ? "Hybrid" : undefined },
-      { id: "recorder", label: "Recorders" },
-      { id: "storage", label: "Storage", badge: wirelessCamCount > 0 ? "HDD + SD" : undefined },
-      { id: "connector", label: "Connectors" },
-      { id: "cable", label: "Cables" },
-      { id: "power", label: "Power Device" },
-      { id: "upgrades", label: "Optional Upgrades" },
-      { id: "installation", label: "Installation", badge: wirelessCamCount > 0 ? "Wired+WiFi" : undefined }
+      { id: "technology", label: t("fcp_technology", "Technology") },
+      { id: "camera", label: t("bld_st_cameras", "Cameras"), badge: wirelessCamCount > 0 ? t("pb_badge_hybrid", "Hybrid") : undefined },
+      { id: "recorder", label: t("pb_step_recorders", "Recorders") },
+      { id: "storage", label: t("fcp_tab_storage", "Storage"), badge: wirelessCamCount > 0 ? t("pb_badge_hdd_sd", "HDD + SD") : undefined },
+      { id: "connector", label: t("pb_step_connectors", "Connectors") },
+      { id: "cable", label: t("pb_step_cables", "Cables") },
+      { id: "power", label: t("pb_step_power", "Power Device") },
+      { id: "upgrades", label: t("pb_step_upgrades", "Optional Upgrades") },
+      { id: "installation", label: t("pb_step_install", "Installation"), badge: wirelessCamCount > 0 ? t("pb_badge_wired_wifi", "Wired+WiFi") : undefined }
     ];
-  }, [technology, wirelessCamCount]);
+  }, [technology, wirelessCamCount, t]);
 
   const activeCategory = STEPS[activeStepIndex]?.id || "technology";
 
@@ -591,7 +618,7 @@ const isWirelessItem = (item: any) => {
     // Validate phone from inline form state
     const cleanedPhone = checkoutPhone.replace(/\D/g, "").slice(-10);
     if (!existingLeadId && (cleanedPhone.length !== 10 || !/^[6-9]/.test(cleanedPhone))) {
-      setPhoneError("Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.");
+      setPhoneError(t("pb_err_phone_start", "Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9."));
       return;
     }
     setPhoneError("");
@@ -657,12 +684,12 @@ const isWirelessItem = (item: any) => {
       if (data.success) {
         router.push(data.leadId ? `/quote/${data.leadId}/review/${data.quoteId}` : `/quote/review/${data.quoteId}`);
       } else {
-        alert(data.message || "Failed to generate quotation.");
+        alert(data.message || t("pb_err_gen_quote", "Failed to generate quotation."));
         setIsGenerating(false);
       }
     } catch (e) {
       console.error(e);
-      alert("Failed to generate quotation.");
+      alert(t("pb_err_gen_quote", "Failed to generate quotation."));
       setIsGenerating(false);
     }
   };
@@ -815,7 +842,7 @@ const isWirelessItem = (item: any) => {
       const handleSendSmsOtp = async () => {
     const cleanedPhone = checkoutPhone.replace(/\D/g, "").slice(-10);
     if (!/^[6-9]\d{9}$/.test(cleanedPhone)) {
-      setPhoneError("Please enter a valid 10-digit Indian mobile number.");
+      setPhoneError(t("pb_err_phone", "Please enter a valid 10-digit Indian mobile number."));
       return;
     }
     setOtpMethod("sms");
@@ -829,14 +856,14 @@ const isWirelessItem = (item: any) => {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(extractErrorMessage(data, "Failed to send SMS OTP."));
+        throw new Error(extractErrorMessage(data, t("pb_err_sms_send", "Failed to send SMS OTP.")));
       }
       setOtpSent(true);
       setCountdown(30);
       setOtp(["", "", "", ""]);
-      toast.success("SMS OTP sent to your number.");
+      toast.success(t("pb_toast_sms_sent", "SMS OTP sent to your number."));
     } catch (error: any) {
-      setPhoneError(extractErrorMessage(error, "Failed to send SMS OTP."));
+      setPhoneError(extractErrorMessage(error, t("pb_err_sms_send", "Failed to send SMS OTP.")));
     } finally {
       setOtpLoading(false);
     }
@@ -845,11 +872,11 @@ const isWirelessItem = (item: any) => {
   const handleSendOtp = async () => {
       const cleanedPhone = checkoutPhone.replace(/\D/g, "").slice(-10);
       if (!checkoutName.trim()) {
-        setPhoneError("Please enter your name.");
+        setPhoneError(t("pb_err_name", "Please enter your name."));
         return;
       }
       if (cleanedPhone.length !== 10 || !/^[6-9]/.test(cleanedPhone)) {
-        setPhoneError("Please enter a valid 10-digit Indian mobile number.");
+        setPhoneError(t("pb_err_phone", "Please enter a valid 10-digit Indian mobile number."));
         return;
       }
       setPhoneError("");
@@ -864,14 +891,14 @@ const isWirelessItem = (item: any) => {
         const data = await res.json();
         
         if (!res.ok) {
-          throw new Error(extractErrorMessage(data, "Failed to send OTP."));
+          throw new Error(extractErrorMessage(data, t("pb_err_otp_send", "Failed to send OTP.")));
         }
         
         setOtpSent(true);
         setCountdown(30);
         setOtp(["", "", "", ""]);
       } catch (error: any) {
-        setPhoneError(extractErrorMessage(error, "Failed to send OTP. Please try again."));
+        setPhoneError(extractErrorMessage(error, t("pb_err_otp_retry", "Failed to send OTP. Please try again.")));
       } finally {
         setOtpLoading(false);
       }
@@ -880,7 +907,7 @@ const isWirelessItem = (item: any) => {
     const handleVerifyOtp = async () => {
       const code = otp.join("");
       if (code.length !== 4) {
-        setPhoneError("Please enter the 4-digit OTP.");
+        setPhoneError(t("pb_err_otp_enter", "Please enter the 4-digit OTP."));
         return;
       }
       setPhoneError("");
@@ -896,12 +923,12 @@ const isWirelessItem = (item: any) => {
         const data = await res.json();
         
         if (!res.ok) {
-          throw new Error(extractErrorMessage(data, "Invalid OTP code."));
+          throw new Error(extractErrorMessage(data, t("pb_err_otp_invalid", "Invalid OTP code.")));
         }
         
         setIsLeadCaptured(true);
       } catch (error: any) {
-        setPhoneError(extractErrorMessage(error, "Invalid OTP code."));
+        setPhoneError(extractErrorMessage(error, t("pb_err_otp_invalid", "Invalid OTP code.")));
         setOtp(["", "", "", ""]); // Reset OTP on failure
       } finally {
         setOtpLoading(false);
@@ -933,14 +960,14 @@ const isWirelessItem = (item: any) => {
           
           <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center text-xs text-gray-500 font-medium">
             <button onClick={() => router.push("/")} className="flex items-center gap-1 hover:text-gray-900 transition-colors">
-              <X className="w-3.5 h-3.5" /> Exit
+              <X className="w-3.5 h-3.5" /> {t("pb_exit", "Exit")}
             </button>
             <span>CCTVQuotation.com</span>
           </div>
 
           <div className="p-8 sm:p-10 space-y-6">
             <div className="text-right">
-              <span className="text-xs text-gray-400 font-medium tracking-wide">Step 1 of 1</span>
+              <span className="text-xs text-gray-400 font-medium tracking-wide">{t("pb_step_1_of_1", "Step 1 of 1")}</span>
             </div>
             
             {otpSent ? (
@@ -974,13 +1001,13 @@ const isWirelessItem = (item: any) => {
                   <Button 
                     onClick={handleVerifyOtp} 
                     disabled={otpLoading || otp.join("").length !== 4} 
-                    className="w-full h-12 sm:h-14 text-base font-bold bg-[#9b8cff] hover:bg-[#8675ff] text-white rounded-xl shadow-md"
+                    className="w-full min-h-12 sm:min-h-14 h-auto py-2.5 text-base font-bold bg-[#9b8cff] hover:bg-[#8675ff] text-white rounded-xl shadow-md whitespace-normal leading-snug"
                   >
-                    {otpLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Verify & Continue"}
+                    {otpLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t("pb_verify_cont", "Verify & Continue")}
                   </Button>
                   
                   <div className="text-center text-sm">
-                    <span className="text-gray-500 mr-1">Didn't receive code?</span>
+                    <span className="text-gray-500 mr-1">{t("pb_didnt_get_code", "Didn't receive code?")}</span>
                     <button
                       type="button"
                       disabled={countdown > 0 || otpLoading}
@@ -991,7 +1018,7 @@ const isWirelessItem = (item: any) => {
                           : "text-[#9b8cff] hover:text-[#8675ff] hover:underline"
                       }`}
                     >
-                      {countdown > 0 ? `Resend OTP in ${countdown}s` : "Resend OTP"}
+                      {countdown > 0 ? t("pb_resend_in", "Resend OTP in {s}s", { s: String(countdown) }) : t("pb_resend_otp", "Resend OTP")}
                     </button>
                   </div>
                   
@@ -1000,7 +1027,7 @@ const isWirelessItem = (item: any) => {
                       onClick={() => { setOtpSent(false); setPhoneError(""); }}
                       className="text-sm font-semibold text-gray-500 hover:text-gray-700"
                     >
-                      Change Mobile Number
+                      {t("pb_change_mobile", "Change Mobile Number")}
                     </button>
                   </div>
                 </div>
@@ -1008,26 +1035,26 @@ const isWirelessItem = (item: any) => {
             ) : (
               <div className="space-y-6 animate-in fade-in">
                 <div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-1">Final Step: Get Your Quotation</h2>
-                  <p className="text-sm text-slate-500 font-medium">Please enter your details to view your personalized CCTV options instantly.</p>
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-1 break-words">{t("pb_gate_title", "Final Step: Get Your Quotation")}</h2>
+                  <p className="text-sm text-slate-500 font-medium break-words">{t("pb_gate_sub", "Please enter your details to view your personalized CCTV options instantly.")}</p>
                 </div>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Your Name *</label>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">{t("wz_your_name_", "Your Name *")}</label>
                     <input 
                       type="text" 
-                      placeholder="e.g. Rahul Kumar" 
+                      placeholder={t("pb_ph_name", "e.g. Rahul Kumar")} 
                       value={checkoutName} 
                       onChange={(e) => { setCheckoutName(e.target.value); setPhoneError(""); }} 
                       className="w-full py-2.5 px-3.5 sm:p-3.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#9b8cff] focus:border-[#9b8cff] outline-none transition-all bg-white text-gray-900"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Mobile Number *</label>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">{t("wz_mobile_number_", "Mobile Number *")}</label>
                     <input 
                       type="tel" 
-                      placeholder="10-digit mobile number" 
+                      placeholder={t("pb_ph_mobile", "10-digit mobile number")} 
                       maxLength={10}
                       value={checkoutPhone} 
                       onChange={(e) => { setCheckoutPhone(e.target.value.replace(/\D/g, '')); setPhoneError(""); }} 
@@ -1051,10 +1078,10 @@ const isWirelessItem = (item: any) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Email (Optional)</label>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">{t("wz_email_optional", "Email (Optional)")}</label>
                     <input 
                       type="email" 
-                      placeholder="e.g. rahul@email.com" 
+                      placeholder={t("pb_ph_email", "e.g. rahul@email.com")} 
                       value={checkoutEmail} 
                       onChange={(e) => setCheckoutEmail(e.target.value)} 
                       className="w-full py-2.5 px-3.5 sm:p-3.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#9b8cff] focus:border-[#9b8cff] outline-none transition-all bg-white text-gray-900"
@@ -1063,8 +1090,8 @@ const isWirelessItem = (item: any) => {
 
                   <div className="p-3 bg-green-50/80 rounded-xl border border-green-200">
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-bold text-green-900">Referral Code (Optional)</label>
-                      <span className="text-[10px] text-green-700 font-medium">Get discount</span>
+                      <label className="text-xs font-bold text-green-900">{t("wz_referral_code_optional", "Referral Code (Optional)")}</label>
+                      <span className="text-[10px] text-green-700 font-medium">{t("pb_get_discount", "Get discount")}</span>
                     </div>
                     <input 
                       type="text" 
@@ -1077,15 +1104,15 @@ const isWirelessItem = (item: any) => {
                 </div>
 
                 <div className="pt-2 flex items-center gap-3">
-                  <Button variant="outline" onClick={() => router.push("/")} className="h-12 px-6 rounded-xl font-bold text-gray-700 border-2">
-                    Back
+                  <Button variant="outline" onClick={() => router.push("/")} className="min-h-12 h-auto py-2.5 px-6 rounded-xl font-bold text-gray-700 border-2 whitespace-normal">
+                    {t("wz_back", "Back")}
                   </Button>
                   <Button 
                     onClick={handleSendOtp}
                     disabled={otpLoading}
-                    className="flex-1 h-12 text-base font-bold bg-[#9b8cff] hover:bg-[#8675ff] text-white rounded-xl shadow-md"
+                    className="flex-1 min-h-12 h-auto py-2.5 px-4 text-base font-bold bg-[#9b8cff] hover:bg-[#8675ff] text-white rounded-xl shadow-md whitespace-normal leading-snug"
                   >
-                    {otpLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "View My CCTV Options"}
+                    {otpLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t("wz_view_cctv_options", "View My CCTV Options")}
                   </Button>
                 </div>
               </div>
@@ -1101,8 +1128,8 @@ const isWirelessItem = (item: any) => {
       <div className="flex-1 p-4 md:p-8 overflow-y-auto h-screen">
         <div className="max-w-5xl mx-auto space-y-8 pb-32">
           <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Pro Builder</h1>
-            <p className="text-slate-500 mt-2">Build a custom quotation item by item.</p>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight break-words">{t("pb_title", "Pro Builder")}</h1>
+            <p className="text-slate-500 mt-2 break-words">{t("pb_subtitle", "Build a custom quotation item by item.")}</p>
           </div>
 
 
@@ -1111,25 +1138,38 @@ const isWirelessItem = (item: any) => {
             <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white p-5 rounded-2xl shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-blue-400/30">
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5 font-black text-[11px] uppercase tracking-wider bg-white/20 text-white w-fit px-2.5 py-0.5 rounded-full">
-                  <Sparkles className="w-3.5 h-3.5 text-yellow-300" /> Smart Setup Assistant
+                  <Sparkles className="w-3.5 h-3.5 text-yellow-300" /> {t("pb_ssa_badge", "Smart Setup Assistant")}
                 </div>
-                <h3 className="text-base sm:text-lg font-black">
-                  Complete your {camCount}-Camera {isHybrid ? `Hybrid (${technology} + Wireless)` : technology} setup in 1-Click?
+                <h3 className="text-base sm:text-lg font-black break-words">
+                  {t("pb_ssa_title", "Complete your {count}-Camera {tech} setup in 1-Click?", {
+                    count: String(camCount),
+                    tech: isHybrid ? t("pb_ssa_hybrid_lbl", "Hybrid ({tech} + Wireless)", { tech: technology || "" }) : (technology || ""),
+                  })}
                 </h3>
-                <p className="text-xs text-blue-100 max-w-xl">
+                <p className="text-xs text-blue-100 max-w-xl break-words">
                   {technology === "Wireless"
-                    ? "Instantly bundles high-endurance 128GB MicroSD cards for all cameras, weatherproof junction boxes, and Professional Wireless Fitting & App Setup."
+                    ? t("pb_ssa_desc_wifi", "Instantly bundles high-endurance 128GB MicroSD cards for all cameras, weatherproof junction boxes, and Professional Wireless Fitting & App Setup.")
                     : isHybrid
-                      ? `Instantly bundles Surveillance HDD for your ${wiredCamCount} wired camera(s), 128GB MicroSD cards for your ${wirelessCamCount} wireless camera(s), ${technology === "IP" ? "CAT6 Cables, PoE Switch, RJ45s" : "3+1 Cables, SMPS Power, BNCs"}, junction boxes, and installation for both.`
-                      : `Instantly bundles the best matching Surveillance HDD, ${technology === "IP" ? "CAT6 Network Cables, PoE Switch" : "3+1 Cables, SMPS Power Supply"}, connectors, junction boxes, and professional installation.`
+                      ? t("pb_ssa_desc_hybrid", "Instantly bundles Surveillance HDD for your {wired} wired camera(s), 128GB MicroSD cards for your {wireless} wireless camera(s), {parts}, junction boxes, and installation for both.", {
+                          wired: String(wiredCamCount),
+                          wireless: String(wirelessCamCount),
+                          parts: technology === "IP"
+                            ? t("pb_ssa_parts_wired_ip", "CAT6 Network Cables, PoE Switch")
+                            : t("pb_ssa_parts_wired_hd", "3+1 Cables, SMPS Power Supply"),
+                        })
+                      : t("pb_ssa_desc_wired", "Instantly bundles the best matching Surveillance HDD, {parts}, connectors, junction boxes, and professional installation.", {
+                          parts: technology === "IP"
+                            ? t("pb_ssa_parts_ip", "CAT6 Cables, PoE Switch, RJ45s")
+                            : t("pb_ssa_parts_hd", "3+1 Cables, SMPS Power, BNCs"),
+                        })
                   }
                 </p>
               </div>
               <Button
                 onClick={handleAutoCompleteSetup}
-                className="bg-white hover:bg-blue-50 text-blue-900 font-black text-sm rounded-xl px-5 py-3 shadow-lg hover:shadow-xl shrink-0 transition-all active:scale-95"
+                className="bg-white hover:bg-blue-50 text-blue-900 font-black text-sm rounded-xl px-5 py-3 min-h-11 h-auto shadow-lg hover:shadow-xl shrink-0 transition-all active:scale-95 whitespace-normal text-center leading-snug"
               >
-                <Sparkles className="w-4 h-4 mr-1.5 text-blue-600" /> Auto-Complete Setup
+                <Sparkles className="w-4 h-4 mr-1.5 text-blue-600 shrink-0" /> {t("pb_auto_btn", "Auto-Complete Setup")}
               </Button>
             </div>
           )}
@@ -1149,7 +1189,7 @@ const isWirelessItem = (item: any) => {
                       : "bg-slate-50 text-slate-400 border border-slate-100 cursor-not-allowed"
                 }`}
               >
-                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] ${
+                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] shrink-0 ${
                   activeStepIndex === idx ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
                 }`}>
                   {idx + 1}
@@ -1159,7 +1199,7 @@ const isWirelessItem = (item: any) => {
                   <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
                     activeStepIndex === idx 
                       ? "bg-white/20 text-white" 
-                      : step.badge === "N/A"
+                      : step.id === "connector"
                         ? "bg-slate-100 text-slate-400"
                         : "bg-blue-50 text-blue-600 border border-blue-200"
                   }`}>
@@ -1173,8 +1213,8 @@ const isWirelessItem = (item: any) => {
           {activeStepIndex === 0 ? (
             <div className="py-6 md:py-12">
               <div className="text-center mb-8">
-                <h2 className="text-3xl font-black text-slate-900">Choose Your Base Technology</h2>
-                <p className="text-slate-500 mt-2">This will automatically filter all compatible cameras and recorders.</p>
+                <h2 className="text-3xl font-black text-slate-900 break-words">{t("pb_choose_tech_h", "Choose Your Base Technology")}</h2>
+                <p className="text-slate-500 mt-2 break-words">{t("pb_choose_tech_sub", "This will automatically filter all compatible cameras and recorders.")}</p>
               </div>
               <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
                 <button 
@@ -1184,14 +1224,14 @@ const isWirelessItem = (item: any) => {
                   <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
                     <Sparkles className="w-8 h-8" />
                   </div>
-                  <h3 className="text-2xl font-black text-slate-900 mb-2">IP / Network System</h3>
-                  <p className="text-slate-600 mb-6">Best for high-resolution setups, smart AI features, and easy scalability over standard network cables (CAT6).</p>
+                  <h3 className="text-2xl font-black text-slate-900 mb-2 break-words">{t("pb_ip_title", "IP / Network System")}</h3>
+                  <p className="text-slate-600 mb-6 break-words">{t("pb_ip_desc", "Best for high-resolution setups, smart AI features, and easy scalability over standard network cables (CAT6).")}</p>
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-blue-600" /> Uses NVRs (Network Video Recorders)</div>
-                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-blue-600" /> Up to 4K / 8MP+ Resolution</div>
-                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-blue-600" /> PoE (Power over Ethernet)</div>
+                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-blue-600 shrink-0" /> <span>{t("pb_ip_f1", "Uses NVRs (Network Video Recorders)")}</span></div>
+                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-blue-600 shrink-0" /> <span>{t("pb_ip_f2", "Up to 4K / 8MP+ Resolution")}</span></div>
+                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-blue-600 shrink-0" /> <span>{t("pb_ip_f3", "PoE (Power over Ethernet)")}</span></div>
                     <div className="flex items-center gap-2 text-xs font-bold text-indigo-700 bg-indigo-50 p-2 rounded-xl border border-indigo-100 mt-2">
-                      <Wifi className="w-4 h-4 text-indigo-600 shrink-0" /> Option to add Wi-Fi / 4G cameras in next step
+                      <Wifi className="w-4 h-4 text-indigo-600 shrink-0" /> <span>{t("pb_opt_add_wifi", "Option to add Wi-Fi / 4G cameras in next step")}</span>
                     </div>
                   </div>
                 </button>
@@ -1203,14 +1243,14 @@ const isWirelessItem = (item: any) => {
                   <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-6">
                     <Sparkles className="w-8 h-8" />
                   </div>
-                  <h3 className="text-2xl font-black text-slate-900 mb-2">HD / Coaxial System</h3>
-                  <p className="text-slate-600 mb-6">Cost-effective and reliable. Perfect for upgrading older analog systems using existing BNC coaxial cabling.</p>
+                  <h3 className="text-2xl font-black text-slate-900 mb-2 break-words">{t("pb_hd_title", "HD / Coaxial System")}</h3>
+                  <p className="text-slate-600 mb-6 break-words">{t("pb_hd_desc", "Cost-effective and reliable. Perfect for upgrading older analog systems using existing BNC coaxial cabling.")}</p>
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-amber-600" /> Uses DVRs (Digital Video Recorders)</div>
-                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-amber-600" /> 2MP to 5MP Resolution</div>
-                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-amber-600" /> Coaxial (3+1) Cable</div>
+                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-amber-600 shrink-0" /> <span>{t("pb_hd_f1", "Uses DVRs (Digital Video Recorders)")}</span></div>
+                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-amber-600 shrink-0" /> <span>{t("pb_hd_f2", "2MP to 5MP Resolution")}</span></div>
+                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-amber-600 shrink-0" /> <span>{t("pb_hd_f3", "Coaxial (3+1) Cable")}</span></div>
                     <div className="flex items-center gap-2 text-xs font-bold text-amber-800 bg-amber-50 p-2 rounded-xl border border-amber-200 mt-2">
-                      <Wifi className="w-4 h-4 text-amber-600 shrink-0" /> Option to add Wi-Fi / 4G cameras in next step
+                      <Wifi className="w-4 h-4 text-amber-600 shrink-0" /> <span>{t("pb_opt_add_wifi", "Option to add Wi-Fi / 4G cameras in next step")}</span>
                     </div>
                   </div>
                 </button>
@@ -1222,14 +1262,14 @@ const isWirelessItem = (item: any) => {
                   <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-6">
                     <Wifi className="w-8 h-8" />
                   </div>
-                  <h3 className="text-2xl font-black text-slate-900 mb-2">Wireless (Wi-Fi / 4G)</h3>
-                  <p className="text-slate-600 mb-6">Zero video cabling. Perfect for homes, shops, and standalone perimeter monitoring with easy phone app access.</p>
+                  <h3 className="text-2xl font-black text-slate-900 mb-2 break-words">{t("pb_wf_title", "Wireless (Wi-Fi / 4G)")}</h3>
+                  <p className="text-slate-600 mb-6 break-words">{t("pb_wf_desc", "Zero video cabling. Perfect for homes, shops, and standalone perimeter monitoring with easy phone app access.")}</p>
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-purple-600" /> Dedicated MicroSD Storage</div>
-                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-purple-600" /> Standalone App or NVR Compatible</div>
-                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-purple-600" /> Wi-Fi / 4G SIM Connectivity</div>
+                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-purple-600 shrink-0" /> <span>{t("pb_wf_f1", "Dedicated MicroSD Storage")}</span></div>
+                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-purple-600 shrink-0" /> <span>{t("pb_wf_f2", "Standalone App or NVR Compatible")}</span></div>
+                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-purple-600 shrink-0" /> <span>{t("pb_wf_f3", "Wi-Fi / 4G SIM Connectivity")}</span></div>
                     <div className="flex items-center gap-2 text-xs font-bold text-purple-800 bg-purple-50 p-2 rounded-xl border border-purple-200 mt-2">
-                      <Sparkles className="w-4 h-4 text-purple-600 shrink-0" /> Optional NVR pairing supported
+                      <Sparkles className="w-4 h-4 text-purple-600 shrink-0" /> <span>{t("pb_wf_opt_nvr", "Optional NVR pairing supported")}</span>
                     </div>
                   </div>
                 </button>
@@ -1242,31 +1282,31 @@ const isWirelessItem = (item: any) => {
                 <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 text-white shadow-lg border border-indigo-800/40 space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-[10px] font-black uppercase tracking-wider bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 px-2 py-0.5 rounded-full">
-                          System Architecture
+                          {t("pb_sys_arch", "System Architecture")}
                         </span>
                         {wirelessCamCount > 0 && (
                           <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 text-emerald-400" /> Hybrid Setup Active
+                            <Sparkles className="w-3 h-3 text-emerald-400" /> {t("pb_hybrid_active", "Hybrid Setup Active")}
                           </span>
                         )}
                       </div>
-                      <h3 className="text-base sm:text-lg font-black mt-1">Select Cameras for Your Build</h3>
-                      <p className="text-xs text-indigo-200/80">Mix wired {technology} cameras with standalone Wi-Fi / 4G cameras for complete coverage.</p>
+                      <h3 className="text-base sm:text-lg font-black mt-1 break-words">{t("pb_sel_cams_hdr", "Select Cameras for Your Build")}</h3>
+                      <p className="text-xs text-indigo-200/80 break-words">{t("pb_sel_cams_sub", "Mix wired {tech} cameras with standalone Wi-Fi / 4G cameras for complete coverage.", { tech: technology })}</p>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-white/10 p-1.5 rounded-xl border border-white/15">
+                    <div className="flex flex-wrap items-center gap-2 bg-white/10 p-1.5 rounded-xl border border-white/15">
                       <button
                         onClick={() => { setCameraSubTab("wired"); setFilterConnection("all"); }}
-                        className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
+                        className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-2 whitespace-normal text-left ${
                           cameraSubTab === "wired"
                             ? "bg-white text-slate-900 shadow-md"
                             : "text-white/80 hover:text-white hover:bg-white/10"
                         }`}
                       >
-                        <Lock className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Wired {technology} Cameras</span>
+                        <Lock className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        <span>{t("pb_wired_cams_tab", "Wired {tech} Cameras", { tech: technology })}</span>
                         {wiredCamCount > 0 && (
                           <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
                             cameraSubTab === "wired" ? "bg-blue-600 text-white" : "bg-white/20 text-white"
@@ -1278,14 +1318,14 @@ const isWirelessItem = (item: any) => {
 
                       <button
                         onClick={() => { setCameraSubTab("wireless"); setFilterConnection("all"); }}
-                        className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
+                        className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-2 whitespace-normal text-left ${
                           cameraSubTab === "wireless"
                             ? "bg-purple-600 text-white shadow-md shadow-purple-500/30"
                             : "text-white/80 hover:text-white hover:bg-white/10"
                         }`}
                       >
-                        <Wifi className="w-3.5 h-3.5 text-purple-300" />
-                        <span>+ Add Wireless / 4G</span>
+                        <Wifi className="w-3.5 h-3.5 text-purple-300 shrink-0" />
+                        <span>{t("pb_add_wf_tab", "+ Add Wireless / 4G")}</span>
                         {wirelessCamCount > 0 && (
                           <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-white text-purple-900">
                             {wirelessCamCount}
@@ -1299,8 +1339,8 @@ const isWirelessItem = (item: any) => {
                     <div className="bg-purple-950/60 border border-purple-400/30 rounded-xl p-3 text-xs text-purple-200 flex items-start gap-2.5 animate-in fade-in">
                       <Sparkles className="w-4 h-4 text-purple-300 shrink-0 mt-0.5" />
                       <div>
-                        <span className="font-bold text-white">Why add wireless cameras to a wired setup? </span>
-                        Ideal for spots where running physical cables through walls or driveways is hard (e.g. detached gate, terrace, garden, or baby room). Wireless cameras record locally onto MicroSD cards and stream live to your phone app without consuming wired ports on your {technology} recorder.
+                        <span className="font-bold text-white">{t("pb_why_wf_t", "Why add wireless cameras to a wired setup? ")}</span>
+                        {t("pb_why_wf_d", "Ideal for spots where running physical cables through walls or driveways is hard (e.g. detached gate, terrace, garden, or baby room). Wireless cameras record locally onto MicroSD cards and stream live to your phone app without consuming wired ports on your {tech} recorder.", { tech: technology })}
                       </div>
                     </div>
                   )}
@@ -1312,30 +1352,30 @@ const isWirelessItem = (item: any) => {
                 <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-4 border border-indigo-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 font-black text-xs uppercase tracking-wider text-indigo-700">
-                      <Sparkles className="w-4 h-4 text-indigo-600" /> Hybrid Storage Plan Active
+                      <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" /> {t("pb_hyb_stor_badge", "Hybrid Storage Active")}
                     </div>
-                    <p className="text-xs text-slate-700 max-w-2xl">
-                      Your build contains <strong>{wiredCamCount} wired camera(s)</strong> (record to central Surveillance HDD in recorder) and <strong>{wirelessCamCount} wireless camera(s)</strong> (record to dedicated MicroSD cards). Please ensure both storage types are selected below.
+                    <p className="text-xs text-slate-700 max-w-2xl break-words">
+                      {t("pb_hyb_stor_desc", "Your build contains {wired} wired camera(s) (record to central Surveillance HDD in recorder) and {wireless} wireless camera(s) (record to dedicated MicroSD cards). Please ensure both storage types are selected below.", { wired: String(wiredCamCount), wireless: String(wirelessCamCount) })}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-indigo-200 shrink-0">
+                  <div className="flex flex-wrap items-center gap-1.5 bg-white p-1 rounded-xl border border-indigo-200 max-w-full">
                     <button
                       onClick={() => setStorageSubTab("all")}
                       className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${storageSubTab === "all" ? "bg-indigo-600 text-white" : "text-slate-600 hover:text-slate-900"}`}
                     >
-                      All Storage
+                      {t("pb_all_storage", "All Storage")}
                     </button>
                     <button
                       onClick={() => setStorageSubTab("hdd")}
                       className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${storageSubTab === "hdd" ? "bg-indigo-600 text-white" : "text-slate-600 hover:text-slate-900"}`}
                     >
-                      Surveillance HDDs ({wiredCamCount} Wired)
+                      {t("pb_hdd_tab", "Surveillance HDDs ({count} Wired)", { count: String(wiredCamCount) })}
                     </button>
                     <button
                       onClick={() => setStorageSubTab("sd")}
                       className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${storageSubTab === "sd" ? "bg-indigo-600 text-white" : "text-slate-600 hover:text-slate-900"}`}
                     >
-                      MicroSD Cards ({wirelessCamCount} Wireless)
+                      {t("pb_sd_tab", "MicroSD Cards ({count} Wireless)", { count: String(wirelessCamCount) })}
                     </button>
                   </div>
                 </div>
@@ -1344,9 +1384,9 @@ const isWirelessItem = (item: any) => {
               {activeCategory === "connector" && isHybrid && (
                 <div className="bg-blue-50 rounded-2xl p-3.5 border border-blue-200 shadow-sm flex items-start gap-2.5 text-xs text-blue-900">
                   <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold">Hybrid Connector Sizing: </span>
-                    Recommended quantities below are calculated for your <strong>{wiredCamCount} wired camera(s)</strong> only. Wireless cameras do not require video cable connectors.
+                  <div className="break-words">
+                    <span className="font-bold">{t("pb_hyb_conn_t", "Hybrid Connector Sizing: ")}</span>
+                    {t("pb_hyb_conn_d", "Quantities below are calculated for your {wired} wired camera(s) only. Wireless cameras do not require video cable connectors.", { wired: String(wiredCamCount) })}
                   </div>
                 </div>
               )}
@@ -1354,9 +1394,9 @@ const isWirelessItem = (item: any) => {
               {activeCategory === "cable" && isHybrid && (
                 <div className="bg-blue-50 rounded-2xl p-3.5 border border-blue-200 shadow-sm flex items-start gap-2.5 text-xs text-blue-900">
                   <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold">Hybrid Cabling Sizing: </span>
-                    Cable bundles below cover your <strong>{wiredCamCount} wired camera(s)</strong>. Your <strong>{wirelessCamCount} wireless camera(s)</strong> transmit video over Wi-Fi / 4G and need no video cables.
+                  <div className="break-words">
+                    <span className="font-bold">{t("pb_hyb_cbl_t", "Hybrid Cabling Sizing: ")}</span>
+                    {t("pb_hyb_cbl_d", "Cable bundles below cover your {wired} wired camera(s). Your {wireless} wireless camera(s) transmit video over Wi-Fi / 4G and need no video cables.", { wired: String(wiredCamCount), wireless: String(wirelessCamCount) })}
                   </div>
                 </div>
               )}
@@ -1365,12 +1405,12 @@ const isWirelessItem = (item: any) => {
                 <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 rounded-2xl p-4 border border-emerald-200 shadow-sm flex items-start gap-3 text-xs sm:text-sm">
                   <Sparkles className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                   <div className="space-y-1">
-                    <div className="font-black text-slate-900 flex items-center gap-2">
-                      <span>Zero Video Cabling Required (Wireless Wi-Fi / 4G)</span>
-                      <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-bold">100% Wire-Free Video</span>
+                    <div className="font-black text-slate-900 flex flex-wrap items-center gap-2">
+                      <span>{t("pb_wf_cbl_t", "Zero Video Cabling Required (Wireless Wi-Fi / 4G)")}</span>
+                      <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-bold">{t("pb_wf_cbl_badge", "100% Wire-Free Video")}</span>
                     </div>
-                    <p className="text-slate-600 text-xs leading-relaxed">
-                      Wireless cameras transmit video digitally over Wi-Fi/4G without any 3+1 coaxial or CAT6 LAN cables. If your camera installation spots lack nearby 220V wall sockets, add <strong>2-Core Copper Electrical Power Wire</strong> below to power them from your switchboard.
+                    <p className="text-slate-600 text-xs leading-relaxed break-words">
+                      {t("pb_wf_cbl_d", "Wireless cameras transmit video digitally over Wi-Fi/4G without any 3+1 coaxial or CAT6 LAN cables. If your camera installation spots lack nearby 220V wall sockets, add 2-Core Copper Electrical Power Wire below to power them from your switchboard.")}
                     </p>
                   </div>
                 </div>
@@ -1379,9 +1419,9 @@ const isWirelessItem = (item: any) => {
               {activeCategory === "power" && isHybrid && (
                 <div className="bg-blue-50 rounded-2xl p-3.5 border border-blue-200 shadow-sm flex items-start gap-2.5 text-xs text-blue-900">
                   <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold">Hybrid Power Sizing: </span>
-                    Power supplies below are sized for your <strong>{wiredCamCount} wired camera(s)</strong>. Your <strong>{wirelessCamCount} wireless camera(s)</strong> come with their individual certified power adapters included in the box.
+                  <div className="break-words">
+                    <span className="font-bold">{t("pb_hyb_pwr_t", "Hybrid Power Sizing: ")}</span>
+                    {t("pb_hyb_pwr_d", "Power supplies below are sized for your {wired} wired camera(s). Your {wireless} wireless camera(s) come with their individual certified power adapters included in the box.", { wired: String(wiredCamCount), wireless: String(wirelessCamCount) })}
                   </div>
                 </div>
               )}
@@ -1391,10 +1431,10 @@ const isWirelessItem = (item: any) => {
                   <Sparkles className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
                   <div className="space-y-1">
                     <div className="font-black text-slate-900">
-                      Hybrid Installation Available
+                      {t("pb_hyb_ins_t", "Hybrid Installation Available")}
                     </div>
-                    <p className="text-slate-600 text-xs">
-                      Select <strong>{technology} Standard Installation</strong> for your {wiredCamCount} wired cameras (includes cabling, conduit fitting, camera mounting & recorder setup), and <strong>Smart Wi-Fi Camera Wall Mounting & App Pairing</strong> for your {wirelessCamCount} wireless camera(s).
+                    <p className="text-slate-600 text-xs break-words">
+                      {t("pb_hyb_ins_d", "Select {tech} Standard Installation for your {wired} wired cameras (includes cabling, conduit fitting, camera mounting & recorder setup), and Smart Wi-Fi Camera Wall Mounting & App Pairing for your {wireless} wireless camera(s).", { tech: technology || "", wired: String(wiredCamCount), wireless: String(wirelessCamCount) })}
                     </p>
                   </div>
                 </div>
@@ -1407,7 +1447,7 @@ const isWirelessItem = (item: any) => {
                   <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="text"
-                    placeholder={`Search in ${STEPS.find(c => c.id === activeCategory)?.label}...`}
+                    placeholder={t("pb_search_ph", "Search in {label}...", { label: STEPS.find(c => c.id === activeCategory)?.label || "" })}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-10 pr-9 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
@@ -1416,7 +1456,7 @@ const isWirelessItem = (item: any) => {
                     <button 
                       onClick={() => setSearchQuery("")}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                      title="Clear search"
+                      title={t("pb_clr_search", "Clear search")}
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -1430,11 +1470,11 @@ const isWirelessItem = (item: any) => {
                     <FilterSelect
                       value={filterConnection}
                       onChange={setFilterConnection}
-                      ariaLabel="Filter by connection"
+                      ariaLabel={t("pb_flt_conn", "Filter by connection")}
                       options={[
-                        { value: "all", label: "Connection: All" },
-                        ...(filterOptions.hasWifi ? [{ value: "wifi", label: "Wi-Fi (Home/Office)" }] : []),
-                        ...(filterOptions.has4G ? [{ value: "4g", label: "4G SIM (Cellular)" }] : []),
+                        { value: "all", label: t("pb_flt_conn_all", "Connection: All") },
+                        ...(filterOptions.hasWifi ? [{ value: "wifi", label: t("pb_flt_conn_wifi", "Wi-Fi (Home/Office)") }] : []),
+                        ...(filterOptions.has4G ? [{ value: "4g", label: t("pb_flt_conn_4g", "4G SIM (Cellular)") }] : []),
                       ]}
                     />
                   )}
@@ -1444,13 +1484,13 @@ const isWirelessItem = (item: any) => {
                     <FilterSelect
                       value={filterType}
                       onChange={setFilterType}
-                      ariaLabel="Filter by camera type"
+                      ariaLabel={t("pb_flt_type", "Filter by camera type")}
                       options={[
-                        { value: "all", label: "Type: All" },
-                        ...(filterOptions.hasDomes ? [{ value: "dome", label: "Dome (Indoor)" }] : []),
-                        ...(filterOptions.hasBullets ? [{ value: "bullet", label: "Bullet (Outdoor)" }] : []),
-                        ...(filterOptions.hasPTZ ? [{ value: "ptz", label: "360° Pan-Tilt (PTZ)" }] : []),
-                        ...(filterOptions.hasMultiLens ? [{ value: "multi_lens", label: "Multi-Lens (Dual)" }] : []),
+                        { value: "all", label: t("pb_flt_type_all", "Type: All") },
+                        ...(filterOptions.hasDomes ? [{ value: "dome", label: t("pb_type_dome", "Dome (Indoor)") }] : []),
+                        ...(filterOptions.hasBullets ? [{ value: "bullet", label: t("pb_type_bullet", "Bullet (Outdoor)") }] : []),
+                        ...(filterOptions.hasPTZ ? [{ value: "ptz", label: t("pb_type_ptz", "360° Pan-Tilt (PTZ)") }] : []),
+                        ...(filterOptions.hasMultiLens ? [{ value: "multi_lens", label: t("pb_type_dual", "Multi-Lens (Dual)") }] : []),
                       ]}
                     />
                   )}
@@ -1460,9 +1500,9 @@ const isWirelessItem = (item: any) => {
                     <FilterSelect
                       value={filterRes}
                       onChange={setFilterRes}
-                      ariaLabel="Filter by resolution"
+                      ariaLabel={t("pb_flt_res", "Resolution")}
                       options={[
-                        { value: "all", label: "Resolution: All" },
+                        { value: "all", label: t("pb_flt_res_all", "Resolution: All") },
                         ...filterOptions.resolutions.map(r => ({ value: r, label: r })),
                       ]}
                     />
@@ -1473,10 +1513,10 @@ const isWirelessItem = (item: any) => {
                     <FilterSelect
                       value={filterNightVision}
                       onChange={setFilterNightVision}
-                      ariaLabel="Filter by night vision"
+                      ariaLabel={t("pb_flt_nv", "Night Vision")}
                       options={[
-                        { value: "all", label: "Vision: All" },
-                        ...filterOptions.nightVisions.map(nv => ({ value: nv, label: nv })),
+                        { value: "all", label: t("pb_flt_nv_all", "Vision: All") },
+                        ...filterOptions.nightVisions.map(nv => ({ value: nv, label: translateNightVision(nv) })),
                       ]}
                     />
                   )}
@@ -1486,10 +1526,10 @@ const isWirelessItem = (item: any) => {
                     <FilterSelect
                       value={filterChannels}
                       onChange={setFilterChannels}
-                      ariaLabel="Filter by channels"
+                      ariaLabel={t("pb_flt_ch", "Channels")}
                       options={[
-                        { value: "all", label: "Channels: All" },
-                        ...filterOptions.channels.map(ch => ({ value: ch, label: `${ch} Channels` })),
+                        { value: "all", label: t("pb_flt_ch_all", "Channels: All") },
+                        ...filterOptions.channels.map(ch => ({ value: ch, label: t("pb_ch_plural", "{ch} Channels", { ch: String(ch) }) })),
                       ]}
                     />
                   )}
@@ -1499,9 +1539,9 @@ const isWirelessItem = (item: any) => {
                     <FilterSelect
                       value={filterCapacity}
                       onChange={setFilterCapacity}
-                      ariaLabel="Filter by storage capacity"
+                      ariaLabel={t("pb_flt_cap", "Capacity")}
                       options={[
-                        { value: "all", label: "Capacity: All" },
+                        { value: "all", label: t("pb_flt_cap_all", "Capacity: All") },
                         ...filterOptions.capacities.map(cap => ({ value: cap, label: cap })),
                       ]}
                     />
@@ -1512,10 +1552,10 @@ const isWirelessItem = (item: any) => {
                     <FilterSelect
                       value={filterCableType}
                       onChange={setFilterCableType}
-                      ariaLabel="Filter by cable type"
+                      ariaLabel={t("pb_flt_cbl", "Cable Type")}
                       options={[
-                        { value: "all", label: "Cable: All" },
-                        ...filterOptions.cableTypes.map(ct => ({ value: ct, label: ct })),
+                        { value: "all", label: t("pb_flt_cbl_all", "Cable: All") },
+                        ...filterOptions.cableTypes.map(ct => ({ value: ct, label: translateCableType(ct) })),
                       ]}
                     />
                   )}
@@ -1525,12 +1565,12 @@ const isWirelessItem = (item: any) => {
                     <FilterSelect
                       value={filterType}
                       onChange={setFilterType}
-                      ariaLabel="Filter by upgrade category"
+                      ariaLabel={t("pb_flt_upg", "Upgrade Type")}
                       options={[
-                        { value: "all", label: "Type: All" },
+                        { value: "all", label: t("pb_flt_upg_all", "Type: All") },
                         ...filterOptions.upgradeTypes.map(ut => ({ 
                           value: ut, 
-                          label: ut.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()) 
+                          label: translateUpgradeType(ut)
                         })),
                       ]}
                     />
@@ -1541,9 +1581,9 @@ const isWirelessItem = (item: any) => {
                     <FilterSelect
                       value={filterBrand}
                       onChange={setFilterBrand}
-                      ariaLabel="Filter by brand"
+                      ariaLabel={t("pb_flt_brand", "Brand")}
                       options={[
-                        { value: "all", label: "Brand: All" },
+                        { value: "all", label: t("pb_flt_brand_all", "Brand: All") },
                         ...filterOptions.brands.map(b => ({ value: b, label: b })),
                       ]}
                     />
@@ -1553,13 +1593,13 @@ const isWirelessItem = (item: any) => {
                   <FilterSelect
                     value={sortBy}
                     onChange={(val) => setSortBy(val as any)}
-                    ariaLabel="Sort products"
+                    ariaLabel={t("pb_sort_aria", "Sort By")}
                     icon={<ArrowUpDown className="w-3.5 h-3.5" />}
                     options={[
-                      { value: "recommended", label: "Sort: Default" },
-                      { value: "price_asc", label: "Price: Low to High" },
-                      { value: "price_desc", label: "Price: High to Low" },
-                      { value: "name_asc", label: "Name: A to Z" },
+                      { value: "recommended", label: t("pb_sort_default", "Sort: Default") },
+                      { value: "price_asc", label: t("pb_sort_low", "Price: Low to High") },
+                      { value: "price_desc", label: t("pb_sort_high", "Price: High to Low") },
+                      { value: "name_asc", label: t("pb_sort_az", "Name: A to Z") },
                     ]}
                   />
 
@@ -1567,21 +1607,21 @@ const isWirelessItem = (item: any) => {
                   {hasActiveFilters && (
                     <button
                       onClick={resetAllFilters}
-                      className="col-span-2 sm:col-span-1 px-3 py-2 text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-all whitespace-nowrap flex items-center justify-center gap-1 shadow-sm"
-                      title="Reset all filters"
+                      className="col-span-2 sm:col-span-1 px-3 py-2 text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-all flex items-center justify-center gap-1 shadow-sm whitespace-normal text-center"
+                      title={t("pb_reset_filters", "Reset Filters")}
                     >
-                      <X className="w-3.5 h-3.5" /> Reset Filters
+                      <X className="w-3.5 h-3.5 shrink-0" /> {t("pb_reset_filters", "Reset Filters")}
                     </button>
                   )}
                 </div>
 
                 {/* Counter & Status */}
-                <div className="text-[11px] font-medium text-slate-400 flex items-center justify-between pt-1">
-                  <span>Showing {filteredProducts.length} of {categoryProducts.length} items</span>
+                <div className="text-[11px] font-medium text-slate-400 flex flex-wrap items-center justify-between gap-2 pt-1">
+                  <span>{t("pb_showing_cnt", "Showing {shown} of {total} items", { shown: String(filteredProducts.length), total: String(categoryProducts.length) })}</span>
                   {hasActiveFilters && (
                     <span className="text-blue-600 font-semibold flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block animate-pulse"></span>
-                      Active filters applied
+                      {t("pb_active_filters", "Active filters applied")}
                     </span>
                   )}
                 </div>
@@ -1592,27 +1632,27 @@ const isWirelessItem = (item: any) => {
                 <div className="mb-4 bg-purple-50 border border-purple-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-purple-900">
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 font-black text-xs uppercase tracking-wider text-purple-700">
-                      <Wifi className="w-4 h-4" /> Optional Centralized IP NVRs
+                      <Wifi className="w-4 h-4 shrink-0" /> {t("pb_opt_nvr_t", "Optional Centralized IP NVRs")}
                     </div>
-                    <p className="text-xs text-purple-800 max-w-2xl">
-                      Wireless cameras record independently to MicroSD cards and stream live to your phone app. An NVR is optional only if you want centralized 24/7 continuous TV display recording.
+                    <p className="text-xs text-purple-800 max-w-2xl break-words">
+                      {t("pb_opt_nvr_d", "Wireless cameras record independently to MicroSD cards and stream live to your phone app. An NVR is optional only if you want centralized 24/7 continuous TV display recording.")}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
                     <Button 
                       onClick={() => handleStepChange(3)}
                       size="sm"
-                      className="bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl"
+                      className="bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl h-auto min-h-9 py-1.5 whitespace-normal"
                     >
-                      Skip to MicroSD &rarr;
+                      {t("pb_skip_microsd", "Skip to MicroSD →")}
                     </Button>
                     <Button 
                       variant="outline"
                       onClick={() => setShowOptionalNVRs(false)}
                       size="sm"
-                      className="border-purple-200 text-purple-700 hover:bg-purple-100/50 rounded-xl"
+                      className="border-purple-200 text-purple-700 hover:bg-purple-100/50 rounded-xl h-auto min-h-9 py-1.5 whitespace-normal"
                     >
-                      Hide NVRs
+                      {t("pb_hide_nvrs", "Hide NVRs")}
                     </Button>
                   </div>
                 </div>
@@ -1622,14 +1662,14 @@ const isWirelessItem = (item: any) => {
                 <div className="mb-4 bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-emerald-900">
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 font-black text-xs uppercase tracking-wider text-emerald-700">
-                      <Sparkles className="w-4 h-4 text-emerald-600" /> Dedicated MicroSD Storage Recommended
+                      <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" /> {t("pb_sd_sug_t", "Dedicated MicroSD Storage")}
                     </div>
-                    <p className="text-xs text-emerald-800 max-w-2xl">
-                      Each wireless camera stores video footage locally on its own high-endurance MicroSD card. 128GB provides ~15 to 20 days of motion event / continuous recording per camera.
+                    <p className="text-xs text-emerald-800 max-w-2xl break-words">
+                      {t("pb_sd_sug_d", "Each wireless camera stores video footage locally on its own high-endurance MicroSD card. 128GB provides ~15 to 20 days of motion event / continuous recording per camera.")}
                     </p>
                   </div>
-                  <div className="text-xs font-bold text-emerald-800 bg-white border border-emerald-200 px-3 py-1.5 rounded-xl shrink-0">
-                    Recommended: 1 card per camera ({camCount} cameras)
+                  <div className="text-xs font-bold text-emerald-800 bg-white border border-emerald-200 px-3 py-1.5 rounded-xl max-w-full break-words">
+                    {t("pb_sd_sug_badge", "Suggested: 1 card per camera ({count} cameras)", { count: String(camCount) })}
                   </div>
                 </div>
               )}
@@ -1638,26 +1678,26 @@ const isWirelessItem = (item: any) => {
                 <div className="mb-4 bg-purple-50 border border-purple-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-purple-900">
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 font-black text-xs uppercase tracking-wider text-purple-700">
-                      <Wifi className="w-4 h-4" /> Zero Video Cabling Needed
+                      <Wifi className="w-4 h-4 shrink-0" /> {t("pb_wf_cbl_t", "Zero Video Cabling Required (Wireless Wi-Fi / 4G)")}
                     </div>
-                    <p className="text-xs text-purple-800 max-w-2xl">
-                      Wireless cameras communicate wirelessly over Wi-Fi or 4G. Power adapters are included in the box. Pick an HDMI cable below if connecting an optional NVR to a TV/display, or proceed to the next step.
+                    <p className="text-xs text-purple-800 max-w-2xl break-words">
+                      {t("pb_wf_cbl_tip_d", "Wireless cameras communicate wirelessly over Wi-Fi or 4G. Power adapters are included in the box. Pick an HDMI cable below if connecting an optional NVR to a TV/display, or proceed to the next step.")}
                     </p>
                   </div>
                   <Button 
                     onClick={() => handleStepChange(6)}
                     size="sm"
-                    className="bg-purple-700 hover:bg-purple-800 text-white font-bold shrink-0 rounded-xl"
+                    className="bg-purple-700 hover:bg-purple-800 text-white font-bold shrink-0 rounded-xl h-auto min-h-9 py-1.5 whitespace-normal"
                   >
-                    Skip to Power &rarr;
+                    {t("pb_skip_power", "Skip to Power →")}
                   </Button>
                 </div>
               )}
 
               {technology === "Wireless" && activeCategory === "upgrades" && (
-                <div className="mb-4 bg-blue-50 border border-blue-200 rounded-2xl p-3.5 flex items-center gap-2 text-xs text-blue-900">
-                  <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span><strong>Pro Tip for Outdoor Wireless Cameras:</strong> Add Weatherproof Deep Junction Boxes to house and protect the 230V power plug from rain and weathering.</span>
+                <div className="mb-4 bg-blue-50 border border-blue-200 rounded-2xl p-3.5 flex items-start gap-2 text-xs text-blue-900">
+                  <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                  <span className="break-words"><strong>{t("pb_protip_pre", "Tip for Outdoor Wireless Cameras:")}</strong> {t("pb_protip_post", "Add Weatherproof Deep Junction Boxes to house and protect the 230V power plug from rain and weathering.")}</span>
                 </div>
               )}
 
@@ -1703,51 +1743,61 @@ const isWirelessItem = (item: any) => {
                     if (activeCategory === "connector") {
                       if (name.includes("BNC") && name.includes("DC")) {
                          autoQty = effectiveWiredCams;
-                         autoQtyLabel = `${effectiveWiredCams} pairs (1 per wired camera)`;
+                         autoQtyLabel = t("pb_qty_pairs", "{qty} pairs (1 per wired camera)", { qty: String(effectiveWiredCams) });
                       } else if (name.includes("RJ45")) {
                          autoQty = (effectiveWiredCams * 2) + 2;
-                         autoQtyLabel = `${autoQty} units (2/wired cam + 2 uplink)`;
+                         autoQtyLabel = t("pb_qty_rj45_uplink", "{qty} units (2/wired cam + 2 uplink)", { qty: String(autoQty) });
                       } else if (name.includes("BNC")) {
                          autoQty = effectiveWiredCams * 2;
-                         autoQtyLabel = `${effectiveWiredCams * 2} units (2 per wired camera)`;
+                         autoQtyLabel = t("pb_qty_wired_units2", "{qty} units (2 per wired camera)", { qty: String(effectiveWiredCams * 2) });
                       } else if (name.includes("DC")) {
                          autoQty = effectiveWiredCams;
-                         autoQtyLabel = `${effectiveWiredCams} units (1 per wired camera)`;
+                         autoQtyLabel = t("pb_qty_wired_units1", "{qty} units (1 per wired camera)", { qty: String(effectiveWiredCams) });
                       } else {
                          autoQty = effectiveWiredCams * 2;
-                         autoQtyLabel = `${effectiveWiredCams * 2} units (2 per wired camera)`;
+                         autoQtyLabel = t("pb_qty_wired_units2", "{qty} units (2 per wired camera)", { qty: String(effectiveWiredCams * 2) });
                       }
                     } else if (activeCategory === "cable") {
                       autoQty = Math.max(1, Math.ceil(effectiveWiredCams / 4));
-                      autoQtyLabel = `${autoQty} coil${autoQty > 1 ? 's' : ''} (covers ~${effectiveWiredCams * 15}m)`;
+                      autoQtyLabel = t("pb_qty_coil_m", "{qty} {unit} (covers ~{meters}m)", {
+                        qty: String(autoQty),
+                        unit: autoQty > 1 ? t("pb_coils", "coils") : t("pb_coil", "coil"),
+                        meters: String(effectiveWiredCams * 15),
+                      });
                     } else if (activeCategory === "upgrades" && (p.category === "camera_mount" || name.includes("JUNCTION") || name.includes("MOUNT"))) {
                       autoQty = camCount;
-                      autoQtyLabel = `${camCount} units (1 per camera)`;
+                      autoQtyLabel = t("pb_qty_per_cam_1", "{qty} units (1 per camera)", { qty: String(camCount) });
                     } else if (p.id === "PRO_INSTALL_DIY") {
                       autoQty = 1;
-                      autoQtyLabel = "Free Self-Setup";
+                      autoQtyLabel = t("pb_free_diy", "Free Self-Setup");
                     } else if (p.id === "PRO_INSTALL_HD" || p.id === "PRO_INSTALL_IP") {
                       autoQty = effectiveWiredCams;
-                      autoQtyLabel = `${effectiveWiredCams} units (for wired cameras)`;
+                      autoQtyLabel = t("pb_qty_wired_units", "{qty} units (for wired cameras)", { qty: String(effectiveWiredCams) });
                     } else if (p.id === "PRO_INSTALL_WIRELESS" || p.id === "labor_wireless_pro_fitting") {
                       autoQty = effectiveWirelessCams;
-                      autoQtyLabel = `${effectiveWirelessCams} units (for wireless cameras)`;
+                      autoQtyLabel = t("pb_qty_wf_units", "{qty} units (for wireless cameras)", { qty: String(effectiveWirelessCams) });
                     } else if (activeCategory === "installation" || p.category === "installation" || p.unit_multiplier === "camera_count") {
                       autoQty = camCount;
-                      autoQtyLabel = `${camCount} units (1 per camera)`;
+                      autoQtyLabel = t("pb_qty_per_cam_1", "{qty} units (1 per camera)", { qty: String(camCount) });
                     } else if (activeCategory === "power" || p.category === "power_device" || p.category === "power") {
                       const maxCams = p.max_cameras || p.channels || 0;
                       if (maxCams > 0) {
                         autoQty = Math.max(1, Math.ceil(effectiveWiredCams / maxCams));
-                        autoQtyLabel = `${autoQty} unit${autoQty > 1 ? 's' : ''} (to power ${effectiveWiredCams} wired cams)`;
+                        autoQtyLabel = t("pb_qty_pwr_units", "{qty} {unit} (to power {count} wired cams)", {
+                          qty: String(autoQty),
+                          unit: autoQty > 1 ? t("pb_units", "units") : t("pb_unit", "unit"),
+                          count: String(effectiveWiredCams),
+                        });
                       }
                     } else if (activeCategory === "storage" || p.category === "storage") {
                       if (isSdProduct) {
                         autoQty = effectiveWirelessCams;
-                        autoQtyLabel = `${effectiveWirelessCams} units (1 per ${wirelessCamCount > 0 ? 'wireless ' : ''}camera)`;
+                        autoQtyLabel = wirelessCamCount > 0
+                          ? t("pb_qty_sd_wf", "{qty} units (1 per wireless camera)", { qty: String(effectiveWirelessCams) })
+                          : t("pb_qty_per_cam_1", "{qty} units (1 per camera)", { qty: String(effectiveWirelessCams) });
                       } else {
                         autoQty = 1;
-                        autoQtyLabel = "1 unit (for central recorder)";
+                        autoQtyLabel = t("pb_qty_hdd_rec", "1 unit (for central recorder)");
                       }
                     }
                   }
@@ -1759,9 +1809,9 @@ const isWirelessItem = (item: any) => {
                           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
                             {p.brand || "Generic"}
                           </span>
-                          {p.technologies && p.technologies.map((t: string) => (
-                            <span key={t} className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-                              {t}
+                          {p.technologies && p.technologies.map((tech: string) => (
+                            <span key={tech} className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                              {tech}
                             </span>
                           ))}
                         </div>
@@ -1770,37 +1820,37 @@ const isWirelessItem = (item: any) => {
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {p.derivedFormFactor === "dome" && (
                             <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">
-                              Dome (Indoor)
+                              {t("pb_badge_dome", "Dome (Indoor)")}
                             </span>
                           )}
                           {p.derivedFormFactor === "bullet" && (
                             <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
-                              Bullet (Outdoor)
+                              {t("pb_badge_bullet", "Bullet (Outdoor)")}
                             </span>
                           )}
                           {p.derivedFormFactor === "ptz" && (
                             <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">
-                              360° PTZ (Pan-Tilt)
+                              {t("pb_badge_ptz", "360° PTZ (Pan-Tilt)")}
                             </span>
                           )}
                           {p.is4G && (
                             <span className="text-[10px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">
-                              4G SIM
+                              {t("pb_badge_4g", "4G SIM")}
                             </span>
                           )}
                           {p.isWifi && (
                             <span className="text-[10px] font-bold text-cyan-700 bg-cyan-50 border border-cyan-200 px-2 py-0.5 rounded-full">
-                              Wi-Fi
+                              {t("pb_badge_wifi", "Wi-Fi")}
                             </span>
                           )}
                           {p.isMultiLens && (
                             <span className="text-[10px] font-bold text-fuchsia-700 bg-fuchsia-50 border border-fuchsia-200 px-2 py-0.5 rounded-full">
-                              Multi-Lens (Dual)
+                              {t("pb_badge_dual", "Multi-Lens (Dual)")}
                             </span>
                           )}
                           {p.hasSpeaker && (
                             <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
-                              Inbuilt Speaker
+                              {t("pb_speaker", "Inbuilt Speaker")}
                             </span>
                           )}
                           {p.derivedResolution && (
@@ -1810,49 +1860,49 @@ const isWirelessItem = (item: any) => {
                           )}
                           {p.derivedNightVision && (
                             <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">
-                              {p.derivedNightVision}
+                              {translateNightVision(p.derivedNightVision)}
                             </span>
                           )}
                           {p.derivedCableType && (
                             <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full">
-                              {p.derivedCableType}
+                              {translateCableType(p.derivedCableType)}
                             </span>
                           )}
                         </div>
 
-                        <h4 className="font-bold text-slate-900 leading-snug">{p.display_name}</h4>
+                        <h4 className="font-bold text-slate-900 leading-snug break-words">{p.display_name}</h4>
                         
                         {/* Auto-Quantity Smart Badge */}
                         {autoQty > 0 && (
-                          <div className="flex items-center gap-1 mt-1.5 mb-1.5">
-                            <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                            <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full inline-block">
-                              Recommended: {autoQtyLabel}
+                          <div className="flex items-start gap-1 mt-1.5 mb-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                            <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full inline-block break-words max-w-full">
+                              {t("pb_suggested_badge", "Suggested: {label}", { label: autoQtyLabel })}
                             </span>
                           </div>
                         )}
-                        {p.channels && <p className="text-xs text-slate-500 font-medium">{p.channels} Channels</p>}
+                        {p.channels && <p className="text-xs text-slate-500 font-medium">{t("pb_ch_plural", "{ch} Channels", { ch: String(p.channels) })}</p>}
 
-                        {/* Recommendation Badges */}
+                        {/* Suggested Fit Badges */}
                         {isRecommendedStorage && (
-                          <div className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 text-emerald-600 shrink-0" /> {isSdProduct ? "Recommended MicroSD: 128GB (~15-20 days backup)" : `Recommended HDD for ${effectiveWiredCams} wired cams (~15-30 days backup)`}
+                          <div className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md flex items-start gap-1 break-words">
+                            <Sparkles className="w-3 h-3 text-emerald-600 shrink-0 mt-0.5" /> <span>{isSdProduct ? t("pb_sug_sd_note", "Suggested MicroSD: 128GB (~15-20 days backup)") : t("pb_sug_hdd_note", "Suggested HDD for {count} wired cams (~15-30 days backup)", { count: String(effectiveWiredCams) })}</span>
                           </div>
                         )}
                         {isRecommendedRecorder && (
-                          <div className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 text-blue-600 shrink-0" /> Best fit for {effectiveWiredCams} wired cameras
+                          <div className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md flex items-start gap-1 break-words">
+                            <Sparkles className="w-3 h-3 text-blue-600 shrink-0 mt-0.5" /> <span>{t("pb_best_fit_rec", "Best fit for {count} wired cameras", { count: String(effectiveWiredCams) })}</span>
                           </div>
                         )}
                         {isUnderCapacityRecorder && (
-                          <div className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-md flex items-start gap-1">
-                            <span className="shrink-0 mt-0.5">⚠️</span> <span>Under capacity for {effectiveWiredCams} wired cameras. You will need multiple units.</span>
+                          <div className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-md flex items-start gap-1 break-words">
+                            <span className="shrink-0 mt-0.5">⚠️</span> <span>{t("pb_under_cap_rec", "Under capacity for {count} wired cameras. You will need multiple units.", { count: String(effectiveWiredCams) })}</span>
                           </div>
                         )}
 
                         <div className="text-lg font-black text-slate-900 pt-1">
-                          INR {p.unit_price.toLocaleString('en-IN')}
-                          {p.unit_multiplier === "camera_count" && <span className="text-[10px] text-slate-400 ml-1">/ cam</span>}
+                          ₹{p.unit_price.toLocaleString('en-IN')}
+                          {p.unit_multiplier === "camera_count" && <span className="text-[10px] text-slate-400 ml-1">{t("pb_per_cam", "/ cam")}</span>}
                         </div>
                       </div>
                       
@@ -1864,8 +1914,8 @@ const isWirelessItem = (item: any) => {
                             <button onClick={() => addItem(p)} className="w-8 h-8 flex items-center justify-center bg-white text-blue-600 rounded-lg shadow-sm font-black">+</button>
                           </div>
                         ) : (
-                          <Button onClick={() => addItem(p, autoQty > 0 ? autoQty : 1)} className="w-full bg-slate-900 text-white hover:bg-slate-800 rounded-xl shadow-md">
-                            Add to Quote
+                          <Button onClick={() => addItem(p, autoQty > 0 ? autoQty : 1)} className="w-full min-h-10 h-auto py-2 px-3 bg-slate-900 text-white hover:bg-slate-800 rounded-xl shadow-md whitespace-normal text-center leading-snug">
+                            {t("pb_add_quote", "Add to Quote")}
                           </Button>
                         )}
                       </div>
@@ -1881,26 +1931,26 @@ const isWirelessItem = (item: any) => {
                           <Wifi className="w-8 h-8" />
                         </div>
                         <span className="text-[11px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 px-3 py-1 rounded-full inline-block mb-3">
-                          Standalone Mobile App Architecture
+                          {t("pb_wf_arch_tag", "Standalone Mobile App Architecture")}
                         </span>
-                        <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">No NVR or DVR Recorder Required!</h3>
-                        <p className="text-sm text-slate-600 max-w-xl mx-auto mb-6 leading-relaxed">
-                          Your Wi-Fi & 4G cameras connect directly to your home/office Wi-Fi router or cellular SIM card. They record independently onto high-speed MicroSD memory cards and stream live to your smartphone app anywhere in the world.
+                        <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2 break-words">{t("pb_no_rec_req_t", "No NVR or DVR Recorder Required!")}</h3>
+                        <p className="text-sm text-slate-600 max-w-xl mx-auto mb-6 leading-relaxed break-words">
+                          {t("pb_no_rec_req_d", "Your Wi-Fi & 4G cameras connect directly to your home/office Wi-Fi router or cellular SIM card. They record independently onto high-speed MicroSD memory cards and stream live to your smartphone app anywhere in the world.")}
                         </p>
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                        <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3">
                           <Button 
                             onClick={() => handleStepChange(3)}
-                            className="w-full sm:w-auto bg-purple-700 hover:bg-purple-800 text-white font-bold px-6 py-3 rounded-xl shadow-md flex items-center justify-center gap-2"
+                            className="w-full sm:w-auto min-h-11 h-auto py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-bold px-6 rounded-xl shadow-md flex items-center justify-center gap-2 whitespace-normal text-center"
                           >
-                            <span>Skip to MicroSD Storage (Recommended)</span>
-                            <ArrowRight className="w-4 h-4" />
+                            <span>{t("pb_skip_sd_main", "Skip to MicroSD Storage")}</span>
+                            <ArrowRight className="w-4 h-4 shrink-0" />
                           </Button>
                           <Button 
                             variant="outline"
                             onClick={() => setShowOptionalNVRs(true)}
-                            className="w-full sm:w-auto border-purple-300 text-purple-800 hover:bg-purple-50 font-bold px-5 py-3 rounded-xl"
+                            className="w-full sm:w-auto min-h-11 h-auto py-2.5 border-purple-300 text-purple-800 hover:bg-purple-50 font-bold px-5 rounded-xl whitespace-normal text-center"
                           >
-                            View Compatible IP NVRs (Optional)
+                            {t("pb_view_opt_nvrs", "View Compatible IP NVRs (Optional)")}
                           </Button>
                         </div>
                       </div>
@@ -1910,18 +1960,18 @@ const isWirelessItem = (item: any) => {
                           <Sparkles className="w-8 h-8" />
                         </div>
                         <span className="text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full inline-block mb-3">
-                          Zero Connectors Needed
+                          {t("pb_zero_conn_tag", "Zero Connectors Needed")}
                         </span>
-                        <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">No Video Connectors Required</h3>
-                        <p className="text-sm text-slate-600 max-w-xl mx-auto mb-6 leading-relaxed">
-                          Wireless Wi-Fi and 4G cameras transmit video data digitally over radio frequencies and mobile cellular networks. Unlike wired HD (BNC/DC) or IP (RJ45) systems, wireless cameras do not need crimped video connectors.
+                        <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2 break-words">{t("pb_no_conn_t", "No Video Connectors Required")}</h3>
+                        <p className="text-sm text-slate-600 max-w-xl mx-auto mb-6 leading-relaxed break-words">
+                          {t("pb_no_conn_d", "Wireless Wi-Fi and 4G cameras transmit video data digitally over radio frequencies and mobile cellular networks. Unlike wired HD (BNC/DC) or IP (RJ45) systems, wireless cameras do not need crimped video connectors.")}
                         </p>
                         <Button 
                           onClick={() => handleStepChange(5)}
-                          className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-xl shadow-md flex items-center gap-2 mx-auto"
+                          className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 min-h-11 h-auto rounded-xl shadow-md flex items-center gap-2 mx-auto whitespace-normal text-center"
                         >
-                          <span>Proceed to Cables (Optional)</span>
-                          <ArrowRight className="w-4 h-4" />
+                          <span>{t("pb_go_cables_opt", "Continue to Cables (Optional)")}</span>
+                          <ArrowRight className="w-4 h-4 shrink-0" />
                         </Button>
                       </div>
                     ) : technology === "Wireless" && activeCategory === "power" ? (
@@ -1930,28 +1980,28 @@ const isWirelessItem = (item: any) => {
                           <Sparkles className="w-8 h-8" />
                         </div>
                         <span className="text-[11px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 px-3 py-1 rounded-full inline-block mb-3">
-                          Power Adapters Included
+                          {t("pb_pwr_inc_tag", "Power Adapters Included")}
                         </span>
-                        <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">Dedicated Power Adapters Included in Box</h3>
-                        <p className="text-sm text-slate-600 max-w-xl mx-auto mb-6 leading-relaxed">
-                          Every Wi-Fi & 4G camera includes its manufacturer-certified 12V/5V DC power adapter (or integrated battery/solar panel) inside the box. No centralized CCTV SMPS power box or PoE network switch is required!
+                        <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2 break-words">{t("pb_pwr_inc_h", "Dedicated Power Adapters Included in Box")}</h3>
+                        <p className="text-sm text-slate-600 max-w-xl mx-auto mb-6 leading-relaxed break-words">
+                          {t("pb_pwr_inc_d", "Every Wi-Fi & 4G camera includes its manufacturer-certified 12V/5V DC power adapter (or integrated battery/solar panel) inside the box. No centralized CCTV SMPS power box or PoE network switch is required!")}
                         </p>
                         <Button 
                           onClick={() => handleStepChange(7)}
-                          className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-xl shadow-md flex items-center gap-2 mx-auto"
+                          className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 min-h-11 h-auto rounded-xl shadow-md flex items-center gap-2 mx-auto whitespace-normal text-center"
                         >
-                          <span>Proceed to Optional Upgrades</span>
-                          <ArrowRight className="w-4 h-4" />
+                          <span>{t("pb_go_upgrades", "Continue to Optional Upgrades")}</span>
+                          <ArrowRight className="w-4 h-4 shrink-0" />
                         </Button>
                       </div>
                     ) : (
                       <div className="col-span-full py-6 md:py-12 text-center bg-white rounded-2xl border border-dashed border-slate-200 p-4 md:p-8">
                         <Filter className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-600 font-bold">No products match your filters</p>
-                        <p className="text-xs text-slate-400 mt-1">Try clearing or adjusting your search and filter options.</p>
+                        <p className="text-slate-600 font-bold break-words">{t("pb_no_match_t", "No products match your filters")}</p>
+                        <p className="text-xs text-slate-400 mt-1 break-words">{t("pb_no_match_d", "Try clearing a few filters or changing your search keyword.")}</p>
                         {hasActiveFilters && (
-                          <Button onClick={resetAllFilters} variant="outline" size="sm" className="mt-4 text-blue-600 border-blue-200 hover:bg-blue-50">
-                            Clear All Filters
+                          <Button onClick={resetAllFilters} variant="outline" size="sm" className="mt-4 text-blue-600 border-blue-200 hover:bg-blue-50 h-auto min-h-9 py-1.5 whitespace-normal">
+                            {t("pb_clear_all", "Clear All Filters")}
                           </Button>
                         )}
                       </div>
@@ -1965,33 +2015,33 @@ const isWirelessItem = (item: any) => {
                   <div className="sticky bottom-0 -mx-4 md:-mx-8 px-4 md:px-8 py-4 bg-white/90 backdrop-blur-md border-t border-slate-200 z-30 mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
                     
                     {/* Mobile Cart Toggle */}
-                    <div className="md:hidden flex items-center justify-between w-full mb-2">
-                      <div>
-                        <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Cart Total ({items.length})</div>
-                        <div className="text-lg font-black text-slate-900">INR {getTotal().toLocaleString('en-IN')}</div>
+                    <div className="md:hidden flex items-center justify-between gap-2 w-full mb-2">
+                      <div className="min-w-0">
+                        <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{t("pb_cart_total_cnt", "Cart Total ({count})", { count: String(items.length) })}</div>
+                        <div className="text-lg font-black text-slate-900">₹{getTotal().toLocaleString('en-IN')}</div>
                       </div>
-                      <Button onClick={() => setShowMobileCart(true)} variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 h-10 px-4 rounded-xl font-bold flex items-center gap-2">
-                        <ShoppingCart className="w-4 h-4" /> View Cart
+                      <Button onClick={() => setShowMobileCart(true)} variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 min-h-10 h-auto py-2 px-4 rounded-xl font-bold flex items-center gap-2 shrink-0 whitespace-normal">
+                        <ShoppingCart className="w-4 h-4 shrink-0" /> {t("pb_view_cart", "View Cart")}
                       </Button>
                     </div>
 
                     {activeStepIndex < STEPS.length - 1 && (
                       <Button 
                         onClick={() => handleNextStep()}
-                        className="w-full sm:max-w-sm h-12 sm:h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-xl sm:rounded-2xl shadow-xl text-base sm:text-lg font-bold flex items-center justify-between px-6 transition-transform active:scale-95"
+                        className="w-full sm:max-w-sm min-h-12 sm:min-h-14 h-auto py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl sm:rounded-2xl shadow-xl text-base sm:text-lg font-bold flex items-center justify-between gap-2 px-6 transition-transform active:scale-95 whitespace-normal text-left leading-snug"
                       >
-                        <span>Next: {STEPS[activeStepIndex + 1].label}</span>
-                        <span>&rarr;</span>
+                        <span>{t("pb_next_step", "Next: {label}", { label: STEPS[activeStepIndex + 1].label })}</span>
+                        <span className="shrink-0">&rarr;</span>
                       </Button>
                     )}
                     
                     {activeStepIndex === STEPS.length - 1 && (
                       <Button 
                         onClick={() => setShowMobileCart(true)}
-                        className="w-full sm:max-w-sm h-12 sm:h-14 bg-green-600 hover:bg-green-700 text-white rounded-xl sm:rounded-2xl shadow-xl text-base sm:text-lg font-bold flex md:hidden items-center justify-between px-6 transition-transform active:scale-95"
+                        className="w-full sm:max-w-sm min-h-12 sm:min-h-14 h-auto py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl sm:rounded-2xl shadow-xl text-base sm:text-lg font-bold flex md:hidden items-center justify-between gap-2 px-6 transition-transform active:scale-95 whitespace-normal text-left leading-snug"
                       >
-                        <span>Complete Checkout</span>
-                        <span>&rarr;</span>
+                        <span>{t("pb_complete_chk", "Complete Checkout")}</span>
+                        <span className="shrink-0">&rarr;</span>
                       </Button>
                     )}
                   </div>
@@ -2003,44 +2053,46 @@ const isWirelessItem = (item: any) => {
 
       <div className={`fixed inset-0 z-50 bg-white md:static md:inset-auto md:z-10 w-full md:w-[400px] border-l border-slate-200 h-screen overflow-y-auto flex flex-col shadow-2xl transition-transform duration-300 ${showMobileCart ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}>
         <div className="p-6 border-b border-slate-100 bg-slate-50">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5" /> Current Build
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <h2 className="text-xl font-black text-slate-900 flex items-center gap-2 min-w-0">
+                <ShoppingCart className="w-5 h-5 shrink-0" /> <span className="break-words">{t("pb_curr_build", "Current Build")}</span>
               </h2>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 {items.length > 0 && (
                   <button 
                     onClick={() => {
-                      if (window.confirm("Are you sure you want to reset your current build?")) {
+                      if (window.confirm(t("pb_confirm_reset", "Are you sure you want to reset your current build?"))) {
                         clearCart();
                         setActiveStepIndex(0);
                       }
                     }}
                     className="text-xs font-bold text-red-500 hover:text-white border border-red-200 hover:bg-red-500 hover:border-red-500 px-2 py-0.5 rounded-full transition-all flex items-center gap-1 active:scale-95"
-                    title="Clear entire build"
+                    title={t("pb_clr_build", "Clear entire build")}
                   >
-                    <Trash2 className="w-3 h-3" /> Reset
+                    <Trash2 className="w-3 h-3 shrink-0" /> {t("pb_reset", "Reset")}
                   </button>
                 )}
-                <span className="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">{items.length} items</span>
+                <span className="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                  {items.length === 1 ? t("pb_item_singular", "1 item") : t("pb_n_items", "{count} items", { count: String(items.length) })}
+                </span>
                 <button onClick={() => setShowMobileCart(false)} className="md:hidden p-1.5 bg-slate-200 hover:bg-slate-300 rounded-full text-slate-700 transition-colors">
                   <X className="w-4 h-4" />
                 </button>
               </div>
           </div>
           {isOverCapacity && (
-            <div className="mt-4 bg-yellow-50 border border-yellow-200 p-3 rounded-xl flex gap-3 text-yellow-800 text-sm font-medium">
-              <AlertTriangle className="w-5 h-5 shrink-0 text-yellow-600" />
-              You have {effectiveRecorderCams} wired cameras but only {channelCapacity} recorder channels. Please add a larger recorder!
+            <div className="mt-4 bg-yellow-50 border border-yellow-200 p-3 rounded-xl flex gap-3 text-yellow-800 text-sm font-medium break-words">
+              <AlertTriangle className="w-5 h-5 shrink-0 text-yellow-600 mt-0.5" />
+              <span>{t("pb_over_cap_warn", "You have {camCount} wired cameras but only {recCh} recorder channels. Please add a larger recorder!", { camCount: String(effectiveRecorderCams), recCh: String(channelCapacity) })}</span>
             </div>
           )}
           {canAutoComplete && (
             <div className="mt-3">
               <button
                 onClick={handleAutoCompleteSetup}
-                className="w-full py-2.5 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 transition-all active:scale-98"
+                className="w-full py-2.5 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 transition-all active:scale-98 whitespace-normal text-center leading-snug"
               >
-                <Sparkles className="w-3.5 h-3.5 text-yellow-300" /> 1-Click Auto-Complete Setup
+                <Sparkles className="w-3.5 h-3.5 text-yellow-300 shrink-0" /> <span>{t("pb_1click_auto", "1-Click Auto-Complete Setup")}</span>
               </button>
             </div>
           )}
@@ -2050,8 +2102,8 @@ const isWirelessItem = (item: any) => {
           {items.length === 0 ? (
             <div className="text-center py-6 md:py-12 text-slate-400">
               <ShoppingCart className="w-12 h-12 mx-auto mb-4 opacity-20" />
-              <p className="font-medium">Your cart is empty.</p>
-              <p className="text-sm mt-1">Select items to build a quote.</p>
+              <p className="font-medium break-words">{t("pb_cart_empty", "Your cart is empty.")}</p>
+              <p className="text-sm mt-1 break-words">{t("pb_cart_empty_sub", "Select items to build a quote.")}</p>
             </div>
           ) : (
             items.map(item => {
@@ -2059,22 +2111,22 @@ const isWirelessItem = (item: any) => {
               return (
                 <div key={item.id} className="flex gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50/50 relative group">
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-bold text-slate-900 truncate">{item.display_name}</h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-slate-500">INR {item.unit_price.toLocaleString('en-IN')} × {effQty}</span>
+                    <h4 className="text-sm font-bold text-slate-900 break-words leading-snug">{item.display_name}</h4>
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      <span className="text-xs text-slate-500">₹{item.unit_price.toLocaleString('en-IN')} × {effQty}</span>
                       {item.unit_multiplier === "camera_count" && (
-                        <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 rounded font-bold">
+                        <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold break-words">
                           {item.id === "PRO_INSTALL_HD" || item.id === "PRO_INSTALL_IP"
-                            ? `Auto (${wiredCamCount} Wired)`
+                            ? t("pb_auto_label", "Auto ({desc})", { desc: t("pb_auto_wired", "{count} wired", { count: String(wiredCamCount) }) })
                             : item.id === "PRO_INSTALL_WIRELESS"
-                              ? `Auto (${wirelessCamCount} Wireless)`
-                              : "Auto (Per Cam)"}
+                              ? t("pb_auto_label", "Auto ({desc})", { desc: t("pb_auto_wf", "{count} wireless", { count: String(wirelessCamCount) }) })
+                              : t("pb_auto_per_cam", "Auto (Per Cam)")}
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="text-right flex flex-col items-end justify-between">
-                    <span className="font-black text-slate-900">INR {(item.unit_price * effQty).toLocaleString('en-IN')}</span>
+                  <div className="text-right flex flex-col items-end justify-between shrink-0">
+                    <span className="font-black text-slate-900">₹{(item.unit_price * effQty).toLocaleString('en-IN')}</span>
                     {item.unit_multiplier !== "camera_count" && (
                       <div className="flex items-center gap-2 mt-2">
                         <button onClick={() => updateQty(item.id, item.qty - 1)} className="text-slate-400 hover:text-slate-700">
@@ -2101,17 +2153,17 @@ const isWirelessItem = (item: any) => {
         {items.length > 0 && (
           <div className="p-6 bg-white border-t border-slate-200">
             <div className="space-y-3 mb-6">
-              <div className="flex justify-between text-sm text-slate-500 font-medium">
-                <span>Subtotal</span>
-                <span>INR {getTotal().toLocaleString('en-IN')}</span>
+              <div className="flex justify-between gap-2 text-sm text-slate-500 font-medium">
+                <span>{t("pb_subtotal", "Subtotal")}</span>
+                <span className="shrink-0">₹{getTotal().toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between text-sm text-slate-500 font-medium">
-                <span>GST (18%)</span>
-                <span>INR {Math.round(getTotal() * 0.18).toLocaleString('en-IN')}</span>
+              <div className="flex justify-between gap-2 text-sm text-slate-500 font-medium">
+                <span>{t("pb_gst_pct", "GST (18%)")}</span>
+                <span className="shrink-0">₹{Math.round(getTotal() * 0.18).toLocaleString('en-IN')}</span>
               </div>
-              <div className="pt-3 border-t border-slate-100 flex justify-between items-end">
-                <span className="text-sm font-bold text-slate-900">Grand Total</span>
-                <span className="text-2xl font-black text-blue-600">INR {Math.round(getTotal() * 1.18).toLocaleString('en-IN')}</span>
+              <div className="pt-3 border-t border-slate-100 flex justify-between items-end gap-2">
+                <span className="text-sm font-bold text-slate-900">{t("pb_grand_total", "Grand Total")}</span>
+                <span className="text-2xl font-black text-blue-600 shrink-0">₹{Math.round(getTotal() * 1.18).toLocaleString('en-IN')}</span>
               </div>
             </div>
             
@@ -2127,8 +2179,8 @@ const isWirelessItem = (item: any) => {
                 
                 if (poeSwitchesInCart >= 3 && !hasCoreSwitch) {
                   return (
-                    <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl mb-4 text-xs text-amber-800">
-                      <span className="font-bold">⚠️ Architecture Warning:</span> You have {poeSwitchesInCart} PoE switches. You will need a Gigabit Desktop Switch (Core Hub) to link them to the NVR. Add it from the "Optional Upgrades" section.
+                    <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl mb-4 text-xs text-amber-800 break-words">
+                      <span className="font-bold">{t("pb_arch_warn_t", "⚠️ Architecture Warning:")}</span> {t("pb_arch_warn_d", "You have {count} PoE switches. You will need a Gigabit Desktop Switch (Core Hub) to link them to the NVR. Add it from the \"Optional Upgrades\" section.", { count: String(poeSwitchesInCart) })}
                     </div>
                   );
                 }
@@ -2138,9 +2190,9 @@ const isWirelessItem = (item: any) => {
               <Button 
                 onClick={handleCheckout} 
                 disabled={isGenerating || items.length === 0} 
-                className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-lg font-bold shadow-xl shadow-emerald-600/20"
+                className="w-full min-h-14 h-auto py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-lg font-bold shadow-xl shadow-emerald-600/20 whitespace-normal leading-snug"
               >
-                {isGenerating ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Generate Quote"}
+                {isGenerating ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t("pb_gen_quote", "Generate Quote")}
               </Button>
           </div>
         )}

@@ -3,6 +3,7 @@ import { verifyInstallerSession } from "@/lib/auth-installer";
 import { adminDb } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
 import { InstallerProfileClient } from "@/components/installer/InstallerProfileClient";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 import type { Installer } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ export default async function InstallerProfilePage() {
   const docSnap = await adminDb.collection(COLLECTIONS.INSTALLERS).doc(installerId).get();
   
   if (!docSnap.exists) {
-    return <div>Profile not found.</div>;
+    return <div><TranslatedText tKey="inst_prof_not_found" defaultText="Profile not found." /></div>;
   }
 
   const data = docSnap.data() as Installer;

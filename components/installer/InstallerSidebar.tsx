@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase-client";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 import { 
   LayoutDashboard, 
   ClipboardList, 
@@ -19,17 +20,20 @@ import {
 } from "lucide-react";
 
 const NAV_ITEMS = [
-  { name: "Overview", href: "/installer/dashboard", icon: LayoutDashboard },
-  { name: "Daily Route Plan", href: "/installer/route", icon: MapPin },
-  { name: "My Leads", href: "/installer/jobs", icon: ClipboardList },
-  { name: "Ledger", href: "/installer/ledger", icon: BookOpen },
-  { name: "Profile", href: "/installer/profile", icon: Settings2 },
-];
+  { key: "inst_nav_overview", name: "Overview", href: "/installer/dashboard", icon: LayoutDashboard },
+  { key: "inst_nav_route", name: "Daily Route Plan", href: "/installer/route", icon: MapPin },
+  { key: "inst_nav_leads", name: "My Leads", href: "/installer/jobs", icon: ClipboardList },
+  { key: "inst_nav_ledger", name: "Ledger", href: "/installer/ledger", icon: BookOpen },
+  { key: "inst_nav_profile", name: "Profile", href: "/installer/profile", icon: Settings2 },
+] as const;
 
 export function InstallerSidebar({ installerName }: { installerName: string }) {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const displayName = !installerName || installerName === "Installer" ? t("inst_fallback_name", "Installer") : installerName;
 
   const handleLogout = async () => {
     try {
@@ -39,33 +43,33 @@ export function InstallerSidebar({ installerName }: { installerName: string }) {
       router.refresh();
     } catch (error) {
       console.error("Logout failed", error);
-      toast.error('Logout failed. Please try again.');
+      toast.error(t("inst_side_logout_err", "Logout failed. Please try again."));
     }
   };
 
   const sidebarContent = (
     <>
       {/* ── BRAND HEADER ── */}
-      <div className="h-20 flex items-center px-5 border-b border-zinc-100 dark:border-zinc-800/60 shrink-0 gap-3 relative">
+      <div className="min-h-20 py-3 flex items-center px-5 border-b border-zinc-100 dark:border-zinc-800/60 shrink-0 gap-3 relative">
         <div className="w-9 h-9 rounded-[14px] bg-blue-600 flex items-center justify-center shadow-md shadow-blue-500/20 relative z-10 shrink-0">
           <Wrench className="w-5 h-5 text-white" />
         </div>
         <div className="relative z-10 min-w-0 flex-1">
           <p className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] leading-none">TEAM CCTV</p>
-          <p className="text-[13px] font-black text-zinc-900 dark:text-white leading-tight tracking-tight mt-0.5 truncate">Field Operations</p>
+          <p className="text-[13px] font-black text-zinc-900 dark:text-white leading-tight tracking-tight mt-0.5 break-words">{t("inst_side_ops", "Field Operations")}</p>
         </div>
         {/* Mobile close button */}
-        <button aria-label="Close menu" onClick={() => setMobileOpen(false)} className="md:hidden w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+        <button aria-label={t("inst_side_close_menu", "Close menu")} onClick={() => setMobileOpen(false)} className="md:hidden w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors shrink-0">
           <X className="w-4 h-4" />
         </button>
       </div>
 
       {/* ── USER IDENTIFIER ── */}
       <div className="px-5 py-4 border-b border-zinc-100 dark:border-zinc-800/60">
-        <p className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] mb-1">Authenticated As</p>
+        <p className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] mb-1">{t("inst_side_auth_as", "Authenticated As")}</p>
         <div className="flex items-center gap-2">
-           <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-           <p className="text-xs font-bold text-zinc-900 dark:text-white truncate">{installerName}</p>
+           <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse shrink-0" />
+           <p className="text-xs font-bold text-zinc-900 dark:text-white truncate">{displayName}</p>
         </div>
       </div>
 
@@ -76,7 +80,7 @@ export function InstallerSidebar({ installerName }: { installerName: string }) {
           const Icon = item.icon;
           return (
             <Link
-              key={item.name}
+              key={item.href}
               href={item.href}
               onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-3 py-3 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all relative group ${
@@ -97,7 +101,7 @@ export function InstallerSidebar({ installerName }: { installerName: string }) {
                 <Icon className="w-4 h-4" />
               </div>
 
-              <span className="truncate flex-1">{item.name}</span>
+              <span className="leading-snug flex-1">{t(item.key, item.name)}</span>
 
               {active && (
                 <ChevronRight className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
@@ -111,12 +115,12 @@ export function InstallerSidebar({ installerName }: { installerName: string }) {
       <div className="p-3 border-t border-zinc-100 dark:border-zinc-800/60 shrink-0">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 w-full text-left rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/5 group"
+          className="flex items-center gap-3 px-3 py-2.5 w-full text-left rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/5 group whitespace-normal h-auto"
         >
           <div className="w-8 h-8 rounded-[12px] bg-zinc-100 dark:bg-zinc-900 group-hover:bg-red-100 dark:group-hover:bg-red-500/10 text-zinc-500 group-hover:text-red-600 flex items-center justify-center shrink-0 transition-colors">
             <LogOut className="w-4 h-4" />
           </div>
-          <span className="font-bold">Secure Logout</span>
+          <span className="font-bold">{t("inst_side_logout", "Secure Logout")}</span>
         </button>
       </div>
     </>
@@ -126,13 +130,13 @@ export function InstallerSidebar({ installerName }: { installerName: string }) {
     <>
       {/* Mobile header bar with hamburger */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between px-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-[12px] bg-blue-600 flex items-center justify-center shadow-md shadow-blue-500/20">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-[12px] bg-blue-600 flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
             <Wrench className="w-4 h-4 text-white" />
           </div>
-          <span className="text-sm font-black text-zinc-900 dark:text-white tracking-tight">Field Ops</span>
+          <span className="text-sm font-black text-zinc-900 dark:text-white tracking-tight truncate">{t("inst_side_mob_ops", "Field Ops")}</span>
         </div>
-        <button aria-label="Open menu" onClick={() => setMobileOpen(true)} className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+        <button aria-label={t("inst_side_open_menu", "Open menu")} onClick={() => setMobileOpen(true)} className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors shrink-0">
           <Menu className="w-5 h-5" />
         </button>
       </div>

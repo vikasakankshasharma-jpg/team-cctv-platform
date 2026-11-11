@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
+import { cleanEnvVar } from "@/lib/env-utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch Gemini
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = cleanEnvVar(process.env.GEMINI_API_KEY);
     if (!apiKey) {
       return NextResponse.json({ error: "Gemini API Key missing" }, { status: 500 });
     }

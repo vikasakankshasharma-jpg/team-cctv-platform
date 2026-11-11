@@ -163,20 +163,51 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
   const completedSteps = currentTabFlow.filter(t => stepCompletion[t]).length;
   const totalSteps = currentTabFlow.length;
 
+  const TAB_LABEL_KEYS: Record<Tab, string> = {
+    cameras: "fcp_tab_camera",
+    recorders: "fcp_tab_recorder",
+    storage: "fcp_tab_storage",
+    power: "fcp_tab_power",
+    addons: "fcp_tab_accessories",
+  };
+
+  const translateFilterOption = (opt: string) => {
+    const map: Record<string, string> = {
+      "Hard Disk": t("fcp_str_hdd"),
+      "Micro SD": t("fcp_str_sd"),
+      "PoE Switch": t("fcp_pw_poe"),
+      "SMPS Supply": t("fcp_pw_smps"),
+      "Power Adapter": t("fcp_pw_adapter"),
+      "Color": t("fcp_nv_color"),
+      "IR": t("fcp_nv_ir", "IR (Black & White)"),
+      "Dual Light": t("fcp_nv_dual"),
+      "Starlight": t("fcp_nv_star"),
+      "Cables & Wire": t("fcp_grp_cables"),
+      "Connectors": t("fcp_grp_connectors"),
+      "Junction Box & Mounts": t("fcp_grp_jbox"),
+      "Racks & Enclosures": t("fcp_grp_racks"),
+      "Network & Routers": t("fcp_grp_network"),
+      "Display & Monitors": t("fcp_grp_display"),
+      "Services & AMC": t("fcp_grp_services"),
+      "Accessories": t("fcp_tab_accessories"),
+    };
+    return map[opt] || opt;
+  };
+
   // Auto-advance to next tab after selection
   const advanceToNextTab = useCallback((currentTab: Tab) => {
     const currentIdx = currentTabFlow.indexOf(currentTab);
     if (currentIdx === -1 || currentIdx >= currentTabFlow.length - 1) return;
     const nextTab = currentTabFlow[currentIdx + 1];
-    const nextLabel = TAB_LABELS[nextTab];
-    toast.success(`${TAB_LABELS[currentTab]} pinned!`, {
-      description: `Now choose a ${nextLabel} →`,
+    const nextLabel = t(TAB_LABEL_KEYS[nextTab]);
+    toast.success(t("fcp_toast_tab_pinned", "{label} pinned!", { label: t(TAB_LABEL_KEYS[currentTab]) }), {
+      description: t("fcp_toast_choose_next", "Now choose a {next} →", { next: nextLabel }),
       duration: 2500,
     });
     setTimeout(() => {
       handleTabChange(nextTab);
     }, 800);
-  }, [currentTabFlow, handleTabChange]);
+  }, [currentTabFlow, handleTabChange, t]);
 
   const filterCategories = useMemo(() => {
     if (activeTab === "cameras") {
@@ -205,11 +236,11 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
         }
       });
       return [
-        { key: "brand", label: "Brand", options: Array.from(brands).sort() },
-        { key: "mp", label: "Megapixels", options: Array.from(mps).sort() },
-        { key: "type", label: "Type", options: Array.from(types).sort() },
-        { key: "lens", label: "Lens", options: Array.from(lenses).sort() },
-        { key: "nv", label: "Night Vision", options: Array.from(nvs).sort() }
+        { key: "brand", label: t("fcp_lbl_brand"), options: Array.from(brands).sort() },
+        { key: "mp", label: t("fcp_lbl_mp"), options: Array.from(mps).sort() },
+        { key: "type", label: t("fcp_lbl_type"), options: Array.from(types).sort() },
+        { key: "lens", label: t("fcp_lbl_lens"), options: Array.from(lenses).sort() },
+        { key: "nv", label: t("fcp_lbl_nv"), options: Array.from(nvs).sort() }
       ].filter(f => f.options.length > 1);
     } else if (activeTab === "recorders") {
       const brands = new Set<string>();
@@ -228,9 +259,9 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
         if (name.includes("dvr")) types.add("DVR");
       });
       return [
-        { key: "brand", label: "Brand", options: Array.from(brands).sort() },
-        { key: "channels", label: "Channels", options: Array.from(channels).sort((a,b) => parseInt(a) - parseInt(b)) },
-        { key: "type", label: "Type", options: Array.from(types).sort() },
+        { key: "brand", label: t("fcp_lbl_brand"), options: Array.from(brands).sort() },
+        { key: "channels", label: t("fcp_lbl_channels"), options: Array.from(channels).sort((a,b) => parseInt(a) - parseInt(b)) },
+        { key: "type", label: t("fcp_lbl_type"), options: Array.from(types).sort() },
       ].filter(f => f.options.length > 1);
     } else if (activeTab === "storage") {
       const capacities = new Set<string>();
@@ -249,13 +280,13 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
       });
       const filters = [];
       if (brands.size > 1) {
-        filters.push({ key: "brand", label: "Brand", options: Array.from(brands).sort() });
+        filters.push({ key: "brand", label: t("fcp_lbl_brand"), options: Array.from(brands).sort() });
       }
       if (types.size > 1) {
-        filters.push({ key: "type", label: "Type", options: Array.from(types).sort() });
+        filters.push({ key: "type", label: t("fcp_lbl_type"), options: Array.from(types).sort() });
       }
       if (capacities.size > 1) {
-        filters.push({ key: "capacity", label: "Capacity", options: Array.from(capacities).sort((a, b) => parseCapacityInGB(a) - parseCapacityInGB(b)) });
+        filters.push({ key: "capacity", label: t("fcp_lbl_capacity"), options: Array.from(capacities).sort((a, b) => parseCapacityInGB(a) - parseCapacityInGB(b)) });
       }
       return filters;
     } else if (activeTab === "power") {
@@ -279,8 +310,8 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
         else if (name.includes("adapter")) types.add("Power Adapter");
       });
       const filters = [];
-      if (brands.size > 1) filters.push({ key: "brand", label: "Brand", options: Array.from(brands).sort() });
-      if (types.size > 1) filters.push({ key: "type", label: "Type", options: Array.from(types).sort() });
+      if (brands.size > 1) filters.push({ key: "brand", label: t("fcp_lbl_brand"), options: Array.from(brands).sort() });
+      if (types.size > 1) filters.push({ key: "type", label: t("fcp_lbl_type"), options: Array.from(types).sort() });
       return filters;
     } else if (activeTab === "addons") {
       const subcats = new Set<string>();
@@ -301,10 +332,10 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
 
       const filters = [];
       if (subcats.size > 1) {
-        filters.push({ key: "subcat", label: "Category", options: Array.from(subcats).sort() });
+        filters.push({ key: "subcat", label: t("fcp_lbl_category"), options: Array.from(subcats).sort() });
       }
       if (brands.size > 1) {
-        filters.push({ key: "brand", label: "Brand", options: Array.from(brands).sort() });
+        filters.push({ key: "brand", label: t("fcp_lbl_brand"), options: Array.from(brands).sort() });
       }
       return filters;
     }
@@ -835,18 +866,18 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                 style={{ width: `${(completedSteps / totalSteps) * 100}%` }}
               />
             </div>
-            <span className="text-[11px] font-bold text-[#0071e3] whitespace-nowrap">
-              {completedSteps}/{totalSteps} selected
+            <span className="text-[11px] font-bold text-[#0071e3] shrink-0">
+              {t("fcp_selected_count", "{completed}/{total} selected", { completed: String(completedSteps), total: String(totalSteps) })}
             </span>
           </div>
         )}
       </div>
       
       <div className="px-6 py-3 border-b border-[#d2d2d7] dark:border-[#424245] bg-[#f5f5f7] dark:bg-[#2d2d2f] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <Server className="w-4 h-4 text-[#86868b]" />
-            <span className="text-[12px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Technology</span>
+            <span className="text-[12px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{t("fcp_technology")}</span>
           </div>
           <div className="flex bg-[#e8e8ed] dark:bg-[#1d1d1f] rounded-lg p-1">
             {["IP", "HD", "Wireless"].map(tech => (
@@ -863,10 +894,11 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                   if (tech === "Wireless" && (activeTab === "recorders" || activeTab === "power")) {
                     handleTabChange("cameras");
                   }
-                  toast.success(`Switched to ${tech}`, { 
+                  const techLabel = tech === "Wireless" ? t("fcp_wireless") : tech;
+                  toast.success(t("fcp_switched_to", "Switched to {tech}", { tech: techLabel }), { 
                     description: tech === "Wireless" 
-                      ? "Switched to Smart Wireless. Select Wi-Fi/4G cameras and MicroSD cards." 
-                      : "Hardware reset. Please select compatible cameras and recorders." 
+                      ? t("fcp_toast_wifi") 
+                      : t("fcp_toast_reset") 
                   });
                 }}
                 className={`px-3 py-1 rounded-md text-[11px] font-medium transition-colors ${
@@ -875,7 +907,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                     : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"
                 }`}
               >
-                {tech}
+                {tech === "Wireless" ? t("fcp_wireless") : tech}
               </button>
             ))}
           </div>
@@ -891,9 +923,9 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
         <div className="px-6 py-4 border-b border-[#d2d2d7] dark:border-[#424245] bg-[#f5f5f7] dark:bg-[#2d2d2f] shrink-0">
           <div className="flex flex-col gap-3">
             <span className="text-[10px] font-bold text-[#86868b] uppercase tracking-wider flex items-center gap-1.5">
-              <Camera className="w-3.5 h-3.5" /> {isMixedCameraMode ? "Mixed Configuration Active" : "Camera Configuration Active"}
+              <Camera className="w-3.5 h-3.5" /> {isMixedCameraMode ? t("fcp_mixed_active") : t("fcp_cam_active")}
             </span>
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            <div className="flex flex-wrap gap-2 pb-1">
               {isMixedCameraMode ? (
                 selection.mixed_camera_requirements!.map(req => {
                   const isActive = activeMixedType === req.type;
@@ -902,20 +934,20 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                     <button
                       key={req.type}
                       onClick={() => setActiveMixedType(req.type)}
-                      className={`px-4 py-2 rounded-full text-[13px] font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+                      className={`px-4 py-2 rounded-full text-[13px] font-medium transition-all flex items-center gap-2 ${
                         isActive 
                           ? "bg-[#1d1d1f] dark:bg-[#f5f5f7] text-white dark:text-[#1d1d1f] shadow-sm" 
                           : "bg-white dark:bg-[#1d1d1f] text-[#1d1d1f] dark:text-[#f5f5f7] border border-[#d2d2d7] dark:border-[#424245] hover:border-[#86868b]"
                       }`}
                     >
-                      {req.type} Camera ({req.count})
+                      {t("fcp_cam_cnt", "{type} Camera ({count})", { type: req.type, count: String(req.count) })}
                       {isPinned && <CheckCircle2 className={`w-3.5 h-3.5 ${isActive ? "text-[#0071e3]" : "text-emerald-500"}`} />}
                     </button>
                   )
                 })
               ) : (
-                <div className="px-4 py-2 rounded-full text-[13px] font-medium bg-[#1d1d1f] dark:bg-[#f5f5f7] text-white dark:text-[#1d1d1f] shadow-sm flex items-center gap-2 whitespace-nowrap">
-                  Standard Camera ({selection.camera_count})
+                <div className="px-4 py-2 rounded-full text-[13px] font-medium bg-[#1d1d1f] dark:bg-[#f5f5f7] text-white dark:text-[#1d1d1f] shadow-sm flex items-center gap-2">
+                  {t("fcp_std_cam_cnt", "Standard Camera ({count})", { count: String(selection.camera_count) })}
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#0071e3]" />
                 </div>
               )}
@@ -945,7 +977,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                   >
                     <option value="all">{cat.label}</option>
                     {cat.options.map(opt => (
-                      <option key={opt} value={opt}>{cat.label}: {opt}</option>
+                      <option key={opt} value={opt}>{cat.label}: {translateFilterOption(opt)}</option>
                     ))}
                   </select>
                   <ChevronDown className={`w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${
@@ -960,7 +992,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                 onClick={() => setActiveFilters({})}
                 className="shrink-0 snap-start flex items-center justify-center px-4 py-2 rounded-full text-xs font-medium bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#1d1d1f] dark:text-white hover:bg-[#e8e8ed] dark:hover:bg-[#3d3d3f] border border-transparent transition-colors"
               >
-                Clear
+                {t("fcp_clear")}
               </button>
             )}
           </div>
@@ -1003,7 +1035,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                 if (allPinned) {
                   advanceToNextTab("cameras");
                 } else {
-                  toast.success(`${cam.display_name} pinned for ${activeMixedType}!`, { duration: 2000 });
+                  toast.success(t("fcp_toast_cam_pinned", "{name} pinned for {type}!", { name: cam.display_name, type: activeMixedType! }), { duration: 2000 });
                   const currentIndex = selection.mixed_camera_requirements!.findIndex(r => r.type === activeMixedType);
                   if (currentIndex < selection.mixed_camera_requirements!.length - 1) {
                      setActiveMixedType(selection.mixed_camera_requirements![currentIndex + 1].type);
@@ -1033,15 +1065,15 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
             <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/50 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
               <Wifi className="w-6 h-6" />
             </div>
-            <h4 className="text-base font-bold text-[#1d1d1f] dark:text-white mb-2">No NVR/DVR Recorder Needed</h4>
+            <h4 className="text-base font-bold text-[#1d1d1f] dark:text-white mb-2">{t("fcp_no_rec_title")}</h4>
             <p className="text-xs text-[#86868b] leading-relaxed mb-4">
-              Smart Wi-Fi and 4G cameras are standalone devices that stream directly to your mobile app and record onto individual MicroSD cards. A centralized recorder is not required.
+              {t("fcp_no_rec_desc")}
             </p>
             <button
               onClick={() => handleTabChange("storage")}
               className="bg-[#1d1d1f] dark:bg-white text-white dark:text-[#1d1d1f] text-xs font-semibold px-4 py-2 rounded-full hover:opacity-90 transition-opacity"
             >
-              Continue to MicroSD Storage →
+              {t("fcp_cont_microsd")}
             </button>
           </div>
         )}
@@ -1059,10 +1091,10 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
               {
                 id: "none",
                 display_name: <TranslatedText tKey="no_storage_required" defaultText="No Storage Required" /> as any,
-                brand: "None",
+                brand: t("fcp_str_none"),
                 unit_price: 0,
                 price: 0,
-                features: ["Cloud Only", "Customer Provided", "Live View Only"],
+                features: [t("fcp_str_cloud"), t("fcp_str_cust"), t("fcp_str_live")],
                 image_url: "",
                 category: "storage",
                 is_active: true
@@ -1088,15 +1120,15 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
             <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
               <Zap className="w-6 h-6" />
             </div>
-            <h4 className="text-base font-bold text-[#1d1d1f] dark:text-white mb-2">Power Adapters Included in Box</h4>
+            <h4 className="text-base font-bold text-[#1d1d1f] dark:text-white mb-2">{t("fcp_adapters_inc_title")}</h4>
             <p className="text-xs text-[#86868b] leading-relaxed mb-4">
-              Each Wi-Fi & 4G camera includes its manufacturer-certified power adapter in the box. No centralized CCTV SMPS power supply or PoE switch is required.
+              {t("fcp_adapters_inc_desc")}
             </p>
             <button
               onClick={() => handleTabChange("addons")}
               className="bg-[#1d1d1f] dark:bg-white text-white dark:text-[#1d1d1f] text-xs font-semibold px-4 py-2 rounded-full hover:opacity-90 transition-opacity"
             >
-              View Optional Accessories →
+              {t("fcp_view_acc")}
             </button>
           </div>
         )}
@@ -1105,7 +1137,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
           const reqQty = Math.ceil((selection.camera_count || 1) / (pwr.max_cameras || 4));
           const isSelected = selection.selected_power_id === pwr.id || (!selection.selected_power_id && activePricing?.items.some((i: any) => i.product_id === pwr.id));
           return renderProductItem(
-            pwr, isSelected as boolean, () => { updateSelection({ selected_power_id: pwr.id }); toast.success("Power supply pinned!", { description: "Your system is fully configured. Review your quote below.", duration: 3000 }); }, !!selection.selected_power_id, () => updateSelection({ selected_power_id: undefined }), reqQty
+            pwr, isSelected as boolean, () => { updateSelection({ selected_power_id: pwr.id }); toast.success(t("fcp_toast_pw_pinned"), { description: t("fcp_toast_all_done"), duration: 3000 }); }, !!selection.selected_power_id, () => updateSelection({ selected_power_id: undefined }), reqQty
           );
         })}
 
@@ -1122,17 +1154,17 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                   <div className="col-span-full mb-4 p-5 bg-white dark:bg-[#1d1d1f] rounded-[24px] border border-[#d2d2d7] dark:border-[#424245] shadow-sm space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
                             <Zap className="w-4 h-4" />
                           </span>
-                          <h4 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-white">Camera Power Point & Wiring</h4>
+                          <h4 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-white">{t("fcp_power_wiring_hdr")}</h4>
                           <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 px-2 py-0.5 rounded-full">
-                            Zero Video Cabling
+                            {t("iqr_zero_video_cabling")}
                           </span>
                         </div>
                         <p className="text-[13px] text-[#86868b] mt-1">
-                          Wireless Wi-Fi/4G cameras do not require coaxial/CAT6 cables. Each camera includes a 1.5m power adapter.
+                          {t("fcp_wifi_power_desc")}
                         </p>
                       </div>
                     </div>
@@ -1147,13 +1179,13 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                             : "bg-[#f5f5f7] dark:bg-[#2d2d2f] border-transparent text-[#1d1d1f] dark:text-white hover:border-gray-300"
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-bold">Power Socket Nearby</span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/70 dark:text-emerald-300">
-                            ₹0 (Free)
+                        <div className="flex items-center justify-between gap-1.5 mb-1">
+                          <span className="text-xs font-bold">{t("iqr_power_nearby")}</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/70 dark:text-emerald-300 shrink-0">
+                            {t("fcp_socket_free")}
                           </span>
                         </div>
-                        <p className="text-[11px] text-[#86868b] leading-tight">Wall AC point exists within 1.5m of each camera.</p>
+                        <p className="text-[11px] text-[#86868b] leading-tight">{t("fcp_socket_desc")}</p>
                       </button>
 
                       <button
@@ -1169,13 +1201,13 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                             : "bg-[#f5f5f7] dark:bg-[#2d2d2f] border-transparent text-[#1d1d1f] dark:text-white hover:border-gray-300"
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-bold">Need 2-Core Electrical Wire</span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/70 dark:text-amber-300">
+                        <div className="flex items-center justify-between gap-1.5 mb-1">
+                          <span className="text-xs font-bold">{t("fcp_need_2core_wire")}</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/70 dark:text-amber-300 shrink-0">
                             @ ₹10/m
                           </span>
                         </div>
-                        <p className="text-[11px] text-[#86868b] leading-tight">Run copper power wire from switchboard to cameras.</p>
+                        <p className="text-[11px] text-[#86868b] leading-tight">{t("fcp_need_2core_desc")}</p>
                       </button>
 
                       <button
@@ -1187,20 +1219,20 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                             : "bg-[#f5f5f7] dark:bg-[#2d2d2f] border-transparent text-[#1d1d1f] dark:text-white hover:border-gray-300"
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-bold">Check on Site Survey</span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/70 dark:text-blue-300">
-                            Pay on Actuals
+                        <div className="flex items-center justify-between gap-1.5 mb-1">
+                          <span className="text-xs font-bold">{t("iqr_check_survey")}</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/70 dark:text-blue-300 shrink-0">
+                            {t("iqr_pay_actuals")}
                           </span>
                         </div>
-                        <p className="text-[11px] text-[#86868b] leading-tight">Technician measures on-site and bills wire only if required.</p>
+                        <p className="text-[11px] text-[#86868b] leading-tight">{t("fcp_survey_desc")}</p>
                       </button>
                     </div>
 
                     {powerOption === "wire_needed" && (
                       <div className="pt-3 border-t border-[#d2d2d7] dark:border-[#424245] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <span className="text-xs font-semibold text-amber-900 dark:text-amber-200">
-                          Estimated 2-Core Electrical Wire Length:
+                          {t("fcp_est_2core_len")}
                         </span>
                         <div className="flex items-center gap-3">
                           <button 
@@ -1220,7 +1252,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                             }}
                             className="w-8 h-8 flex items-center justify-center rounded-full bg-[#f5f5f7] dark:bg-[#2d2d2f] shadow-sm text-[#1d1d1f] dark:text-white font-medium"
                           >+</button>
-                          <span className="text-[12px] text-[#86868b]">(~{Math.round(totalPowerMeters / cameraCount)}m / camera)</span>
+                          <span className="text-[12px] text-[#86868b]">{t("iqr_per_cam_m", "(~{m}m / camera)", { m: String(Math.round(totalPowerMeters / cameraCount)) })}</span>
                         </div>
                       </div>
                     )}
@@ -1238,8 +1270,8 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                 <>
                   <div className="col-span-full mb-2 p-5 bg-white dark:bg-[#1d1d1f] rounded-[24px] border border-[#d2d2d7] dark:border-[#424245] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <h4 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-white">Total Expected Cable Length</h4>
-                      <p className="text-[13px] text-[#86868b] mt-1">Adjust the total estimated cable length for all cameras combined (default is {freeLimitMeters}m total).</p>
+                      <h4 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-white">{t("fcp_cable_len_hdr")}</h4>
+                      <p className="text-[13px] text-[#86868b] mt-1">{t("fcp_cable_len_desc", "Adjust the total estimated cable length for all cameras combined (default is {total}m total).", { total: String(freeLimitMeters) })}</p>
                     </div>
                     <div className="flex items-center gap-3 bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1 rounded-full shrink-0">
                       <button 
@@ -1264,9 +1296,9 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                         </div>
                       </div>
                       <div>
-                        <h5 className="text-[13px] font-semibold text-red-800 dark:text-red-400">Excess Cabling Labor Surcharge</h5>
+                        <h5 className="text-[13px] font-semibold text-red-800 dark:text-red-400">{t("fcp_surcharge_hdr")}</h5>
                         <p className="text-[12px] text-red-700 dark:text-red-300/80 mt-1">
-                          Your base package includes free installation for up to <b>{freeLimitMeters}m</b> of cabling. Laying extra cable will incur a labor charge of <b>₹15/meter (+₹{excessMeters * 15} estimated)</b> on the final quote.
+                          {t("fcp_surcharge_desc", "Your base package includes free installation for up to {free} of cabling. Laying extra cable will incur a labor charge of ₹15/meter (+₹{amt} estimated) on the final quote.", { free: `${freeLimitMeters}m`, amt: String(excessMeters * 15) })}
                         </p>
                       </div>
                     </div>
@@ -1278,10 +1310,10 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
             {selection.technology === "HD" && (
               <div className="col-span-full mb-4 p-5 bg-white dark:bg-[#1d1d1f] rounded-[24px] border border-[#d2d2d7] dark:border-[#424245] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h4 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-white flex items-center gap-2">HD Cable Type</h4>
-                  <p className="text-[13px] text-[#86868b] mt-1">Select the type of cabling you want to use for this HD setup.</p>
+                  <h4 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-white flex items-center gap-2">{t("fcp_hd_cable_type")}</h4>
+                  <p className="text-[13px] text-[#86868b] mt-1">{t("fcp_hd_cable_desc")}</p>
                 </div>
-                <div className="flex items-center gap-1 bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1 rounded-lg shrink-0">
+                <div className="flex flex-wrap items-center gap-1 bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1 rounded-lg shrink-0">
                   <button
                     onClick={() => updateSelection({ cable_type: "coaxial" })}
                     className={`px-4 py-2 rounded-md text-[13px] font-semibold transition-colors ${
@@ -1290,7 +1322,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                         : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"
                     }`}
                   >
-                    3+1 Coaxial
+                    {t("fcp_coax_31")}
                   </button>
                   <button
                     onClick={() => updateSelection({ cable_type: "cat6" })}
@@ -1300,7 +1332,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                         : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"
                     }`}
                   >
-                    CAT6
+                    {t("fcp_cat6")}
                   </button>
                 </div>
               </div>
@@ -1334,7 +1366,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
 
               const onToggle = () => {
                  if (isImplicitlySelected) {
-                    toast.info("This accessory is automatically included with your current hardware setup.");
+                    toast.info(t("fcp_acc_auto_inc"));
                     return;
                  }
                  toggleAddon(addon.id!);

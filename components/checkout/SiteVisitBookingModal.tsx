@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { extractErrorMessage } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const HybridMap = dynamic(() => import("@/components/maps/HybridMap"), { ssr: false });
 
@@ -34,12 +35,6 @@ interface SiteVisitBookingModalProps {
   onBookingSuccess?: () => void;
 }
 
-const TIME_SLOTS = [
-  { id: "slot-morning", label: "Morning (10:00 AM - 01:00 PM)", icon: "🌅" },
-  { id: "slot-afternoon", label: "Afternoon (01:00 PM - 05:00 PM)", icon: "🌇" },
-  { id: "slot-evening", label: "Evening (05:00 PM - 08:00 PM)", icon: "🌆" },
-];
-
 export function SiteVisitBookingModal({
   isOpen,
   onClose,
@@ -50,6 +45,14 @@ export function SiteVisitBookingModal({
   initialAddress = "",
   onBookingSuccess,
 }: SiteVisitBookingModalProps) {
+  const { t, locale } = useTranslation();
+
+  const timeSlots = [
+    { id: "slot-morning", value: "10:00 AM - 01:00 PM", label: t("svb_slot_morn", "Morning (10:00 AM - 01:00 PM)"), icon: "🌅" },
+    { id: "slot-afternoon", value: "01:00 PM - 05:00 PM", label: t("svb_slot_aft", "Afternoon (01:00 PM - 05:00 PM)"), icon: "🌇" },
+    { id: "slot-evening", value: "05:00 PM - 08:00 PM", label: t("svb_slot_eve", "Evening (05:00 PM - 08:00 PM)"), icon: "🌆" },
+  ];
+
   const getTomorrowDate = () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -85,7 +88,7 @@ export function SiteVisitBookingModal({
     setMarkerPos({ lat, lng });
     setIsGeocoding(true);
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=${encodeURIComponent(locale || "en")}`);
       const data = await res.json();
       if (data && data.display_name) {
         // Strip out the pincode from nominatim if we already have it, or just use their full string
@@ -93,7 +96,7 @@ export function SiteVisitBookingModal({
       }
     } catch (error) {
       console.error("Geocoding failed", error);
-      toast.error("Failed to get address from map");
+      toast.error(t("svb_err_map", "Failed to get address from map"));
     } finally {
       setIsGeocoding(false);
     }
@@ -146,23 +149,23 @@ export function SiteVisitBookingModal({
     e.preventDefault();
 
     if (!name.trim()) {
-      toast.error("Please enter your name");
+      toast.error(t("svb_err_name", "Please enter your name"));
       return;
     }
     if (!phone.trim() || phone.length < 10) {
-      toast.error("Please enter a valid 10-digit mobile number");
+      toast.error(t("svb_err_mob", "Please enter a valid 10-digit mobile number"));
       return;
     }
     if (!pincode.trim() || pincode.length < 6) {
-      toast.error("Please enter a valid 6-digit Pincode");
+      toast.error(t("svb_err_pin", "Please enter a valid 6-digit Pincode"));
       return;
     }
     if (!area) {
-      toast.error("Please select your Area/Locality");
+      toast.error(t("svb_err_area", "Please select your Area/Locality"));
       return;
     }
     if (!address.trim()) {
-      toast.error("Please enter your house/street address");
+      toast.error(t("svb_err_addr", "Please enter your house/street address"));
       return;
     }
 
@@ -191,14 +194,14 @@ export function SiteVisitBookingModal({
       if (res.ok && data.success) {
         setBookingId(data.data?.id || `VISIT-${new Date().getFullYear()}`);
         setBookingConfirmed(true);
-        toast.success("Free Site Survey booked successfully!");
+        toast.success(t("svb_ok", "Free Site Survey booked successfully!"));
         if (onBookingSuccess) onBookingSuccess();
       } else {
-        toast.error(extractErrorMessage(data, "Failed to book site survey. Please try again."));
+        toast.error(extractErrorMessage(data, t("svb_err_fail", "Failed to book site survey. Please try again.")));
       }
     } catch (err: any) {
       console.error("Booking error:", err);
-      toast.error(extractErrorMessage(err, "An error occurred while booking your survey."));
+      toast.error(extractErrorMessage(err, t("svb_err_gen", "An error occurred while booking your survey.")));
     } finally {
       setIsSubmitting(false);
     }
@@ -225,20 +228,20 @@ export function SiteVisitBookingModal({
                 <Camera className="w-5 h-5 text-purple-300" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-bold">Book Free Site Survey</h3>
-                  <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    100% Free
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-lg font-bold">{t("svb_title", "Book Free Site Survey")}</h3>
+                  <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full uppercase">
+                    {t("svb_free_badge", "100% Free")}
                   </span>
                 </div>
                 <p className="text-xs text-purple-200/80 mt-0.5">
-                  Our certified engineer visits your location to inspect camera angles & wiring paths
+                  {t("svb_subtitle", "Our certified engineer visits your location to inspect camera angles & wiring paths")}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-full text-purple-300 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-2 rounded-full text-purple-300 hover:text-white hover:bg-white/10 transition-colors shrink-0"
             >
               <X className="w-5 h-5" />
             </button>
@@ -252,28 +255,28 @@ export function SiteVisitBookingModal({
               </div>
 
               <div>
-                <h4 className="text-xl font-extrabold text-slate-900">Site Survey Appointment Confirmed!</h4>
+                <h4 className="text-xl font-extrabold text-slate-900">{t("svb_conf_title", "Site Survey Appointment Confirmed!")}</h4>
                 <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                  Our installation engineer has been assigned and will arrive at your premises as scheduled.
+                  {t("svb_conf_desc", "Our installation engineer has been assigned and will arrive at your premises as scheduled.")}
                 </p>
               </div>
 
               {/* Appointment Card */}
               <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200 text-left space-y-3">
                 <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-200">
-                  <span className="text-slate-500 font-medium">Booking ID</span>
+                  <span className="text-slate-500 font-medium">{t("svb_booking_id", "Booking ID")}</span>
                   <span className="font-mono font-bold text-slate-900">{bookingId}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-200">
-                  <span className="text-slate-500 font-medium">Scheduled Date</span>
+                  <span className="text-slate-500 font-medium">{t("svb_sched_date", "Scheduled Date")}</span>
                   <span className="font-bold text-purple-700">{selectedDate}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-200">
-                  <span className="text-slate-500 font-medium">Time Slot</span>
-                  <span className="font-bold text-slate-900">{selectedSlot}</span>
+                  <span className="text-slate-500 font-medium">{t("svb_time_slot", "Time Slot")}</span>
+                  <span className="font-bold text-slate-900">{timeSlots.find((s) => s.value === selectedSlot)?.label || selectedSlot}</span>
                 </div>
                 <div className="flex justify-between items-start text-xs">
-                  <span className="text-slate-500 font-medium shrink-0">Site Address</span>
+                  <span className="text-slate-500 font-medium shrink-0">{t("svb_site_addr", "Site Address")}</span>
                   <span className="text-right text-slate-900 font-medium pl-4">{address}, {area} - {pincode}</span>
                 </div>
               </div>
@@ -284,17 +287,17 @@ export function SiteVisitBookingModal({
                   href={whatsappUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all"
+                  className="w-full py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all whitespace-normal text-center leading-snug"
                 >
-                  <MessageCircle className="w-4 h-4" />
-                  Connect with Technician on WhatsApp
+                  <MessageCircle className="w-4 h-4 shrink-0" />
+                  {t("svb_wa_tech", "Connect with Technician on WhatsApp")}
                 </a>
 
                 <button
                   onClick={onClose}
-                  className="w-full py-3 px-4 rounded-2xl border border-slate-300 text-slate-700 font-semibold text-xs sm:text-sm hover:bg-slate-100 transition-colors"
+                  className="w-full py-3 px-4 rounded-2xl border border-slate-300 text-slate-700 font-semibold text-xs sm:text-sm hover:bg-slate-100 transition-colors whitespace-normal text-center leading-snug"
                 >
-                  Done / Return to Quotation
+                  {t("svb_done_back", "Done / Return to Quotation")}
                 </button>
               </div>
             </div>
@@ -305,23 +308,23 @@ export function SiteVisitBookingModal({
               {/* Trust Value Badges */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 bg-purple-50/80 rounded-2xl border border-purple-100 text-center">
                 <div className="text-[11px] font-bold text-purple-900">
-                  ✨ Zero Charges
-                  <p className="text-[10px] text-purple-600 font-normal">100% Free Visit</p>
+                  {t("svb_b1_t", "✨ Zero Charges")}
+                  <p className="text-[10px] text-purple-600 font-normal">{t("svb_b1_s", "100% Free Visit")}</p>
                 </div>
-                <div className="text-[11px] font-bold text-purple-900 border-x border-purple-200">
-                  📐 Angle Testing
-                  <p className="text-[10px] text-purple-600 font-normal">Check blindspots</p>
+                <div className="text-[11px] font-bold text-purple-900 sm:border-x border-y sm:border-y-0 py-1.5 sm:py-0 border-purple-200">
+                  {t("svb_b2_t", "📐 Angle Testing")}
+                  <p className="text-[10px] text-purple-600 font-normal">{t("svb_b2_s", "Check blindspots")}</p>
                 </div>
                 <div className="text-[11px] font-bold text-purple-900">
-                  🔒 No Advance
-                  <p className="text-[10px] text-purple-600 font-normal">Pay after approval</p>
+                  {t("svb_b3_t", "🔒 No Advance")}
+                  <p className="text-[10px] text-purple-600 font-normal">{t("svb_b3_s", "Pay after approval")}</p>
                 </div>
               </div>
 
               {/* Date Selection */}
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-2">
-                  Select Preferred Date <span className="text-rose-500">*</span>
+                  {t("svb_sel_date", "Select Preferred Date")} <span className="text-rose-500">*</span>
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
@@ -333,8 +336,8 @@ export function SiteVisitBookingModal({
                         : "border-slate-200 hover:border-slate-300 text-slate-600 bg-white"
                     }`}
                   >
-                    <span className="block text-[10px] text-slate-400 font-normal">Tomorrow</span>
-                    {new Date(getTomorrowDate()).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
+                    <span className="block text-[10px] text-slate-400 font-normal">{t("svb_tmrw", "Tomorrow")}</span>
+                    {new Date(getTomorrowDate()).toLocaleDateString(locale === "en" ? "en-IN" : `${locale}-IN`, { month: "short", day: "numeric" })}
                   </button>
 
                   <button
@@ -346,8 +349,8 @@ export function SiteVisitBookingModal({
                         : "border-slate-200 hover:border-slate-300 text-slate-600 bg-white"
                     }`}
                   >
-                    <span className="block text-[10px] text-slate-400 font-normal">Day After</span>
-                    {new Date(getDayAfterDate()).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
+                    <span className="block text-[10px] text-slate-400 font-normal">{t("svb_day_after", "Day After")}</span>
+                    {new Date(getDayAfterDate()).toLocaleDateString(locale === "en" ? "en-IN" : `${locale}-IN`, { month: "short", day: "numeric" })}
                   </button>
 
                   <div className="relative">
@@ -365,18 +368,18 @@ export function SiteVisitBookingModal({
               {/* Time Slot Selection */}
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-2">
-                  Select Preferred Time Slot <span className="text-rose-500">*</span>
+                  {t("svb_sel_slot", "Select Preferred Time Slot")} <span className="text-rose-500">*</span>
                 </label>
                 <div className="space-y-2">
-                  {TIME_SLOTS.map((slot) => {
-                    const isSelected = selectedSlot.includes(slot.label.split(" ")[0]);
+                  {timeSlots.map((slot) => {
+                    const isSelected = selectedSlot === slot.value;
                     return (
                       <button
                         key={slot.id}
                         type="button"
-                        onClick={() => setSelectedSlot(slot.label.replace(/^.*?\((.*?)\)/, "$1"))}
+                        onClick={() => setSelectedSlot(slot.value)}
                         className={`w-full p-2.5 rounded-xl border flex items-center justify-between transition-all text-left text-xs ${
-                          isSelected || selectedSlot === slot.label.replace(/^.*?\((.*?)\)/, "$1")
+                          isSelected
                             ? "border-purple-600 bg-purple-50/60 text-purple-950 font-bold shadow-sm"
                             : "border-slate-200 hover:border-slate-300 text-slate-600 bg-white"
                         }`}
@@ -385,7 +388,7 @@ export function SiteVisitBookingModal({
                           <span className="text-base">{slot.icon}</span>
                           <span>{slot.label}</span>
                         </div>
-                        {(isSelected || selectedSlot === slot.label.replace(/^.*?\((.*?)\)/, "$1")) && (
+                        {isSelected && (
                           <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
                         )}
                       </button>
@@ -399,21 +402,21 @@ export function SiteVisitBookingModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs font-semibold text-slate-700 mb-1 block">
-                      Contact Name <span className="text-rose-500">*</span>
+                      {t("svb_contact_name", "Contact Name")} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="Your Name"
+                      placeholder={t("svb_name_ph", "Your Name")}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
                     />
                   </div>
 
                   <div>
                     <label className="text-xs font-semibold text-slate-700 mb-1 block">
-                      Mobile Number <span className="text-rose-500">*</span>
+                      {t("pcm_mob", "Mobile Number")} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="tel"
@@ -430,7 +433,7 @@ export function SiteVisitBookingModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                   <div>
                     <label className="text-xs font-semibold text-slate-700 mb-1 block">
-                      Pincode <span className="text-rose-500">*</span>
+                      {t("addr_pin_lbl", "Pincode")} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -445,7 +448,7 @@ export function SiteVisitBookingModal({
 
                   <div>
                     <label className="text-xs font-semibold text-slate-700 mb-1 block">
-                      Area / Locality <span className="text-rose-500">*</span>
+                      {t("svb_area_lbl", "Area / Locality")} <span className="text-rose-500">*</span>
                     </label>
                     <select
                       required
@@ -454,7 +457,7 @@ export function SiteVisitBookingModal({
                       disabled={areaList.length === 0}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white disabled:bg-slate-50 disabled:text-slate-400"
                     >
-                      <option value="">Select Area</option>
+                      <option value="">{t("svb_sel_area", "Select Area")}</option>
                       {areaList.map((a) => (
                         <option key={a} value={a}>{a}</option>
                       ))}
@@ -463,17 +466,17 @@ export function SiteVisitBookingModal({
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                     <label className="text-xs font-semibold text-slate-700 block">
-                      Site Visit / Installation Address <span className="text-rose-500">*</span>
+                      {t("svb_addr_lbl", "Site Visit / Installation Address")} <span className="text-rose-500">*</span>
                     </label>
                     <button
                       type="button"
                       onClick={openMap}
                       className="text-[10px] font-bold text-purple-600 hover:text-purple-800 flex items-center gap-1 bg-purple-50 px-2 py-1 rounded-md transition-colors"
                     >
-                      <MapPin className="w-3 h-3" />
-                      {showMap ? "Hide Map" : "Drop Pin on Map"}
+                      <MapPin className="w-3 h-3 shrink-0" />
+                      {showMap ? t("svb_hide_map", "Hide Map") : t("svb_drop_pin", "Drop Pin on Map")}
                     </button>
                   </div>
                   
@@ -496,12 +499,12 @@ export function SiteVisitBookingModal({
                       {isGeocoding && (
                         <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg text-[10px] font-bold text-purple-700 shadow-sm flex items-center gap-2 z-[1000]">
                           <div className="w-3 h-3 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
-                          Fetching Address...
+                          {t("svb_fetching", "Fetching Address...")}
                         </div>
                       )}
                       <div className="absolute bottom-2 left-2 right-2 pointer-events-none z-[1000]">
                         <div className="bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg text-[10px] font-bold text-slate-700 shadow-sm text-center">
-                          Tap on the map or drag the pin to set your location
+                          {t("svb_drag_tip", "Tap on the map or drag the pin to set your location")}
                         </div>
                       </div>
                     </div>
@@ -512,20 +515,20 @@ export function SiteVisitBookingModal({
                     required
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    placeholder="House/Shop No, Street, Landmark"
+                    placeholder={t("svb_addr_ph", "House/Shop No, Street, Landmark")}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
                   />
                 </div>
 
                 <div>
                   <label className="text-xs font-semibold text-slate-700 mb-1 block">
-                    Special Site Notes (Optional)
+                    {t("svb_notes_lbl", "Special Site Notes (Optional)")}
                   </label>
                   <input
                     type="text"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="e.g. 2-floor house, tall ladder needed, wiring in conduit"
+                    placeholder={t("svb_notes_ph", "e.g. 2-floor house, tall ladder needed, wiring in conduit")}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
                   />
                 </div>
@@ -537,22 +540,22 @@ export function SiteVisitBookingModal({
                   type="button"
                   onClick={onClose}
                   disabled={isSubmitting}
-                  className="w-full sm:w-1/3 py-3 px-4 rounded-2xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-100 transition-colors"
+                  className="w-full sm:w-1/3 py-3 px-4 rounded-2xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-100 transition-colors whitespace-normal text-center leading-snug"
                 >
-                  Cancel
+                  {t("cancel", "Cancel")}
                 </button>
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full sm:w-2/3 py-3 px-6 rounded-2xl bg-gradient-to-r from-purple-700 via-indigo-700 to-slate-900 hover:from-purple-600 hover:to-slate-800 text-white font-bold text-xs sm:text-sm shadow-lg shadow-purple-900/30 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] disabled:opacity-50"
+                  className="w-full sm:w-2/3 py-3 px-6 rounded-2xl bg-gradient-to-r from-purple-700 via-indigo-700 to-slate-900 hover:from-purple-600 hover:to-slate-800 text-white font-bold text-xs sm:text-sm shadow-lg shadow-purple-900/30 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] disabled:opacity-50 whitespace-normal text-center leading-snug"
                 >
                   {isSubmitting ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      <span>Confirm Free Site Survey</span>
-                      <ArrowRight className="w-4 h-4" />
+                      <span>{t("svb_confirm_btn", "Confirm Free Site Survey")}</span>
+                      <ArrowRight className="w-4 h-4 shrink-0" />
                     </>
                   )}
                 </button>

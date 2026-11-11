@@ -18,9 +18,11 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 
 import { useOmniSearchStore } from "@/store/omni-search";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function OmniSearch() {
   const { isOpen: open, setIsOpen: setOpen } = useOmniSearchStore();
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<{
     leads: any[];
@@ -77,7 +79,7 @@ export function OmniSearch() {
     <Command.Dialog 
       open={open} 
       onOpenChange={setOpen} 
-      label="Global Command Palette"
+      label={t("omni_dialog_label", "Global Command Palette")}
       className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4 sm:px-6 md:px-0"
     >
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setOpen(false)} />
@@ -87,35 +89,37 @@ export function OmniSearch() {
           <Search className="w-5 h-5 text-zinc-400 mr-4 shrink-0" />
           <Command.Input 
             autoFocus
-            placeholder="Search leads, franchises, products or commands..."
+            placeholder={t("omni_search_ph", "Search leads, franchises, products or commands...")}
             onValueChange={setQuery}
             className="flex-1 bg-transparent border-none outline-none text-zinc-900 dark:text-white font-medium placeholder:text-zinc-400 placeholder:font-normal"
           />
           {isLoading && <Loader2 className="w-4 h-4 text-blue-500 animate-spin ml-4" />}
-          <div className="ml-4 flex items-center gap-1.5 px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg shrink-0">
-             <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-tighter">ESC to exit</span>
+          <div className="ml-4 flex items-center gap-1.5 px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg shrink-0">
+             <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-tight leading-snug">{t("omni_esc_exit", "ESC to exit")}</span>
           </div>
         </div>
 
         <Command.List className="max-h-[60vh] overflow-y-auto p-4 space-y-4">
           <Command.Empty className="py-6 md:py-12 text-center">
             <Zap className="w-8 h-8 text-zinc-200 dark:text-zinc-800 mx-auto mb-3" />
-            <p className="text-sm font-black text-zinc-400 uppercase tracking-widest">No results found for &quot;{query}&quot;</p>
+            <p className="text-sm font-black text-zinc-400 uppercase tracking-wider leading-snug">
+              {t("omni_no_results", "No results found for")} &quot;{query}&quot;
+            </p>
           </Command.Empty>
 
           {/* Quick Actions */}
           {query.length === 0 && (
-            <Command.Group heading="Quick Actions" className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] px-2 mb-2">
-              <Item icon={PlusCircle} label="Create New Lead" onSelect={() => runCommand(() => router.push("/admin/leads/new"))} />
-              <Item icon={Building2} label="Add Franchise Partner" onSelect={() => runCommand(() => router.push("/admin/franchises/new"))} />
-              <Item icon={Package} label="Bulk Product Upload" onSelect={() => runCommand(() => router.push("/admin/products/bulk"))} />
-              <Item icon={Settings} label="System Settings" onSelect={() => runCommand(() => router.push("/admin/settings"))} />
+            <Command.Group heading={t("omni_grp_quick", "Quick Actions")} className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.15em] px-2 mb-2">
+              <Item icon={PlusCircle} label={t("omni_act_new_lead", "Create New Lead")} onSelect={() => runCommand(() => router.push("/admin/leads/new"))} />
+              <Item icon={Building2} label={t("omni_act_add_franchise", "Add Franchise Partner")} onSelect={() => runCommand(() => router.push("/admin/franchises/new"))} />
+              <Item icon={Package} label={t("omni_act_bulk_upload", "Bulk Product Upload")} onSelect={() => runCommand(() => router.push("/admin/products/bulk"))} />
+              <Item icon={Settings} label={t("omni_act_settings", "System Settings")} onSelect={() => runCommand(() => router.push("/admin/settings"))} />
             </Command.Group>
           )}
 
           {/* Leads */}
           {results.leads.length > 0 && (
-            <Command.Group heading="Authorized Leads" className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] px-2 mb-2">
+            <Command.Group heading={t("omni_grp_leads", "Authorized Leads")} className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.15em] px-2 mb-2">
               {results.leads.map(lead => (
                 <Item 
                   key={lead.id} 
@@ -130,7 +134,7 @@ export function OmniSearch() {
 
           {/* Franchises */}
           {results.franchises.length > 0 && (
-            <Command.Group heading="Franchise Nodes" className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] px-2 mb-2">
+            <Command.Group heading={t("omni_grp_franchises", "Franchise Nodes")} className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.15em] px-2 mb-2">
               {results.franchises.map(f => (
                 <Item 
                   key={f.id} 
@@ -144,27 +148,27 @@ export function OmniSearch() {
           )}
 
           {/* Theme Commands */}
-          {query.toLowerCase().includes("theme") && (
-            <Command.Group heading="System Interface" className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] px-2 mb-2">
-              <Item icon={Zap} label="Switch to Dark Mode" onSelect={() => setTheme("dark")} />
-              <Item icon={Zap} label="Switch to Light Mode" onSelect={() => setTheme("light")} />
+          {(query.toLowerCase().includes("theme") || query.toLowerCase().includes("dark") || query.toLowerCase().includes("light")) && (
+            <Command.Group heading={t("omni_grp_theme", "System Interface")} className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.15em] px-2 mb-2">
+              <Item icon={Zap} label={t("omni_act_dark", "Switch to Dark Mode")} onSelect={() => setTheme("dark")} />
+              <Item icon={Zap} label={t("omni_act_light", "Switch to Light Mode")} onSelect={() => setTheme("light")} />
             </Command.Group>
           )}
         </Command.List>
 
-        <div className="border-t border-zinc-100 dark:border-zinc-800 px-6 py-4 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-between">
-           <div className="flex items-center gap-4">
+        <div className="border-t border-zinc-100 dark:border-zinc-800 px-6 py-4 bg-zinc-50 dark:bg-zinc-900 flex flex-wrap items-center justify-between gap-2">
+           <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-1.5">
                  <kbd className="px-2 py-1 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md text-[10px] font-bold text-zinc-500 shadow-sm">↵</kbd>
-                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">Select</span>
+                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight leading-snug">{t("omni_hint_select", "Select")}</span>
               </div>
               <div className="flex items-center gap-1.5">
                  <kbd className="px-2 py-1 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md text-[10px] font-bold text-zinc-500 shadow-sm">↑↓</kbd>
-                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">Navigate</span>
+                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight leading-snug">{t("omni_hint_navigate", "Navigate")}</span>
               </div>
            </div>
            <div className="flex items-center gap-2">
-              <span className="text-[9px] font-black text-zinc-300 dark:text-zinc-700 uppercase tracking-widest">TEAM Elite OmniSearch v1.0</span>
+              <span className="text-[9px] font-black text-zinc-300 dark:text-zinc-700 uppercase tracking-widest leading-snug">{t("omni_brand_ver", "TEAM OmniSearch v1.0")}</span>
            </div>
         </div>
       </div>
@@ -179,15 +183,15 @@ function Item({ icon: Icon, label, subtext, onSelect }: { icon: any, label: stri
       className="flex items-center justify-between p-4 rounded-2xl cursor-pointer aria-selected:bg-zinc-50 dark:aria-selected:bg-zinc-800/60 group transition-all"
     >
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-xl bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center text-zinc-400 group-aria-selected:text-blue-500 border border-zinc-100 dark:border-zinc-800 group-aria-selected:border-blue-500/30 transition-all">
+        <div className="w-10 h-10 rounded-xl bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center text-zinc-400 group-aria-selected:text-blue-500 border border-zinc-100 dark:border-zinc-800 group-aria-selected:border-blue-500/30 transition-all shrink-0">
           <Icon className="w-5 h-5" />
         </div>
         <div className="flex flex-col">
-          <span className="text-[13px] font-black text-zinc-900 dark:text-white uppercase tracking-tight leading-none mb-1 group-aria-selected:translate-x-1 transition-transform">{label}</span>
-          {subtext && <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{subtext}</span>}
+          <span className="text-[13px] font-black text-zinc-900 dark:text-white uppercase tracking-tight leading-snug mb-1 group-aria-selected:translate-x-1 transition-transform">{label}</span>
+          {subtext && <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider leading-snug">{subtext}</span>}
         </div>
       </div>
-      <ArrowRight className="w-4 h-4 text-zinc-200 group-aria-selected:text-blue-500 group-aria-selected:translate-x-1 opacity-0 group-aria-selected:opacity-100 transition-all" />
+      <ArrowRight className="w-4 h-4 text-zinc-200 group-aria-selected:text-blue-500 group-aria-selected:translate-x-1 opacity-0 group-aria-selected:opacity-100 transition-all shrink-0" />
     </Command.Item>
   );
 }

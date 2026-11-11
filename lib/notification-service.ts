@@ -1,12 +1,14 @@
+import { cleanEnvVar, cleanPhoneEnvVar } from "@/lib/env-utils";
+
 /**
  * Notification Service
  * Used to dispatch critical alerts (e.g., new leads, error thresholds) to admins.
  */
 export async function sendAdminNotification(message: string) {
   try {
-    const slackWebhookUrl = process.env.SLACK_WEBHOOK_URL;
-    const whatsappPhoneId = process.env.WHATSAPP_PHONE_ID;
-    const whatsappToken = process.env.WHATSAPP_TOKEN;
+    const slackWebhookUrl = cleanEnvVar(process.env.SLACK_WEBHOOK_URL);
+    const whatsappPhoneId = cleanPhoneEnvVar(process.env.WHATSAPP_PHONE_ID);
+    const whatsappToken = cleanEnvVar(process.env.WHATSAPP_TOKEN);
 
     // 1. WhatsApp Priority
     if (whatsappPhoneId && whatsappToken) {
@@ -18,7 +20,7 @@ export async function sendAdminNotification(message: string) {
         },
         body: JSON.stringify({
           messaging_product: "whatsapp",
-          to: process.env.ADMIN_WHATSAPP_NUMBER || "917357612865", // Default to Master Admin
+          to: cleanPhoneEnvVar(process.env.ADMIN_WHATSAPP_NUMBER, "917357612865"), // Default to Master Admin
           type: "text",
           text: { body: message },
         }),
@@ -48,8 +50,8 @@ export async function sendAdminNotification(message: string) {
 
 export async function sendCustomerWhatsApp(phone: string, message: string) {
   try {
-    const whatsappPhoneId = process.env.WHATSAPP_PHONE_ID;
-    const whatsappToken = process.env.WHATSAPP_TOKEN;
+    const whatsappPhoneId = cleanPhoneEnvVar(process.env.WHATSAPP_PHONE_ID);
+    const whatsappToken = cleanEnvVar(process.env.WHATSAPP_TOKEN);
 
     if (whatsappPhoneId && whatsappToken) {
       // Format phone number to E.164 without '+' if needed by Meta API

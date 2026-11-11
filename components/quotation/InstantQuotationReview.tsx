@@ -47,6 +47,20 @@ export function InstantQuotationReview({
     let localized = name;
     localized = localized.replace("Outdoor Bullet Camera", t("wz_prod_outdoor_bullet"));
     localized = localized.replace("Indoor Dome Camera", t("wz_prod_indoor_dome"));
+    localized = localized.replace("Outdoor 4G SIM Camera", t("iqr_prod_outdoor_4g", "Outdoor 4G SIM Camera"));
+    localized = localized.replace("Indoor 4G SIM Camera", t("iqr_prod_indoor_4g", "Indoor 4G SIM Camera"));
+    localized = localized.replace("Outdoor Wi-Fi Camera", t("iqr_prod_outdoor_wifi", "Outdoor Wi-Fi Camera"));
+    localized = localized.replace("Indoor Wi-Fi Camera", t("iqr_prod_indoor_wifi", "Indoor Wi-Fi Camera"));
+    localized = localized.replace("Smart Wi-Fi Camera Wall Mounting & App Pairing", t("iqr_prod_wifi_mount", "Smart Wi-Fi Camera Wall Mounting & App Pairing"));
+    localized = localized.replace("Wireless Camera Wall Mounting, Power Concealment & App Setup", t("iqr_prod_wireless_mount", "Wireless Camera Wall Mounting, Power Concealment & App Setup"));
+    localized = localized.replace("Camera Installation & Setup", t("iqr_prod_install_setup", "Camera Installation & Setup"));
+    localized = localized.replace("Technician Site Visit & Mobilization Fee", t("iqr_prod_mobilization", "Technician Site Visit & Mobilization Fee"));
+    localized = localized.replace("Site Visit & Travel Fee", t("iqr_prod_site_visit", "Site Visit & Travel Fee"));
+    localized = localized.replace("Small Job Flat Rate:", t("iqr_prod_small_job", "Small Job Flat Rate:"));
+    localized = localized.replace("Surveillance SD Card", t("iqr_prod_sd_card", "Surveillance SD Card"));
+    localized = localized.replace("3+1 Coaxial Cable", t("iqr_prod_coaxial_31", "3+1 Coaxial Cable"));
+    localized = localized.replace("CAT6 Cable", t("iqr_prod_cat6", "CAT6 Cable"));
+    localized = localized.replace("Power Supply SMPS", t("iqr_prod_smps", "Power Supply SMPS"));
     localized = localized.replace("Color Night Vision, Audio IN", t("wz_prod_color_night_audio"));
     localized = localized.replace("Supported", t("wz_prod_supported"));
     localized = localized.replace("Surveillance Hard Disk", t("wz_prod_surveillance_hdd"));
@@ -64,12 +78,12 @@ export function InstantQuotationReview({
     localized = localized.replace("Connector Set", t("wz_prod_connector_set"));
     localized = localized.replace("Connectors", t("wz_prod_connectors"));
     localized = localized.replace("Weatherproof Camera Junction Box", t("wz_prod_junction_box"));
-    localized = localized.replace("Budget Brand HDMI Cable", "High-Speed HDMI Cable");
-    localized = localized.replace("Budget Brand Display 19 inch", "19\" Security LED Display");
-    localized = localized.replace("Budget Brand 4G Router", "4G SIM WiFi Router (Dual Antenna)");
-    localized = localized.replace("Budget Brand 2U Rack for Recorder", "2U Metal DVR/NVR Rack");
-    localized = localized.replace("Budget Brand 4U Rack for Recorder", "4U Metal DVR/NVR Rack");
-    localized = localized.replace("Budget Brand PVC Rack for PoE Switch", "PVC Weatherproof Rack");
+    localized = localized.replace("Budget Brand HDMI Cable", t("iqr_hdmi_title"));
+    localized = localized.replace("Budget Brand Display 19 inch", t("addon_disp_19_title"));
+    localized = localized.replace("Budget Brand 4G Router", t("addon_4g_router_title"));
+    localized = localized.replace("Budget Brand 2U Rack for Recorder", t("addon_2u_rack_title"));
+    localized = localized.replace("Budget Brand 4U Rack for Recorder", t("addon_4u_rack_title"));
+    localized = localized.replace("Budget Brand PVC Rack for PoE Switch", t("addon_pvc_rack_title"));
     return localized;
   };
 
@@ -106,7 +120,7 @@ export function InstantQuotationReview({
   const recorderDisplayName = recItem 
     ? (recItem.brand ? `${recItem.brand} ${techName === "IP" ? "NVR" : "DVR"}` : recItem.display_name)
     : isWireless 
-    ? "None (MicroSD / App)" 
+    ? t("iqr_none_microsd") 
     : `${brandName} ${techName === "IP" ? "NVR" : "DVR"}`;
 
   const strItem = activePricing.items?.find((i: any) => 
@@ -128,7 +142,7 @@ export function InstantQuotationReview({
       price: products.find(p => p.id === "ACC-2U-RACK-RECORDER" || p.sku === "ACC-2U-RACK-RECORDER")?.unit_price || 1150,
       icon: Box,
       category: t("addon_cat_enclosure", "Safety Racks & Boxes"),
-      tag: t("addon_tag_recommended", "Recommended")
+      tag: t("addon_tag_recommended", "Handy Add-On")
     },
     {
       id: "ACC-4U-RACK-RECORDER",
@@ -155,7 +169,7 @@ export function InstantQuotationReview({
       price: products.find(p => p.id === "DISP-19-INCH" || p.sku === "DISP-19-INCH")?.unit_price || 5200,
       icon: Monitor,
       category: t("addon_cat_display", "TV & Display Screens"),
-      tag: t("addon_tag_popular", "Popular")
+      tag: t("addon_tag_popular", "Most Picked")
     },
     {
       id: "ACC-4G-ROUTER",
@@ -247,7 +261,7 @@ export function InstantQuotationReview({
   ];
 
   const dynamicAccessories = combinedDbAddons.map(a => {
-    let cat = (a.category || "General Accessories").toString();
+    let cat = (a.category || t("iqr_cat_general", "General Accessories")).toString();
     let Icon = Box;
     const catLower = cat.toLowerCase();
     
@@ -268,7 +282,7 @@ export function InstantQuotationReview({
     return {
       id: a.id || (a as any).sku || "",
       title: a.display_name,
-      description: (a as any).description || "Optional system upgrade or accessory.",
+      description: (a as any).description || t("iqr_addon_opt_desc", "Optional system upgrade or accessory."),
       price: a.unit_price || 0,
       icon: Icon,
       category: cat,
@@ -294,11 +308,11 @@ export function InstantQuotationReview({
 
     toggleAddon(id);
     if (otherHdmi && !isCurrentlySelected) {
-      toast.success(`Switched HDMI cable to ${title}`);
+      toast.success(t("iqr_toast_hdmi_switch", "Switched HDMI cable to {title}", { title }));
     } else if (!isCurrentlySelected) {
-      toast.success(`Added ${title} to quotation`);
+      toast.success(t("iqr_toast_addon_added", "Added {title} to quotation", { title }));
     } else {
-      toast.info(`Removed ${title} from quotation`);
+      toast.info(t("iqr_toast_addon_removed", "Removed {title} from quotation", { title }));
     }
   };
 
@@ -316,7 +330,7 @@ export function InstantQuotationReview({
           </button>
 
           <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-            {brandName} • {Boolean(selection.is_hybrid || (activePricing as any).is_hybrid || ((selection.wifi_camera_count || 0) > 0 && camCount > (selection.wifi_camera_count || 0))) ? (selection.hybrid_wired_technology === "IP" ? "⚡ Pro IP Hybrid (NVR + Wi-Fi)" : "⚡ Value HD Hybrid (DVR + Wi-Fi)") : (techName === "HD" ? t("wz_standard_hd") : t("wz_premium_ip"))}
+            {brandName} • {Boolean(selection.is_hybrid || (activePricing as any).is_hybrid || ((selection.wifi_camera_count || 0) > 0 && camCount > (selection.wifi_camera_count || 0))) ? (selection.hybrid_wired_technology === "IP" ? t("iqr_hybrid_ip_badge") : t("iqr_hybrid_hd_badge")) : (techName === "HD" ? t("wz_standard_hd") : t("wz_premium_ip"))}
           </span>
         </div>
 
@@ -329,7 +343,7 @@ export function InstantQuotationReview({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-blue-400 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-blue-600 transition-colors shadow-2xs cursor-pointer"
             >
               <FileText className="w-3.5 h-3.5 text-blue-600" />
-              <span className="hidden sm:inline">Download</span> PDF
+              <span className="hidden sm:inline">{t("iqr_download")}</span> {t("iqr_pdf_short")}
             </button>
           )}
           {onShareWhatsApp && (
@@ -339,7 +353,7 @@ export function InstantQuotationReview({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 hover:border-emerald-400 text-xs font-semibold text-emerald-700 dark:text-emerald-300 transition-colors shadow-2xs cursor-pointer"
             >
               <Share2 className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="hidden sm:inline">Share</span> WhatsApp
+              <span className="hidden sm:inline">{t("iqr_share")}</span> {t("qrc_whatsapp")}
             </button>
           )}
         </div>
@@ -349,12 +363,12 @@ export function InstantQuotationReview({
       <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="text-[10px] sm:text-xs uppercase font-black text-blue-300 tracking-wider">{t("wz_confirmed_quotation")}</span>
               <span className="text-[9px] sm:text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">{t("wz_best_value")}</span>
             </div>
             <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white">
-              {brandName} {isWireless ? "Smart Wireless (Wi-Fi / 4G)" : techName === "HD" ? t("wz_standard_hd") : t("wz_premium_ip")} {t("wz_setup")}
+              {brandName} {isWireless ? t("iqr_smart_wireless") : techName === "HD" ? t("wz_standard_hd") : t("wz_premium_ip")} {t("wz_setup")}
             </h2>
             <p className="text-[11px] sm:text-xs text-blue-200/80 mt-0.5">
               {t("wz_complete_system_for")} {camCount} {t("wz_cameras_with")} {selection.recording_days || 7} {t("wz_days_storage")}
@@ -369,7 +383,7 @@ export function InstantQuotationReview({
             {/* EMI Sub-Header Anchor */}
             <div className="flex items-center justify-between sm:justify-end gap-2 w-full">
               <span className="text-[10px] text-blue-200 font-medium sm:hidden">
-                ✓ Full Setup Included
+                {t("iqr_full_setup_inc")}
               </span>
               <button
                 type="button"
@@ -377,24 +391,24 @@ export function InstantQuotationReview({
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[11px] sm:text-xs shadow-md transition-all active:scale-95 cursor-pointer group"
               >
                 <CreditCard className="w-3.5 h-3.5 text-slate-950 group-hover:scale-110 transition-transform" />
-                <span>or ₹{emiMonthlyAmount.toLocaleString("en-IN")}/mo (EMI)</span>
+                <span>{t("iqr_or_emi_mo", undefined, { amount: emiMonthlyAmount.toLocaleString("en-IN") })}</span>
                 <span className="bg-slate-950 text-amber-300 text-[9px] uppercase font-black px-1.5 py-0.2 rounded-full ml-0.5">
-                  Plans ⓘ
+                  {t("iqr_plans_info")}
                 </span>
               </button>
             </div>
             <span className="text-[10px] text-blue-200 font-medium hidden sm:block">
-              ✓ {isWireless ? "Zero Video Cabling • High Endurance MicroSD • Onsite Setup" : t("wz_includes_hardware_wiring_install")}
+              {isWireless ? t("iqr_zero_cabling_inc") : `✓ ${t("wz_includes_hardware_wiring_install")}`}
             </span>
             {/* IN-HERO DIRECT BOOKING CTA */}
             <button
               type="button"
               onClick={onProceedToActualQuotation}
               disabled={isSaving}
-              className="w-full mt-1.5 bg-emerald-500 hover:bg-emerald-400 text-white font-black text-xs sm:text-sm py-2 px-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer border border-emerald-400/30"
+              className="w-full mt-1.5 bg-emerald-500 hover:bg-emerald-400 text-white font-black text-xs sm:text-sm min-h-[44px] py-2 px-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer border border-emerald-400/30 text-center"
             >
-              <span>{isSaving ? "Finalizing Quote..." : "Book with ₹500 Token Advance"}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <span>{isSaving ? t("iqr_finalizing") : t("iqr_book_token_btn")}</span>
+              <ArrowRight className="w-3.5 h-3.5 shrink-0" />
             </button>
           </div>
         </div>
@@ -403,36 +417,36 @@ export function InstantQuotationReview({
         <div className="mt-3.5 pt-3 border-t border-white/10 grid grid-cols-3 gap-2 text-center text-[10px] sm:text-xs font-semibold text-blue-100">
           <div className="flex items-center justify-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span className="truncate">{t("wz_100_genuine")}</span>
+            <span className="whitespace-normal break-words leading-tight">{t("wz_100_genuine")}</span>
           </div>
           <div className="flex items-center justify-center gap-1">
             <Wrench className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="truncate">{t("wz_free_onsite_install")}</span>
+            <span className="whitespace-normal break-words leading-tight">{t("wz_free_onsite_install")}</span>
           </div>
           <div className="flex items-center justify-center gap-1">
             <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-            <span className="truncate">{t("wz_1_year_warranty")}</span>
+            <span className="whitespace-normal break-words leading-tight">{t("wz_1_year_warranty")}</span>
           </div>
         </div>
       </div>
 
-      {/* 3. COMPACT SPECIFICATIONS — 3x2 on mobile, 6x1 on desktop */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      {/* 3. COMPACT SPECIFICATIONS — 2x3 on mobile, 3x2 on tablet, 6x1 on desktop */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Camera className="w-4 h-4 text-blue-600 mx-auto mb-1" />
           <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_cameras")}</div>
-          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{camCount}x {isWireless ? "Wi-Fi" : techName}</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white whitespace-normal break-words leading-snug">{camCount}x {isWireless ? "Wi-Fi" : techName}</div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Server className="w-4 h-4 text-indigo-600 mx-auto mb-1" />
           <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_recorder")}</div>
-          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{recorderDisplayName}</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white whitespace-normal break-words leading-snug">{recorderDisplayName}</div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs flex flex-col justify-between">
           <div>
             <HardDrive className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
             <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_storage")}</div>
-            <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{isWireless ? `${storageCap} MicroSD (${selection.recording_days || 7}d)` : `${selection.recording_days || 7} ${t("wz_days")}`}</div>
+            <div className="text-xs font-bold text-zinc-900 dark:text-white whitespace-normal break-words leading-snug">{isWireless ? `${storageCap} MicroSD (${selection.recording_days || 7} ${t("wz_days")})` : `${selection.recording_days || 7} ${t("wz_days")}`}</div>
           </div>
           {!isWireless && (
             <div className="flex items-center justify-center gap-1 mt-1 pt-1 border-t border-zinc-100 dark:border-zinc-800">
@@ -446,7 +460,7 @@ export function InstantQuotationReview({
                       ? "bg-emerald-600 text-white shadow-2xs"
                       : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200"
                   }`}
-                  title={`Switch to ${days} Days Storage`}
+                  title={t("iqr_switch_days", undefined, { days: String(days) })}
                 >
                   {days}d
                 </button>
@@ -457,23 +471,23 @@ export function InstantQuotationReview({
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Cable className="w-4 h-4 text-amber-600 mx-auto mb-1" />
           <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_cabling")}</div>
-          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">
+          <div className="text-xs font-bold text-zinc-900 dark:text-white whitespace-normal break-words leading-tight">
             {isWireless 
               ? (selection.power_wiring_option === "wire_needed" 
-                  ? `2-Core Wire (~${selection.total_power_cable_meters || (camCount * 10)}m)` 
-                  : "Zero Video Cabling") 
+                  ? t("iqr_2core_wire", undefined, { meters: String(selection.total_power_cable_meters || (camCount * 10)) })
+                  : t("iqr_zero_video_cabling")) 
               : t("wz_copper_wire")}
           </div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Wrench className="w-4 h-4 text-purple-600 mx-auto mb-1" />
           <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_installation")}</div>
-          <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 truncate">{t("wz_included")}</div>
+          <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-normal break-words leading-tight">{t("wz_included")}</div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <ShieldCheck className="w-4 h-4 text-rose-600 mx-auto mb-1" />
           <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_warranty")}</div>
-          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{t("wz_1_year_brand")}</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white whitespace-normal break-words leading-tight">{t("wz_1_year_brand")}</div>
         </div>
       </div>
 
@@ -490,20 +504,20 @@ export function InstantQuotationReview({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-xs font-bold text-zinc-900 dark:text-white truncate">
-                  Easy EMI from ₹{emiMonthlyAmount.toLocaleString("en-IN")}/mo
+                <span className="text-xs font-bold text-zinc-900 dark:text-white">
+                  {t("iqr_easy_emi_from", undefined, { amount: emiMonthlyAmount.toLocaleString("en-IN") })}
                 </span>
                 <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 px-1.5 py-0.5 rounded shrink-0">
-                  No Cost Available
+                  {t("iqr_nocost_badge")}
                 </span>
               </div>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate sm:whitespace-normal">
-                HDFC, ICICI, SBI, Axis, Bajaj Finserv & more • Powered by Razorpay
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 whitespace-normal leading-snug">
+                {t("iqr_razorpay_banks")}
               </p>
             </div>
           </div>
           <div className="text-[11px] font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform flex items-center shrink-0">
-            <span>Plans</span> <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+            <span>{t("iqr_plans")}</span> <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
           </div>
         </div>
 
@@ -515,15 +529,15 @@ export function InstantQuotationReview({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-xs font-bold text-zinc-900 dark:text-white truncate">
-                  Pay After Installation (Zero Risk)
+                <span className="text-xs font-bold text-zinc-900 dark:text-white">
+                  {t("iqr_pay_after_install")}
                 </span>
                 <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 px-1.5 py-0.5 rounded shrink-0">
-                  ₹500 Booking Token
+                  {t("iqr_token_badge")}
                 </span>
               </div>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate sm:whitespace-normal">
-                Book your technician slot with ₹500 token, pay balance only after live camera testing
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 whitespace-normal leading-snug">
+                {t("iqr_token_desc")}
               </p>
             </div>
           </div>
@@ -533,21 +547,21 @@ export function InstantQuotationReview({
 
       {/* Guaranteed All-Inclusive Fixed Price Inclusions Checklist */}
       <div className="bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-3.5 sm:p-4 my-3 shadow-xs">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <span className="text-xs font-black uppercase tracking-wider text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
-            <span>✅</span> Guaranteed Fixed Price — Zero Hidden Extras
+            <span>✅</span> {t("iqr_fixed_price_hdr")}
           </span>
-          <span className="text-[10px] bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200 font-extrabold px-2 py-0.5 rounded-full">
-            100% Inclusions
+          <span className="text-[10px] bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200 font-extrabold px-2 py-0.5 rounded-full shrink-0">
+            {t("iqr_100_inclusions")}
           </span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-emerald-800 dark:text-emerald-300 font-medium">
-          <span className="flex items-center gap-1">✓ Genuine WD/Seagate HDD</span>
-          <span className="flex items-center gap-1">✓ 100% Pure Copper Cable</span>
-          <span className="flex items-center gap-1">✓ Heavy-Duty Metal SMPS</span>
-          <span className="flex items-center gap-1">✓ Waterproof Junction Boxes</span>
-          <span className="flex items-center gap-1">✓ High-Shield BNC/DC Jacks</span>
-          <span className="flex items-center gap-1">✓ 1-Yr Free Onsite Warranty</span>
+          <span className="flex items-center gap-1">{t("iqr_inc_hdd")}</span>
+          <span className="flex items-center gap-1">{t("iqr_inc_cable")}</span>
+          <span className="flex items-center gap-1">{t("iqr_inc_smps")}</span>
+          <span className="flex items-center gap-1">{t("iqr_inc_jbox")}</span>
+          <span className="flex items-center gap-1">{t("iqr_inc_jacks")}</span>
+          <span className="flex items-center gap-1">{t("iqr_inc_warranty")}</span>
         </div>
       </div>
 
@@ -556,23 +570,23 @@ export function InstantQuotationReview({
         <summary className="flex items-center justify-between cursor-pointer list-none select-none text-xs font-bold text-slate-200">
           <div className="flex items-center gap-2">
             <span className="text-base">👁️</span>
-            <span>Night Vision Quality Comparison: See 2:00 AM Simulation</span>
+            <span>{t("iqr_nv_sim_title")}</span>
           </div>
-          <span className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded font-bold group-open:hidden">
-            Compare IR vs ColorVu ▼
+          <span className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded font-bold group-open:hidden shrink-0">
+            {t("iqr_compare_ir_color")}
           </span>
         </summary>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-800 text-xs">
           <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700">
-            <span className="font-bold text-slate-400 block mb-1">Standard IR (Black & White)</span>
-            <div className="h-24 bg-slate-950 rounded-lg flex items-center justify-center text-slate-400 border border-slate-800 text-center p-2 text-[11px] leading-relaxed">
-              Grainy monochrome view. Number plates unreadable, car color and intruder clothing appear identical grey.
+            <span className="font-bold text-slate-400 block mb-1">{t("iqr_std_ir_bw")}</span>
+            <div className="min-h-24 bg-slate-950 rounded-lg flex items-center justify-center text-slate-400 border border-slate-800 text-center p-2.5 text-[11px] leading-relaxed">
+              {t("iqr_std_ir_desc")}
             </div>
           </div>
           <div className="p-3 rounded-xl bg-blue-950/80 border border-blue-500/50">
-            <span className="font-bold text-amber-300 block mb-1">24/7 ColorVu Full Color</span>
-            <div className="h-24 bg-blue-900/30 rounded-lg flex items-center justify-center text-blue-200 border border-blue-500/30 text-center p-2 text-[11px] leading-relaxed">
-              Vivid daylight-like color. Clear red t-shirt, blue vehicle, and crisp high-contrast license plate identification.
+            <span className="font-bold text-amber-300 block mb-1">{t("iqr_colorvu_title")}</span>
+            <div className="min-h-24 bg-blue-900/30 rounded-lg flex items-center justify-center text-blue-200 border border-blue-500/30 text-center p-2.5 text-[11px] leading-relaxed">
+              {t("iqr_colorvu_desc")}
             </div>
           </div>
         </div>
@@ -580,43 +594,43 @@ export function InstantQuotationReview({
 
       {/* 2-Tap Preferred Survey Appointment Slot */}
       <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-3.5 sm:p-4 my-3 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
-            <span>🗓️</span> Schedule Certified Engineer Site Visit (₹0 Free)
+            <span>🗓️</span> {t("iqr_sched_visit_hdr")}
           </span>
-          <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full">
-            Certified Technician
+          <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full shrink-0">
+            {t("iqr_cert_tech")}
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 block mb-1.5">Tap 1: Preferred Day</span>
+            <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 block mb-1.5">{t("iqr_tap1_day")}</span>
             <div className="grid grid-cols-3 gap-1.5 text-xs font-bold">
               {["Tomorrow", "Sunday", "Monday"].map(day => (
                 <button
                   key={day}
                   type="button"
                   onClick={() => setPreferredSurveyDate(day)}
-                  className={`p-2 rounded-xl border text-center transition-all ${
+                  className={`p-2 rounded-xl border text-center transition-all break-words ${
                     preferredSurveyDate === day
                       ? "border-blue-600 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-black shadow-xs ring-1 ring-blue-500"
                       : "border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
                   }`}
                 >
-                  {day}
+                  {day === "Tomorrow" ? t("iqr_day_tomorrow") : day === "Sunday" ? t("iqr_day_sunday") : t("iqr_day_monday")}
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 block mb-1.5">Tap 2: Time Window</span>
+            <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 block mb-1.5">{t("iqr_tap2_time")}</span>
             <div className="grid grid-cols-3 gap-1.5 text-xs font-bold">
               {[
-                { id: "Morning (10 AM - 1 PM)", label: "Morning", time: "10am-1pm" },
-                { id: "Afternoon (2 PM - 5 PM)", label: "Afternoon", time: "2pm-5pm" },
-                { id: "Evening (5 PM - 8 PM)", label: "Evening", time: "5pm-8pm" },
+                { id: "Morning (10 AM - 1 PM)", label: t("iqr_slot_morning"), time: "10am-1pm" },
+                { id: "Afternoon (2 PM - 5 PM)", label: t("iqr_slot_afternoon"), time: "2pm-5pm" },
+                { id: "Evening (5 PM - 8 PM)", label: t("iqr_slot_evening"), time: "5pm-8pm" },
               ].map(slot => (
                 <button
                   key={slot.id}
@@ -645,7 +659,7 @@ export function InstantQuotationReview({
             <span>{t("iqr_match_my_brand")}</span>
           </div>
           <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-            Mixed combines top-grade cameras with a CP Plus recorder for maximum savings. Or match 100% of items to one brand:
+            {t("iqr_brand_mix_desc")}
           </p>
         </div>
         <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full scrollbar-none">
@@ -653,12 +667,12 @@ export function InstantQuotationReview({
             onClick={() => updateSelection({ brand_preference: 'all' })}
             className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${selection.brand_preference === 'all' || !selection.brand_preference || getCanonicalBrandKey(selection.brand_preference) === 'all' ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'}`}
           >
-            <span>Mixed (Best Price)</span>
-            <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-emerald-500 text-white font-black">★ Best Value</span>
+            <span>{t("iqr_mixed_best_price")}</span>
+            <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-emerald-500 text-white font-black">{t("iqr_lowest_price_badge")}</span>
           </button>
           {getUniqueCanonicalBrands(products, "cctv_camera").map(brand => {
             const isSelected = getCanonicalBrandKey(selection.brand_preference) === getCanonicalBrandKey(brand);
-            const brandBadge = brand.toLowerCase().includes("cp plus") ? "Popular" : brand.toLowerCase().includes("hikvision") ? "Global #1" : "Verified";
+            const brandBadge = brand.toLowerCase().includes("cp plus") ? t("iqr_badge_cpplus") : brand.toLowerCase().includes("hikvision") ? t("iqr_badge_hikvision") : t("iqr_badge_verified");
             return (
               <button 
                 key={brand}
@@ -683,14 +697,14 @@ export function InstantQuotationReview({
                   <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </span>
                 <h4 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white">
-                  Camera Power Point Availability
+                  {t("iqr_cam_power_avail")}
                 </h4>
                 <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 px-2 py-0.5 rounded-full">
-                  Zero Video Cabling
+                  {t("iqr_zero_video_cabling")}
                 </span>
               </div>
               <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                Wi-Fi & 4G cameras transmit video wirelessly. Each camera includes a manufacturer power adapter (1.5m). Select your site power scenario:
+                {t("iqr_wifi_power_desc")}
               </p>
             </div>
           </div>
@@ -706,14 +720,14 @@ export function InstantQuotationReview({
                   : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 text-zinc-700 dark:text-zinc-300"
               }`}
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-bold">Power Socket Nearby</span>
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/70 dark:text-emerald-300">
-                  Included (₹0)
+              <div className="flex items-center justify-between gap-1.5 mb-1">
+                <span className="text-xs font-bold">{t("iqr_power_nearby")}</span>
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/70 dark:text-emerald-300 shrink-0">
+                  {t("iqr_included_free")}
                 </span>
               </div>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
-                Power socket within 1.5m of camera. Camera plugs directly into AC point.
+                {t("iqr_power_nearby_desc")}
               </p>
             </button>
 
@@ -731,14 +745,14 @@ export function InstantQuotationReview({
                   : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 text-zinc-700 dark:text-zinc-300"
               }`}
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-bold">Need Electrical Wire</span>
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/70 dark:text-amber-300">
+              <div className="flex items-center justify-between gap-1.5 mb-1">
+                <span className="text-xs font-bold">{t("iqr_need_2core")}</span>
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/70 dark:text-amber-300 shrink-0">
                   @ ₹10/m
                 </span>
               </div>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
-                No plug point near camera. Run 2-core copper electrical wire from switchboard.
+                {t("iqr_need_2core_desc")}
               </p>
             </button>
 
@@ -752,14 +766,14 @@ export function InstantQuotationReview({
                   : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 text-zinc-700 dark:text-zinc-300"
               }`}
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-bold">Check on Site Survey</span>
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/70 dark:text-blue-300">
-                  Pay on Actuals
+              <div className="flex items-center justify-between gap-1.5 mb-1">
+                <span className="text-xs font-bold">{t("iqr_check_survey")}</span>
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/70 dark:text-blue-300 shrink-0">
+                  {t("iqr_pay_actuals")}
                 </span>
               </div>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
-                Free survey. Technician will measure distance on site and bill wire only if required.
+                {t("iqr_check_survey_desc")}
               </p>
             </button>
           </div>
@@ -768,7 +782,7 @@ export function InstantQuotationReview({
           {selection.power_wiring_option === "wire_needed" && (
             <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-amber-50/50 dark:bg-amber-950/20 p-2.5 sm:p-3 rounded-xl">
               <span className="text-xs font-semibold text-amber-900 dark:text-amber-200">
-                2-Core Electrical Wire Estimated Length:
+                {t("iqr_est_2core_len")}
               </span>
               <div className="flex items-center gap-2 self-start sm:self-auto">
                 <button
@@ -797,7 +811,7 @@ export function InstantQuotationReview({
                   +
                 </button>
                 <span className="text-[11px] text-zinc-500 dark:text-zinc-400 ml-1">
-                  (~{Math.round((selection.total_power_cable_meters || (camCount * 10)) / camCount)}m / camera)
+                  {t("iqr_per_cam_m", "(~{m}m / camera)", { m: String(Math.round((selection.total_power_cable_meters || (camCount * 10)) / camCount)) })}
                 </span>
               </div>
             </div>
@@ -811,26 +825,26 @@ export function InstantQuotationReview({
             {activePricing.items.map((item, idx) => (
               <div key={idx} className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex items-center justify-between gap-2 shadow-xs">
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{translateProductName(item.display_name)}</div>
+                  <div className="text-xs font-bold text-zinc-900 dark:text-white break-words leading-snug">{translateProductName(item.display_name)}</div>
                     {item.brand && (
                       <div className="inline-block mt-0.5 mb-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
-                        {getCanonicalBrandName(item.brand)}
+                        {getCanonicalBrandName(item.brand) === "Budget Brand" ? t("dvg_brand_budget_lbl", "Budget Brand") : getCanonicalBrandName(item.brand)}
                       </div>
                     )}
                     <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    {t("wz_qty")}: {item.qty} {item.unit_price > 0 ? `• ₹${item.unit_price.toLocaleString("en-IN")} each` : `• ${t("wz_free_included", "Included (Free)")}`}
+                    {t("wz_qty")}: {item.qty} {item.unit_price > 0 ? t("iqr_each", "• ₹{price} each", { price: item.unit_price.toLocaleString("en-IN") }) : `• ${t("wz_free_included", "Included (Free)")}`}
                   </div>
                 </div>
                 <div className="text-xs font-black text-zinc-900 dark:text-white shrink-0">
-                  {item.line_total > 0 ? `₹${item.line_total.toLocaleString("en-IN")}` : <span className="text-emerald-600 text-[11px]">FREE</span>}
+                  {item.line_total > 0 ? `₹${item.line_total.toLocaleString("en-IN")}` : <span className="text-emerald-600 text-[11px]">{t("iqr_free_badge")}</span>}
                 </div>
               </div>
             ))}
             {activePricing.addons && activePricing.addons.length > 0 && activePricing.addons.map((addon, idx) => (
               <div key={`addon-${idx}`} className="p-3 bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center justify-between gap-2 shadow-xs">
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-bold text-blue-950 dark:text-blue-200 truncate">{translateProductName(addon.display_name)}</div>
-                  <div className="text-[11px] text-blue-700/80 dark:text-blue-400">Add-on • {t("wz_qty")}: {addon.qty || 1}</div>
+                  <div className="text-xs font-bold text-blue-950 dark:text-blue-200 break-words leading-snug">{translateProductName(addon.display_name)}</div>
+                  <div className="text-[11px] text-blue-700/80 dark:text-blue-400">{t("iqr_addon_bullet")} {t("wz_qty")}: {addon.qty || 1}</div>
                 </div>
                 <div className="text-xs font-black text-blue-900 dark:text-blue-200 shrink-0">
                   +₹{((addon.price || 0) * (addon.qty || 1)).toLocaleString("en-IN")}
@@ -870,7 +884,7 @@ export function InstantQuotationReview({
                           <div className="truncate">{translateProductName(item.display_name)}</div>
                           {item.brand && (
                             <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
-                              {getCanonicalBrandName(item.brand)}
+                              {getCanonicalBrandName(item.brand) === "Budget Brand" ? t("dvg_brand_budget_lbl", "Budget Brand") : getCanonicalBrandName(item.brand)}
                             </span>
                           )}
                         </td>
@@ -914,13 +928,13 @@ export function InstantQuotationReview({
               )}
               {activePricing.addons_total > 0 && (
                 <div className="flex justify-between text-blue-600 dark:text-blue-400">
-                  <span>Accessories & Add-ons:</span>
+                  <span>{t("iqr_addons_line")}</span>
                   <span className="font-bold">+₹{activePricing.addons_total.toLocaleString("en-IN")}</span>
                 </div>
               )}
               {activePricing.referral_discount > 0 && (
                 <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
-                  <span>Discount / Promo:</span>
+                  <span>{t("iqr_discount_promo")}</span>
                   <span className="font-bold">-₹{activePricing.referral_discount.toLocaleString("en-IN")}</span>
                 </div>
               )}
@@ -939,15 +953,15 @@ export function InstantQuotationReview({
 
               {/* High-Trust Token Advance Callout */}
               <div className="mt-3 pt-3 border-t border-dashed border-emerald-300 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/30 p-3 rounded-xl space-y-1.5">
-                <div className="flex justify-between items-center text-xs">
+                <div className="flex justify-between items-center text-xs gap-2">
                   <span className="font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    Booking Token (Due Today):
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                    {t("iqr_token_due_today")}
                   </span>
-                  <span className="font-black text-emerald-700 dark:text-emerald-300 text-sm">₹500</span>
+                  <span className="font-black text-emerald-700 dark:text-emerald-300 text-sm shrink-0">₹500</span>
                 </div>
-                <div className="flex justify-between items-center text-[11px] text-zinc-600 dark:text-zinc-400">
-                  <span>Balance payable post installation & live testing:</span>
+                <div className="flex justify-between items-center gap-2 text-[11px] text-zinc-600 dark:text-zinc-400">
+                  <span>{t("iqr_bal_post_test")}</span>
                   <span className="font-bold text-zinc-900 dark:text-white">
                     ₹{(activePricing.total_payable - 500).toLocaleString("en-IN")}
                   </span>
@@ -975,7 +989,7 @@ export function InstantQuotationReview({
           </div>
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <div className="text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-              Live Real-Time Pricing
+              {t("iqr_live_pricing")}
             </div>
           </div>
         </div>
@@ -1080,14 +1094,14 @@ export function InstantQuotationReview({
                             {hasSelected ? (
                               <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
                                 <Check className="w-3 h-3 stroke-[3]" />
-                                {selectedItems.length === 1 ? selectedItems[0].title : `${selectedItems.length} Added`}
+                                {selectedItems.length === 1 ? selectedItems[0].title : t("iqr_n_added", "{count} Added", { count: String(selectedItems.length) })}
                                 <span className="opacity-75 font-normal ml-0.5">
                                   (+₹{selectedItems.reduce((sum, i) => sum + i.price, 0).toLocaleString("en-IN")})
                                 </span>
                               </span>
                             ) : (
                               <span className="text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
-                                {hasHdmiGroup ? `${hdmiItems.length} Lengths Available` : `${items.length} ${items.length === 1 ? "Option" : "Options"}`}
+                                {hasHdmiGroup ? t("iqr_lengths_avail", "{count} Lengths Available", { count: String(hdmiItems.length) }) : `${items.length} ${items.length === 1 ? t("iqr_opt_singular") : t("iqr_opt_plural")}`}
                               </span>
                             )}
                           </div>
@@ -1106,18 +1120,18 @@ export function InstantQuotationReview({
                               selectedItems.forEach(item => handleToggle(item.id, item.title));
                             }}
                             className="text-[11px] font-bold text-red-600 hover:text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 px-2 py-1 rounded-lg transition-colors hidden md:inline-flex items-center gap-1 cursor-pointer"
-                            title="Remove selected items"
+                            title={t("iqr_remove_items")}
                           >
                             <X className="w-3 h-3" />
-                            <span>Remove</span>
+                            <span>{t("iqr_remove")}</span>
                           </button>
                         )}
-                        <span className={`text-xs font-bold px-2.5 py-1 rounded-lg transition-colors ${
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-lg transition-colors shrink-0 ${
                           isCategoryOpen 
                             ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200" 
                             : "bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400"
                         }`}>
-                          {isCategoryOpen ? "Close" : (hasSelected ? "Modify" : "+ Select")}
+                          {isCategoryOpen ? t("iqr_close") : (hasSelected ? t("iqr_modify") : t("iqr_select_plus"))}
                         </span>
                         <ChevronDown className={`w-4 h-4 sm:w-5 sm:h-5 text-zinc-400 transition-transform duration-200 ${
                           isCategoryOpen ? "rotate-180" : ""
@@ -1145,14 +1159,14 @@ export function InstantQuotationReview({
                                 <div>
                                   <div className="flex items-center gap-2 flex-wrap">
                                     <h4 className="font-extrabold text-sm sm:text-base text-zinc-900 dark:text-white">
-                                      High-Speed 4K HDMI Cable
+                                      {t("iqr_hdmi_title")}
                                     </h4>
                                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">
-                                      Gold Plated 4K 60Hz
+                                      {t("iqr_hdmi_badge")}
                                     </span>
                                   </div>
                                   <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                                    Ultra-clear video & audio transmission from your DVR/NVR directly to a local TV or monitor.
+                                    {t("iqr_hdmi_desc")}
                                   </p>
                                 </div>
                               </div>
@@ -1168,7 +1182,7 @@ export function InstantQuotationReview({
                                       handleToggle(selectedHdmi.id, selectedHdmi.title);
                                     }}
                                     className="ml-1 hover:text-red-600 dark:hover:text-red-400 text-zinc-400 transition-colors p-0.5 rounded cursor-pointer"
-                                    title="Remove Cable"
+                                    title={t("iqr_remove_cable")}
                                   >
                                     <X className="w-3.5 h-3.5" />
                                   </button>
@@ -1179,13 +1193,13 @@ export function InstantQuotationReview({
                             {/* Length Selection Pill Grid */}
                             <div className="space-y-2">
                               <label className="text-[10px] sm:text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block">
-                                Choose Cable Length:
+                                {t("iqr_choose_cable_len")}
                               </label>
                               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
                                 {hdmiItems.map((hdmi) => {
                                   const isSelected = isAddonSelected(hdmi.id);
                                   const match = hdmi.title.match(/(\d+(?:\.\d+)?)\s*(?:MTR|M|Meter)/i);
-                                  const meterLabel = match ? `${match[1]} Meter` : hdmi.title;
+                                  const meterLabel = match ? t("iqr_n_meter", "{m} Meter", { m: match[1] }) : hdmi.title;
 
                                   return (
                                     <button
@@ -1228,18 +1242,18 @@ export function InstantQuotationReview({
                             </div>
 
                             <div className="mt-3.5 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
-                              <span>* Shielded 4K 60Hz high-bandwidth transmission with gold connectors.</span>
+                              <span>{t("iqr_hdmi_note")}</span>
                               {selectedHdmi ? (
                                 <button
                                   type="button"
                                   onClick={() => handleToggle(selectedHdmi.id, selectedHdmi.title)}
                                   className="text-red-600 hover:text-red-700 dark:text-red-400 font-bold underline cursor-pointer self-start sm:self-auto"
                                 >
-                                  Remove from quotation
+                                  {t("iqr_remove_from_quote")}
                                 </button>
                               ) : (
                                 <span className="text-blue-600 dark:text-blue-400 font-semibold">
-                                  Tip: 3 Meter is the standard recommended length for wall-mounted TVs.
+                                  {t("iqr_hdmi_tip")}
                                 </span>
                               )}
                             </div>
@@ -1306,7 +1320,7 @@ export function InstantQuotationReview({
                                         handleToggle(acc.id, acc.title);
                                       }}
                                     >
-                                      {selected ? "✓ Added" : "+ Add"}
+                                      {selected ? t("iqr_added_check") : t("iqr_add_plus")}
                                     </Button>
                                   </div>
                                 </div>
@@ -1360,8 +1374,8 @@ export function InstantQuotationReview({
             <ShieldCheck className="w-4 h-4" />
           </div>
           <div>
-            <h5 className="text-xs font-bold text-zinc-900 dark:text-white">Zero Advance Risk</h5>
-            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">₹500 token booking. Balance after live camera test on phone.</p>
+            <h5 className="text-xs font-bold text-zinc-900 dark:text-white">{t("qrc_p1_title")}</h5>
+            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">{t("qrc_p1_desc")}</p>
           </div>
         </div>
 
@@ -1370,8 +1384,8 @@ export function InstantQuotationReview({
             <CheckCircle2 className="w-4 h-4" />
           </div>
           <div>
-            <h5 className="text-xs font-bold text-zinc-900 dark:text-white">100% Original Brand</h5>
-            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">Original sealed boxes with valid brand warranty and GST bill.</p>
+            <h5 className="text-xs font-bold text-zinc-900 dark:text-white">{t("qrc_p2_title")}</h5>
+            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">{t("qrc_p2_desc")}</p>
           </div>
         </div>
 
@@ -1380,8 +1394,8 @@ export function InstantQuotationReview({
             <Wrench className="w-4 h-4" />
           </div>
           <div>
-            <h5 className="text-xs font-bold text-zinc-900 dark:text-white">Certified Engineers</h5>
-            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">Police-verified engineers equipped with pro wiring tools.</p>
+            <h5 className="text-xs font-bold text-zinc-900 dark:text-white">{t("qrc_p3_title")}</h5>
+            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">{t("qrc_p3_desc")}</p>
           </div>
         </div>
 
@@ -1390,8 +1404,8 @@ export function InstantQuotationReview({
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
-            <h5 className="text-xs font-bold text-zinc-900 dark:text-white">7-Day Price Lock</h5>
-            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">This quote is locked. No hidden charges on site visit.</p>
+            <h5 className="text-xs font-bold text-zinc-900 dark:text-white">{t("qrc_price_lock")}</h5>
+            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">{t("qrc_p4_desc")}</p>
           </div>
         </div>
       </div>
@@ -1400,7 +1414,7 @@ export function InstantQuotationReview({
       <div className="rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-700 p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-2 text-center md:text-left">
           <div className="text-xs uppercase tracking-widest text-blue-200 font-black">
-            Ready To Finalize Your Quotation?
+            {t("iqr_ready_finalize")}
           </div>
           <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
             {t("wz_total_amount_payable")} ₹{activePricing.total_payable.toLocaleString("en-IN")}
@@ -1418,7 +1432,7 @@ export function InstantQuotationReview({
               className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border-white/20 font-bold text-xs px-4 py-2.5 rounded-full"
             >
               <FileText className="w-3.5 h-3.5 mr-1.5" />
-              Download PDF
+              {t("quote_download_pdf")}
             </Button>
           )}
           {onShareWhatsApp && (
@@ -1428,7 +1442,7 @@ export function InstantQuotationReview({
               className="w-full sm:w-auto bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border-emerald-400/30 font-bold text-xs px-4 py-2.5 rounded-full"
             >
               <Share2 className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
-              Share WhatsApp
+              {t("iqr_share_wa")}
             </Button>
           )}
           <Button
@@ -1436,7 +1450,7 @@ export function InstantQuotationReview({
             disabled={isSaving}
             className="w-full sm:w-auto bg-white hover:bg-zinc-100 text-blue-700 font-extrabold text-sm px-6 py-3 rounded-full shadow-lg transition-transform active:scale-95"
           >
-            {isSaving ? "Finalizing Quote..." : t("wz_proceed_to_final_quotation")}
+            {isSaving ? t("iqr_finalizing") : t("wz_proceed_to_final_quotation")}
           </Button>
         </div>
       </div>
@@ -1448,7 +1462,7 @@ export function InstantQuotationReview({
         isOpen={showEmiModal}
         onClose={() => setShowEmiModal(false)}
         totalAmount={activePricing.total_payable}
-        packageName={`${brandName} ${isWireless ? "Smart Wireless" : techName === "HD" ? "Standard HD" : "Premium IP"} Setup`}
+        packageName={`${brandName} ${isWireless ? t("dvg_wireless_full") : techName === "HD" ? t("iqr_standard_hd") : t("iqr_digital_ip")} ${t("wz_setup")}`}
         onProceed={onProceedToActualQuotation}
       />
     </div>

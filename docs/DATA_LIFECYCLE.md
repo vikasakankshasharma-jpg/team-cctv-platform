@@ -116,3 +116,8 @@
 - **Self-Healing Hook**: Upon submission, triggers `getOrCreateLeadQuote()` to ensure `quotes/{leadId}` is populated with an authoritative 8-item BOM.
 - **Admin Counter-Offer**: Recorded with admin email, timestamp, chosen strategy (`match`, `beat_500`, `custom`), and counter amount.
 
+### 7. Deal Profitability Context & Services Accounting (`lib/profit-context.ts`, `lib/quotation-profit.ts`)
+- **Context Hydration (`fetchSingleQuoteProfitContext`):** Joins `commission_records`, `commissions`, `promoters`, `salespersons`, `amc_subscriptions`, `amc_contracts`, `payment_history`, and `settings` for `/api/crm/quotes/[quoteId]` and `/api/analytics/profitability`.
+- **Services Bucket:** Aggregates installation labor (`base_cost_at_quote`), `travel_fee` payout reserve, Paid AMC contracts & Free Promo AMC PM visit obligations (deduplicated against checkout add-ons), and Referral/Salesperson commission deductions.
+- **True Net Pocket Profit (`overheads`):** Deducts Payment Gateway MDR (actual `payment_history.razorpay_fee`, ₹0 on cash/direct transfers, or configured `payment_gateway_fee_percent`), 1st-year warranty visit reserve, job consumables/logistics, and installer bonuses from Gross Profit without modifying customer tax invoices.
+

@@ -56,12 +56,24 @@ interface DealProfitItem {
   productMarginPercent: number;
   productItemCount: number;
 
-  // Services Margin
+  // Services Margin (Labor + Paid AMC - Referral Commission)
   serviceRevenue: number;
   serviceCost: number;
   serviceProfit: number;
   serviceMarginPercent: number;
   serviceItemCount: number;
+
+  amcRevenue?: number;
+  amcProfit?: number;
+  referralCommissionCost?: number;
+  referralCommissionSource?: string;
+
+  totalOverheads?: number;
+  paymentGatewayFee?: number;
+  warrantyReserve?: number;
+  logisticsConsumables?: number;
+  netProfit?: number;
+  netMarginPercent?: number;
 
   // Overall Deal Margin (With Services)
   overallMarginPercent: number;
@@ -91,6 +103,8 @@ interface ProfitabilityResponse {
     totalPayableWithGst: number;
     totalGrossProfit: number;
     averageMargin: number;
+    totalNetProfit?: number;
+    avgNetMargin?: number;
 
     totalProductRevenue: number;
     totalProductCost: number;
@@ -101,6 +115,12 @@ interface ProfitabilityResponse {
     totalServiceCost: number;
     totalServiceProfit: number;
     avgServiceMargin: number;
+    totalAmcRevenue?: number;
+    totalAmcProfit?: number;
+    totalReferralCommissions?: number;
+    totalOverheads?: number;
+    totalPaymentGatewayFees?: number;
+    totalWarrantyReserves?: number;
 
     healthCounts: {
       healthy: number;
@@ -221,11 +241,16 @@ export function ProfitabilityAnalyticsClient() {
       "Product Profit",
       "Product Margin % (Without Services)",
       "Services Revenue",
-      "Services Cost",
+      "Paid AMC Revenue (in Services)",
+      "Services Cost (Incl. Ref. Comm)",
+      "Referral Commission (in Services)",
       "Services Profit",
       "Services Margin %",
       "Gross Profit (With Services)",
       "Blended Margin %",
+      "Operating Overheads (PG+Warranty+Ops)",
+      "True Net Pocket Profit",
+      "True Net Margin %",
       "Health Diagnosis"
     ];
 
@@ -244,11 +269,16 @@ export function ProfitabilityAnalyticsClient() {
       d.productProfit,
       d.productMarginPercent,
       d.serviceRevenue,
+      d.amcRevenue ?? 0,
       d.serviceCost,
+      d.referralCommissionCost ?? 0,
       d.serviceProfit,
       d.serviceMarginPercent,
       d.grossProfit,
       d.margin,
+      d.totalOverheads ?? 0,
+      d.netProfit ?? d.grossProfit,
+      d.netMarginPercent ?? d.margin,
       `"${d.healthBadge}"`
     ]);
 
@@ -344,13 +374,13 @@ export function ProfitabilityAnalyticsClient() {
           </CardContent>
         </Card>
 
-        {/* Card 2: Services / Labor Profit */}
+        {/* Card 2: Services, Paid AMC & Referral Commissions */}
         <Card className="bg-gradient-to-br from-amber-50/80 via-white to-amber-50/40 dark:from-amber-950/25 dark:via-zinc-900 dark:to-amber-950/10 border-amber-200/80 dark:border-amber-900/50 shadow-xs">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
                 <Wrench className="w-4 h-4" />
-                Labor & Services Profit
+                Services, AMC &amp; Commissions
               </span>
               <Badge variant="outline" className="border-amber-200 dark:border-amber-800 text-amber-700 text-[10px] font-bold">
                 {summary.avgServiceMargin.toFixed(1)}% Avg
@@ -358,17 +388,31 @@ export function ProfitabilityAnalyticsClient() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl lg:text-3xl font-black text-amber-950 dark:text-amber-100">
+            <div className={`text-2xl lg:text-3xl font-black ${summary.totalServiceProfit >= 0 ? "text-amber-950 dark:text-amber-100" : "text-rose-600 dark:text-rose-400"}`}>
               {formatInr(summary.totalServiceProfit)}
             </div>
             <div className="mt-2 text-xs text-muted-foreground flex justify-between font-medium">
               <span>Billed: {formatInr(summary.totalServiceRevenue)}</span>
               <span>Cost: {formatInr(summary.totalServiceCost)}</span>
             </div>
+            {((summary.totalAmcRevenue ?? 0) > 0 || (summary.totalReferralCommissions ?? 0) > 0) && (
+              <div className="mt-1.5 flex flex-wrap gap-1.5 text-[10px] font-semibold">
+                {(summary.totalAmcRevenue ?? 0) > 0 && (
+                  <span className="text-emerald-700 dark:text-emerald-400">
+                    AMC: +{formatInr(summary.totalAmcRevenue || 0)}
+                  </span>
+                )}
+                {(summary.totalReferralCommissions ?? 0) > 0 && (
+                  <span className="text-rose-600 dark:text-rose-400">
+                    Ref. Comm: -{formatInr(summary.totalReferralCommissions || 0)}
+                  </span>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Card 3: Total Blended Deal Profit (With Services) */}
+        {/* Card 3: Total Gross & True Net Pocket Profit */}
         <Card className="bg-gradient-to-br from-emerald-50/80 via-white to-emerald-50/40 dark:from-emerald-950/25 dark:via-zinc-900 dark:to-emerald-950/10 border-2 border-emerald-300 dark:border-emerald-800/60 shadow-xs">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -385,9 +429,14 @@ export function ProfitabilityAnalyticsClient() {
             <div className="text-2xl lg:text-3xl font-black text-emerald-950 dark:text-emerald-100">
               {formatInr(summary.totalGrossProfit)}
             </div>
-            <p className="mt-2 text-xs text-emerald-700/80 dark:text-emerald-400 font-semibold">
+            <p className="mt-1.5 text-xs text-emerald-700/80 dark:text-emerald-400 font-semibold">
               Turnkey Deal Profit (With Services)
             </p>
+            {(summary.totalOverheads ?? 0) > 0 && (
+              <p className="mt-1 text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
+                Net Pocket Profit: {formatInr(summary.totalNetProfit ?? summary.totalGrossProfit)} ({(summary.avgNetMargin ?? summary.averageMargin).toFixed(1)}%)
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -646,15 +695,25 @@ export function ProfitabilityAnalyticsClient() {
                             <div className={getMarginTextColor(deal.serviceMarginPercent)}>
                               {formatPct(deal.serviceMarginPercent)}
                             </div>
-                            <span className="text-[11px] text-zinc-500 dark:text-zinc-400 block font-normal">
+                            <span className={`text-[11px] block font-normal ${deal.serviceProfit < 0 ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-zinc-500 dark:text-zinc-400"}`}>
                               Profit: {formatInr(deal.serviceProfit)}
                             </span>
                             <span className="text-[10px] text-muted-foreground block font-normal">
                               Cost: {formatInr(deal.serviceCost)}
                             </span>
+                            {(deal.referralCommissionCost ?? 0) > 0 && (
+                              <span className="text-[10px] text-rose-600 dark:text-rose-400 block font-normal">
+                                Ref: -{formatInr(deal.referralCommissionCost || 0)}
+                              </span>
+                            )}
+                            {(deal.amcRevenue ?? 0) > 0 && (
+                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block font-normal">
+                                AMC: +{formatInr(deal.amcRevenue || 0)}
+                              </span>
+                            )}
                           </TableCell>
 
-                          {/* Blended Deal Margin (With Services) */}
+                          {/* Blended Deal Margin (With Services & True Net Pocket Profit) */}
                           <TableCell className="py-3 px-3 text-right font-mono">
                             <div className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
                               {formatPct(deal.overallMarginPercent || deal.margin)}
@@ -662,6 +721,11 @@ export function ProfitabilityAnalyticsClient() {
                             <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 block">
                               Profit: {formatInr(deal.grossProfit)}
                             </span>
+                            {(deal.totalOverheads ?? 0) > 0 && (
+                              <span className="text-[10px] text-muted-foreground block font-normal">
+                                Net: {formatInr(deal.netProfit ?? deal.grossProfit)} ({formatPct(deal.netMarginPercent ?? deal.margin)})
+                              </span>
+                            )}
                           </TableCell>
 
                           {/* Health Badge */}
@@ -702,10 +766,11 @@ export function ProfitabilityAnalyticsClient() {
                           <TableRow className="bg-zinc-50/80 dark:bg-zinc-900/60">
                             <TableCell colSpan={8} className="p-3">
                               <div className="p-3 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200/80 dark:border-zinc-700/60 space-y-2">
-                                <div className="flex items-center justify-between text-xs font-bold text-zinc-800 dark:text-zinc-200 border-b pb-1.5">
+                                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-zinc-800 dark:text-zinc-200 border-b pb-1.5">
                                   <span>Category Margin Breakdown for {deal.customerName} (Quote: {deal.quoteId}):</span>
                                   <span className="text-muted-foreground font-mono font-normal text-[11px]">
                                     Net Taxable: {formatInr(deal.revenue)} • Gross Profit: {formatInr(deal.grossProfit)}
+                                    {(deal.totalOverheads ?? 0) > 0 && ` • Overheads: -${formatInr(deal.totalOverheads || 0)} • True Net: ${formatInr(deal.netProfit ?? deal.grossProfit)}`}
                                   </span>
                                 </div>
 
@@ -713,12 +778,12 @@ export function ProfitabilityAnalyticsClient() {
                                   {deal.categories.map((cat, cIdx) => (
                                     <div key={cIdx} className="p-2 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 text-center">
                                       <span className="text-[10px] text-muted-foreground uppercase font-bold block truncate" title={cat.label}>
-                                        {cat.label.split(" ")[0]}
+                                        {cat.label}
                                       </span>
                                       <span className={`text-xs font-black block mt-0.5 ${getMarginTextColor(cat.margin_percent)}`}>
                                         {formatPct(cat.margin_percent)}
                                       </span>
-                                      <span className="text-[10px] text-zinc-500 block">
+                                      <span className={`text-[10px] block ${cat.profit < 0 ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-zinc-500"}`}>
                                         Profit: {formatInr(cat.profit)}
                                       </span>
                                     </div>

@@ -1,11 +1,8 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
-
-// Register fonts for a more formal certificate look
-Font.register({
-  family: 'Times-Roman',
-  src: 'https://fonts.cdnfonts.com/s/15392/TimesNewRoman.woff'
-});
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { ensurePdfFontsForLocale, normalizePdfLocale } from '@/lib/pdf/pdf-fonts-indic';
+import { getPdfLabels } from '@/lib/pdf/pdf-i18n';
+import { SPEECH_LOCALE_MAP } from '@/lib/i18n/mapping';
 
 const emerald = '#047857';
 const lightEmerald = '#d1fae5';
@@ -139,7 +136,6 @@ const styles = StyleSheet.create({
   },
   tableTitle: {
     fontSize: 12,
-    fontFamily: 'Times-Roman',
     fontWeight: 'bold',
     marginBottom: 10,
     color: emerald,
@@ -236,18 +232,29 @@ interface WarrantyPDFProps {
   customerName: string;
   customerPhone: string;
   customerAddress: string;
+  locale?: string;
 }
 
-export const WarrantyPDF = ({ certificate, customerName, customerPhone, customerAddress }: WarrantyPDFProps) => {
+export const WarrantyPDF = ({ certificate, customerName, customerPhone, customerAddress, locale }: WarrantyPDFProps) => {
+  const pdfLocale = normalizePdfLocale(locale ?? certificate?.preferred_language ?? certificate?.language ?? certificate?.locale);
+  const pdfFont = ensurePdfFontsForLocale(pdfLocale);
+  const isEn = pdfLocale === 'en';
+  const noUpper = isEn ? {} : { textTransform: 'none' as const, letterSpacing: 0 };
+  const L = getPdfLabels(pdfLocale);
+  const dateLocale = SPEECH_LOCALE_MAP[pdfLocale] || 'en-IN';
+
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
+    if (!dateString) return 'N/A';
+    const d = new Date(dateString);
+    if (Number.isNaN(d.getTime())) return 'N/A';
+    return d.toLocaleDateString(dateLocale, {
       day: '2-digit', month: 'short', year: 'numeric'
     });
   };
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={[styles.page, { fontFamily: pdfFont }]}>
         <View style={styles.topBar} />
         <View style={styles.pageBorder} />
 
@@ -261,38 +268,42 @@ export const WarrantyPDF = ({ certificate, customerName, customerPhone, customer
               <Text style={styles.logoText}>TEAM CCTV</Text>
             </View>
             <View style={styles.certInfo}>
-              <Text style={{ fontSize: 9, color: '#6b7280' }}>Certificate No.</Text>
+              <Text style={{ fontSize: 9, color: '#6b7280' }}>{L.certNumber}</Text>
               <Text style={{ fontSize: 11, fontWeight: 'bold', color: emerald }}>{certificate.certNumber}</Text>
             </View>
           </View>
 
           <View style={styles.titleWrap}>
-            <Text style={styles.titleText}>Official Warranty</Text>
-            <Text style={styles.subtitleText}>Certificate of Coverage</Text>
+            <Text style={[styles.titleText, { fontFamily: pdfFont }, noUpper]}>
+              {isEn ? 'Official Warranty' : L.warrantyTitle}
+            </Text>
+            <Text style={[styles.subtitleText, { fontFamily: pdfFont }, noUpper]}>
+              {isEn ? 'Certificate of Coverage' : L.coveragePeriod}
+            </Text>
             
             <View style={styles.sealBox}>
-              <Text style={styles.sealText1}>FULL</Text>
+              <Text style={styles.sealText1}>TEAM CCTV</Text>
               <Text style={styles.sealText2}>100%</Text>
-              <Text style={styles.sealText3}>COVERAGE</Text>
+              <Text style={styles.sealText3}>WARRANTY</Text>
             </View>
           </View>
 
           <View style={styles.infoSection}>
             <View style={styles.infoCol}>
               <View style={styles.labelLine}>
-                <Text style={styles.label}>Customer Name</Text>
+                <Text style={styles.label}>{L.preparedFor}</Text>
                 <View style={styles.valueLine}>
                   <Text style={styles.valueText}>{customerName}</Text>
                 </View>
               </View>
               <View style={styles.labelLine}>
-                <Text style={styles.label}>Contact No.</Text>
+                <Text style={styles.label}>Phone / Mobile</Text>
                 <View style={styles.valueLine}>
                   <Text style={styles.valueText}>{customerPhone}</Text>
                 </View>
               </View>
               <View style={styles.labelLine}>
-                <Text style={styles.label}>Installation Address</Text>
+                <Text style={styles.label}>{L.installationSite}</Text>
                 <View style={styles.valueLine}>
                   <Text style={styles.valueText}>{customerAddress || "N/A"}</Text>
                 </View>
@@ -300,19 +311,19 @@ export const WarrantyPDF = ({ certificate, customerName, customerPhone, customer
             </View>
             <View style={[styles.infoCol, { paddingLeft: 20 }]}>
               <View style={styles.labelLine}>
-                <Text style={styles.label}>Date of Issue</Text>
+                <Text style={styles.label}>{L.dateIssued}</Text>
                 <View style={styles.valueLine}>
                   <Text style={styles.valueText}>{formatDate(certificate.issuedAt)}</Text>
                 </View>
               </View>
               <View style={styles.labelLine}>
-                <Text style={styles.label}>Installation Date</Text>
+                <Text style={styles.label}>{L.installedOn}</Text>
                 <View style={styles.valueLine}>
                   <Text style={styles.valueText}>{formatDate(certificate.installationDate)}</Text>
                 </View>
               </View>
               <View style={styles.labelLine}>
-                <Text style={styles.label}>Job Reference</Text>
+                <Text style={styles.label}>{L.leadRef}</Text>
                 <View style={styles.valueLine}>
                   <Text style={styles.valueText}>{certificate.jobId}</Text>
                 </View>
@@ -321,16 +332,16 @@ export const WarrantyPDF = ({ certificate, customerName, customerPhone, customer
           </View>
 
           <View style={styles.tableContainer}>
-            <Text style={styles.tableTitle}>Equipment Covered</Text>
+            <Text style={[styles.tableTitle, { fontFamily: pdfFont }, noUpper]}>{L.protectedEquipment}</Text>
             <View style={styles.table}>
               <View style={styles.tableHeader}>
-                <Text style={[styles.colProduct, styles.headerText]}>Product Details</Text>
-                <Text style={[styles.colSerial, styles.headerText]}>Serial Number</Text>
-                <Text style={[styles.colTerm, styles.headerText]}>Term</Text>
-                <Text style={[styles.colExpiry, styles.headerText]}>Expiry Date</Text>
+                <Text style={[styles.colProduct, styles.headerText, noUpper]}>{L.itemDescription}</Text>
+                <Text style={[styles.colSerial, styles.headerText, noUpper]}>{L.serialNumbers}</Text>
+                <Text style={[styles.colTerm, styles.headerText, noUpper]}>{L.coveragePeriod}</Text>
+                <Text style={[styles.colExpiry, styles.headerText, noUpper]}>{L.validTill}</Text>
               </View>
               
-              {certificate.assets.map((asset: any, idx: number) => (
+              {(certificate.assets || []).map((asset: any, idx: number) => (
                 <View key={idx} style={styles.tableRow}>
                   <Text style={[styles.colProduct, styles.cellText]}>
                     {asset.productName || asset.skuId || "CCTV Equipment"}
@@ -350,22 +361,22 @@ export const WarrantyPDF = ({ certificate, customerName, customerPhone, customer
           </View>
 
           <View style={styles.termsBox}>
-            <Text style={styles.termsTitle}>Terms & Conditions</Text>
+            <Text style={[styles.termsTitle, noUpper]}>{L.termsTitle}</Text>
             <Text style={styles.termsText}>
-              1. Warranty Coverage: This certificate warrants that the equipment listed above is free from manufacturing defects in material and workmanship.{"\n"}
-              2. Exclusions: Warranty does not cover damages caused by lightning strikes, power surges, water ingress (for non-waterproof items), physical damage, or unauthorized tampering.{"\n"}
-              3. Claims Process: To claim warranty service, present this certificate or quote the Certificate Number. On-site visits after the initial free service period may incur standard visiting charges.
+              1. {L.warranty1YrTitle}: {L.warranty1YrBody}{"\n"}
+              2. {L.supportTitle}: {L.supportBody}{"\n"}
+              3. {L.warrantyFooterNote} ({L.certNumber}: {certificate.certNumber})
             </Text>
           </View>
 
           <View style={styles.signatureRow}>
             <View style={styles.sigBlock}>
               <View style={styles.sigLine} />
-              <Text style={styles.sigText}>Authorized Signature</Text>
+              <Text style={styles.sigText}>{L.authorisedSignatory}</Text>
             </View>
             <View style={styles.sigBlock}>
               <Text style={[styles.sigText, { fontWeight: 'bold', fontSize: 11, marginBottom: 5, color: emerald }]}>TEAM CCTV SEAL</Text>
-              <Text style={styles.sigText}>Certified Secure</Text>
+              <Text style={styles.sigText}>{L.warrantyFooterNote}</Text>
             </View>
           </View>
 

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { MapPin, RotateCcw, Maximize2, Minimize2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getTerritoryPolygon, getKnownCentroid, JAIPUR_METRO_BOUNDARY } from "@/lib/geo/pincodePolygons";
+import { useTranslation } from "@/hooks/useTranslation";
 
 declare global {
   interface Window {
@@ -113,6 +114,7 @@ export default function MapplsBoundaryMap({
   className = "",
   onLayerLoaded,
 }: MapplsBoundaryMapProps) {
+  const { t } = useTranslation();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const currentLayerRef = useRef<any>(null);
@@ -156,7 +158,7 @@ export default function MapplsBoundaryMap({
         if (window.mappls) {
           setSdkReady(true);
         } else {
-          setError("Map SDK failed to initialize. Check console for details.");
+          setError(t("map_err_sdk", "Map SDK failed to initialize. Check console for details."));
           setIsLoading(false);
         }
       }
@@ -696,7 +698,7 @@ export default function MapplsBoundaryMap({
       map.addListener("load", onLoad);
     } catch (e: any) {
       console.error("Mappls Map init error:", e);
-      setError(e?.message || "Map failed to initialize.");
+      setError(e?.message || t("map_err_init", "Map failed to initialize."));
       setIsLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -736,7 +738,7 @@ export default function MapplsBoundaryMap({
             <>
               <span className="w-3 h-3 rounded-full bg-blue-500 animate-ping" />
               <span className="text-xs text-muted-foreground font-medium">
-                {!sdkReady ? "Loading map…" : "Rendering coverage map…"}
+                {!sdkReady ? t("map_loading", "Loading map…") : t("map_rendering", "Rendering coverage map…")}
               </span>
             </>
           )}
@@ -745,13 +747,13 @@ export default function MapplsBoundaryMap({
 
       {/* Floating Territory Coverage Legend & Fullscreen Button */}
       {pincodes && pincodes.length > 0 && (
-        <div className="absolute top-3 right-3 z-10 bg-background/90 backdrop-blur-md border border-border rounded-xl p-2.5 shadow-lg text-xs space-y-1.5 pointer-events-auto">
+        <div className="absolute top-3 right-3 z-10 bg-background/90 backdrop-blur-md border border-border rounded-xl p-2.5 shadow-lg text-xs space-y-1.5 pointer-events-auto max-w-[90vw]">
           {activeSelectedPin ? (
             <div className="flex flex-col gap-1.5 min-w-[170px]">
-              <div className="font-bold text-[11px] text-foreground uppercase tracking-wider flex items-center justify-between gap-2 pb-1 border-b border-border/50">
+              <div className="font-bold text-[11px] text-foreground uppercase tracking-wider flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-border/50 leading-snug">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                  Isolated Territory
+                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shrink-0" />
+                  {t("map_isolated_terr", "Selected PIN Area")}
                 </span>
                 <div className="flex items-center gap-1">
                   <Badge variant="outline" className="font-mono text-[10px] font-bold border-blue-500/30 text-blue-600 bg-blue-500/10">
@@ -761,54 +763,54 @@ export default function MapplsBoundaryMap({
                     type="button"
                     onClick={() => setIsFullscreen(!isFullscreen)}
                     className="p-1 rounded-md text-foreground hover:bg-muted transition-colors"
-                    title={isFullscreen ? "Exit Fullscreen View (Esc)" : "Expand to Full Map View"}
+                    title={isFullscreen ? t("map_exit_fs_title", "Exit Fullscreen View (Esc)") : t("map_expand_fs_title", "Expand to Full Map View")}
                   >
                     {isFullscreen ? <Minimize2 className="w-3.5 h-3.5 text-purple-600" /> : <Maximize2 className="w-3.5 h-3.5" />}
                   </button>
                 </div>
               </div>
-              <p className="text-[10px] text-muted-foreground">Isolating boundary for {activeSelectedPin.pincode}</p>
+              <p className="text-[10px] text-muted-foreground leading-snug">{t("map_isolating_pin", "Showing boundary for {pin}", { pin: activeSelectedPin.pincode })}</p>
               {onResetSelection && (
                 <button
                   type="button"
                   onClick={onResetSelection}
-                  className="text-[10px] text-primary hover:underline font-bold flex items-center gap-1 pt-0.5 border-t border-border/40"
+                  className="text-[10px] text-primary hover:underline font-bold flex items-center gap-1 pt-0.5 border-t border-border/40 whitespace-normal text-left leading-snug"
                 >
-                  <RotateCcw className="w-3 h-3" />
-                  Show All {pincodes.length} District PINs
+                  <RotateCcw className="w-3 h-3 shrink-0" />
+                  {t("map_show_all_pins", "Show All {n} District PINs", { n: String(pincodes.length) })}
                 </button>
               )}
             </div>
           ) : (
             <>
-              <div className="font-bold text-[11px] text-foreground uppercase tracking-wider flex items-center justify-between gap-2 pb-1 border-b border-border/50">
+              <div className="font-bold text-[11px] text-foreground uppercase tracking-wider flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-border/50 leading-snug">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  Choropleth Territory View
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+                  {t("map_choropleth_view", "Territory Coverage View")}
                 </span>
                 <button
                   type="button"
                   onClick={() => setIsFullscreen(!isFullscreen)}
-                  className="px-1.5 py-0.5 rounded-md text-foreground hover:bg-muted transition-colors flex items-center gap-1 font-semibold text-[10px]"
-                  title={isFullscreen ? "Exit Fullscreen View (Esc)" : "Expand to Full Map View"}
+                  className="px-1.5 py-0.5 rounded-md text-foreground hover:bg-muted transition-colors flex items-center gap-1 font-semibold text-[10px] whitespace-normal leading-snug"
+                  title={isFullscreen ? t("map_exit_fs_title", "Exit Fullscreen View (Esc)") : t("map_expand_fs_title", "Expand to Full Map View")}
                 >
-                  {isFullscreen ? <Minimize2 className="w-3 h-3 text-purple-600" /> : <Maximize2 className="w-3 h-3" />}
-                  <span>{isFullscreen ? "Exit Full" : "Full Map"}</span>
+                  {isFullscreen ? <Minimize2 className="w-3 h-3 text-purple-600 shrink-0" /> : <Maximize2 className="w-3 h-3 shrink-0" />}
+                  <span>{isFullscreen ? t("map_exit_full", "Exit Full") : t("map_full_map", "Full Map")}</span>
                 </button>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3 leading-snug">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-sm bg-emerald-500 shadow-sm border border-emerald-600 inline-block" />
-                  <span className="text-foreground font-semibold">Covered ({coveredCount})</span>
+                  <span className="w-3 h-3 rounded-sm bg-emerald-500 shadow-sm border border-emerald-600 inline-block shrink-0" />
+                  <span className="text-foreground font-semibold">{t("map_covered_n", "Covered ({n})", { n: String(coveredCount) })}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-sm bg-rose-500 shadow-sm border border-rose-600 inline-block" />
-                  <span className="text-foreground font-semibold">Gaps ({uncoveredCount})</span>
+                  <span className="w-3 h-3 rounded-sm bg-rose-500 shadow-sm border border-rose-600 inline-block shrink-0" />
+                  <span className="text-foreground font-semibold">{t("map_gaps_n", "Gaps ({n})", { n: String(uncoveredCount) })}</span>
                 </div>
                 {partialCount > 0 && (
                   <div className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded-sm bg-amber-500 shadow-sm border border-amber-600 inline-block" />
-                    <span className="text-foreground font-semibold">Partial ({partialCount})</span>
+                    <span className="w-3 h-3 rounded-sm bg-amber-500 shadow-sm border border-amber-600 inline-block shrink-0" />
+                    <span className="text-foreground font-semibold">{t("map_partial_n", "Partial ({n})", { n: String(partialCount) })}</span>
                   </div>
                 )}
               </div>
@@ -820,17 +822,17 @@ export default function MapplsBoundaryMap({
       {/* Floating Selected Pincode Card */}
       {activeSelectedPin && (
         <div className="absolute bottom-3 left-3 z-10 bg-background/95 backdrop-blur-md border border-border rounded-xl p-3 shadow-xl max-w-xs text-xs pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <div className="flex items-center justify-between gap-2 mb-1">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
             <div className="flex items-center gap-1.5">
-              <MapPin className={`w-3.5 h-3.5 ${activeSelectedPin.status === 'covered' ? 'text-emerald-500' : 'text-rose-500'}`} />
+              <MapPin className={`w-3.5 h-3.5 shrink-0 ${activeSelectedPin.status === 'covered' ? 'text-emerald-500' : 'text-rose-500'}`} />
               <span className="font-mono font-bold text-sm text-foreground">{activeSelectedPin.pincode}</span>
             </div>
-            <Badge variant="outline" className={`text-[10px] uppercase font-bold ${
+            <Badge variant="outline" className={`text-[10px] uppercase font-bold whitespace-normal leading-snug ${
               activeSelectedPin.status === 'covered' 
                 ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' 
                 : 'bg-rose-500/10 text-rose-600 border-rose-500/30'
             }`}>
-              {activeSelectedPin.status === 'covered' ? 'Covered' : 'Unstaffed Gap'}
+              {activeSelectedPin.status === 'covered' ? t("map_covered", "Covered") : t("map_unstaffed_gap", "Unstaffed Gap")}
             </Badge>
           </div>
           {activeSelectedPin.areas && activeSelectedPin.areas.length > 0 && (
@@ -838,21 +840,21 @@ export default function MapplsBoundaryMap({
               {activeSelectedPin.areas.slice(0, 3).join(", ")}
             </p>
           )}
-          <div className="text-[11px] font-medium text-foreground mb-2">
+          <div className="text-[11px] font-medium text-foreground mb-2 leading-snug">
             {activeSelectedPin.agents && activeSelectedPin.agents.length > 0 ? (
               <span className="text-emerald-600 dark:text-emerald-400">👤 {activeSelectedPin.agents.join(", ")}</span>
             ) : (
-              <span className="text-rose-500">⚠️ No sales agent deployed</span>
+              <span className="text-rose-500">⚠️ {t("map_no_agent", "No sales agent deployed")}</span>
             )}
           </div>
           {onResetSelection && (
             <button
               type="button"
               onClick={onResetSelection}
-              className="text-[10px] text-primary hover:underline font-semibold flex items-center gap-1"
+              className="text-[10px] text-primary hover:underline font-semibold flex items-center gap-1 whitespace-normal text-left leading-snug"
             >
-              <RotateCcw className="w-3 h-3" />
-              Reset to Full District View
+              <RotateCcw className="w-3 h-3 shrink-0" />
+              {t("map_reset_district", "Reset to Full District View")}
             </button>
           )}
         </div>

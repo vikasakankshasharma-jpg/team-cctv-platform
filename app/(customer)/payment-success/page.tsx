@@ -1,10 +1,11 @@
 import { PaymentSuccessClient } from "@/components/payment/PaymentSuccessClient";
 import type { Metadata } from "next";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { buildPageMetadata } from "@/lib/i18n/seo-metadata";
 
-export const metadata: Metadata = {
-  title: "Payment Successful | CCTVQuotation by TEAM",
-  description: "Your CCTV installation payment has been confirmed. Download your tax invoice.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata("payment_success", await getServerLocale());
+}
 
 export default async function PaymentSuccessPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const params = await searchParams;

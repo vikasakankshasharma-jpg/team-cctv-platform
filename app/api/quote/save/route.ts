@@ -8,10 +8,13 @@ import { generateConfiguration } from "@/lib/configuration-engine";
 import { resolveProducts } from "@/lib/product-resolver";
 import { generatePricingSnapshot } from "@/lib/pricing-engine";
 import { MarginEngine, DEFAULT_MARGIN_POLICY } from "@/lib/margin-engine";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 
 export async function POST(request: Request) {
+  let locale = resolveRequestLocale(request);
   try {
     const data = await request.json();
+    locale = resolveRequestLocale(request, data);
     const { 
       customer_mobile: rawMobile, 
       customer_name, 
@@ -38,14 +41,14 @@ export async function POST(request: Request) {
 
     if (!customer_mobile || customer_mobile.length !== 10 || !/^[6-9]/.test(customer_mobile)) {
       return NextResponse.json(
-        { success: false, message: "A valid 10-digit Indian mobile number is required" },
+        { success: false, message: getApiMessage(locale, "phone_invalid") },
         { status: 400 }
       );
     }
 
     if (!requirementSnapshot) {
       return NextResponse.json(
-        { success: false, message: "Missing requirementSnapshot" },
+        { success: false, message: getApiMessage(locale, "quote_missing_snapshot") },
         { status: 400 }
       );
     }
@@ -476,7 +479,7 @@ export async function POST(request: Request) {
     });
   } catch (error: any) {
     console.error("[Quote Save Server Error]:", error);
-    return NextResponse.json({ success: false, message: error.message || "Failed to save quote" }, { status: 500 });
+    return NextResponse.json({ success: false, message: getApiMessage(locale, "quote_save_failed") }, { status: 500 });
   }
 }
 

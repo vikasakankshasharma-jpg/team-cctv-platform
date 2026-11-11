@@ -7,6 +7,7 @@ import { ApiResponse } from "@/lib/api-response";
 import { calculateSlaDeadline, OperatingHours } from "@/lib/sla-engine";
 import { isMaintenanceMode } from "@/lib/kill-switch";
 import { CRMEngine } from "@/lib/crm-engine";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 import type { LeadPriority } from "@/types";
 
 /**
@@ -14,15 +15,16 @@ import type { LeadPriority } from "@/types";
  * Handles lead creation, referral validation, and territory-based load balancing.
  */
 export async function POST(request: NextRequest) {
+  let locale = resolveRequestLocale(request);
   const { success } = await rateLimit(request);
   if (!success) {
-    return ApiResponse.error("Too many requests", "RATE_LIMIT_EXCEEDED", 429);
+    return ApiResponse.error(getApiMessage(locale, "too_many_requests"), "RATE_LIMIT_EXCEEDED", 429);
   }
 
   // Kill Switch: Maintenance Mode Guard
   if (await isMaintenanceMode()) {
     return ApiResponse.error(
-      "System is currently under maintenance. Please try again shortly.",
+      getApiMessage(locale, "system_maintenance"),
       "SYSTEM_MAINTENANCE",
       503
     );
@@ -30,11 +32,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
+    locale = resolveRequestLocale(request, body);
 
     // 1. Validate request body
     const validation = CreateLeadSchema.safeParse(body);
     if (!validation.success) {
-      return ApiResponse.badRequest("Lead validation failed", validation.error.format());
+      return ApiResponse.badRequest(getApiMessage(locale, "lead_validation_failed"), validation.error.format());
     }
 
     const leadData = validation.data;
@@ -153,10 +156,19 @@ export async function POST(request: NextRequest) {
       junction_box_count: cameraCount,
     };
 
+    const { normalizeLocaleCode } = await import("@/lib/whatsapp/customer-notifications-i18n");
+    const preferredLanguage =
+      normalizeLocaleCode(body?.preferred_language) ||
+      normalizeLocaleCode(wizardAnswers?.preferred_language) ||
+      normalizeLocaleCode(wizardAnswers?.locale) ||
+      normalizeLocaleCode(request.cookies.get("team_locale")?.value) ||
+      "en";
+
     await newLeadRef.set({
       customer_name:        leadData.customer_name,
       mobile_number:        leadData.mobile_number,
       firebase_uid:         leadData.firebase_uid,
+      preferred_language:   preferredLanguage,
       status:               leadData.status || "new",
       promoter_id:          promoterId,
       referral_code_used:   leadData.referral_code || null,
@@ -242,12 +254,12 @@ export async function POST(request: NextRequest) {
 
     return ApiResponse.success({ 
       id: newLeadRef.id, 
-      message: "Lead created and routed successfully" 
+      message: getApiMessage(locale, "lead_created_success") 
     }, 201);
 
   } catch (error: any) {
     console.error("Critical error in lead ingestion:", error);
-    return ApiResponse.error("Internal server error", "INTERNAL_ERROR", 500, error.message);
+    return ApiResponse.error(getApiMessage(locale, "internal_error"), "INTERNAL_ERROR", 500, error.message);
   }
 }
 

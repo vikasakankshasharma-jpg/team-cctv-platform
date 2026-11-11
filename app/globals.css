@@ -170,7 +170,7 @@ html {
 }
 
 body {
-  font-family: Inter, system-ui, -apple-system, sans-serif;
+  font-family: var(--font-indic-sans, var(--font-sans, "Inter")), system-ui, -apple-system, sans-serif;
   font-size: clamp(0.9rem, 1.5vw, 1rem);
   line-height: 1.6;
   position: relative;
@@ -445,7 +445,7 @@ body::before {
 }
 
 .admin-theme {
-  font-family: var(--font-space), sans-serif;
+  font-family: var(--font-sans, "Inter"), system-ui, -apple-system, sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -582,8 +582,10 @@ body::before {
 .metric-bar-fill { height: 100%; border-radius: 3px; }
 .metric-bar-pct { font-size: 11px; font-weight: 600; color: var(--text); min-width: 32px; text-align: right; font-family: var(--font-mono), monospace; }
 /* Automatically normalize typography for Indic languages to prevent broken ligatures, clipped matras, and unreadable text */
-html[data-locale]:not([data-locale="en"]) {
-  font-family: var(--font-sans), system-ui, -apple-system,
+html[data-locale]:not([data-locale="en"]),
+html[data-locale]:not([data-locale="en"]) body,
+html[data-locale]:not([data-locale="en"]) .font-sans {
+  font-family: var(--font-indic-sans, "Noto Sans Devanagari"), var(--font-sans, "Inter"), system-ui, -apple-system,
     "Noto Sans Devanagari", "Nirmala UI", "Mukta",
     "Noto Sans Gujarati", "Gujarati Sangam MN", "Shruti",
     "Noto Sans Tamil", "Tamil Sangam MN", "Latha",
@@ -595,6 +597,20 @@ html[data-locale]:not([data-locale="en"]) {
     "Noto Sans Oriya", "Oriya Sangam MN", "Kalinga",
     sans-serif;
   line-height: 1.55;
+  text-rendering: optimizeLegibility;
+}
+
+/* Protect Indic top matras and stacked conjuncts on base heading elements */
+html[data-locale]:not([data-locale="en"]) h1 {
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+}
+
+html[data-locale]:not([data-locale="en"]) h2 {
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  font-weight: 700;
 }
 
 /* Neutralize negative tracking (which collides Indic ligatures and matras) and excessive tracking */
@@ -602,19 +618,36 @@ html[data-locale]:not([data-locale="en"]) .tracking-tight,
 html[data-locale]:not([data-locale="en"]) .tracking-tighter,
 html[data-locale]:not([data-locale="en"]) .tracking-widest,
 html[data-locale]:not([data-locale="en"]) .tracking-wider,
+html[data-locale]:not([data-locale="en"]) .tracking-\[0\.1em\],
+html[data-locale]:not([data-locale="en"]) .tracking-\[0\.15em\],
 html[data-locale]:not([data-locale="en"]) .tracking-\[0\.2em\],
-html[data-locale]:not([data-locale="en"]) .tracking-\[0\.25em\] {
+html[data-locale]:not([data-locale="en"]) .tracking-\[0\.25em\],
+html[data-locale]:not([data-locale="en"]) .tracking-\[0\.3em\],
+html[data-locale]:not([data-locale="en"]) .tracking-\[0\.4em\] {
   letter-spacing: 0.01em !important;
 }
 
 /* Relax tight line-heights to protect upper matras (े, ै, ो, ौ, ं, र्) and lower matras (ु, ू, ृ, ्र) */
 html[data-locale]:not([data-locale="en"]) .leading-none,
 html[data-locale]:not([data-locale="en"]) .leading-tight,
+html[data-locale]:not([data-locale="en"]) .leading-snug,
 html[data-locale]:not([data-locale="en"]) .leading-3,
 html[data-locale]:not([data-locale="en"]) .leading-4,
+html[data-locale]:not([data-locale="en"]) .leading-5,
 html[data-locale]:not([data-locale="en"]) .leading-\[1\.05\],
-html[data-locale]:not([data-locale="en"]) .leading-\[1\.1\] {
-  line-height: 1.38 !important;
+html[data-locale]:not([data-locale="en"]) .leading-\[1\.1\],
+html[data-locale]:not([data-locale="en"]) .leading-\[1\.15\],
+html[data-locale]:not([data-locale="en"]) .leading-\[1\.18\],
+html[data-locale]:not([data-locale="en"]) .leading-\[1\.25\] {
+  line-height: 1.45 !important;
+}
+
+/* Boost sub-11px micro badges so Indic conjuncts and matras stay crisp on budget screens */
+html[data-locale]:not([data-locale="en"]) .text-\[8px\],
+html[data-locale]:not([data-locale="en"]) .text-\[9px\],
+html[data-locale]:not([data-locale="en"]) .text-\[10px\] {
+  font-size: 0.72rem !important;
+  line-height: 1.45 !important;
 }
 
 /* Disable text transform since Indic scripts do not have capitalization */
@@ -623,17 +656,17 @@ html[data-locale]:not([data-locale="en"]) .capitalize {
   text-transform: none !important;
 }
 
-/* For Indic languages, font-black can cause characters to bleed into each other at small sizes */
+/* For Indic languages, font-extrabold / font-black triggers faux-bold smudging when only 400-700 font weights load */
+html[data-locale]:not([data-locale="en"]) .font-extrabold,
 html[data-locale]:not([data-locale="en"]) .font-black {
-  font-weight: 700 !important; /* Downgrade black to bold for legibility */
+  font-weight: 700 !important;
 }
 
-/* Prevent vertical clipping of diacritics in badges, buttons, and pill labels */
+/* Prevent vertical clipping of diacritics in interactive buttons and badges */
 html[data-locale]:not([data-locale="en"]) button,
 html[data-locale]:not([data-locale="en"]) .badge,
 html[data-locale]:not([data-locale="en"]) [role="button"] {
-  padding-top: max(0.2rem, inherit);
-  padding-bottom: max(0.2rem, inherit);
+  line-height: 1.4;
 }
 
 /* Mobile touch target - WCAG 2.5.5 */

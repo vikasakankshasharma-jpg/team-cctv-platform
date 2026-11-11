@@ -3,10 +3,13 @@ import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
 import { SiteSurveySchema } from "@/lib/validators";
 import { Msg91WhatsAppProvider } from "@/lib/whatsapp/msg91-provider";
 import { addLeadActivity } from "@/app/actions/leads";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 
 export async function POST(req: Request) {
+  let locale = resolveRequestLocale(req);
   try {
     const payload = await req.json();
+    locale = resolveRequestLocale(req, payload);
     
     // 1. Validate Input
     const parsed = SiteSurveySchema.omit({ 
@@ -60,6 +63,12 @@ export async function POST(req: Request) {
 
     // 4. Send the MSG91 Confirmation WhatsApp!
     try {
+      const { resolveCustomerLocale } = await import("@/lib/whatsapp/customer-notifications-i18n");
+      const custLocale = await resolveCustomerLocale({
+        preferredLanguage: (payload as any)?.preferred_language || locale,
+        leadId,
+        phone: cleanPhone,
+      });
       const msg91 = new Msg91WhatsAppProvider();
       
       const timeSlotMap: Record<string, string> = {
@@ -72,7 +81,8 @@ export async function POST(req: Request) {
         phone: cleanPhone,
         customerName: parsed.customer_name,
         date: parsed.date, // e.g. "2024-11-25"
-        timeSlot: timeSlotMap[parsed.time_slot] || "TBD"
+        timeSlot: timeSlotMap[parsed.time_slot] || "TBD",
+        preferredLanguage: custLocale,
       });
     } catch (msgErr) {
       console.error("Failed to send MSG91 confirmation:", msgErr);
@@ -82,11 +92,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ 
       success: true, 
       surveyId: surveyRef.id,
-      leadId: leadId
+      leadId: leadId,
+      message: getApiMessage(locale, "booking_success"),
     });
 
   } catch (error: any) {
     console.error("Book Survey Error:", error);
-    return NextResponse.json({ error: error.message || "Failed to book survey" }, { status: 500 });
+    return NextResponse.json({ error: getApiMessage(locale, "survey_failed") }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import { verifySession } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 import { FileText } from "lucide-react";
 import type { Metadata } from "next";
 import ManualQuoteBuilderClient from "@/components/salesperson/ManualQuoteBuilderClient";
@@ -22,8 +23,8 @@ export default async function SalespersonCreateQuotePage() {
     <div className="space-y-10 animate-in fade-in duration-700">
       <PageHeader
         icon={FileText}
-        title="Manual Quote Builder"
-        description="Build custom quotes by selecting catalog items and applying approved discounts."
+        title={<TranslatedText tKey="sls_mqb_page_title" defaultText="Manual Quote Builder" />}
+        description={<TranslatedText tKey="sls_mqb_page_desc" defaultText="Build custom quotes by selecting catalog items and applying approved discounts." />}
       />
       <ManualQuoteBuilderClient />
     </div>

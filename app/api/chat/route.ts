@@ -5,6 +5,7 @@ import { searchBrain, saveToBrain } from "@/lib/ai/vector-db";
 import { queryLocalBrain } from "@/lib/ai/local-brain";
 import { getCostBudgetSettings, recordServiceUsage } from "@/lib/billing/budget-tracker";
 import { wizardToolDefinition, executeQuotationWizardStatus, updateQuotationWizardToolDefinition, executeUpdateQuotationWizard } from "@/lib/ai/tools/wizard";
+import { getChatApiStrings, localizeChatQuickActions } from "@/lib/ai/chat-i18n";
 
 // Initialize Gemini SDK
 // Requires GEMINI_API_KEY in .env
@@ -17,17 +18,22 @@ export async function POST(req: NextRequest) {
     
     const body = await req.json();
     const { messages, pageContext, locale } = body;
+    const chatUi = getChatApiStrings(locale);
+    const isNonEnglish = Boolean(locale && locale !== "en");
     const latestMessage = messages[messages.length - 1].content || "";
 
     // 2. Query Local Autonomous Brain First (100% Free, Zero Google Calls)
-    const localMatch = await queryLocalBrain(latestMessage);
+    const localMatch = await queryLocalBrain(latestMessage, locale);
     if (localMatch.matched && localMatch.answer) {
+      const answerContent = isNonEnglish
+        ? `${localMatch.answer}\n\n_${chatUi.localNoteFooter}_`
+        : localMatch.answer;
       return NextResponse.json({
         role: "assistant",
-        content: localMatch.answer,
+        content: answerContent,
         isFromStudent: true,
         source: localMatch.source,
-        quickActions: localMatch.quickActions || [],
+        quickActions: localizeChatQuickActions(localMatch.quickActions, locale),
       });
     }
 
@@ -37,11 +43,11 @@ export async function POST(req: NextRequest) {
       // In Strict Zero-Cost Mode, external paid APIs are completely blocked
       return NextResponse.json({
         role: "assistant",
-        content: "I am operating in Zero-Cost Mode to protect against unexpected cloud charges. While I don't have this exact query in my local manual, our CCTV technicians are available right now on WhatsApp to answer you directly.",
+        content: chatUi.zeroCostReply,
         isFromStudent: true,
         quickActions: [
-          { label: "Chat on WhatsApp", action: "whatsapp" },
-          { label: "Book Free Site Survey", action: "survey" },
+          { label: chatUi.qaWhatsapp, action: "whatsapp" },
+          { label: chatUi.qaBookSurvey, action: "survey" },
         ],
       });
     }
@@ -103,7 +109,7 @@ export async function POST(req: NextRequest) {
     // 4. If no cached answer, Route to Master AI (Gemini Pro)
     let systemPrompt = `You are the AI assistant for this website.
 The user is currently viewing the following page/URL: ${pageContext || 'unknown'}. Use this context to provide highly relevant answers.
-The user's preferred language locale code is: ${locale || 'en'}. You MUST reply in this language. If the locale is 'hi', reply in Hindi. If 'mr', reply in Marathi. If 'gu', reply in Gujarati, etc. Keep the language natural and colloquial to the region.
+The user's preferred language locale code is: ${locale || 'en'}. You MUST reply in this language (hi=Hindi, mr=Marathi, gu=Gujarati, ta=Tamil, te=Telugu, kn=Kannada, bn=Bengali, ml=Malayalam, pa=Punjabi, or=Odia). Use natural, colloquial local phrasing that everyday shopkeepers and homeowners speak — keep familiar technical/commercial words like CCTV, DVR/NVR, Wi-Fi, 4G SIM, Hard Disk, EMI, GST, and Site Survey in readable English instead of stiff textbook words.
 Your current security context is: ${securityContext.role}.
 ${securityContext.userId ? `The user's unique ID is: ${securityContext.userId}. Whenever a tool requires a 'userId', use this ID automatically without asking the user for it.` : ''}
 
@@ -211,7 +217,7 @@ If they ask for an AMC or Warranty renewal, tell them to close this chat and vis
       });
     }
 
-    const answer = chatResponse.text || "I am unable to process that right now.";
+    const answer = chatResponse.text || chatUi.fallbackError;
 
     // 5. Save the new Master AI answer to the Brain for Admin Review
     let savedBrainId = null;

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { renderToStream } from "@react-pdf/renderer";
 import { WarrantyPDF } from "@/lib/pdf/warranty-pdf";
+import { resolveRequestLocale } from "@/lib/i18n/api-messages";
+import { resolveCustomerLocale } from "@/lib/whatsapp/customer-notifications-i18n";
 import React from "react";
 
 export async function GET(
@@ -25,6 +27,7 @@ export async function GET(
     let customerName = "Valued Customer";
     let customerPhone = "";
     let customerAddress = "";
+    let preferredLang = "";
     
     if (certificate.customerId) {
       const customerDoc = await adminDb.collection("users").doc(certificate.customerId).get();
@@ -32,17 +35,28 @@ export async function GET(
         const data = customerDoc.data()!;
         customerName = data.displayName || data.name || "Customer";
         customerPhone = data.phoneNumber || data.phone || "";
+        preferredLang = data.preferred_language || data.language || "";
       }
-    } else if (certificate.jobId) {
-      // Fallback to job info if customerId is missing or doesn't resolve
+    }
+    if (certificate.jobId && (!customerAddress || !customerPhone || !preferredLang)) {
       const jobDoc = await adminDb.collection("jobs").doc(certificate.jobId).get();
       if (jobDoc.exists) {
         const job = jobDoc.data()!;
-        customerName = job.customer?.name || "Customer";
-        customerPhone = job.customer?.mobile || "";
-        customerAddress = typeof job.address === 'string' ? job.address : (job.address?.full_address || "");
+        if (customerName === "Valued Customer") customerName = job.customer?.name || "Customer";
+        if (!customerPhone) customerPhone = job.customer?.mobile || "";
+        if (!customerAddress) customerAddress = typeof job.address === 'string' ? job.address : (job.address?.full_address || "");
+        if (!preferredLang) preferredLang = job.preferred_language || job.language || "";
       }
     }
+
+    const reqLocale = resolveRequestLocale(request);
+    const pdfLocale =
+      reqLocale !== "en"
+        ? reqLocale
+        : await resolveCustomerLocale({
+            quoteData: { preferred_language: preferredLang || certificate.preferred_language } as any,
+            phone: customerPhone,
+          });
     
     // 3. Render PDF
     const stream = await renderToStream(
@@ -51,6 +65,7 @@ export async function GET(
         customerName={customerName}
         customerPhone={customerPhone}
         customerAddress={customerAddress}
+        locale={pdfLocale}
       />
     );
     

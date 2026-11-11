@@ -12,12 +12,15 @@ export interface ProfitabilityCostBreakdown {
   amcParts: number;
   amcLabour: number;
   rmaOperational: number;
+  referralCommission?: number;
+  paymentGatewayFee?: number;
 }
 
 export interface ProfitabilityResult {
   dealId: string;
   period: string; // e.g. YYYY-MM
   revenue: number;
+  amcRevenue?: number;
   costs: ProfitabilityCostBreakdown;
   grossProfit: number;
   calculationVersion: CalculationVersion;
@@ -33,6 +36,7 @@ export interface ProfitabilityResult {
  */
 export async function calculateDealProfitability(dealId: string, period?: string): Promise<ProfitabilityResult> {
   let revenue = 0;
+  let amcRevenue = 0;
   const costs: ProfitabilityCostBreakdown = {
     purchase: 0,
     freight: 0,
@@ -41,7 +45,9 @@ export async function calculateDealProfitability(dealId: string, period?: string
     warrantyLabour: 0,
     amcParts: 0,
     amcLabour: 0,
-    rmaOperational: 0
+    rmaOperational: 0,
+    referralCommission: 0,
+    paymentGatewayFee: 0
   };
   const sourceRefs: Set<string> = new Set();
   
@@ -52,9 +58,29 @@ export async function calculateDealProfitability(dealId: string, period?: string
       // Exclude cancelled invoices
       if (inv.status !== "CANCELLED") {
           revenue += inv.totalAmount || 0; // Using grand total, excluding GST if separated in real schema
+          if (typeof inv.paymentGatewayFee === "number" && inv.paymentGatewayFee > 0) {
+              costs.paymentGatewayFee = (costs.paymentGatewayFee || 0) + inv.paymentGatewayFee;
+          } else if (typeof inv.razorpay_fee === "number" && inv.razorpay_fee > 0) {
+              costs.paymentGatewayFee = (costs.paymentGatewayFee || 0) + inv.razorpay_fee;
+          }
           sourceRefs.add(`invoice_${doc.id}`);
       }
   }
+
+  // 1b. LINKED PAID AMC CONTRACT REVENUE (Service Revenue)
+  try {
+      const amcSnap = await adminDb.collection("amc_contracts").where("quoteId", "==", dealId).get();
+      for (const doc of amcSnap.docs) {
+          const amc = doc.data();
+          const paid = Number(amc.amountPaid || amc.agreedPrice || 0);
+          if (paid > 0 && !amc.isComplimentary && amc.source !== "checkout_addon") {
+              const exTax = Number((paid / 1.18).toFixed(2));
+              amcRevenue += exTax;
+              revenue += exTax;
+              sourceRefs.add(`amc_${doc.id}`);
+          }
+      }
+  } catch {}
 
   // 2. PRODUCT PURCHASE COST (Original Installation)
   // Look at Serial Assets tied to this Deal that were installed.
@@ -136,6 +162,29 @@ export async function calculateDealProfitability(dealId: string, period?: string
       }
   }
 
+  // 5. REFERRAL, PROMOTER & SALESPERSON COMMISSIONS (Counted inside Service / Acquisition Costs)
+  try {
+      const [commRecsByDeal, commRecsByLead, installerCommsSnap] = await Promise.all([
+          adminDb.collection("commission_records").where("quote_id", "==", dealId).get().catch(() => ({ docs: [] })),
+          adminDb.collection("commission_records").where("lead_id", "==", dealId).get().catch(() => ({ docs: [] })),
+          adminDb.collection("commissions").where("lead_id", "==", dealId).get().catch(() => ({ docs: [] })),
+      ]);
+      const seenComm = new Set<string>();
+      for (const snap of [commRecsByDeal, commRecsByLead, installerCommsSnap]) {
+          for (const doc of snap.docs) {
+              if (seenComm.has(doc.id)) continue;
+              seenComm.add(doc.id);
+              const c = doc.data();
+              if (c.status === "cancelled" || c.status === "rejected") continue;
+              const amt = Number(c.commission_amount || 0);
+              if (amt > 0) {
+                  costs.referralCommission = (costs.referralCommission || 0) + amt;
+                  sourceRefs.add(`comm_${doc.id}`);
+              }
+          }
+      }
+  } catch {}
+
   const totalCost = 
       costs.purchase + 
       costs.freight + 
@@ -144,7 +193,9 @@ export async function calculateDealProfitability(dealId: string, period?: string
       costs.warrantyLabour + 
       costs.amcParts + 
       costs.amcLabour + 
-      costs.rmaOperational;
+      costs.rmaOperational +
+      (costs.referralCommission || 0) +
+      (costs.paymentGatewayFee || 0);
 
   const grossProfit = revenue - totalCost;
 
@@ -152,6 +203,7 @@ export async function calculateDealProfitability(dealId: string, period?: string
       dealId,
       period: period || new Date().toISOString().slice(0, 7), // Default to current YYYY-MM
       revenue,
+      ...(amcRevenue > 0 ? { amcRevenue } : {}),
       costs,
       grossProfit,
       calculationVersion: CURRENT_CALCULATION_VERSION,

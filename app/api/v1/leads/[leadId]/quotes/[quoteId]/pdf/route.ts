@@ -22,6 +22,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb as adminFirestore, adminStorage } from "@/lib/firebase-admin";
 import { generateQuotePdfBuffer } from "@/components/quote/QuotePDF";
 import { getCachedAdminSettings } from "@/lib/cached-settings";
+import { resolveRequestLocale } from "@/lib/i18n/api-messages";
+import { resolveCustomerLocale } from "@/lib/whatsapp/customer-notifications-i18n";
 
 export const maxDuration = 60; // Vercel Pro â€” keep in sync with vercel.json
 
@@ -89,7 +91,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       id: item.product_id || item.id || item.sku || Math.random().toString(36).substr(2, 9),
       name: item.display_name || item.name || item.title || "CCTV Component",
       brand: item.brand || "",
-      description: item.technology ? `Camera type: ${item.technology} | Tier: ${item.resolution_tier || 'standard'}` : (item.description || ""),
+      description: item.technology ? `Camera type: ${item.technology} | Resolution: ${item.resolution || item.resolution_tier || '2MP'}` : (item.description || ""),
       badge: item.technology ? { label: item.technology, color: item.technology === "IP" ? "#2C5F8A" : "#0F1F3D" } : undefined,
       quantity: item.qty || item.quantity || 1,
       unitPrice: item.unit_price || item.unitPrice || item.price || 0,
@@ -244,9 +246,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   // Check if it's an invoice
   const isInvoice = quote.status === "accepted" || quote.status === "PAID";
 
-  // â”€â”€ 3. Check Storage cache â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const reqLocale = resolveRequestLocale(request);
+  const pdfLocale =
+    reqLocale !== "en"
+      ? reqLocale
+      : await resolveCustomerLocale({
+          quoteData: quote,
+          leadData: lead,
+          phone: quote?.customer_mobile || lead?.mobile_number,
+        });
+
+  // Storage cache partitioned per document type and locale
   const bucket     = adminStorage.bucket();
-  const storagePath = `quotes/${leadId}/${quoteId}${isInvoice ? "_invoice" : ""}_v4.pdf`;
+  const storagePath = `quotes/${leadId}/${quoteId}${isInvoice ? "_invoice" : ""}_${pdfLocale}_v4.pdf`;
   const file        = bucket.file(storagePath);
 
   try {
@@ -270,7 +282,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
   let pdfBuffer: Buffer;
   try {
-    pdfBuffer = await generateQuotePdfBuffer(quoteData as Parameters<typeof generateQuotePdfBuffer>[0], settings, isInvoice);
+    pdfBuffer = await generateQuotePdfBuffer(quoteData as Parameters<typeof generateQuotePdfBuffer>[0], settings, isInvoice, pdfLocale);
   } catch (err) {
     console.error("[QuotePDF] Generation failed:", err);
     return NextResponse.json({ error: "PDF generation failed" }, { status: 500 });

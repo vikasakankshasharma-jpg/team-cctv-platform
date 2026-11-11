@@ -6,6 +6,7 @@ import type { Lead } from "@/types";
 import { addLeadActivity, updateNextFollowUp, updateLeadStatus } from "@/app/actions/leads";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ProgressiveDialerProps {
   leads: Lead[];
@@ -15,6 +16,7 @@ interface ProgressiveDialerProps {
 }
 
 export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: ProgressiveDialerProps) {
+  const { t } = useTranslation();
   const [queue, setQueue] = useState<Lead[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [callNotes, setCallNotes] = useState("");
@@ -52,7 +54,7 @@ export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: Progr
       setCurrentIndex(currentIndex + 1);
       resetForm();
     } else {
-      toast.success("Queue completed! Great job.");
+      toast.success(t("adm_dial_done_toast", "Queue completed! Great job."));
       onClose();
     }
   };
@@ -79,11 +81,11 @@ export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: Progr
         await updateLeadStatus(currentLead.id, statusChange);
       }
 
-      toast.success("Logged successfully");
+      toast.success(t("adm_drw_toast_logged", "Activity logged"));
       handleNext();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to log activity");
+      toast.error(t("adm_drw_toast_log_err", "Failed to log activity"));
     } finally {
       setIsSubmitting(false);
     }
@@ -97,12 +99,12 @@ export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: Progr
         <div className="w-20 h-20 bg-success/10 rounded-full flex items-center justify-center mb-6">
           <Target className="w-10 h-10 text-success" />
         </div>
-        <h2 className="text-3xl font-black text-foreground mb-2">Queue Empty!</h2>
-        <p className="text-muted-foreground mb-8 text-center px-4 max-w-sm">
-          No urgent follow-ups or unattended leads for today. You are completely caught up.
+        <h2 className="text-3xl font-black text-foreground mb-2 text-center">{t("adm_dial_empty_t", "Queue Empty!")}</h2>
+        <p className="text-muted-foreground mb-8 text-center px-4 max-w-sm leading-relaxed">
+          {t("adm_dial_empty_d", "No urgent follow-ups or unattended leads for today. You are completely caught up.")}
         </p>
-        <Button onClick={onClose} size="lg" className="rounded-full px-4 md:px-8 font-bold">
-          Return to Dashboard
+        <Button onClick={onClose} size="lg" className="rounded-full px-4 md:px-8 py-3 h-auto font-bold whitespace-normal leading-snug">
+          {t("adm_dial_ret_dash", "Return to Dashboard")}
         </Button>
       </div>
     );
@@ -116,12 +118,12 @@ export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: Progr
       {/* Top Header */}
       <div className="flex items-center justify-between p-4 border-b border-border bg-card shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-sm">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-sm shrink-0">
             {currentIndex + 1}
           </div>
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">of {queue.length} Leads</span>
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("adm_dial_of_leads", "of {count} Leads", { count: String(queue.length) })}</span>
         </div>
-        <button onClick={onClose} className="p-2 bg-secondary rounded-full hover:bg-muted transition-colors">
+        <button onClick={onClose} className="p-2 bg-secondary rounded-full hover:bg-muted transition-colors shrink-0">
           <X className="w-5 h-5 text-foreground" />
         </button>
       </div>
@@ -134,15 +136,15 @@ export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: Progr
           <div className="text-center space-y-3">
             {isFollowUp ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full text-xs font-black uppercase tracking-widest border border-amber-500/20">
-                <Clock className="w-3 h-3" /> Scheduled Follow-Up
+                <Clock className="w-3 h-3 shrink-0" /> {t("adm_dial_sched_fu", "Scheduled Follow-Up")}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-xs font-black uppercase tracking-widest border border-blue-500/20">
-                <Target className="w-3 h-3" /> Unattended Lead
+                <Target className="w-3 h-3 shrink-0" /> {t("adm_dial_unattended", "Unattended Lead")}
               </span>
             )}
             <h1 className="text-4xl font-black text-foreground tracking-tight">{currentLead.customer_name}</h1>
-            <p className="text-lg text-muted-foreground font-medium flex items-center justify-center gap-2">
+            <p className="text-lg text-muted-foreground font-medium flex flex-wrap items-center justify-center gap-2">
               <span className="capitalize">{currentLead.property_type}</span>
               <span>•</span>
               <span className="uppercase">{currentLead.technology_choice}</span>
@@ -153,12 +155,12 @@ export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: Progr
           <div className="flex justify-center pt-4">
             <a 
               href={`tel:${currentLead.mobile_number}`}
-              className="group relative flex items-center justify-center w-full max-w-xs h-20 rounded-[32px] bg-gradient-to-br from-green-400 to-green-600 shadow-xl shadow-green-500/20 active:scale-95 transition-all overflow-hidden"
+              className="group relative flex items-center justify-center w-full max-w-xs min-h-[5rem] h-auto py-4 px-6 rounded-[32px] bg-gradient-to-br from-green-400 to-green-600 shadow-xl shadow-green-500/20 active:scale-95 transition-all overflow-hidden"
             >
               <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="flex items-center gap-4 text-white">
-                <Phone className="w-8 h-8 fill-current" />
-                <span className="text-2xl font-black tracking-wide">Call Now</span>
+                <Phone className="w-8 h-8 fill-current shrink-0" />
+                <span className="text-2xl font-black tracking-wide leading-snug">{t("adm_dial_call_now", "Call Now")}</span>
               </div>
             </a>
           </div>
@@ -169,10 +171,10 @@ export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: Progr
 
           {/* Quick Action Form */}
           <div className="bg-card border border-border rounded-[24px] p-6 shadow-sm space-y-6 mt-8">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-foreground">Log Outcome</h3>
+            <h3 className="text-sm font-bold uppercase tracking-widest text-foreground">{t("adm_dial_log_out", "Log Outcome")}</h3>
             
             <textarea 
-              placeholder="What happened on the call?"
+              placeholder={t("adm_dial_what_ph", "What happened on the call?")}
               value={callNotes}
               onChange={e => setCallNotes(e.target.value)}
               className="w-full h-32 p-4 bg-background border border-border rounded-xl resize-none outline-none focus:ring-2 focus:ring-primary/50 text-sm font-medium"
@@ -180,7 +182,7 @@ export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: Progr
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5"/> Next Follow-up</label>
+                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5 shrink-0"/> {t("adm_drw_next_fu", "Next Follow-Up")}</label>
                 <input 
                   type="date"
                   value={followUpDate}
@@ -189,19 +191,19 @@ export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: Progr
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Update Status</label>
+                <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">{t("adm_dial_upd_status", "Update Status")}</label>
                 <select 
                   value={statusChange || currentLead.status}
                   onChange={e => setStatusChange(e.target.value)}
                   className="w-full h-12 px-4 bg-background border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 font-medium capitalize"
                 >
-                  <option value="new">New</option>
-                  <option value="attempted">Attempted</option>
-                  <option value="contacted">Contacted</option>
-                  <option value="site_visit">Site Visit</option>
-                  <option value="quoted">Re-Quoted</option>
-                  <option value="won">Won</option>
-                  <option value="lost">Lost</option>
+                  <option value="new">{t("adm_leads_st_new", "New")}</option>
+                  <option value="attempted">{t("adm_lc_st_attempted", "Attempted")}</option>
+                  <option value="contacted">{t("adm_leads_st_contacted", "Contacted")}</option>
+                  <option value="site_visit">{t("adm_fu_act_visit", "Site Visit")}</option>
+                  <option value="quoted">{t("adm_lc_st_requote", "Re-Quote")}</option>
+                  <option value="won">{t("adm_leads_tab_won", "Won / Paid")}</option>
+                  <option value="lost">{t("adm_leads_st_lost", "Lost")}</option>
                 </select>
               </div>
             </div>
@@ -211,24 +213,24 @@ export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: Progr
       </div>
 
       {/* Bottom Sticky Action Bar */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-background/80 backdrop-blur-xl border-t border-border flex gap-4">
+      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-background/80 backdrop-blur-xl border-t border-border flex flex-wrap gap-4">
         <Button 
           variant="outline" 
           size="lg" 
-          className="flex-1 h-14 rounded-2xl font-bold text-muted-foreground border-border hover:bg-secondary"
+          className="flex-1 min-h-[3.5rem] h-auto py-3 rounded-2xl font-bold text-muted-foreground border-border hover:bg-secondary whitespace-normal leading-snug"
           onClick={handleNext}
         >
-          <SkipForward className="w-5 h-5 mr-2" /> Skip
+          <SkipForward className="w-5 h-5 mr-2 shrink-0" /> {t("adm_dial_skip", "Skip")}
         </Button>
         <Button 
           size="lg" 
-          className="flex-[2] h-14 rounded-2xl font-black bg-primary text-primary-foreground hover:bg-primary/90 text-lg shadow-lg shadow-primary/20"
+          className="flex-[2] min-h-[3.5rem] h-auto py-3 rounded-2xl font-black bg-primary text-primary-foreground hover:bg-primary/90 text-lg shadow-lg shadow-primary/20 whitespace-normal leading-snug"
           onClick={handleLogAndNext}
           disabled={isSubmitting}
         >
           {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : (
             <>
-              Log & Next <ArrowRight className="w-6 h-6 ml-2" />
+              {t("adm_dial_log_next", "Log & Next")} <ArrowRight className="w-6 h-6 ml-2 shrink-0" />
             </>
           )}
         </Button>

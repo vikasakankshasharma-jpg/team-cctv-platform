@@ -3,10 +3,14 @@ import { redirect } from "next/navigation";
 import { CustomerAmcClient } from "@/components/customer/CustomerAmcClient";
 import { ShieldCheck, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import type { Metadata } from "next";
+import { TranslatedText } from "@/components/shared/TranslatedText";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { buildPageMetadata } from "@/lib/i18n/seo-metadata";
 
-export const metadata = {
-  title: "My Warranties & AMC | TEAM CCTV",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata("customer_amc", await getServerLocale());
+}
 
 export const dynamic = "force-dynamic";
 
@@ -25,10 +29,10 @@ export default async function CustomerAmcPage() {
         </Link>
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-foreground flex items-center gap-3">
-            <ShieldCheck className="w-7 h-7 text-primary" />
-            Warranties & Coverage
+            <ShieldCheck className="w-7 h-7 text-primary shrink-0" />
+            <TranslatedText tKey="amc_page_title" defaultText="Warranties & Coverage" />
           </h1>
-          <p className="text-muted-foreground mt-1">View active hardware warranties and renew Annual Maintenance Contracts.</p>
+          <p className="text-muted-foreground mt-1"><TranslatedText tKey="amc_page_sub" defaultText="View active hardware warranties and renew Annual Maintenance Contracts." /></p>
         </div>
       </div>
       

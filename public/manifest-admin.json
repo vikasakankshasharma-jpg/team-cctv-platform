@@ -2,6 +2,8 @@
   "name": "CCTVQuotation Admin",
   "short_name": "CCTVQuotation",
   "description": "CCTVQuotation - Admin Dashboard",
+  "lang": "en-IN",
+  "dir": "ltr",
   "start_url": "/admin",
   "display": "standalone",
   "background_color": "#09090b",

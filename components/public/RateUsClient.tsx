@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { Star, MessageSquare, Loader2, HeartHandshake } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function RateUsClient({ leadId, customerName }: { leadId: string, customerName: string }) {
+  const { t } = useTranslation();
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
   const [showForm, setShowForm] = useState(false);
@@ -41,10 +43,10 @@ export function RateUsClient({ leadId, customerName }: { leadId: string, custome
       if (data.success) {
         setIsDone(true);
       } else {
-        toast.error("Failed to submit feedback.");
+        toast.error(t("rate_err_submit", "Failed to submit feedback."));
       }
     } catch (e) {
-      toast.error("An error occurred.");
+      toast.error(t("rate_err_generic", "An error occurred."));
     } finally {
       setIsSubmitting(false);
     }
@@ -56,9 +58,9 @@ export function RateUsClient({ leadId, customerName }: { leadId: string, custome
         <div className="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
           <HeartHandshake className="w-8 h-8" />
         </div>
-        <h3 className="text-xl font-black text-gray-900">Thank you for your feedback.</h3>
+        <h3 className="text-xl font-black text-gray-900">{t("rate_thanks", "Thank you for your feedback.")}</h3>
         <p className="text-gray-500 font-medium text-sm">
-          We deeply apologize that your experience was not perfect. Our senior management team has been alerted and will contact you shortly to resolve this.
+          {t("rate_sorry_done", "We deeply apologize that your experience was not perfect. Our senior management team has been alerted and will contact you shortly to resolve this.")}
         </p>
       </div>
     );
@@ -86,18 +88,18 @@ export function RateUsClient({ leadId, customerName }: { leadId: string, custome
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-left space-y-4">
           <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 text-rose-700 text-sm font-bold flex items-start gap-2">
             <span>⚠️</span>
-            <p>We are so sorry we didn't meet your expectations. Please let us know exactly what went wrong so we can fix it immediately.</p>
+            <p>{t("rate_sorry_box", "We are so sorry we didn't meet your expectations. Please let us know exactly what went wrong so we can fix it immediately.")}</p>
           </div>
           
           <div>
-            <label className="text-xs font-bold text-gray-700 flex items-center gap-1 mb-2 uppercase tracking-widest">
-              <MessageSquare className="w-3 h-3" /> Private Feedback
+            <label className="text-xs font-bold text-gray-700 flex items-center gap-1 mb-2 uppercase tracking-wider">
+              <MessageSquare className="w-3 h-3" /> {t("rate_priv_label", "Private Feedback")}
             </label>
             <textarea 
               rows={4}
               value={comment}
               onChange={e => setComment(e.target.value)}
-              placeholder="What could we have done better?"
+              placeholder={t("rate_placeholder", "What could we have done better?")}
               className="w-full text-sm p-4 border-2 border-gray-200 rounded-xl outline-none focus:border-rose-400 font-medium resize-none bg-gray-50"
             ></textarea>
           </div>
@@ -105,9 +107,9 @@ export function RateUsClient({ leadId, customerName }: { leadId: string, custome
           <button
             onClick={() => handleSubmit(rating, comment)}
             disabled={isSubmitting || !comment}
-            className="w-full bg-rose-600 text-white font-bold py-4 rounded-xl hover:bg-rose-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full bg-rose-600 text-white font-bold py-4 rounded-xl hover:bg-rose-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 whitespace-normal text-center leading-snug"
           >
-            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Submit Feedback"}
+            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : t("rate_submit", "Submit Feedback")}
           </button>
         </div>
       )}

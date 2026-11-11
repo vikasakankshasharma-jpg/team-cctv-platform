@@ -1,3 +1,5 @@
+import { TranslatedText } from "@/components/shared/TranslatedText";
+
 export default function OfflinePage() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-4 md:p-8 text-center">
@@ -11,21 +13,31 @@ export default function OfflinePage() {
           <path d="M18.8 8.8A15.9 15.9 0 0 0 11 6.5"/>
         </svg>
       </div>
-      <h1 className="text-3xl font-black text-foreground mb-4">You are Offline</h1>
+      <h1 className="text-3xl font-black text-foreground mb-4">
+        <TranslatedText tKey="off_title" defaultText="You are Offline" />
+      </h1>
       <p className="text-muted-foreground max-w-md mx-auto mb-8 font-medium">
-        It looks like you've lost your internet connection. Please check your network settings and try again. 
+        <TranslatedText
+          tKey="off_desc"
+          defaultText="It looks like you've lost your internet connection. Please check your network settings and try again."
+        />
       </p>
       
       <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-md shadow-sm">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-foreground mb-3">Contact Support</h2>
+        <h2 className="text-sm font-bold uppercase tracking-wider text-foreground mb-3">
+          <TranslatedText tKey="off_support_title" defaultText="Contact Support" />
+        </h2>
         <p className="text-sm text-muted-foreground mb-4">
-          If you need immediate assistance regarding a quote or installation, please call us directly.
+          <TranslatedText
+            tKey="off_support_desc"
+            defaultText="If you need immediate assistance regarding a quote or installation, please call us directly."
+          />
         </p>
         <a 
           href="tel:+917357612865" 
-          className="inline-flex w-full items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-black rounded-xl hover:bg-primary/90 transition-colors"
+          className="inline-flex w-full items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-black rounded-xl hover:bg-primary/90 transition-colors whitespace-normal text-center leading-snug"
         >
-          Call +91 73576 12865
+          <TranslatedText tKey="off_call_btn" defaultText="Call +91 73576 12865" />
         </a>
       </div>
     </div>

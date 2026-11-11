@@ -1,8 +1,11 @@
+import { cleanEnvVar, cleanPhoneEnvVar } from "../env-utils";
+
 export interface Msg91QuotePayload {
   phone: string;
   customerName: string;
   pdfUrl: string;
   quoteId: string;
+  preferredLanguage?: string;
 }
 
 export interface Msg91InvoicePayload {
@@ -10,6 +13,7 @@ export interface Msg91InvoicePayload {
   customerName: string;
   pdfUrl: string;
   amount: number;
+  preferredLanguage?: string;
 }
 
 
@@ -17,6 +21,7 @@ export interface Msg91FollowupPayload {
   phone: string;
   customerName: string;
   amount: string | number;
+  preferredLanguage?: string;
 }
 
 export interface Msg91SurveyPayload {
@@ -24,6 +29,7 @@ export interface Msg91SurveyPayload {
   customerName: string;
   date: string;
   timeSlot: string;
+  preferredLanguage?: string;
 }
 
 export class Msg91WhatsAppProvider {
@@ -85,13 +91,16 @@ export class Msg91WhatsAppProvider {
   private baseUrl = "https://control.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/";
 
   constructor() {
-    this.authKey = process.env.MSG91_AUTH_KEY || "";
-    this.fromNumber = process.env.MSG91_WHATSAPP_NUMBER || "";
+    this.authKey = cleanEnvVar(process.env.MSG91_AUTH_KEY);
+    this.fromNumber = cleanPhoneEnvVar(process.env.MSG91_WHATSAPP_NUMBER);
   }
 
-  private async sendMessage(payload: any): Promise<{ success: boolean; messageId?: string; error?: string }> {
-    if (!this.authKey || !this.fromNumber) {
-      return { success: false, error: "Missing MSG91 credentials" };
+  private async sendMessage(payload: any): Promise<{ success: boolean; messageId?: string; error?: string; missingCredentials?: boolean }> {
+    const authKey = this.authKey || cleanEnvVar(process.env.MSG91_AUTH_KEY);
+    const fromNumber = this.fromNumber || cleanPhoneEnvVar(process.env.MSG91_WHATSAPP_NUMBER);
+
+    if (!authKey || !fromNumber) {
+      return { success: false, missingCredentials: true, error: "Missing MSG91 credentials" };
     }
 
     try {
@@ -99,25 +108,63 @@ export class Msg91WhatsAppProvider {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "authkey": this.authKey
+          "accept": "application/json",
+          "authkey": authKey
         },
         body: JSON.stringify({
-          integrated_number: this.fromNumber,
+          integrated_number: fromNumber,
           content_type: "template",
           payload: payload
         })
       });
 
-      const data = await response.json();
-      
-      if (!response.ok || data.hasError) {
-        return { success: false, error: data.message || "MSG91 API Error" };
+      const rawText = await response.text();
+      let data: any = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        data = {};
       }
 
-      return { success: true, messageId: data.msgId };
+      if (!response.ok || data?.hasError || data?.status === "fail") {
+        const errorDetail =
+          (typeof data?.errors === "string" && data.errors) ||
+          (data?.errors && JSON.stringify(data.errors)) ||
+          data?.message ||
+          rawText ||
+          `HTTP ${response.status}`;
+        return { success: false, error: errorDetail };
+      }
+
+      return {
+        success: true,
+        messageId: data?.data?.message_uuid || data?.msgId || data?.message_uuid,
+      };
     } catch (error: any) {
-      return { success: false, error: error.message };
+      return { success: false, error: error?.message || "Network error" };
     }
+  }
+
+  async sendOtpTemplate(phone: string, otp: string) {
+    let to = String(phone).replace(/\D/g, "");
+    if (to.length === 10) to = `91${to}`;
+    if (!to) return { success: false, error: "Missing phone number" };
+
+    return this.sendMessage({
+      messaging_product: "whatsapp",
+      to,
+      type: "template",
+      template: {
+        name: "cctv_update",
+        language: { code: "en" },
+        components: [
+          {
+            type: "body",
+            parameters: [{ type: "text", text: otp }]
+          }
+        ]
+      }
+    });
   }
 
   async sendQuote(payload: Msg91QuotePayload) {
@@ -271,7 +318,7 @@ export class Msg91WhatsAppProvider {
     });
   }
 
-  async sendLeadWelcome(payload: { phone: string, customerName: string, configDetails: string }) {
+  async sendLeadWelcome(payload: { phone: string, customerName: string, configDetails: string, preferredLanguage?: string }) {
     console.log(`[MSG91] Sending lead welcome to ${payload.phone}`);
     if (!payload.phone) return { success: false, error: 'Missing phone number' };
     let to = String(payload.phone).replace(/[^0-9]/g, '');

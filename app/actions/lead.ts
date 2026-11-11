@@ -5,6 +5,7 @@ import { isPincodeActiveByDefault, resolveStaticHierarchy } from "@/lib/geo/geoH
 import { CreateLeadSchema } from "@/lib/validators";
 import { calculateSlaDeadline } from "@/lib/sla-engine";
 import { CRMEngine } from "@/lib/crm-engine";
+import { getActionLocale, getApiMessage } from "@/lib/i18n/api-messages";
 import type { LeadPriority } from "@/types";
 
 export async function createLeadAction(payload: {
@@ -20,16 +21,22 @@ export async function createLeadAction(payload: {
   status?: string;
   source?: string;
   detected_city?: string;
+  preferred_language?: string;
   // B2B / Corporate fields
   is_b2b?: boolean;
   company_name?: string | null;
   gst_number?: string | null;
 }) {
+  const locale = await getActionLocale(
+    payload.preferred_language ||
+      (payload.wizard_answers as any)?.preferred_language ||
+      (payload.wizard_answers as any)?.locale
+  );
   try {
     // Validate
     const validation = CreateLeadSchema.safeParse(payload);
     if (!validation.success) {
-      return { error: "Lead validation failed", details: validation.error.format() };
+      return { error: getApiMessage(locale, "lead_validation_failed"), details: validation.error.format() };
     }
 
     const leadData = validation.data;
@@ -162,10 +169,21 @@ export async function createLeadAction(payload: {
       }
     }
 
+    const { normalizeLocaleCode } = await import("@/lib/whatsapp/customer-notifications-i18n");
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies().catch(() => null);
+    const preferredLanguage =
+      normalizeLocaleCode((payload as any).preferred_language) ||
+      normalizeLocaleCode(wizardAnswers?.preferred_language) ||
+      normalizeLocaleCode(wizardAnswers?.locale) ||
+      normalizeLocaleCode(cookieStore?.get("team_locale")?.value) ||
+      "en";
+
     await newLeadRef.set({
       customer_name:        leadData.customer_name,
       mobile_number:        leadData.mobile_number,
       firebase_uid:         leadData.firebase_uid,
+      preferred_language:   preferredLanguage,
       status:               leadData.status || "new",
       promoter_id:          resolvedPromoterId,
       referral_code_used:   referralCodeUsed,
@@ -252,12 +270,12 @@ export async function createLeadAction(payload: {
     // Send MSG91 Lead Welcome
     try {
       const { msg91 } = await import("@/lib/whatsapp/msg91-provider");
-      const phone = payload.mobile_number || "Customer";
       const configStr = leadData.wizard_answers?.cameras ? `${leadData.wizard_answers.cameras} Cameras` : "CCTV System";
       await msg91.sendLeadWelcome({
         phone: payload.mobile_number,
         customerName: payload.customer_name,
-        configDetails: configStr
+        configDetails: configStr,
+        preferredLanguage: locale,
       });
     } catch (e) {
       console.error("Failed to send Lead Welcome:", e);
@@ -266,7 +284,7 @@ export async function createLeadAction(payload: {
     return { success: true, id: newLeadRef.id };
   } catch (error: any) {
     console.error("createLeadAction error:", error);
-    return { error: error.message || "Internal server error" };
+    return { error: getApiMessage(locale, "internal_error") };
   }
 }
 

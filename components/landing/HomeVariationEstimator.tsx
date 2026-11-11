@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import type { DynamicPackageMap } from "@/lib/dynamic-package-pricing";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface BrandReference {
   name: string;
@@ -439,6 +440,7 @@ interface HomeVariationEstimatorProps {
 }
 
 export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimatorProps = {}) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [propertyType, setPropertyType] = useState<"home" | "shop" | "office">("home");
   const [cameraCount, setCameraCount] = useState<number>(4);
@@ -446,16 +448,47 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
   const fallbackGroup = VARIATION_REFERENCES[propertyType][cameraCount] || VARIATION_REFERENCES.home[4];
   const dynamicGroup = initialPackages?.[propertyType]?.[cameraCount];
 
+  const localizeFeature = (feat: string): string => {
+    if (/Cabling|15m Free/i.test(feat)) return t("est_feat_cabling");
+    if (/Mobile & Desktop/i.test(feat)) return t("est_feat_multi_app");
+    if (/Store Phone/i.test(feat)) return t("est_feat_store_app");
+    if (/Complete Fitting|Mobile Live App/i.test(feat)) return t("est_feat_fitting_app");
+    const chMatch = feat.match(/(\d+)-Channel/i);
+    if (chMatch) {
+      return /Turbo/i.test(feat)
+        ? t("est_feat_dvr_turbo", undefined, { ch: chMatch[1] })
+        : t("est_feat_dvr_smart", undefined, { ch: chMatch[1] });
+    }
+    const cntMatch = feat.match(/^(\d+)x\s/i);
+    const cnt = cntMatch ? cntMatch[1] : String(cameraCount);
+    if (/Indoor Dome.*Outdoor Bullet/i.test(feat)) return t("est_feat_mixed_hd", undefined, { count: cnt });
+    if (/Dome|Ceiling/i.test(feat)) {
+      if (/Color|Full-Color|True-Color/i.test(feat)) return t("est_feat_dome_prama", undefined, { count: cnt });
+      if (/3K|Audio|High-Clarity/i.test(feat)) return t("est_feat_dome_hik", undefined, { count: cnt });
+      return t("est_feat_dome_cp", undefined, { count: cnt });
+    }
+    if (/Color|Full-Color|True-Color/i.test(feat)) return t("est_feat_cam_prama", undefined, { count: cnt });
+    if (/3K|Smart IR|Ultra-Clarity|Ultra Clarity|High-Clarity|High Clarity/i.test(feat)) return t("est_feat_cam_hik", undefined, { count: cnt });
+    if (cntMatch || /Camera|Cam/i.test(feat)) return t("est_feat_cam_cp", undefined, { count: cnt });
+    return feat;
+  };
+
   const getBrandReference = (brandKey: "cpplus" | "hik" | "prama"): BrandReference => {
     const base = fallbackGroup[brandKey];
     const live = dynamicGroup?.[brandKey];
-    if (!live) return base;
+    const priceNum = live ? live.price : (parseInt(base.startingRef.replace(/\D/g, ""), 10) || 17999);
+    const emiNum = live ? live.emi : (parseInt(base.emiRef.replace(/\D/g, ""), 10) || 999);
+    const rawFeatures = live?.features && live.features.length > 0 ? live.features : base.features;
 
     return {
       ...base,
-      startingRef: `From ~₹${live.price.toLocaleString("en-IN")}*`,
-      emiRef: `Starting ₹${live.emi.toLocaleString("en-IN")} / mo*`,
-      features: live.features && live.features.length > 0 ? live.features : base.features,
+      name: t(`est_title_${brandKey}`, undefined, { count: String(cameraCount) }),
+      tag: t(`est_tag_${brandKey}`),
+      resolution: brandKey === "cpplus" ? t("est_res_2mp") : brandKey === "hik" ? t("est_res_5mp") : t("est_res_color"),
+      desc: t(`est_desc_${propertyType}_${brandKey}`),
+      startingRef: t("est_from_price", undefined, { price: `₹${priceNum.toLocaleString("en-IN")}` }),
+      emiRef: t("est_emi_starting", undefined, { emi: emiNum.toLocaleString("en-IN") }),
+      features: rawFeatures.map(localizeFeature),
     };
   };
 
@@ -478,13 +511,13 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
         <div>
           <div className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 flex items-center gap-1.5 mb-1.5">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Interactive Multi-Brand Variation Explorer</span>
+            <span>{t("est_badge")}</span>
           </div>
           <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            Explore Multiple Variations for Your Site
+            {t("est_title")}
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1 font-medium">
-            Compare brand packages with EMI references. Get your exact tailored quotation in under 2 minutes.
+            {t("est_subtitle")}
           </p>
         </div>
 
@@ -500,8 +533,8 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
             }`}
           >
             <HomeIcon className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden sm:inline">Home / Villa</span>
-            <span className="sm:hidden">Home</span>
+            <span className="hidden sm:inline">{t("est_prop_home_full")}</span>
+            <span className="sm:hidden">{t("est_prop_home_short")}</span>
           </button>
 
           <button
@@ -514,8 +547,8 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
             }`}
           >
             <Store className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden sm:inline">Shop / Retail</span>
-            <span className="sm:hidden">Shop</span>
+            <span className="hidden sm:inline">{t("est_prop_shop_full")}</span>
+            <span className="sm:hidden">{t("est_prop_shop_short")}</span>
           </button>
 
           <button
@@ -528,8 +561,8 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
             }`}
           >
             <Building2 className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden sm:inline">Office / Factory</span>
-            <span className="sm:hidden">Office</span>
+            <span className="hidden sm:inline">{t("est_prop_office_full")}</span>
+            <span className="sm:hidden">{t("est_prop_office_short")}</span>
           </button>
         </div>
       </div>
@@ -537,7 +570,7 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
       {/* Camera Count Bar - Balanced 2x2 grid on mobile, row on desktop */}
       <div className="py-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2.5 w-full">
         <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500 sm:mr-2">
-          Required Cameras:
+          {t("est_req_cameras")}
         </span>
         <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
           {[2, 4, 8, 16].map((count) => {
@@ -553,10 +586,10 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
                     : "border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300"
                 }`}
               >
-                <span>{count} Cameras</span>
+                <span>{t("est_n_cameras", undefined, { count: String(count) })}</span>
                 {count === 4 && (
                   <span className="px-1.5 py-0.5 rounded bg-blue-600 text-white text-[9px] font-black uppercase">
-                    Popular
+                    {t("est_4cam_badge")}
                   </span>
                 )}
               </button>
@@ -574,11 +607,11 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
           className="rounded-2xl border-2 border-slate-200 dark:border-zinc-800 hover:border-blue-500 dark:hover:border-blue-500 p-5 bg-white dark:bg-zinc-800/40 flex flex-col justify-between transition-all group shadow-xs hover:shadow-md"
         >
           <div>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between gap-2 mb-3">
               <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${currentGroup.cpplus.tagColor}`}>
                 {currentGroup.cpplus.tag}
               </span>
-              <span className="text-xs font-bold text-slate-400 dark:text-zinc-500">{currentGroup.cpplus.resolution}</span>
+              <span className="text-xs font-bold text-slate-400 dark:text-zinc-500 text-right">{currentGroup.cpplus.resolution}</span>
             </div>
             
             <h3 className="text-lg font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
@@ -590,13 +623,13 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
 
             {/* Price Benchmark Box */}
             <div className="bg-slate-50 dark:bg-zinc-900 p-3.5 rounded-xl border border-slate-200/80 dark:border-zinc-750 mb-4 shadow-2xs">
-              <div className="flex items-baseline justify-between">
-                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500">Indicative Pricing</span>
-                <span className="text-xs font-bold text-slate-700 dark:text-zinc-300">{currentGroup.cpplus.startingRef}</span>
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500">{t("est_ind_pricing")}</span>
+                <span className="text-xs font-bold text-slate-700 dark:text-zinc-300 text-right">{currentGroup.cpplus.startingRef}</span>
               </div>
               <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-1.5">
                 <CreditCard className="w-4 h-4 shrink-0" />
-                <span><strong>{currentGroup.cpplus.emiRef}</strong> on EMI</span>
+                <span><strong>{currentGroup.cpplus.emiRef}</strong></span>
               </div>
             </div>
 
@@ -614,30 +647,30 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
           <button
             type="button"
             onClick={() => handleStartExactQuote("cpplus")}
-            className="w-full min-h-[44px] py-3 px-4 rounded-xl bg-slate-900 dark:bg-zinc-700 hover:bg-blue-600 text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-98 cursor-pointer"
+            className="w-full min-h-[44px] py-3 px-4 rounded-xl bg-slate-900 dark:bg-zinc-700 hover:bg-blue-600 text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-98 cursor-pointer text-center"
           >
-            <span>Get Exact Quote for My Site</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <span>{t("est_cta_btn")}</span>
+            <ArrowRight className="w-3.5 h-3.5 shrink-0" />
           </button>
         </motion.div>
 
-        {/* Hikvision Card (Recommended) */}
+        {/* Hikvision Card */}
         <motion.div 
           layout 
           className="rounded-2xl border-2 border-blue-600 p-5 bg-blue-50/20 dark:bg-blue-950/20 flex flex-col justify-between shadow-lg relative group mt-4 md:mt-0"
         >
           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-            <span className="px-3 py-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-black uppercase tracking-widest shadow-sm">
-              Recommended 🌟
+            <span className="px-3 py-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-black uppercase tracking-widest shadow-sm whitespace-nowrap">
+              {t("est_hik_top_badge")}
             </span>
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-3 mt-1">
+            <div className="flex items-center justify-between gap-2 mb-3 mt-1">
               <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${currentGroup.hik.tagColor}`}>
                 {currentGroup.hik.tag}
               </span>
-              <span className="text-xs font-bold text-blue-600 dark:text-blue-400">{currentGroup.hik.resolution}</span>
+              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 text-right">{currentGroup.hik.resolution}</span>
             </div>
 
             <h3 className="text-lg font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
@@ -649,13 +682,13 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
 
             {/* Price Benchmark Box */}
             <div className="bg-white dark:bg-zinc-900 p-3.5 rounded-xl border border-blue-200 dark:border-blue-900/60 mb-4 shadow-2xs">
-              <div className="flex items-baseline justify-between">
-                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500">Indicative Pricing</span>
-                <span className="text-xs font-bold text-slate-700 dark:text-zinc-300">{currentGroup.hik.startingRef}</span>
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500">{t("est_ind_pricing")}</span>
+                <span className="text-xs font-bold text-slate-700 dark:text-zinc-300 text-right">{currentGroup.hik.startingRef}</span>
               </div>
               <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-1.5">
                 <CreditCard className="w-4 h-4 shrink-0" />
-                <span><strong>{currentGroup.hik.emiRef}</strong> on EMI</span>
+                <span><strong>{currentGroup.hik.emiRef}</strong></span>
               </div>
             </div>
 
@@ -673,10 +706,10 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
           <button
             type="button"
             onClick={() => handleStartExactQuote("hikvision")}
-            className="w-full min-h-[44px] py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/25 active:scale-98 cursor-pointer"
+            className="w-full min-h-[44px] py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/25 active:scale-98 cursor-pointer text-center"
           >
-            <span>Get Exact Quote for My Site</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <span>{t("est_cta_btn")}</span>
+            <ArrowRight className="w-3.5 h-3.5 shrink-0" />
           </button>
         </motion.div>
 
@@ -686,11 +719,11 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
           className="rounded-2xl border-2 border-slate-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 p-5 bg-white dark:bg-zinc-800/40 flex flex-col justify-between transition-all group shadow-xs hover:shadow-md"
         >
           <div>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between gap-2 mb-3">
               <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${currentGroup.prama.tagColor}`}>
                 {currentGroup.prama.tag}
               </span>
-              <span className="text-xs font-bold text-slate-400 dark:text-zinc-500">{currentGroup.prama.resolution}</span>
+              <span className="text-xs font-bold text-slate-400 dark:text-zinc-500 text-right">{currentGroup.prama.resolution}</span>
             </div>
 
             <h3 className="text-lg font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
@@ -702,13 +735,13 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
 
             {/* Price Benchmark Box */}
             <div className="bg-slate-50 dark:bg-zinc-900 p-3.5 rounded-xl border border-slate-200 dark:border-zinc-750 mb-4 shadow-2xs">
-              <div className="flex items-baseline justify-between">
-                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500">Indicative Pricing</span>
-                <span className="text-xs font-bold text-slate-700 dark:text-zinc-300">{currentGroup.prama.startingRef}</span>
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500">{t("est_ind_pricing")}</span>
+                <span className="text-xs font-bold text-slate-700 dark:text-zinc-300 text-right">{currentGroup.prama.startingRef}</span>
               </div>
               <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-1.5">
                 <CreditCard className="w-4 h-4 shrink-0" />
-                <span><strong>{currentGroup.prama.emiRef}</strong> on EMI</span>
+                <span><strong>{currentGroup.prama.emiRef}</strong></span>
               </div>
             </div>
 
@@ -726,10 +759,10 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
           <button
             type="button"
             onClick={() => handleStartExactQuote("prama")}
-            className="w-full py-3 px-4 rounded-xl bg-slate-900 dark:bg-zinc-700 hover:bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-98 cursor-pointer"
+            className="w-full min-h-[44px] py-3 px-4 rounded-xl bg-slate-900 dark:bg-zinc-700 hover:bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-98 cursor-pointer text-center"
           >
-            <span>Get Exact Quote for My Site</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <span>{t("est_cta_btn")}</span>
+            <ArrowRight className="w-3.5 h-3.5 shrink-0" />
           </button>
         </motion.div>
 
@@ -739,14 +772,14 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
       <div className="mt-6 pt-5 border-t border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 dark:text-zinc-400">
         <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-zinc-300">
           <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>Every package includes Hardware, 18% GST Bill, Cabling Labor & Mobile View Setup.</span>
+          <span>{t("est_trust_strip")}</span>
         </div>
         <button
           type="button"
           onClick={() => handleStartExactQuote()}
           className="text-blue-600 dark:text-blue-400 font-extrabold hover:underline flex items-center gap-1 self-end sm:self-auto cursor-pointer"
         >
-          <span>Calculate Exact Quote for My Property →</span>
+          <span>{t("est_calc_exact")}</span>
         </button>
       </div>
 

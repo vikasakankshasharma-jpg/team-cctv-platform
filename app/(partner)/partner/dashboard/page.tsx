@@ -37,7 +37,7 @@ export default async function PartnerDashboardPage() {
 
   const recentWinsPromises = recentCommsSnap.docs.map(async (doc) => {
     const data = doc.data() as CommissionRecord;
-    let customerName = "Unknown Customer";
+    let customerName = "";
     try {
       const leadSnap = await adminDb.collection(COLLECTIONS.LEADS).doc(data.lead_id).get();
       if (leadSnap.exists) {
@@ -97,7 +97,7 @@ export default async function PartnerDashboardPage() {
 
   return (
     <PartnerDashboardClient 
-      partnerName={session.promoterName || "Partner"}
+      partnerName={session.promoterName || ""}
       referralCode={referralCode}
       stats={{
         totalEarned,

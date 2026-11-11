@@ -1,9 +1,12 @@
 import { BookSurveyClient } from "@/components/public/BookSurveyClient";
+import { TranslatedText } from "@/components/shared/TranslatedText";
+import type { Metadata } from "next";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { buildPageMetadata } from "@/lib/i18n/seo-metadata";
 
-export const metadata = {
-  title: "Book a Free Site Survey | TEAM CCTV",
-  description: "Schedule a free site survey with our expert CCTV engineers.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata("book_survey", await getServerLocale());
+}
 
 export default function BookSurveyPage() {
   return (
@@ -13,22 +16,22 @@ export default function BookSurveyPage() {
         {/* Left Side Branding */}
         <div className="w-full md:w-1/3 bg-zinc-900 p-8 text-white flex flex-col justify-between relative overflow-hidden">
           <div className="relative z-10">
-            <h2 className="text-3xl font-black mb-4">Secure Your Property.</h2>
+            <h2 className="text-3xl font-black mb-4"><TranslatedText tKey="bs_hero_title" defaultText="Secure Your Property." /></h2>
             <p className="text-zinc-400 font-medium leading-relaxed mb-8">
-              Book a free, no-obligation site survey. Our expert engineers will visit your location and design the perfect surveillance architecture.
+              <TranslatedText tKey="bs_hero_desc" defaultText="Book a free, no-obligation site survey. Our expert engineers will visit your location and design the perfect surveillance architecture." />
             </p>
             <ul className="space-y-4">
               <li className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">✓</div>
-                <span className="text-sm font-bold">100% Free Assessment</span>
+                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">✓</div>
+                <span className="text-sm font-bold"><TranslatedText tKey="bs_feat1" defaultText="100% Free Assessment" /></span>
               </li>
               <li className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">✓</div>
-                <span className="text-sm font-bold">Exact Pricing Quote</span>
+                <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">✓</div>
+                <span className="text-sm font-bold"><TranslatedText tKey="bs_feat2" defaultText="Exact Pricing Quote" /></span>
               </li>
               <li className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400">✓</div>
-                <span className="text-sm font-bold">Expert Camera Placement</span>
+                <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">✓</div>
+                <span className="text-sm font-bold"><TranslatedText tKey="bs_feat3" defaultText="Expert Camera Placement" /></span>
               </li>
             </ul>
           </div>

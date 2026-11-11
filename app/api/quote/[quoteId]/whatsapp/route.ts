@@ -63,11 +63,16 @@ export async function POST(
         return NextResponse.json({ success: false, message: "Customer phone number not found in quote or lead" }, { status: 400 });
       }
 
+      const { resolveCustomerLocale } = await import("@/lib/whatsapp/customer-notifications-i18n");
+      const custLocale = await resolveCustomerLocale({ quoteData: quote, leadId: quote.lead_id, phone });
+      const localizedPdfUrl = pdfUrl.includes("?") ? `${pdfUrl}&lang=${custLocale}` : `${pdfUrl}?lang=${custLocale}`;
+
       deliveryResult = await waProvider.sendQuote({
         phone,
         customerName: quote.customer_name || 'Customer',
         quoteId,
-        pdfUrl
+        pdfUrl: localizedPdfUrl,
+        preferredLanguage: custLocale,
       });
     }
 

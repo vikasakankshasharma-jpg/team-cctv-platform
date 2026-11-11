@@ -3,15 +3,21 @@ import { adminDb } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
 import { generateOtp, otpExpiresAt } from "@/lib/auth-partner";
 import { Resend } from "resend";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
+import { cleanEnvVar } from "@/lib/env-utils";
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const resendApiKey = cleanEnvVar(process.env.RESEND_API_KEY);
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 export async function POST(req: Request) {
+  let locale = resolveRequestLocale(req);
   try {
-    const { email } = await req.json();
+    const body = await req.json();
+    locale = resolveRequestLocale(req, body);
+    const { email } = body;
 
-    if (!email || !/^[^s@]+@[^s@]+.[^s@]+$/.test(email)) {
-      return NextResponse.json({ error: "Invalid email address." }, { status: 400 });
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: getApiMessage(locale, "email_invalid") }, { status: 400 });
     }
 
     if (email.toLowerCase().trim() === "partner@example.com") {
@@ -28,7 +34,7 @@ export async function POST(req: Request) {
 
     if (promoterSnap.empty) {
       return NextResponse.json(
-        { error: "No active partner account found with this email address." },
+        { error: getApiMessage(locale, "partner_not_found") },
         { status: 404 }
       );
     }
@@ -81,6 +87,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, partnerName: promoter.name });
   } catch (error) {
     console.error("[Partner OTP Email] Error:", error);
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    return NextResponse.json({ error: getApiMessage(locale, "internal_error") }, { status: 500 });
   }
 }

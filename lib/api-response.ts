@@ -34,7 +34,9 @@ export class ApiResponse {
     let safeMessage = message;
     if (process.env.NODE_ENV === "production" && status === 500) {
        console.error(`[CRITICAL ERROR | REQ: ${reqId}] ${message}`, details);
-       safeMessage = "Unable to complete the request. An internal error occurred.";
+       if (!safeMessage || safeMessage === "Internal server error" || safeMessage === "Internal Error" || safeMessage === "Database not initialized") {
+         safeMessage = "Unable to complete the request. An internal error occurred.";
+       }
        details = undefined;
     }
 

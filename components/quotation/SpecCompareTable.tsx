@@ -37,133 +37,10 @@ type SpecRow = {
 };
 
 type SpecSection = {
+  id: string;
   title: string;
   rows: SpecRow[];
 };
-
-const SECTIONS: SpecSection[] = [
-  {
-    title: "1. Camera Specifications",
-    rows: [
-      { label: "Camera Model", key: "cam_model", getValue: ({ cam }) => cam?.camera_model || cam?.technical_name || cam?.display_name },
-      { label: "Brand", key: "cam_brand", getValue: ({ cam }) => (cam?.brand ? getCanonicalBrandName(cam.brand) : "Premium") },
-      { label: "Technology", key: "cam_tech", getValue: ({ cam }) => cam?.technologies?.join(', ') },
-      {
-        label: "Resolution",
-        key: "cam_res",
-        getValue: ({ cam }) => cam ? cam.resolution_mp ?? inferResolutionFromName(cam.technical_name || cam.display_name) : undefined,
-        formatValue: (v) => (v ? `${v} MP` : "-"),
-        getScore: (v) => Number(v) || 0,
-      },
-      {
-        label: "Night Vision",
-        key: "cam_nv",
-        getValue: ({ cam }) => {
-          if (!cam) return;
-          const type = cam.night_vision_type ?? inferNightVisionFromName(cam.technical_name || cam.display_name);
-          const range = cam.night_vision_range_m ?? (cam.technical_name?.toLowerCase().includes("30m") ? 30 : 20);
-          const typeLabel = type === "color" ? "Color Night Vision" : type === "starlight" ? "Starlight" : type === "dual_light" ? "Dual Light" : type === "ir" ? "Standard IR" : "-";
-          return `${typeLabel} (Up to ${range}m)`;
-        },
-      },
-      {
-        label: "Built-in Audio",
-        key: "cam_audio",
-        getValue: ({ cam }) => cam ? cam.has_audio === true || cam.technical_name?.toLowerCase().includes("mic") || cam.display_name?.toLowerCase().includes("mic") : false,
-        formatValue: (v) => v ? <Check className="w-5 h-5 text-[#0071e3] mx-auto" /> : <X className="w-5 h-5 text-[#d2d2d7] mx-auto" />,
-      },
-      {
-        label: "Certifications",
-        key: "cam_certifications",
-        getValue: ({ cam }) => cam?.certifications?.join(", ") || "-",
-        formatValue: (v) => v,
-      },
-      {
-        label: "Form Factor",
-        key: "cam_form",
-        getValue: ({ cam }) => cam ? cam.form_factor ?? (cam.technical_name?.toLowerCase().includes("bullet") ? "bullet" : "dome") : undefined,
-        formatValue: (v) => (v ? String(v).charAt(0).toUpperCase() + String(v).slice(1) : "-"),
-      },
-      {
-        label: "Durability (IP)",
-        key: "cam_ip",
-        getValue: ({ cam }) => cam ? cam.ip_rating ?? (cam.technical_name?.toLowerCase().includes("bullet") ? "IP67" : "IP66") : undefined,
-        formatValue: (v) => v || "-",
-      },
-      {
-        label: "Lens",
-        key: "cam_lens",
-        getValue: ({ cam }) => cam?.lens_mm ?? undefined,
-        formatValue: (v) => v ? (String(v).toLowerCase().includes("mm") ? String(v) : `${v}mm`) : "-",
-      },
-    ],
-  },
-  {
-    title: "2. Recorder Specifications",
-    rows: [
-      { label: "Recorder Model", key: "rec_model", getValue: ({ rec, quote }) => rec?.recorder_model || rec?.technical_name || rec?.display_name || quote.items.find(i => i.product_id.includes("recorder") || i.display_name.includes("Recorder"))?.display_name },
-      { label: "Brand", key: "rec_brand", getValue: ({ rec }) => (rec?.brand ? getCanonicalBrandName(rec.brand) : "Premium") },
-      { label: "Type", key: "rec_type", getValue: ({ rec, cam }) => rec?.recorder_type || rec?.technologies?.join(', ') || (cam?.technologies?.includes("IP") ? "NVR" : "DVR") },
-      {
-        label: "Compression",
-        key: "rec_compression",
-        getValue: ({ rec }) => rec ? rec.compression ?? (rec.technical_name?.toLowerCase().includes("h265") || rec.display_name?.toLowerCase().includes("h.265") ? "H.265" : "H.264") : "H.265",
-      },
-    ],
-  },
-  {
-    title: "3. Storage & Backup",
-    rows: [
-      {
-        label: "Target Backup",
-        key: "storage_days",
-        getValue: ({ selection }) => selection.recording_days,
-        formatValue: (v) => v === 0 ? "None" : `${v} Days`
-      },
-      {
-        label: "Hard Drive Included",
-        key: "storage_drive",
-        getValue: ({ quote }) => quote.items.find(i => i.product_id.includes("hdd") || i.display_name.toLowerCase().includes("hdd"))?.display_name || "Surveillance HDD",
-      },
-    ]
-  },
-  {
-    title: "4. Cabling & Materials",
-    rows: [
-      {
-        label: "Wiring Type",
-        key: "cable_type",
-        getValue: ({ quote }) => quote.items.find(i => i.product_id === "cabling_material")?.display_name?.split(" (~")[0] || "Standard Wiring",
-      },
-      {
-        label: "Approx. Length",
-        key: "cable_len",
-        getValue: ({ selection }) => {
-          if (selection.total_cable_length_meters) return selection.total_cable_length_meters;
-          const metersPerCam = selection.cable_length_meters || 15;
-          return metersPerCam * selection.camera_count;
-        },
-        formatValue: (v) => `~${v} Meters`
-      },
-    ]
-  },
-  {
-    title: "5. Services & Support",
-    rows: [
-      {
-        label: "Professional Installation",
-        key: "svc_install",
-        getValue: () => true,
-        formatValue: (v) => v ? <Check className="w-5 h-5 text-[#0071e3] mx-auto" /> : <X className="w-5 h-5 text-[#d2d2d7] mx-auto" />,
-      },
-      {
-        label: "Post-Installation Support",
-        key: "svc_amc",
-        getValue: ({ quote }) => quote.addons?.find(a => a.addon_id?.includes("amc")) ? "1-Year Comprehensive AMC" : "1-Year Standard Warranty",
-      },
-    ]
-  }
-];
 
 export function SpecCompareTable({
   compareOptions,
@@ -176,8 +53,137 @@ export function SpecCompareTable({
   const [showDiffOnly, setShowDiffOnly] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
-  const toggleSection = (title: string) => {
-    setCollapsedSections((prev) => ({ ...prev, [title]: !prev[title] }));
+  const sections = useMemo<SpecSection[]>(() => [
+    {
+      id: "cam",
+      title: t("spec_s1", "1. Camera Specifications"),
+      rows: [
+        { label: t("spec_cam_model", "Camera Model"), key: "cam_model", getValue: ({ cam }) => cam?.camera_model || cam?.technical_name || cam?.display_name },
+        { label: t("spec_brand", "Brand"), key: "cam_brand", getValue: ({ cam }) => (cam?.brand ? getCanonicalBrandName(cam.brand) : t("cmp_std", "Standard")) },
+        { label: t("spec_tech", "Technology"), key: "cam_tech", getValue: ({ cam }) => cam?.technologies?.join(', ') },
+        {
+          label: t("spec_res", "Resolution"),
+          key: "cam_res",
+          getValue: ({ cam }) => cam ? cam.resolution_mp ?? inferResolutionFromName(cam.technical_name || cam.display_name) : undefined,
+          formatValue: (v) => (v ? `${v} MP` : "-"),
+          getScore: (v) => Number(v) || 0,
+        },
+        {
+          label: t("spec_nv", "Night Vision"),
+          key: "cam_nv",
+          getValue: ({ cam }) => {
+            if (!cam) return;
+            const type = cam.night_vision_type ?? inferNightVisionFromName(cam.technical_name || cam.display_name);
+            const range = cam.night_vision_range_m ?? (cam.technical_name?.toLowerCase().includes("30m") ? 30 : 20);
+            const typeLabel = type === "color" ? t("spec_nv_color", "Color Night Vision") : type === "starlight" ? t("spec_nv_star", "Starlight") : type === "dual_light" ? t("spec_nv_dual", "Dual Light") : type === "ir" ? t("spec_nv_ir", "Standard IR") : "-";
+            return t("spec_nv_range", "{type} (Up to {range}m)", { type: typeLabel, range: String(range) });
+          },
+        },
+        {
+          label: t("spec_audio", "Built-in Audio"),
+          key: "cam_audio",
+          getValue: ({ cam }) => cam ? cam.has_audio === true || cam.technical_name?.toLowerCase().includes("mic") || cam.display_name?.toLowerCase().includes("mic") : false,
+          formatValue: (v) => v ? <Check className="w-5 h-5 text-[#0071e3] mx-auto" /> : <X className="w-5 h-5 text-[#d2d2d7] mx-auto" />,
+        },
+        {
+          label: t("spec_cert", "Certifications"),
+          key: "cam_certifications",
+          getValue: ({ cam }) => cam?.certifications?.join(", ") || "-",
+          formatValue: (v) => v,
+        },
+        {
+          label: t("spec_form", "Form Factor"),
+          key: "cam_form",
+          getValue: ({ cam }) => cam ? cam.form_factor ?? (cam.technical_name?.toLowerCase().includes("bullet") ? "bullet" : "dome") : undefined,
+          formatValue: (v) => (v ? String(v).charAt(0).toUpperCase() + String(v).slice(1) : "-"),
+        },
+        {
+          label: t("spec_ip", "Durability (IP)"),
+          key: "cam_ip",
+          getValue: ({ cam }) => cam ? cam.ip_rating ?? (cam.technical_name?.toLowerCase().includes("bullet") ? "IP67" : "IP66") : undefined,
+          formatValue: (v) => v || "-",
+        },
+        {
+          label: t("spec_lens", "Lens"),
+          key: "cam_lens",
+          getValue: ({ cam }) => cam?.lens_mm ?? undefined,
+          formatValue: (v) => v ? (String(v).toLowerCase().includes("mm") ? String(v) : `${v}mm`) : "-",
+        },
+      ],
+    },
+    {
+      id: "rec",
+      title: t("spec_s2", "2. Recorder Specifications"),
+      rows: [
+        { label: t("spec_rec_model", "Recorder Model"), key: "rec_model", getValue: ({ rec, quote }) => rec?.recorder_model || rec?.technical_name || rec?.display_name || quote.items.find(i => i.product_id.includes("recorder") || i.display_name.includes("Recorder"))?.display_name },
+        { label: t("spec_brand", "Brand"), key: "rec_brand", getValue: ({ rec }) => (rec?.brand ? getCanonicalBrandName(rec.brand) : t("cmp_std", "Standard")) },
+        { label: t("spec_rec_type", "Type"), key: "rec_type", getValue: ({ rec, cam }) => rec?.recorder_type || rec?.technologies?.join(', ') || (cam?.technologies?.includes("IP") ? "NVR" : "DVR") },
+        {
+          label: t("spec_comp", "Compression"),
+          key: "rec_compression",
+          getValue: ({ rec }) => rec ? rec.compression ?? (rec.technical_name?.toLowerCase().includes("h265") || rec.display_name?.toLowerCase().includes("h.265") ? "H.265" : "H.264") : "H.265",
+        },
+      ],
+    },
+    {
+      id: "storage",
+      title: t("spec_s3", "3. Storage & Backup"),
+      rows: [
+        {
+          label: t("spec_target_bak", "Target Backup"),
+          key: "storage_days",
+          getValue: ({ selection }) => selection.recording_days,
+          formatValue: (v) => v === 0 ? t("spec_none", "None") : t("spec_days_n", "{n} Days", { n: String(v) })
+        },
+        {
+          label: t("spec_hdd_inc", "Hard Drive Included"),
+          key: "storage_drive",
+          getValue: ({ quote }) => quote.items.find(i => i.product_id.includes("hdd") || i.display_name.toLowerCase().includes("hdd"))?.display_name || t("spec_surv_hdd", "Surveillance HDD"),
+        },
+      ]
+    },
+    {
+      id: "cabling",
+      title: t("spec_s4", "4. Cabling & Materials"),
+      rows: [
+        {
+          label: t("spec_wiring_type", "Wiring Type"),
+          key: "cable_type",
+          getValue: ({ quote }) => quote.items.find(i => i.product_id === "cabling_material")?.display_name?.split(" (~")[0] || t("spec_std_wiring", "Standard Wiring"),
+        },
+        {
+          label: t("spec_approx_len", "Approx. Length"),
+          key: "cable_len",
+          getValue: ({ selection }) => {
+            if (selection.total_cable_length_meters) return selection.total_cable_length_meters;
+            const metersPerCam = selection.cable_length_meters || 15;
+            return metersPerCam * selection.camera_count;
+          },
+          formatValue: (v) => t("spec_meters_n", "~{n} Meters", { n: String(v) })
+        },
+      ]
+    },
+    {
+      id: "support",
+      title: t("spec_s5", "5. Services & Support"),
+      rows: [
+        {
+          label: t("spec_prof_inst", "Professional Installation"),
+          key: "svc_install",
+          getValue: () => true,
+          formatValue: (v) => v ? <Check className="w-5 h-5 text-[#0071e3] mx-auto" /> : <X className="w-5 h-5 text-[#d2d2d7] mx-auto" />,
+        },
+        {
+          label: t("spec_post_sup", "Post-Installation Support"),
+          key: "svc_amc",
+          getValue: ({ quote }) => quote.addons?.find(a => a.addon_id?.includes("amc")) ? t("spec_amc_1y", "1-Year Comprehensive AMC") : t("spec_war_1y", "1-Year Standard Warranty"),
+        },
+      ]
+    }
+  ], [t]);
+
+  const toggleSection = (sectionId: string) => {
+    setCollapsedSections((prev) => ({ ...prev, [sectionId]: !prev[sectionId] }));
   };
 
   const tableColumns = useMemo(() => {
@@ -227,9 +233,9 @@ export function SpecCompareTable({
     const res = col.cam?.resolution_mp ? `${col.cam.resolution_mp}MP` : "";
     if (brand) return `${brand} ${res}`.trim();
     const optValue = col.opt.option;
-    if (optValue === 1 || optValue === "budget") return "Package 1";
-    if (optValue === 2 || optValue === "recommended") return "Package 2";
-    if (optValue === 3 || optValue === "premium") return "Package 3";
+    if (optValue === 1 || optValue === "budget") return t("spec_opt_n", "Option {n}", { n: "1" });
+    if (optValue === 2 || optValue === "recommended") return t("spec_opt_n", "Option {n}", { n: "2" });
+    if (optValue === 3 || optValue === "premium") return t("spec_opt_n", "Option {n}", { n: "3" });
     return t('custom', 'Custom');
   });
 
@@ -317,7 +323,7 @@ export function SpecCompareTable({
 
         {/* Table Body */}
         <div className="flex flex-col">
-          {SECTIONS.map((section) => {
+          {sections.map((section) => {
             const visibleRows = section.rows.filter((row) => {
               if (!showDiffOnly) return true;
               const values = tableColumns.map((col) => row.getValue(col));
@@ -325,12 +331,12 @@ export function SpecCompareTable({
             });
 
             if (visibleRows.length === 0) return null;
-            const isCollapsed = collapsedSections[section.title];
+            const isCollapsed = collapsedSections[section.id];
 
             return (
-              <div key={section.title} className="flex flex-col">
+              <div key={section.id} className="flex flex-col">
                 <button
-                  onClick={() => toggleSection(section.title)}
+                  onClick={() => toggleSection(section.id)}
                   className="flex items-center justify-between p-4 bg-[#fbfbfd] dark:bg-[#1d1d1f] border-b border-[#d2d2d7] dark:border-[#424245] transition-colors hover:bg-[#f5f5f7] dark:hover:bg-[#2d2d2f]"
                 >
                   <span className="font-semibold text-[15px] text-[#1d1d1f] dark:text-[#f5f5f7]">
@@ -379,7 +385,7 @@ export function SpecCompareTable({
               onClick={() => scrollSpecToCol(Math.max(0, activeSpecCol - 1))}
               disabled={activeSpecCol === 0}
               className="w-10 h-10 rounded-xl bg-[#0071e3]/10 dark:bg-[#0071e3]/20 flex items-center justify-center text-[#0071e3] disabled:opacity-25 transition-all active:scale-90"
-              aria-label="Previous spec column"
+              aria-label={t("spec_prev_aria", "Previous spec column")}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -395,13 +401,13 @@ export function SpecCompareTable({
                         ? "w-8 h-2.5 bg-[#0071e3] shadow-sm shadow-[#0071e3]/30"
                         : "w-2.5 h-2.5 bg-[#d2d2d7] dark:bg-[#424245] hover:bg-[#86868b]"
                     }`}
-                    aria-label={`Go to spec column ${i + 1}`}
+                    aria-label={t("spec_goto_aria", "Go to spec column {n}", { n: String(i + 1) })}
                   />
                 ))}
               </div>
               <p className="text-[13px] font-bold text-[#1d1d1f] dark:text-white tracking-tight">
                 <span className="text-[#0071e3]">{columnHeaders[activeSpecCol]}</span>
-                <span className="text-[#86868b] font-medium"> â€” {activeSpecCol + 1} of {totalSpecCols}</span>
+                <span className="text-[#86868b] font-medium"> {t("spec_page_of", "— {curr} of {total}", { curr: String(activeSpecCol + 1), total: String(totalSpecCols) })}</span>
               </p>
             </div>
 
@@ -409,7 +415,7 @@ export function SpecCompareTable({
               onClick={() => scrollSpecToCol(Math.min(totalSpecCols - 1, activeSpecCol + 1))}
               disabled={activeSpecCol === totalSpecCols - 1}
               className="w-10 h-10 rounded-xl bg-[#0071e3]/10 dark:bg-[#0071e3]/20 flex items-center justify-center text-[#0071e3] disabled:opacity-25 transition-all active:scale-90"
-              aria-label="Next spec column"
+              aria-label={t("spec_next_aria", "Next spec column")}
             >
               <ChevronRight className="w-5 h-5" />
             </button>

@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { Product } from "@/types";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 
 export async function GET(request: Request) {
+  const locale = resolveRequestLocale(request);
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
@@ -25,6 +27,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, products });
   } catch (error: any) {
     console.error("Error fetching build products:", error);
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: getApiMessage(locale, "internal_error") }, { status: 500 });
   }
 }

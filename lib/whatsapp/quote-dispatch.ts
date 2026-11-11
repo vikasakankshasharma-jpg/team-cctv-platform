@@ -5,13 +5,88 @@
 
 import { adminDb } from "../firebase-admin";
 import { COLLECTIONS, SUBCOLLECTIONS } from "../constants";
+import { cleanEnvVar, cleanPhoneEnvVar } from "../env-utils";
 import { WhatsAppSession } from "../../types/whatsapp";
 import { ConfiguratorSelection, PricingResult } from "../../types";
 import { generateAllCatalogVariations, BrandPriceSummary } from "../quotation/variant-generator";
+import { buildMixedCameraRequirements } from "../camera-requirements";
 import { MessageBuilder } from "./message-builder";
 import { Msg91WhatsAppProvider } from "./msg91-provider";
+import { getConversationalStrings, ConversationalStrings } from "./conversational-i18n";
+
+export function resolveDispatchTech(rawSelection: any): {
+  isPureWireless: boolean;
+  isHybrid: boolean;
+  tech: "Wireless" | "IP" | "HD";
+  hydratedSelection: ConfiguratorSelection;
+} {
+  const selection = { ...(rawSelection || {}) } as any;
+  const rawTechUpper = String(selection.technology || "").toUpperCase();
+  const isPureWireless =
+    (rawTechUpper === "WIRELESS" ||
+      rawTechUpper === "4G_SOLAR" ||
+      rawTechUpper === "WIFI" ||
+      selection.installation_type === "wireless" ||
+      selection.installation_type === "solar_4g") &&
+    !selection.is_hybrid;
+
+  const wifiCount = Number(selection.wifi_camera_count) || 0;
+  const wiredCount = isPureWireless
+    ? 0
+    : (Number(selection.outdoor_camera_count) || 0) + (Number(selection.indoor_camera_count) || 0);
+  const existingMixed: any[] = Array.isArray(selection.mixed_camera_requirements)
+    ? selection.mixed_camera_requirements
+    : [];
+  const hasMixedHybrid =
+    existingMixed.some((m) => String(m?.technology || "").toLowerCase() === "wireless") &&
+    existingMixed.some((m) => m?.technology && String(m.technology).toLowerCase() !== "wireless");
+
+  const isHybrid =
+    !isPureWireless &&
+    ((wifiCount > 0 && wiredCount > 0) ||
+      Boolean(selection.is_hybrid) ||
+      hasMixedHybrid ||
+      rawTechUpper === "HYBRID" ||
+      selection.installation_type === "hybrid");
+
+  const hybridWiredPref = String(selection.hybrid_wired_technology || "").toUpperCase();
+  const wiredTech: "HD" | "IP" =
+    rawTechUpper === "IP" || (isHybrid && hybridWiredPref === "IP") ? "IP" : "HD";
+  const tech: "Wireless" | "IP" | "HD" = isPureWireless ? "Wireless" : wiredTech;
+
+  const mixedReqs =
+    existingMixed.length > 0
+      ? existingMixed.map((m) => {
+          const isWItem =
+            String(m?.technology || "").toLowerCase() === "wireless" ||
+            String(m?.type || "").toLowerCase().includes("wi-fi") ||
+            String(m?.type || "").toLowerCase().includes("wifi") ||
+            String(m?.type || "").toLowerCase().includes("4g");
+          return {
+            ...m,
+            technology: isWItem ? "Wireless" : isPureWireless ? "Wireless" : wiredTech,
+          };
+        })
+      : isHybrid || isPureWireless
+      ? buildMixedCameraRequirements({
+          ...selection,
+          technology_preference: tech,
+        })
+      : undefined;
+
+  const hydratedSelection: ConfiguratorSelection = {
+    ...selection,
+    technology: tech as any,
+    is_hybrid: isHybrid,
+    hybrid_wired_technology: wiredTech,
+    ...(mixedReqs ? { mixed_camera_requirements: mixedReqs } : {}),
+  };
+
+  return { isPureWireless, isHybrid, tech, hydratedSelection };
+}
 
 export async function generateAndSendPriceRanges(phone: string, session: WhatsAppSession) {
+  const conv = getConversationalStrings(session.language);
   try {
     const [productsSnap, addonsSnap, settingsSnap] = await Promise.all([
       adminDb.collection(COLLECTIONS.PRODUCTS).where("is_active", "==", true).get(),
@@ -25,18 +100,12 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
 
     if (!settings) throw new Error("Settings not found");
 
-    const selection = (session.wizard_answers || {}) as ConfiguratorSelection;
+    const rawSelection = (session.wizard_answers || {}) as ConfiguratorSelection;
     const cablingDone = session.wizard_answers?.cabling_done === true || session.wizard_answers?.cabling_status === "done";
-    const totalCams = selection.camera_count || 4;
+    const totalCams = rawSelection.camera_count || 4;
     
-    // Explicit technology resolution:
-    // Pure wireless setups (Wi-Fi only, 4G solar) stay Wireless.
-    // Standard wired/hybrid setups default to "HD" (Standard HD Analog / DVR - Lowest Price Guarantee) to match the website.
-    // If the customer specifically chose "IP", we respect "IP".
-    const isPureWireless = selection.technology === "Wireless" || selection.technology === "4G_Solar" || (selection as any).installation_type === "wireless";
-    const rawTech = String(selection.technology || "").toUpperCase();
-    const tech = isPureWireless ? "Wireless" : (rawTech === "IP" ? "IP" : "HD");
-    selection.technology = tech as any;
+    // Explicit technology resolution (supports Pure Wireless, HD, IP, and Hybrid HD/IP backbones)
+    const { isHybrid, tech, hydratedSelection: selection } = resolveDispatchTech(rawSelection);
     const storageDays = selection.recording_days !== undefined ? selection.recording_days : 7;
 
     // Evaluate site prep surcharge flags (ladder fee for high ceilings)
@@ -79,7 +148,7 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
     const { brandSummaries, lowestOverallQuote, totalVariationsCount } = catalogResult;
 
     if (brandSummaries.length === 0 || !lowestOverallQuote) {
-      await sendMsg(MessageBuilder.text(phone, "Sorry, we could not find matching hardware configurations for your requirements. Our engineer will contact you shortly."));
+      await sendMsg(MessageBuilder.text(phone, conv.qdNoConfig));
       return;
     }
 
@@ -90,7 +159,11 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
     if (tech === "HD") {
       try {
         const ipCatalogResult = generateAllCatalogVariations({
-          selection: { ...selection, technology: "IP" },
+          selection: {
+            ...selection,
+            technology: "IP",
+            hybrid_wired_technology: "IP",
+          },
           products,
           addons,
           settings,
@@ -106,7 +179,11 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
     } else if (tech === "IP") {
       try {
         const hdCatalogResult = generateAllCatalogVariations({
-          selection: { ...selection, technology: "HD" },
+          selection: {
+            ...selection,
+            technology: "HD",
+            hybrid_wired_technology: "HD",
+          },
           products,
           addons,
           settings,
@@ -134,67 +211,89 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
       cached_lowest_quote: lowestOverallQuote,
     });
 
+    if (session.lead_id) {
+      try {
+        await adminDb.collection(COLLECTIONS.LEADS).doc(session.lead_id).update({
+          technology_choice: isHybrid ? "Hybrid" : tech,
+          wizard_answers: {
+            ...(session.wizard_answers || {}),
+            technology: tech,
+            technology_preference: tech,
+            is_hybrid: isHybrid,
+            hybrid_wired_technology: tech === "IP" ? "IP" : "HD",
+            technology_choice: isHybrid ? "Hybrid" : tech,
+            ...(selection.mixed_camera_requirements ? { mixed_camera_requirements: selection.mixed_camera_requirements } : {}),
+          },
+          updated_at: new Date(),
+        });
+      } catch (err) {
+        console.warn("Could not sync Hybrid/Tech state to Lead:", err);
+      }
+    }
+
     // 1. Text Summary Card: All-Inclusive Brand Price Range
     const customerDisplayName = (session.customer_name && session.customer_name !== "WhatsApp Customer")
-      ? ` FOR ${session.customer_name.toUpperCase()}`
+      ? ` — ${session.customer_name}`
       : "";
-    let summaryText = `📷 *COMPLETE CCTV PRICE SUMMARY${customerDisplayName}*\n`;
+    let summaryText = `${conv.qdSummaryTitle.replace("{namePart}", customerDisplayName)}\n`;
     summaryText += `━━━━━━━━━━━━━━━━━━━━━\n`;
-    summaryText += `📍 *Site Setup:* ${totalCams} Cameras (${formatCameraBreakdown(selection)})\n`;
-    const isHybrid = Number(selection.wifi_camera_count || 0) > 0 && 
-      ((Number(selection.outdoor_camera_count) || 0) + (Number(selection.indoor_camera_count) || 0) > 0);
+    summaryText += `${conv.qdLabelSetup.replace("{total}", String(totalCams)).replace("{breakdown}", formatCameraBreakdown(selection, conv))}\n`;
     const techDisplay = isHybrid
-      ? (tech === "IP" ? "Pro Hybrid - Digital IP & PoE (with Smart Wireless)" : "Value Hybrid - HD Analog DVR (with Smart Wireless)")
-      : (tech === "IP" ? "Digital IP (Best Quality)" : tech === "HD" ? "HD Analog (Lowest Price Guarantee)" : "Smart Wireless");
-    summaryText += `⚡ *Technology:* ${techDisplay}\n`;
-    summaryText += `💾 *Storage:* ${storageDays === 0 ? "Live Viewing Only (No HDD)" : `${storageDays} Days Retention (${selection.recording_mode === "motion" ? "Motion" : "24x7"})`}\n`;
-    summaryText += `🔌 *Cabling:* ${cablingDone ? "Pre-Wired Site (Fitting only)" : "Need New Cabling (~15m wire/cam incl)"}\n`;
+      ? (tech === "IP" ? conv.qdSetupTechHybridIp : conv.qdSetupTechHybridHd)
+      : (tech === "IP" ? conv.setupDigitalIp : tech === "HD" ? conv.setupAnalogHd : conv.qdSetupTechWireless);
+    summaryText += `${conv.qdLabelTech.replace("{tech}", techDisplay)}\n`;
+    const storageText = storageDays === 0
+      ? conv.qdStorageNone
+      : conv.qdStorageDays
+          .replace("{days}", String(storageDays))
+          .replace("{mode}", selection.recording_mode === "motion" ? conv.qdModeMotion : conv.qdMode247);
+    summaryText += `${conv.qdLabelStorage.replace("{storage}", storageText)}\n`;
+    summaryText += `${conv.qdLabelCabling.replace("{cabling}", cablingDone ? conv.qdCablingPrewired : conv.qdCablingNew)}\n`;
     if (selection.broadband_status === "sim_router") {
-      summaryText += `🌐 *Connectivity:* 4G SIM Wi-Fi Router Included\n`;
+      summaryText += `${conv.qdLabelConnectivity}\n`;
     }
     if (promoterDiscount) {
-      summaryText += `🎁 *Partner Discount Applied:* Code ${partnerId} (${promoterDiscount.percent ? `${promoterDiscount.percent}% Off` : `₹${promoterDiscount.flat} Flat Off`})\n`;
+      const offLabel = promoterDiscount.percent ? `-${promoterDiscount.percent}%` : `-₹${promoterDiscount.flat}`;
+      summaryText += `${conv.qdLabelPartnerDiscount.replace("{code}", String(partnerId)).replace("{off}", offLabel)}\n`;
     }
-    summaryText += `✅ *All prices include:* Cameras, DVR/NVR, Storage, Cables, Connectors, Installation Labor & 18% GST (Zero Hidden Costs!)\n\n`;
+    summaryText += `✅ ${conv.allInclusiveTag}\n\n`;
 
     if (tech === "HD" && proIpLowestPrice) {
-      summaryText += `💡 *DUAL SETUP CHOICES:*\n`;
+      summaryText += `${conv.qdDualSetupTitle}\n`;
       summaryText += isHybrid
-        ? `🏷️ *Value Hybrid (HD DVR + Wi-Fi):* From *₹${lowestOverallQuote.total_payable.toLocaleString('en-IN')}* (Best for Price-Conscious)\n💎 *Pro Hybrid (IP NVR & PoE + Wi-Fi):* From *₹${proIpLowestPrice.toLocaleString('en-IN')}* (Best for 4K / Network Structured)\n\n`
-        : `🏷️ *Value Tier (HD Analog DVR):* From *₹${lowestOverallQuote.total_payable.toLocaleString('en-IN')}* (Best for Price-Conscious)\n💎 *Pro Tier (Digital IP NVR):* From *₹${proIpLowestPrice.toLocaleString('en-IN')}* (Best for 4K / Commercial)\n\n`;
+        ? `🏷️ *${conv.qdSetupTechHybridHd}:* ₹${lowestOverallQuote.total_payable.toLocaleString("en-IN")}+\n💎 *${conv.qdSetupTechHybridIp}:* ₹${proIpLowestPrice.toLocaleString("en-IN")}+\n\n`
+        : `🏷️ *${conv.setupAnalogHd}:* ₹${lowestOverallQuote.total_payable.toLocaleString("en-IN")}+\n💎 *${conv.setupDigitalIp}:* ₹${proIpLowestPrice.toLocaleString("en-IN")}+\n\n`;
     } else if (tech === "IP" && valueHdLowestPrice) {
-      summaryText += `💡 *DUAL SETUP CHOICES:*\n`;
+      summaryText += `${conv.qdDualSetupTitle}\n`;
       summaryText += isHybrid
-        ? `💎 *Pro Hybrid (IP NVR & PoE + Wi-Fi):* From *₹${lowestOverallQuote.total_payable.toLocaleString('en-IN')}* (Currently Viewing)\n🏷️ *Value Hybrid (HD DVR + Wi-Fi):* From *₹${valueHdLowestPrice.toLocaleString('en-IN')}* (Save ₹${(lowestOverallQuote.total_payable - valueHdLowestPrice).toLocaleString('en-IN')}!)\n\n`
-        : `💎 *Pro Tier (Digital IP NVR):* From *₹${lowestOverallQuote.total_payable.toLocaleString('en-IN')}* (Currently Viewing)\n🏷️ *Value Tier (HD Analog DVR):* From *₹${valueHdLowestPrice.toLocaleString('en-IN')}* (Save ₹${(lowestOverallQuote.total_payable - valueHdLowestPrice).toLocaleString('en-IN')}!)\n\n`;
+        ? `💎 *${conv.qdSetupTechHybridIp}:* ₹${lowestOverallQuote.total_payable.toLocaleString("en-IN")}+\n🏷️ *${conv.qdSetupTechHybridHd}:* ₹${valueHdLowestPrice.toLocaleString("en-IN")}+\n\n`
+        : `💎 *${conv.setupDigitalIp}:* ₹${lowestOverallQuote.total_payable.toLocaleString("en-IN")}+\n🏷️ *${conv.setupAnalogHd}:* ₹${valueHdLowestPrice.toLocaleString("en-IN")}+\n\n`;
     }
 
-    const spectrumTierName = isHybrid
-      ? (tech === "HD" ? "Value Hybrid - HD Analog" : "Pro Hybrid - Digital IP")
-      : (tech === "HD" ? "Value Tier - HD Analog" : tech === "IP" ? "Pro Tier - Digital IP" : "Smart Wireless");
-    summaryText += `🏆 *ALL-INCLUSIVE BRAND PRICE SPECTRUM (${spectrumTierName}):*\n\n`;
+    summaryText += `${conv.qdBrandSpectrumTitle}\n\n`;
 
     brandSummaries.forEach((b, idx) => {
       const isLowest = b.minPrice === lowestOverallQuote.total_payable;
-      summaryText += `${idx + 1}️⃣ *${b.brandName.toUpperCase()}*${isLowest ? " ⚡ *Lowest Entry Package*" : ""}\n`;
-      summaryText += `   💰 *₹${b.minPrice.toLocaleString('en-IN')} to ₹${b.maxPrice.toLocaleString('en-IN')}*\n`;
+      summaryText += `${idx + 1}️⃣ *${b.brandName.toUpperCase()}*${isLowest ? conv.qdLowestBadge : ""}\n`;
+      summaryText += `   💰 *₹${b.minPrice.toLocaleString("en-IN")} – ₹${b.maxPrice.toLocaleString("en-IN")}*\n`;
       if (b.economyQuote && b.economyQuote.total_payable < (b.standardQuote.total_payable || Infinity)) {
-        summaryText += `   • Economy 500GB: ₹${b.economyQuote.total_payable.toLocaleString('en-IN')} (Save ₹${((b.standardQuote.total_payable || 0) - b.economyQuote.total_payable).toLocaleString('en-IN')})\n`;
+        const saveAmt = ((b.standardQuote.total_payable || 0) - b.economyQuote.total_payable).toLocaleString("en-IN");
+        summaryText += `${conv.qdEconomyLine.replace("{price}", b.economyQuote.total_payable.toLocaleString("en-IN")).replace("{save}", saveAmt)}\n`;
       }
-      summaryText += `   • Standard ${storageDays} Days: ₹${b.standardQuote.total_payable.toLocaleString('en-IN')}\n\n`;
+      summaryText += `${conv.qdStandardLine.replace("{days}", String(storageDays)).replace("{price}", b.standardQuote.total_payable.toLocaleString("en-IN"))}\n\n`;
     });
 
     const langParam = session.language ? `?lang=${session.language}` : "";
     const nameParam = session.customer_name && session.customer_name !== "WhatsApp Customer" ? `&name=${encodeURIComponent(session.customer_name)}` : "";
-    const webStudioUrl = session.lead_id 
-      ? `https://cctvquotation.com/quote/${session.lead_id}${langParam}${nameParam ? (langParam ? nameParam : `?${nameParam.slice(1)}`) : ""}` 
+    const webStudioUrl = session.lead_id
+      ? `https://cctvquotation.com/quote/${session.lead_id}${langParam}${nameParam ? (langParam ? nameParam : `?${nameParam.slice(1)}`) : ""}`
       : `https://cctvquotation.com/wizard?phone=${phone}${session.language ? `&lang=${session.language}` : ""}${nameParam}`;
 
     summaryText += `━━━━━━━━━━━━━━━━━━━━━\n`;
-    summaryText += `🌐 *Interactive Web Studio & 3D Viewer:*\n`;
-    summaryText += `Inspect camera models, toggle hard drives, and download your official PDF quote:\n👉 ${webStudioUrl}\n\n`;
-    summaryText += `🛡️ *100% Price Match Guarantee:*\n`;
-    summaryText += `Already have a quote from another vendor? Reply with a PHOTO or PDF right here to beat their price by 5%-10%!`;
+    summaryText += `${conv.qdStudioTitle}\n`;
+    summaryText += `${conv.qdStudioBody.replace("{url}", webStudioUrl)}\n\n`;
+    summaryText += `${conv.qdPriceMatchTitle}\n`;
+    summaryText += conv.qdPriceMatchBody;
 
     await sendMsg(MessageBuilder.text(phone, summaryText));
 
@@ -202,37 +301,40 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
     const specialRows: any[] = [
       {
         id: "select_lowest_quote",
-        title: "⚡ Best Value Quote",
-        description: `Lowest price package: ₹${lowestOverallQuote.total_payable.toLocaleString('en-IN')} (${lowestOverallQuote.camera_device?.brand || "A+ Products"})`.slice(0, 72)
+        title: conv.qdLowestTitle,
+        description: conv.qdLowestDesc
+          .replace("{price}", lowestOverallQuote.total_payable.toLocaleString("en-IN"))
+          .replace("{brand}", lowestOverallQuote.camera_device?.brand || "TEAM CCTV")
       }
     ];
 
     if (tech === "HD" && proIpLowestPrice) {
       specialRows.push({
         id: "toggle_tech_ip",
-        title: "💎 View Pro IP Packages",
-        description: `Switch to Digital IP / NVR setups (from ₹${proIpLowestPrice.toLocaleString('en-IN')})`.slice(0, 72)
+        title: isHybrid ? conv.qdViewIpHybridTitle : conv.qdViewIpTitle,
+        description: conv.qdViewIpDesc.replace("{price}", proIpLowestPrice.toLocaleString("en-IN"))
       });
     } else if (tech === "IP") {
       specialRows.push({
         id: "toggle_tech_hd",
-        title: isHybrid ? "🏷️ View Value HD Hybrid" : "🏷️ View Value HD Analog",
-        description: valueHdLowestPrice 
-          ? `Switch to HD Analog packages (from ₹${valueHdLowestPrice.toLocaleString('en-IN')})`.slice(0, 72)
-          : "Switch to HD Analog / DVR packages (lowest price guarantee)".slice(0, 72)
+        title: isHybrid ? conv.qdViewHdHybridTitle : conv.qdViewHdTitle,
+        description: conv.qdViewHdDesc.replace(
+          "{price}",
+          (valueHdLowestPrice || lowestOverallQuote.total_payable).toLocaleString("en-IN")
+        )
       });
     }
 
     specialRows.push(
       {
         id: "upload_competitor_quote",
-        title: "📸 Upload Offline Quote",
-        description: "Send photo/PDF of offline quote for 5%-10% price match".slice(0, 72)
+        title: conv.qdUploadTitle,
+        description: conv.qdUploadDesc
       },
       {
         id: "open_web_studio",
-        title: "🎨 Open 3D Web Studio",
-        description: "Inspect 3D camera angles and compare in browser".slice(0, 72)
+        title: conv.qdStudioBtnTitle,
+        description: conv.qdStudioBtnDesc
       }
     );
 
@@ -240,27 +342,28 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
     const maxBrandRows = Math.max(1, 10 - specialRows.length);
     const brandRows = brandSummaries.slice(0, maxBrandRows).map(b => ({
       id: `view_brand_${b.brandKey}`,
-      title: `${b.brandName} (₹${Math.round(b.minPrice / 1000)}k-₹${Math.round(b.maxPrice / 1000)}k)`.slice(0, 24),
-      description: `₹${b.minPrice.toLocaleString('en-IN')} - ₹${b.maxPrice.toLocaleString('en-IN')} (${b.variations.length} packages)`.slice(0, 72)
+      title: `${b.brandName} (₹${Math.round(b.minPrice / 1000)}k-₹${Math.round(b.maxPrice / 1000)}k)`,
+      description: `₹${b.minPrice.toLocaleString("en-IN")} – ₹${b.maxPrice.toLocaleString("en-IN")} (${b.variations.length})`
     }));
 
     await sendMsg(MessageBuilder.list(
       phone,
-      "Choose a brand below to view specific packages and lock your quotation:",
-      "View Brand Packages",
+      conv.qdPickBrandPrompt,
+      conv.btnChooseBrand,
       [
-        { title: "Brand Packages", rows: brandRows },
-        { title: "Quick Actions", rows: specialRows }
+        { title: conv.secBrands, rows: brandRows },
+        { title: conv.secQuickActions, rows: specialRows }
       ]
     ));
 
   } catch (error) {
     console.error("🔥 Error in generateAndSendPriceRanges:", error);
-    await sendMsg(MessageBuilder.text(phone, "Sorry, there was an issue computing your price summary. A representative will contact you shortly."));
+    await sendMsg(MessageBuilder.text(phone, conv.errGeneric));
   }
 }
 
 export async function sendBrandVariations(phone: string, session: WhatsAppSession, brandKey: string) {
+  const conv = getConversationalStrings(session.language);
   try {
     const [productsSnap, addonsSnap, settingsSnap] = await Promise.all([
       adminDb.collection(COLLECTIONS.PRODUCTS).where("is_active", "==", true).get(),
@@ -272,12 +375,9 @@ export async function sendBrandVariations(phone: string, session: WhatsAppSessio
     const addons = addonsSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
     const settings = settingsSnap.data() as any;
 
-    const selection = (session.wizard_answers || {}) as ConfiguratorSelection;
+    const rawSelection = (session.wizard_answers || {}) as ConfiguratorSelection;
     const cablingDone = session.wizard_answers?.cabling_done === true || session.wizard_answers?.cabling_status === "done";
-    const isPureWireless = selection.technology === "Wireless" || selection.technology === "4G_Solar" || (selection as any).installation_type === "wireless";
-    const rawTech = String(selection.technology || "").toUpperCase();
-    const tech = isPureWireless ? "Wireless" : (rawTech === "IP" ? "IP" : "HD");
-    selection.technology = tech as any;
+    const { hydratedSelection: selection } = resolveDispatchTech(rawSelection);
     const reqDays = selection.recording_days !== undefined ? selection.recording_days : 7;
 
     if (!selection.site_surcharge_flags && (selection.ceiling_height === "high" || selection.ceiling_height === "very_high")) {
@@ -316,69 +416,77 @@ export async function sendBrandVariations(phone: string, session: WhatsAppSessio
 
     const targetBrandSummary = catalogResult.brandSummaries.find(b => b.brandKey === brandKey);
     if (!targetBrandSummary) {
-      await sendMsg(MessageBuilder.text(phone, "Brand packages not found. Please select another option."));
+      await sendMsg(MessageBuilder.text(phone, conv.qdVarNotFound));
       return;
     }
 
     const { standardQuote, economyQuote, colorNightQuote, brandName } = targetBrandSummary;
-    const storageLabel = reqDays === 0 ? "Live Viewing Only (No HDD)" : `${reqDays} Days Storage`;
+    const storageLabel = reqDays === 0
+      ? conv.qdStorageNone
+      : conv.qdStorageDays.replace("{days}", String(reqDays)).replace("{mode}", conv.qdMode247);
 
-    let text = `📦 *${brandName.toUpperCase()} CCTV PACKAGES*\n\n`;
-    text += `1️⃣ *Standard Package (2MP Full HD - ${storageLabel})*\n`;
-    text += `• Total: ₹${standardQuote.total_payable.toLocaleString('en-IN')} (Incl. 18% GST & Professional Installation)\n`;
-    text += `• Hardware: ${selection.camera_count || 4}x ${techResolution(standardQuote)} Cameras (${formatCameraBreakdown(selection)}) + Central DVR/NVR + ${reqDays === 0 ? "Zero Storage" : "Surveillance HDD"}\n\n`;
+    let text = `${conv.qdVarHeader.replace("{brand}", brandName.toUpperCase())}\n\n`;
+    text += `${conv.qdVarStdTitle.replace("{storage}", storageLabel)}\n`;
+    text += `${conv.qdVarTotalLine.replace("{price}", standardQuote.total_payable.toLocaleString("en-IN"))}\n`;
+    text += `${conv.qdVarHwStd
+      .replace("{cams}", String(selection.camera_count || 4))
+      .replace("{res}", techResolution(standardQuote))
+      .replace("{breakdown}", formatCameraBreakdown(selection, conv))
+      .replace("{storageType}", storageLabel)}\n\n`;
 
     if (colorNightQuote) {
-      text += `2️⃣ *Enhanced 2K ColorVu / Color Night Vision Package (3MP/5MP)*\n`;
-      text += `• Total: ₹${colorNightQuote.total_payable.toLocaleString('en-IN')} (Incl. 18% GST & Installation)\n`;
-      text += `• Hardware: 24/7 Full Color Night Vision + Built-in Audio Microphone + Smart Motion Detection\n\n`;
+      text += `${conv.qdVarColorTitle}\n`;
+      text += `${conv.qdVarTotalLine.replace("{price}", colorNightQuote.total_payable.toLocaleString("en-IN"))}\n`;
+      text += `${conv.qdVarHwColor}\n\n`;
     }
 
     if (economyQuote) {
-      text += `3️⃣ *Economy Storage Match (500GB HDD)*\n`;
-      text += `• Total: ₹${economyQuote.total_payable.toLocaleString('en-IN')} (Save ₹${((standardQuote.total_payable || 0) - economyQuote.total_payable).toLocaleString('en-IN')}!)\n`;
-      text += `• Hardware: Same cameras with 3-5 days basic backup\n\n`;
+      const saveAmt = ((standardQuote.total_payable || 0) - economyQuote.total_payable).toLocaleString("en-IN");
+      text += `${conv.qdVarEcoTitle}\n`;
+      text += `${conv.qdVarSaveLine.replace("{price}", economyQuote.total_payable.toLocaleString("en-IN")).replace("{save}", saveAmt)}\n`;
+      text += `${conv.qdVarHwEco}\n\n`;
     }
 
-    text += `Select your preferred variation below to freeze your quotation and receive your official PDF quotation:`;
+    text += conv.qdVarSelectPrompt;
 
     const variationRows = [
-      { 
-        id: `lock_${brandKey}_standard`, 
-        title: `1. Standard 2MP Quote`.slice(0, 24), 
-        description: `₹${standardQuote.total_payable.toLocaleString('en-IN')} (${storageLabel})`.slice(0, 72) 
+      {
+        id: `lock_${brandKey}_standard`,
+        title: conv.qdVarStdRow,
+        description: `₹${standardQuote.total_payable.toLocaleString("en-IN")} (${storageLabel})`
       }
     ];
 
     if (colorNightQuote) {
       variationRows.push({
         id: `lock_${brandKey}_color`,
-        title: `2. ColorVu 2K + Mic`.slice(0, 24),
-        description: `₹${colorNightQuote.total_payable.toLocaleString('en-IN')} (Full color night vision + mic)`.slice(0, 72)
+        title: conv.qdVarColorRow,
+        description: `₹${colorNightQuote.total_payable.toLocaleString("en-IN")}`
       });
     }
 
     if (economyQuote) {
+      const saveAmt = ((standardQuote.total_payable || 0) - economyQuote.total_payable).toLocaleString("en-IN");
       variationRows.push({
         id: `lock_${brandKey}_economy`,
-        title: `3. Economy 500GB`.slice(0, 24),
-        description: `₹${economyQuote.total_payable.toLocaleString('en-IN')} (Save ₹${((standardQuote.total_payable || 0) - economyQuote.total_payable).toLocaleString('en-IN')} with basic backup)`.slice(0, 72)
+        title: conv.qdVarEcoRow,
+        description: `₹${economyQuote.total_payable.toLocaleString("en-IN")} (-₹${saveAmt})`
       });
     }
 
     variationRows.push({
       id: "back_to_brands",
-      title: "← Back to All Brands".slice(0, 24),
-      description: "Compare price spectrum across all brands".slice(0, 72)
+      title: conv.qdVarBackTitle,
+      description: conv.qdVarBackDesc
     });
 
     await sendMsg(MessageBuilder.list(
       phone,
       text,
-      "Select Package Variation",
+      conv.btnChooseVariation,
       [
         {
-          title: `${brandName} Variations`,
+          title: conv.secVariations.replace("{brand}", brandName),
           rows: variationRows
         }
       ]
@@ -393,12 +501,24 @@ export async function sendBrandVariations(phone: string, session: WhatsAppSessio
 
   } catch (err) {
     console.error("🔥 Error in sendBrandVariations:", err);
-    await sendMsg(MessageBuilder.text(phone, "Sorry, we could not retrieve the package options right now. Please type 'Hi' to restart."));
+    await sendMsg(MessageBuilder.text(phone, conv.errGeneric));
   }
 }
 
 export async function finalizeAndSendQuote(phone: string, session: WhatsAppSession, chosenQuote: PricingResult) {
+  const conv = getConversationalStrings(session.language);
   try {
+    const { isHybrid, tech, hydratedSelection } = resolveDispatchTech(session.wizard_answers || {});
+    const mergedWizardAnswers = {
+      ...(session.wizard_answers || {}),
+      technology: tech,
+      technology_preference: tech,
+      is_hybrid: isHybrid,
+      hybrid_wired_technology: tech === "IP" ? "IP" : "HD",
+      technology_choice: isHybrid ? "Hybrid" : tech,
+      ...(hydratedSelection.mixed_camera_requirements ? { mixed_camera_requirements: hydratedSelection.mixed_camera_requirements } : {}),
+    };
+
     let leadId = session.lead_id;
     if (!leadId) {
       const newLead = {
@@ -406,7 +526,8 @@ export async function finalizeAndSendQuote(phone: string, session: WhatsAppSessi
         mobile_number: phone.replace(/\D/g, ""),
         channel: "whatsapp",
         status: "quoted",
-        wizard_answers: session.wizard_answers,
+        technology_choice: isHybrid ? "Hybrid" : tech,
+        wizard_answers: mergedWizardAnswers,
         created_at: new Date(),
         updated_at: new Date(),
         partner_id: session.partner_id || null,
@@ -418,6 +539,8 @@ export async function finalizeAndSendQuote(phone: string, session: WhatsAppSessi
     } else {
       const updatePayload: any = {
         status: "quoted",
+        technology_choice: isHybrid ? "Hybrid" : tech,
+        wizard_answers: mergedWizardAnswers,
         updated_at: new Date(),
       };
       if (session.customer_name && session.customer_name !== "WhatsApp Customer") {
@@ -431,10 +554,12 @@ export async function finalizeAndSendQuote(phone: string, session: WhatsAppSessi
 
     // Create quote record in Firestore subcollection
     const quoteRef = adminDb.collection(COLLECTIONS.LEADS).doc(leadId).collection(SUBCOLLECTIONS.QUOTES).doc();
+    const customerLang = session.language || "en";
     const newQuote = {
       ...chosenQuote,
       id: quoteRef.id,
       lead_id: leadId,
+      preferred_language: customerLang,
       status: "DRAFT",
       created_at: new Date(),
       validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days validity
@@ -449,43 +574,46 @@ export async function finalizeAndSendQuote(phone: string, session: WhatsAppSessi
     });
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://cctvquotation.com";
-    const pdfUrl = `${baseUrl}/api/v1/leads/${leadId}/quotes/${quoteRef.id}/pdf`;
+    const pdfUrl = `${baseUrl}/api/v1/leads/${leadId}/quotes/${quoteRef.id}/pdf?lang=${encodeURIComponent(customerLang)}`;
 
     // Send PDF document via WhatsApp
     await sendMsg(MessageBuilder.document(
       phone,
       pdfUrl,
-      `📄 Here is your official GST Quotation (Quote ID: ${quoteRef.id})!\n\nTotal Payable: ₹${chosenQuote.total_payable.toLocaleString('en-IN')} (All Inclusive)\n\nReview the attached PDF for the full Bill of Materials (BOM) & warranty terms.`,
+      conv.qdPdfCaption
+        .replace("{quoteId}", quoteRef.id)
+        .replace("{price}", chosenQuote.total_payable.toLocaleString("en-IN")),
       `TEAM_CCTV_Quotation_${quoteRef.id}.pdf`
     ));
 
-    // Send the 4 Checkout Pathways Menu
+    // Send Checkout Pathways Menu
     const checkoutButtons = [
-      { id: "action_pay_full", title: "💳 Pay Full (2% Off)" },
-      { id: "action_book_token", title: "🔒 Book with ₹500" },
-      { id: "action_book_survey", title: "📅 Free Site Visit" },
+      { id: "action_pay_full", title: conv.btnPayFull },
+      { id: "action_book_token", title: conv.btnBookToken },
+      { id: "action_book_survey", title: conv.btnFreeVisit },
     ];
 
     await sendMsg(MessageBuilder.buttons(
       phone,
-      "How would you like to proceed with your installation slot?",
+      conv.qdCheckoutPrompt,
       checkoutButtons
     ));
 
   } catch (err) {
     console.error("🔥 Error in finalizeAndSendQuote:", err);
-    await sendMsg(MessageBuilder.text(phone, "Sorry, we encountered an issue finalizing your quotation. Please type 'Hi' to try again or reach our support."));
+    await sendMsg(MessageBuilder.text(phone, conv.qdErrFinalize));
   }
 }
 
 export async function handleCheckoutAction(phone: string, session: WhatsAppSession, actionId: string) {
+  const conv = getConversationalStrings(session.language);
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://cctvquotation.com";
     const leadId = session.lead_id;
     const quoteId = session.quote_id;
 
     if (!leadId || !quoteId) {
-      await sendMsg(MessageBuilder.text(phone, "Please configure your quotation first before booking. Type 'Hi' to start."));
+      await sendMsg(MessageBuilder.text(phone, conv.qdErrQuoteFirst));
       return;
     }
 
@@ -497,14 +625,11 @@ export async function handleCheckoutAction(phone: string, session: WhatsAppSessi
         body: JSON.stringify({ leadId, quoteId, applyUpfrontDiscount: true })
       });
       const data = await res.json();
-      if (data.short_url) {
-        await sendMsg(MessageBuilder.text(
-          phone,
-          `🎉 *2% Upfront Discount Applied!*\n\nClick the link below to complete your payment securely via UPI (Google Pay / PhonePe / Paytm) or Cards:\n\n👉 ${data.short_url}\n\nOnce paid, your installation kit will be dispatched immediately.`
-        ));
-      } else {
-        await sendMsg(MessageBuilder.text(phone, `Click here to complete payment: ${baseUrl}/quote/${leadId}/review/${quoteId}`));
-      }
+      const payUrl = data.short_url || `${baseUrl}/quote/${leadId}/review/${quoteId}`;
+      await sendMsg(MessageBuilder.text(
+        phone,
+        conv.qdPayFullMsg.replace("{url}", payUrl)
+      ));
 
     } else if (actionId === "action_book_token") {
       // Create Razorpay ₹500 advance slot reservation token link
@@ -514,29 +639,26 @@ export async function handleCheckoutAction(phone: string, session: WhatsAppSessi
         body: JSON.stringify({ leadId, quoteId, isTokenBooking: true, amount: 500 })
       });
       const data = await res.json();
-      if (data.short_url) {
-        await sendMsg(MessageBuilder.text(
-          phone,
-          `🔒 *Reserve Your Installation Slot with ₹500 Token*\n\nPay ₹500 now to lock your technician and delivery slot. Balance 90% payable upon hardware delivery.\n\n👉 ${data.short_url}`
-        ));
-      } else {
-        await sendMsg(MessageBuilder.text(phone, `Click here to reserve your slot: ${baseUrl}/quote/${leadId}/review/${quoteId}`));
-      }
+      const tokenUrl = data.short_url || `${baseUrl}/quote/${leadId}/review/${quoteId}`;
+      await sendMsg(MessageBuilder.text(
+        phone,
+        conv.qdBookTokenMsg.replace("{url}", tokenUrl)
+      ));
 
     } else if (actionId === "action_book_survey") {
       // Provide free site visit slot picker
       await sendMsg(MessageBuilder.list(
         phone,
-        "Select your preferred date & time for a free on-site consultation:",
-        "Select Slot",
+        conv.qdVisitPrompt,
+        conv.btnChooseSlot,
         [
           {
-            title: "Available Site Visit Slots",
+            title: conv.secVisitSlots,
             rows: [
-              { id: "slot_tmw_morning", title: "Tomorrow Morning (10 AM - 1 PM)", description: "Certified engineer visits for site inspection" },
-              { id: "slot_tmw_afternoon", title: "Tomorrow Afternoon (2 PM - 5 PM)", description: "Certified engineer visits for site inspection" },
-              { id: "slot_day2_morning", title: "Day After Tomorrow (10 AM - 1 PM)", description: "Certified engineer visits for site inspection" },
-              { id: "slot_day2_afternoon", title: "Day After Tomorrow (2 PM - 5 PM)", description: "Certified engineer visits for site inspection" },
+              { id: "slot_tmw_morning", title: conv.slotTmwMornTitle, description: conv.slotDesc },
+              { id: "slot_tmw_afternoon", title: conv.slotTmwAftTitle, description: conv.slotDesc },
+              { id: "slot_day2_morning", title: conv.slotDay2MornTitle, description: conv.slotDesc },
+              { id: "slot_day2_afternoon", title: conv.slotDay2AftTitle, description: conv.slotDesc },
             ]
           }
         ]
@@ -548,11 +670,12 @@ export async function handleCheckoutAction(phone: string, session: WhatsAppSessi
 
   } catch (err) {
     console.error("🔥 Error in handleCheckoutAction:", err);
-    await sendMsg(MessageBuilder.text(phone, "Sorry, we could not generate your checkout link right now. Please type 'Hi' or check your online quote page directly."));
+    await sendMsg(MessageBuilder.text(phone, conv.qdErrCheckout));
   }
 }
 
 export async function handleSlotSelection(phone: string, session: WhatsAppSession, slotId: string) {
+  const conv = getConversationalStrings(session.language);
   try {
     const leadId = session.lead_id;
     const slotMap: Record<string, { date: string; timeSlot: string }> = {
@@ -564,11 +687,15 @@ export async function handleSlotSelection(phone: string, session: WhatsAppSessio
 
     const slot = slotMap[slotId] || { date: "Upcoming", timeSlot: "10:00 AM - 01:00 PM" };
 
+    const localizedDate = slotId.includes("tmw") ? conv.qdSlotTomorrow : conv.qdSlotDayAfter;
+
     if (leadId) {
       await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
         status: "site_visit",
         site_visit_date: slot.date,
+        site_visit_date_localized: localizedDate,
         site_visit_time_slot: slot.timeSlot,
+        preferred_language: session.language || "en",
         updated_at: new Date(),
       });
 
@@ -576,15 +703,16 @@ export async function handleSlotSelection(phone: string, session: WhatsAppSessio
       const provider = new Msg91WhatsAppProvider();
       await provider.sendSurveyConfirm({
         phone,
-        customerName: session.customer_name || "Customer",
-        date: slot.date,
+        customerName: session.customer_name || conv.valuedCustomer,
+        date: localizedDate,
         timeSlot: slot.timeSlot,
+        preferredLanguage: session.language || "en",
       });
     }
 
     await sendMsg(MessageBuilder.text(
       phone,
-      `✅ *Free Site Visit Confirmed!*\n\n📅 Date: *${slot.date}*\n⏰ Time: *${slot.timeSlot}*\n\nA certified CCTV engineer from our nearest micro-hub has been assigned to inspect your location and verify camera mounting angles. See you then!`
+      conv.qdSlotConfirmed.replace("{date}", localizedDate).replace("{time}", slot.timeSlot)
     ));
 
     await adminDb.collection(COLLECTIONS.WHATSAPP_SESSIONS).doc(phone).update({
@@ -596,27 +724,36 @@ export async function handleSlotSelection(phone: string, session: WhatsAppSessio
   }
 }
 
-function formatCameraBreakdown(selection: any): string {
-  const isPureWireless = selection.technology === "Wireless" || selection.technology === "wifi";
+function formatCameraBreakdown(selection: any, conv: ConversationalStrings): string {
+  const techLower = String(selection?.technology || "").toLowerCase();
+  const isPureWireless =
+    (techLower === "wireless" ||
+      techLower === "wifi" ||
+      techLower === "4g_solar" ||
+      selection?.installation_type === "wireless" ||
+      selection?.installation_type === "solar_4g") &&
+    !selection?.is_hybrid;
   const outCount = Number(selection.outdoor_camera_count) || 0;
   const inCount = Number(selection.indoor_camera_count) || 0;
   const wifiCount = Number(selection.wifi_camera_count) || 0;
   const total = Number(selection.camera_count) || (isPureWireless ? (wifiCount || (outCount + inCount) || 4) : (outCount + inCount + wifiCount || 4));
 
   if (isPureWireless) {
-    if (outCount > 0 && inCount > 0) return `${outCount} Out + ${inCount} In Wireless`;
-    return `${total} Smart Wireless`;
+    if (outCount > 0 && inCount > 0) {
+      return `${conv.qdBreakdownOut.replace("{n}", String(outCount))} + ${conv.qdBreakdownIn.replace("{n}", String(inCount))} (${conv.qdSetupTechWireless})`;
+    }
+    return `${total} ${conv.qdSetupTechWireless}`;
   }
   const parts: string[] = [];
-  if (outCount > 0) parts.push(`${outCount} Out`);
-  else if (inCount > 0 && wifiCount === 0) parts.push("0 Out");
+  if (outCount > 0) parts.push(conv.qdBreakdownOut.replace("{n}", String(outCount)));
+  else if (inCount > 0 && wifiCount === 0) parts.push(conv.qdBreakdownOut.replace("{n}", "0"));
 
-  if (inCount > 0) parts.push(`${inCount} In`);
-  else if (outCount > 0 && wifiCount === 0) parts.push("0 In");
+  if (inCount > 0) parts.push(conv.qdBreakdownIn.replace("{n}", String(inCount)));
+  else if (outCount > 0 && wifiCount === 0) parts.push(conv.qdBreakdownIn.replace("{n}", "0"));
 
-  if (wifiCount > 0) parts.push(`${wifiCount} Wireless`);
+  if (wifiCount > 0) parts.push(conv.qdBreakdownWifi.replace("{n}", String(wifiCount)));
 
-  return parts.length > 0 ? parts.join(" + ") : `${total} Wired`;
+  return parts.length > 0 ? parts.join(" + ") : conv.qdBreakdownWired.replace("{n}", String(total));
 }
 
 function techResolution(quote: PricingResult): string {
@@ -624,11 +761,11 @@ function techResolution(quote: PricingResult): string {
 }
 
 async function sendMsg(msg: any) {
-  const whatsappPhoneId = (process.env.WHATSAPP_PHONE_ID || process.env.WA_PHONE_NUMBER_ID || "").trim().replace(/^["']|["']$/g, '');
-  const whatsappToken = (process.env.WHATSAPP_TOKEN || process.env.WA_ACCESS_TOKEN || "").trim().replace(/^["']|["']$/g, '');
-  const msg91AuthKey = (process.env.MSG91_AUTH_KEY || "").trim().replace(/^["']|["']$/g, '');
-  const msg91FromNumber = (process.env.MSG91_WHATSAPP_NUMBER || "").trim().replace(/^["']|["']$/g, '');
-  const providerPref = (process.env.WHATSAPP_PROVIDER || "").toLowerCase().trim();
+  const whatsappPhoneId = cleanPhoneEnvVar(process.env.WHATSAPP_PHONE_ID || process.env.WA_PHONE_NUMBER_ID);
+  const whatsappToken = cleanEnvVar(process.env.WHATSAPP_TOKEN || process.env.WA_ACCESS_TOKEN);
+  const msg91AuthKey = cleanEnvVar(process.env.MSG91_AUTH_KEY);
+  const msg91FromNumber = cleanPhoneEnvVar(process.env.MSG91_WHATSAPP_NUMBER);
+  const providerPref = cleanEnvVar(process.env.WHATSAPP_PROVIDER).toLowerCase();
 
   const useMsg91 = providerPref === "msg91" || (!!msg91AuthKey && providerPref !== "meta");
 

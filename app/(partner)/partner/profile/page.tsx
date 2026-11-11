@@ -7,6 +7,8 @@ import type { Promoter } from "@/types";
 
 export const dynamic = "force-dynamic";
 
+import { TranslatedText } from "@/components/shared/TranslatedText";
+
 export default async function PartnerProfilePage() {
   const session = await verifyPartnerSession();
   if (!session.isAuthenticated) redirect("/partner/login");
@@ -15,7 +17,7 @@ export default async function PartnerProfilePage() {
   const docSnap = await adminDb.collection(COLLECTIONS.PROMOTERS).doc(promoterId).get();
   
   if (!docSnap.exists) {
-    return <div>Profile not found.</div>;
+    return <div><TranslatedText tKey="inst_prof_not_found" defaultText="Profile not found." /></div>;
   }
 
   const data = docSnap.data() as Promoter;

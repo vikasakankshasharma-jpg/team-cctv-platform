@@ -5,8 +5,10 @@ import { HelpCircle, X } from "lucide-react";
 import { ChatInterface } from "./ChatInterface";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function FloatingAIChat() {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname() || "unknown";
 
@@ -26,7 +28,7 @@ export function FloatingAIChat() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-        aria-label="Toggle AI Assistant"
+        aria-label={t("ai_toggle_aria")}
       >
         {isOpen ? (
           <X className="w-6 h-6 pointer-events-none" />

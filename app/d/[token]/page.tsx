@@ -2,10 +2,12 @@ import { adminDb } from "@/lib/firebase-admin";
 import { notFound } from "next/navigation";
 import PublicDeliveryClient from "./PublicDeliveryClient";
 import type { Metadata } from "next";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { buildPageMetadata } from "@/lib/i18n/seo-metadata";
 
-export const metadata: Metadata = {
-  title: "Material Delivery Verification | TEAM CCTV",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata("delivery_verify", await getServerLocale());
+}
 
 export const dynamic = "force-dynamic";
 

@@ -7,12 +7,13 @@ import { calculatePricing } from "@/lib/pricing-engine";
 import { calculateSystemScore } from "@/lib/system-score";
 import { trackEvent } from "@/components/shared/TrackingProvider";
 import { useConfiguratorStore } from "@/store/configurator";
+import { useTranslation } from "@/hooks/useTranslation";
 
 import { getCanonicalBrandName } from "@/lib/brand-utils";
 
 function normalizeBrand(brand?: string | null): string {
-  if (!brand) return "Premium";
-  return getCanonicalBrandName(brand) || "Premium";
+  if (!brand) return "";
+  return getCanonicalBrandName(brand) || "";
 }
 
 
@@ -36,7 +37,8 @@ interface CompareCardsProps {
   onPriceMatch?: (card: any) => void;
 }
 
-function AddonRow({ name, price, isMandatory }: { name: string; price: number; isMandatory: boolean; }) {
+function AddonRow({ name, price, isMandatory, includedLabel }: { name: string; price: number; isMandatory: boolean; includedLabel?: string; }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-between gap-2 group/addon py-1 border-b border-[#f5f5f7] dark:border-[#2d2d2f] last:border-0">
       <div className="flex items-center gap-2 min-w-0">
@@ -48,7 +50,7 @@ function AddonRow({ name, price, isMandatory }: { name: string; price: number; i
         </span>
       </div>
       <span className={`text-[10px] font-semibold shrink-0 ${isMandatory ? "text-emerald-600" : "text-[#86868b]"}`}>
-        {isMandatory ? "Included" : `+₹${price.toLocaleString("en-IN")}`}
+        {isMandatory ? (includedLabel || t("cmp_included", "Included")) : `+₹${price.toLocaleString("en-IN")}`}
       </span>
     </div>
   );
@@ -73,6 +75,7 @@ export function CompareCards({
   customerPhone,
   onPriceMatch,
 }: CompareCardsProps) {
+  const { t } = useTranslation();
 
   const cardsData = useMemo(() => {
     return compareOptions
@@ -238,8 +241,8 @@ export function CompareCards({
     return (
       <div className="w-full p-5 md:p-12 rounded-3xl border border-[#d2d2d7] dark:border-[#424245] flex flex-col items-center text-center">
         <Camera className="w-8 h-8 text-[#86868b] mb-4" />
-        <p className="text-lg font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">No Packages Selected</p>
-        <p className="text-[#86868b] mt-1">Please select an option to compare.</p>
+        <p className="text-lg font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{t("cmp_no_pkg", "No Packages Selected")}</p>
+        <p className="text-[#86868b] mt-1">{t("cmp_select_opt", "Please select an option to compare.")}</p>
       </div>
     );
   }
@@ -252,12 +255,11 @@ export function CompareCards({
         const isCustom = typeof card.option === 'string' && !["budget", "recommended", "premium"].includes(card.option);
         const isUpgradeSuggestion = customerTechnology === "HD" && card.isIP && !isCustom;
         
-        const brandName = normalizeBrand(card.camProduct?.brand || card.recProduct?.brand);
+        const brandName = normalizeBrand(card.camProduct?.brand || card.recProduct?.brand) || t("cmp_std", "Standard");
         const resLabel = card.camProduct?.resolution_mp ? `${card.camProduct.resolution_mp}MP` : "";
-        let tierName = resLabel ? `${resLabel} System` : "Surveillance System";
-        if (isCustom) tierName = "Custom Built System";
-        else if (isUpgradeSuggestion) tierName = "IP Network Upgrade";
-        else if (card.isRecommended) tierName = "Recommended Package";
+        let tierName = resLabel ? t("cmp_mp_sys", "{mp} System", { mp: resLabel }) : t("cmp_sys_default", "Surveillance System");
+        if (isCustom) tierName = t("cmp_custom_sys", "Custom Built System");
+        else if (isUpgradeSuggestion) tierName = t("cmp_ip_upgrade", "IP Network Upgrade");
         
         const pricePerCam = selection.camera_count > 0 ? Math.round(card.pricing.total_payable / selection.camera_count) : 0;
 
@@ -284,14 +286,6 @@ export function CompareCards({
                   )
               }`}
           >
-            {/* Top Recommended Badge */}
-            {card.isRecommended && (
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 bg-[#1d1d1f] dark:bg-white text-white dark:text-[#1d1d1f] rounded-full text-[10px] font-semibold uppercase tracking-wide flex items-center gap-1 z-10 shadow-md">
-                <Zap className="w-3 h-3 fill-current" />
-                Our Pick
-              </div>
-            )}
-
             {isCustom && (
               <button
                 onClick={(e) => {
@@ -311,12 +305,12 @@ export function CompareCards({
                 {brandName} {tierName}
               </div>
               <h3 className="text-2xl font-bold text-[#1d1d1f] dark:text-white mb-4">
-                {card.is5MP ? "5MP" : card.is4MP ? "4MP" : "2MP"} Resolution
+                {t("cmp_res_title", "{mp} Resolution", { mp: card.is5MP ? "5MP" : card.is4MP ? "4MP" : "2MP" })}
               </h3>
               
               {card.pricing.error ? (
                 <div className="flex flex-col items-center justify-center">
-                  <span className="text-xl font-medium text-red-500 mt-1">Unavailable</span>
+                  <span className="text-xl font-medium text-red-500 mt-1">{t("cmp_unavail", "Unavailable")}</span>
                 </div>
               ) : (
                 <div className="flex items-start justify-center">
@@ -337,10 +331,10 @@ export function CompareCards({
                         onSelectCheckout({ technology: card.technology, option: card.option });
                       }
                     }}
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/60 transition-all hover:scale-[1.02] shadow-xs cursor-pointer w-full"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/60 transition-all hover:scale-[1.02] shadow-xs cursor-pointer w-full min-h-[32px] h-auto whitespace-normal text-center leading-snug"
                   >
-                    <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                    <span>Lower competitor quote? Match Price</span>
+                    <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <span>{t("cmp_price_match", "Lower competitor quote? Match Price")}</span>
                   </button>
                 </div>
               )}
@@ -367,17 +361,20 @@ export function CompareCards({
               </div>
               <div className="flex-1 min-w-0">
                 <h4 className="text-[15px] font-semibold text-amber-900 dark:text-amber-200 mb-1">
-                  Storage exceeds available capacity
+                  {t("cmp_overflow_title", "Storage exceeds available capacity")}
                 </h4>
                 <p className="text-[13px] text-amber-700 dark:text-amber-300/80 leading-relaxed mb-3">
-                  Your requirement needs <strong>{requiredTB}TB</strong> storage, but the largest available hard disk is <strong>{availableTB}TB</strong>. 
-                  The prices shown above are based on the best available {availableTB}TB drive (~{approxDays} days backup). 
-                  For full {info?.recording_days}-day backup, a custom configuration is needed.
+                  {t("cmp_overflow_body", "Your requirement needs {requiredTB}TB storage, but the largest available hard disk is {availableTB}TB. The prices shown above are based on the best available {availableTB}TB drive (~{approxDays} days backup). For full {recordingDays}-day backup, a custom configuration is needed.", {
+                    requiredTB: String(requiredTB),
+                    availableTB: String(availableTB),
+                    approxDays: String(approxDays),
+                    recordingDays: String(info?.recording_days ?? ""),
+                  })}
                 </p>
                 <div className="flex items-center gap-2 text-[13px]">
-                  <Phone className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <Phone className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                   <span className="text-amber-800 dark:text-amber-200 font-medium">
-                    Our team will contact you to arrange the right setup for your site.
+                    {t("cmp_overflow_contact", "Our team will contact you to arrange the right setup for your site.")}
                   </span>
                 </div>
               </div>
@@ -396,7 +393,7 @@ export function CompareCards({
               onClick={() => scrollToCard(Math.max(0, activeCardIdx - 1))}
               disabled={activeCardIdx === 0}
               className="w-10 h-10 rounded-xl bg-[#0071e3]/10 dark:bg-[#0071e3]/20 flex items-center justify-center text-[#0071e3] disabled:opacity-25 transition-all active:scale-90"
-              aria-label="Previous quotation"
+              aria-label={t("cmp_prev_aria", "Previous quotation")}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -413,14 +410,13 @@ export function CompareCards({
                         ? "w-8 h-2.5 bg-[#0071e3] shadow-sm shadow-[#0071e3]/30"
                         : "w-2.5 h-2.5 bg-[#d2d2d7] dark:bg-[#424245] hover:bg-[#86868b]"
                     }`}
-                    aria-label={`Go to quotation ${i + 1}`}
+                    aria-label={t("cmp_goto_aria", "Go to quotation {n}", { n: String(i + 1) })}
                   />
                 ))}
               </div>
               <p className="text-[13px] font-bold text-[#1d1d1f] dark:text-white tracking-tight">
                 <span className="text-[#0071e3]">{activeCardIdx + 1}</span>
-                <span className="text-[#86868b] font-medium"> of </span>
-                <span>{cardsData.length} packages</span>
+                <span className="text-[#86868b] font-medium"> {t("cmp_count_of", "of {total} options", { total: String(cardsData.length) })}</span>
               </p>
             </div>
 
@@ -429,7 +425,7 @@ export function CompareCards({
               onClick={() => scrollToCard(Math.min(cardsData.length - 1, activeCardIdx + 1))}
               disabled={activeCardIdx === cardsData.length - 1}
               className="w-10 h-10 rounded-xl bg-[#0071e3]/10 dark:bg-[#0071e3]/20 flex items-center justify-center text-[#0071e3] disabled:opacity-25 transition-all active:scale-90"
-              aria-label="Next quotation"
+              aria-label={t("cmp_next_aria", "Next quotation")}
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -439,7 +435,7 @@ export function CompareCards({
           {showSwipeHint && (
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0071e3] text-white text-[11px] font-bold uppercase tracking-wider animate-bounce shadow-md shadow-[#0071e3]/25">
               <ChevronLeft className="w-3.5 h-3.5" />
-              <span>Swipe to compare</span>
+              <span>{t("cmp_swipe", "Swipe to compare")}</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </div>
           )}

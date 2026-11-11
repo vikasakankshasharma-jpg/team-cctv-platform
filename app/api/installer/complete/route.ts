@@ -57,9 +57,12 @@ export async function POST(req: Request) {
         
         if (linkData.success && linkData.payment_url && quoteData?.customer_mobile) {
           const { sendCustomerWhatsApp } = await import("@/lib/notification-service");
+          const { resolveCustomerLocale, getCustomerNotifications } = await import("@/lib/whatsapp/customer-notifications-i18n");
+          const custLocale = await resolveCustomerLocale({ quoteData, phone: quoteData.customer_mobile });
+          const notif = getCustomerNotifications(custLocale);
           await sendCustomerWhatsApp(
             quoteData.customer_mobile,
-            `🎉 Installation Complete! Please complete the final payment of ₹${finalAmount} to receive your Warranty Certificate: ${linkData.payment_url}`
+            notif.installerCompletedPayFinal({ amount: finalAmount.toLocaleString("en-IN"), paymentUrl: linkData.payment_url })
           );
         }
       } catch (err) {
@@ -70,9 +73,12 @@ export async function POST(req: Request) {
       try {
         const { sendCustomerWhatsApp } = await import("@/lib/notification-service");
         if (quoteData?.customer_mobile) {
+          const { resolveCustomerLocale, getCustomerNotifications } = await import("@/lib/whatsapp/customer-notifications-i18n");
+          const custLocale = await resolveCustomerLocale({ quoteData, phone: quoteData.customer_mobile });
+          const notif = getCustomerNotifications(custLocale);
           await sendCustomerWhatsApp(
             quoteData.customer_mobile,
-            `🎉 Installation Complete! Your CCTV system is fully installed. Your Warranty Certificate is being generated and will be sent shortly. Thank you for choosing TEAM CCTV! 🛡️`
+            notif.installerCompletedWarrantySoon()
           );
         }
         if (quoteData?.job_id) {

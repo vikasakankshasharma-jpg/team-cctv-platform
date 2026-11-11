@@ -1548,6 +1548,94 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
               </div>
             </div>
 
+            {/* Profit Waterfall Overhead & AMC Fulfillment Reserves */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">AMC Fulfillment Cost Reserve</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  max="100"
+                  name="amc_fulfillment_cost_percent"
+                  value={formData.amc_fulfillment_cost_percent ?? 35}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-success/20 outline-none transition-all font-medium shadow-sm"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Visit & support cost % on Paid/Free AMC (counted in Services)</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Payment Gateway MDR (+GST)</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="10"
+                  name="payment_gateway_fee_percent"
+                  value={formData.payment_gateway_fee_percent ?? 2.36}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-success/20 outline-none transition-all font-medium shadow-sm"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Razorpay / online PG fee fallback (2% + 18% GST = 2.36%)</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">1st-Yr Warranty Visit Reserve</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  max="20"
+                  name="warranty_reserve_percent"
+                  value={formData.warranty_reserve_percent ?? 2}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-success/20 outline-none transition-all font-medium shadow-sm"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Hardware onsite RMA / service revisit reserve %</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Job Consumables & Local Porter</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="0"
+                  name="logistics_consumables_per_job"
+                  value={formData.logistics_consumables_per_job ?? 150}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-success/20 outline-none transition-all font-medium shadow-sm"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">₹</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Fasteners, tape, local conveyance reserve per installed job</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Technician Travel Payout Share</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  name="travel_fee_payout_percent"
+                  value={formData.travel_fee_payout_percent ?? 85}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-success/20 outline-none transition-all font-medium shadow-sm"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">% of travel fee paid out to engineer</p>
+            </div>
+
           </div>
         </div>
 
@@ -1651,7 +1739,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
               </div>
-              <p className="text-[10px] text-muted-foreground">White-label / budget cameras or Value Tier packages</p>
+              <p className="text-[10px] text-muted-foreground">White-label / budget cameras or entry-level HD packages</p>
             </div>
 
             {/* Recorders */}
@@ -1894,7 +1982,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             <div className="space-y-4 p-5 rounded-xl bg-indigo-500/5 border border-indigo-500/20">
               <div className="flex items-center gap-2 mb-2">
                 <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                <h3 className="text-[11px] font-semibold text-indigo-500 uppercase tracking-wider">Elite Tier (Premium)</h3>
+                <h3 className="text-[11px] font-semibold text-indigo-500 uppercase tracking-wider">High-Resolution Multiplier</h3>
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-semibold text-indigo-500/70 uppercase tracking-wider ml-1">Label Prefix</label>

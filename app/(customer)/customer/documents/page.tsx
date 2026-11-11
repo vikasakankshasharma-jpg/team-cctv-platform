@@ -4,16 +4,21 @@ import { adminDb, adminAuth } from "@/lib/firebase-admin";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Download, FileText, Receipt, ShieldCheck } from "lucide-react";
+import { TranslatedText } from "@/components/shared/TranslatedText";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { SPEECH_LOCALE_MAP } from "@/lib/i18n/mapping";
+import { buildPageMetadata } from "@/lib/i18n/seo-metadata";
 
-export const metadata: Metadata = {
-  title: "My Documents | TEAM CCTV",
-  description: "View and download your official invoices, receipts, and warranty certificates.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata("customer_documents", await getServerLocale());
+}
 
 export const dynamic = "force-dynamic";
 
 export default async function CustomerDocumentsPage() {
   const session = await verifySession();
+  const locale = await getServerLocale();
+  const dateLocale = SPEECH_LOCALE_MAP[locale] || "en-IN";
 
   if (!session.isAuthenticated) {
     redirect("/customer/login?redirect=/customer/documents");
@@ -57,7 +62,8 @@ export default async function CustomerDocumentsPage() {
             documents.push({
               id: doc.id,
               type: "invoice",
-              title: (data.amount_due ?? 0) > 0 ? `Advance Receipt - ${doc.id.slice(0, 8).toUpperCase()}` : `Tax Invoice - ${doc.id.slice(0, 8).toUpperCase()}`,
+              docKind: (data.amount_due ?? 0) > 0 ? "advance" : "tax_invoice",
+              shortId: doc.id.slice(0, 8).toUpperCase(),
               date: data.created_at?.toDate ? data.created_at.toDate() : new Date(),
               amount: data.grand_total,
               downloadUrl: `/api/invoice/${doc.id}/download`,
@@ -88,7 +94,8 @@ export default async function CustomerDocumentsPage() {
             documents.push({
               id: doc.id,
               type: "warranty",
-              title: `Warranty Certificate - ${doc.id.slice(0, 8).toUpperCase()}`,
+              docKind: "warranty",
+              shortId: doc.id.slice(0, 8).toUpperCase(),
               date: data.created_at?.toDate ? data.created_at.toDate() : new Date(),
               downloadUrl: `/api/warranty/${doc.id}/download`,
             });
@@ -112,20 +119,20 @@ export default async function CustomerDocumentsPage() {
           className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
+          <TranslatedText tKey="doc_back_dash" defaultText="Back to Dashboard" />
         </Link>
         
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-10 shadow-sm">
           <div className="mb-8">
-            <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white">My Documents</h1>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-2">Access your official tax invoices, payment receipts, and warranty certificates.</p>
+            <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white"><TranslatedText tKey="doc_title" defaultText="My Documents" /></h1>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-2"><TranslatedText tKey="doc_sub" defaultText="Access your official tax invoices, payment receipts, and warranty certificates." /></p>
           </div>
 
           {documents.length === 0 ? (
             <div className="text-center py-12 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
               <FileText className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
-              <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-1">No documents yet</h3>
-              <p className="text-zinc-500 text-sm">Your invoices and certificates will appear here once your bookings are confirmed.</p>
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-1"><TranslatedText tKey="doc_empty_title" defaultText="No documents yet" /></h3>
+              <p className="text-zinc-500 text-sm"><TranslatedText tKey="doc_empty_desc" defaultText="Your invoices and certificates will appear here once your bookings are confirmed." /></p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -136,9 +143,19 @@ export default async function CustomerDocumentsPage() {
                       {doc.type === 'invoice' ? <Receipt className="w-6 h-6" /> : <ShieldCheck className="w-6 h-6" />}
                     </div>
                     <div>
-                      <h4 className="font-bold text-zinc-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{doc.title}</h4>
+                      <h4 className="font-bold text-zinc-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
+                        {doc.docKind === "advance" ? (
+                          <TranslatedText tKey="doc_type_advance" defaultText="Advance Receipt" />
+                        ) : doc.docKind === "tax_invoice" ? (
+                          <TranslatedText tKey="ps_doc_inv" defaultText="Tax Invoice" />
+                        ) : (
+                          <TranslatedText tKey="doc_type_warranty" defaultText="Warranty Certificate" />
+                        )}
+                        {" - "}
+                        {doc.shortId}
+                      </h4>
                       <div className="text-xs font-semibold text-zinc-500 mt-1 flex items-center gap-2">
-                        {doc.date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {doc.date.toLocaleDateString(dateLocale, { day: 'numeric', month: 'short', year: 'numeric' })}
                         {doc.amount && (
                           <>
                             <span>•</span>
@@ -153,9 +170,9 @@ export default async function CustomerDocumentsPage() {
                     target="_blank"
                     rel="noreferrer"
                     className="w-10 h-10 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition-all shrink-0"
-                    title="Download PDF"
                   >
                     <Download className="w-4 h-4" />
+                    <span className="sr-only"><TranslatedText tKey="quote_download_pdf" defaultText="Download PDF" /></span>
                   </a>
                 </div>
               ))}

@@ -1,21 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { TranslationKey } from "@/lib/i18n/translations";
 
-export function TranslatedText({ tKey, defaultText, params }: { tKey: TranslationKey | (string & {}), defaultText: string, params?: Record<string, string> }) {
+export function TranslatedText({
+  tKey,
+  defaultText,
+  params,
+}: {
+  tKey: TranslationKey | (string & {});
+  defaultText: string;
+  params?: Record<string, string>;
+}) {
   const { t } = useTranslation();
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!mounted) {
-    return <span className="opacity-0">{defaultText}</span>;
-  }
-
-  return <span>{t(tKey, defaultText, params)}</span>;
+  return <span suppressHydrationWarning>{t(tKey, defaultText, params)}</span>;
 }

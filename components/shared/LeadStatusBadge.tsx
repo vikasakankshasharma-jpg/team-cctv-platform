@@ -69,9 +69,9 @@ export function LeadStatusBadge({ lead, quote, className = "" }: LeadStatusBadge
   }
 
   return (
-    <span className={`inline-flex items-center gap-1.5 border text-[10px] sm:text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider whitespace-nowrap ${colorClass} ${className}`}>
+    <span className={`inline-flex items-center gap-1.5 border text-[10px] sm:text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider whitespace-normal sm:whitespace-nowrap text-left leading-snug max-w-full ${colorClass} ${className}`}>
       <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-      {status}
+      <span>{status}</span>
     </span>
   );
 }

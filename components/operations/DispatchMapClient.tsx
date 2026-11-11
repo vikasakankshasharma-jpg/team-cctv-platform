@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { GoogleMap, MarkerF, InfoWindowF, useJsApiLoader } from "@react-google-maps/api";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface DispatchMarker {
   id: string;
@@ -33,6 +34,7 @@ const mapContainerStyle = {
 const defaultCenter = { lat: 26.9124, lng: 75.7873 }; // Jaipur Default
 
 export function DispatchMapClient() {
+  const { t } = useTranslation();
   const [markers, setMarkers] = useState<DispatchMarker[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMarker, setSelectedMarker] = useState<DispatchMarker | null>(null);
@@ -57,7 +59,7 @@ export function DispatchMapClient() {
         setMarkers(markerData.markers || []);
       }
     } catch {
-      toast.error("Failed to fetch map data");
+      toast.error(t("ops_map_fetch_err", "Failed to fetch map data"));
     } finally {
       setLoading(false);
     }
@@ -98,23 +100,23 @@ export function DispatchMapClient() {
               <MapPin className="w-5 h-5" />
             </span>
             <h1 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight">
-              Live Dispatch Map
+              {t("ops_live_dispatch_map", "Live Dispatch Map")}
             </h1>
           </div>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            Bird's-eye view of all field agents, active installations, and deliveries.
+            {t("ops_map_subtitle", "Bird's-eye view of all field agents, active installations, and deliveries.")}
           </p>
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
+        <div className="flex flex-wrap items-center gap-2 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
           <button
             onClick={() => setFilterType("all")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
               filterType === "all" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
             }`}
           >
-            All Active
+            {t("ops_filter_all", "All Active")}
           </button>
           <button
             onClick={() => setFilterType("service")}
@@ -122,7 +124,7 @@ export function DispatchMapClient() {
               filterType === "service" ? "bg-white text-blue-600 shadow-sm" : "text-zinc-500 hover:text-blue-600"
             }`}
           >
-            <Wrench className="w-3.5 h-3.5" /> Services
+            <Wrench className="w-3.5 h-3.5 shrink-0" /> {t("ops_filter_services", "Services")}
           </button>
           <button
             onClick={() => setFilterType("delivery")}
@@ -130,7 +132,7 @@ export function DispatchMapClient() {
               filterType === "delivery" ? "bg-white text-emerald-600 shadow-sm" : "text-zinc-500 hover:text-emerald-600"
             }`}
           >
-            <Truck className="w-3.5 h-3.5" /> Deliveries
+            <Truck className="w-3.5 h-3.5 shrink-0" /> {t("ops_filter_deliveries", "Deliveries")}
           </button>
         </div>
       </div>
@@ -173,7 +175,7 @@ export function DispatchMapClient() {
                     <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
                       selectedMarker.type === 'delivery' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
                     }`}>
-                      {selectedMarker.type === 'delivery' ? 'Delivery' : 'Installation / Survey'}
+                      {selectedMarker.type === 'delivery' ? t("ops_marker_delivery", "Delivery") : t("ops_marker_service", "Installation / Survey")}
                     </span>
                     <span className="text-[9px] font-bold uppercase text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full">
                       {selectedMarker.status}
@@ -181,10 +183,10 @@ export function DispatchMapClient() {
                   </div>
                   <h3 className="font-bold text-sm text-zinc-900">{selectedMarker.title}</h3>
                   <p className="text-xs text-zinc-600 mt-1 flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> Slot: {selectedMarker.time_slot}
+                    <Clock className="w-3 h-3 shrink-0" /> {t("ops_slot_lbl", "Slot: {slot}", { slot: selectedMarker.time_slot })}
                   </p>
                   <p className="text-xs font-mono text-zinc-400 mt-1">
-                    Agent ID: {selectedMarker.agent_id.substring(0,8)}
+                    {t("ops_agent_id", "Agent ID: {id}", { id: selectedMarker.agent_id.substring(0,8) })}
                   </p>
                 </div>
               </InfoWindowF>
@@ -192,7 +194,7 @@ export function DispatchMapClient() {
           </GoogleMap>
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-xs text-zinc-500">
-            Loading Google Maps Engine...
+            {t("ops_loading_gmaps_eng", "Loading Google Maps Engine...")}
           </div>
         )}
       </div>

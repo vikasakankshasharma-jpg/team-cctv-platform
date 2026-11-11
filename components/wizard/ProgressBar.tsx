@@ -29,7 +29,7 @@ export function ProgressBar({ currentStepIndex, totalSteps }: ProgressBarProps) 
         </div>
         <span
           className="text-3xl font-black text-blue-600 dark:text-blue-400 tabular-nums leading-none"
-          aria-label={`${Math.round(progress)} percent complete`}
+          aria-label={t("wz_percent_aria", "{pct} percent complete", { pct: String(Math.round(progress)) })}
         >
           {Math.round(progress)}%
         </span>
@@ -39,7 +39,7 @@ export function ProgressBar({ currentStepIndex, totalSteps }: ProgressBarProps) 
       <div
         className="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden"
         role="progressbar"
-        aria-label="Wizard progress"
+        aria-label={t("wz_progress_aria", "Wizard progress")}
         aria-valuenow={Math.round(progress)}
         aria-valuemin={0}
         aria-valuemax={100}

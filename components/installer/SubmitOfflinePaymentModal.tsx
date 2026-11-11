@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "@/hooks/useTranslation";
 import { DynamicOnScreenQRCodeModal } from "@/components/shared/DynamicOnScreenQRCodeModal";
 
 interface SubmitPaymentProps {
@@ -40,6 +41,7 @@ export default function SubmitOfflinePaymentModal({
   isCashApproved = false,
   expectedAmount = 0 
 }: SubmitPaymentProps) {
+  const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRequestingCashApproval, setIsRequestingCashApproval] = useState(false);
   const [cashApprovalRequested, setCashApprovalRequested] = useState(false);
@@ -72,12 +74,12 @@ export default function SubmitOfflinePaymentModal({
       const data = await res.json();
       if (res.ok && data.success) {
         setCashApprovalRequested(true);
-        toast.success("Cash collection request sent to Admin desk!");
+        toast.success(t("inst_pay_cash_req_toast", "Cash collection request sent to Admin desk!"));
       } else {
-        toast.error(data.error || "Failed to request cash approval");
+        toast.error(data.error || t("inst_pay_cash_req_err", "Failed to request cash approval"));
       }
     } catch {
-      toast.error("Network error requesting cash approval");
+      toast.error(t("inst_pay_cash_req_net", "Network error requesting cash approval"));
     } finally {
       setIsRequestingCashApproval(false);
     }
@@ -90,7 +92,7 @@ export default function SubmitOfflinePaymentModal({
     }
 
     if (data.method === "cash" && !isCashApproved) {
-      toast.error("Cash collection is locked. Admin staff approval is required.");
+      toast.error(t("inst_pay_cash_locked_toast", "Cash collection is locked. Admin staff approval is required."));
       return;
     }
 
@@ -112,14 +114,14 @@ export default function SubmitOfflinePaymentModal({
       const result = await res.json();
 
       if (result.status === "approved") {
-        toast.success("Payment instantly approved (Trusted Collector)!");
+        toast.success(t("inst_pay_approved_toast", "Payment instantly approved (Trusted Collector)!"));
       } else {
-        toast.success("Payment submitted for Admin verification.");
+        toast.success(t("inst_pay_submitted_toast", "Payment submitted for Admin verification."));
       }
       reset();
       onClose();
     } catch (error: any) {
-      toast.error(error.message || "Failed to submit payment");
+      toast.error(error.message || t("inst_pay_submit_err", "Failed to submit payment"));
     } finally {
       setIsSubmitting(false);
     }
@@ -130,19 +132,19 @@ export default function SubmitOfflinePaymentModal({
   return (
     <>
       <AnimatePresence>
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-md shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden"
+            className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-md shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden my-auto max-h-[90vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between p-5 border-b border-zinc-100 dark:border-zinc-800">
+            <div className="flex items-center justify-between gap-3 p-5 border-b border-zinc-100 dark:border-zinc-800">
               <div>
-                <h2 className="text-base font-black text-zinc-900 dark:text-white">Collect Payment On Site</h2>
-                <p className="text-xs text-zinc-500">Quote #{quoteId.slice(0, 8)}</p>
+                <h2 className="text-base font-black text-zinc-900 dark:text-white">{t("inst_pay_modal_title", "Collect Payment On Site")}</h2>
+                <p className="text-xs text-zinc-500">{t("del_quote_hash", "Quote #{id}", { id: quoteId.slice(0, 8) })}</p>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+              <button onClick={onClose} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors shrink-0">
                 <X className="w-5 h-5 text-zinc-400" />
               </button>
             </div>
@@ -151,10 +153,10 @@ export default function SubmitOfflinePaymentModal({
               {/* Payment Methods */}
               <div className="space-y-3">
                 <label className="text-xs font-black uppercase tracking-wider text-zinc-500">
-                  Select Payment Method
+                  {t("inst_pay_sel_method", "Select Payment Method")}
                 </label>
                 
-                {/* Option 1: On-Screen Dynamic UPI QR (Default & Recommended) */}
+                {/* Option 1: On-Screen Dynamic UPI QR (Default & Instant) */}
                 <label
                   onClick={() => setValue("method", "qr_upi")}
                   className={`flex items-start gap-3 p-3.5 rounded-2xl border-2 cursor-pointer transition-all ${
@@ -167,17 +169,17 @@ export default function SubmitOfflinePaymentModal({
                   <div className="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0">
                     <QrCode className="w-5 h-5" />
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center justify-between gap-1.5">
                       <span className="font-bold text-sm text-zinc-900 dark:text-white">
-                        On-Screen Dynamic UPI QR
+                        {t("inst_pay_qr_name", "On-Screen Dynamic UPI QR")}
                       </span>
-                      <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full">
-                        RECOMMENDED
+                      <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full shrink-0">
+                        {t("inst_pay_instant_badge", "INSTANT 3S")}
                       </span>
                     </div>
                     <p className="text-xs text-zinc-500 mt-0.5">
-                      Customer scans your phone with GPay, PhonePe, or Paytm. Auto-verified in 3s.
+                      {t("inst_pay_qr_desc", "Customer scans your phone with GPay, PhonePe, or Paytm. Auto-verified in 3s.")}
                     </p>
                   </div>
                 </label>
@@ -195,12 +197,12 @@ export default function SubmitOfflinePaymentModal({
                   <div className="w-9 h-9 rounded-xl bg-blue-500 text-white flex items-center justify-center shrink-0">
                     <CreditCard className="w-5 h-5" />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <span className="font-bold text-sm text-zinc-900 dark:text-white">
-                      Manual UPI / Bank Transfer
+                      {t("inst_pay_upi_name", "Manual UPI / Bank Transfer")}
                     </span>
                     <p className="text-xs text-zinc-500 mt-0.5">
-                      Customer transferred directly to company account. Enter 12-digit UTR.
+                      {t("inst_pay_upi_desc", "Customer transferred directly to company account. Enter 12-digit UTR.")}
                     </p>
                   </div>
                 </label>
@@ -231,25 +233,25 @@ export default function SubmitOfflinePaymentModal({
                     }`}>
                       {isCashApproved ? <Banknote className="w-5 h-5" /> : <Lock className="w-4 h-4" />}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center justify-between gap-1.5">
                         <span className="font-bold text-sm text-zinc-900 dark:text-white">
-                          Cash Collection on Site
+                          {t("inst_pay_cash_name", "Cash Collection on Site")}
                         </span>
                         {!isCashApproved ? (
-                          <span className="text-[9px] font-black uppercase tracking-wider bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <Lock className="w-2.5 h-2.5" /> Requires Approval
+                          <span className="text-[9px] font-black uppercase tracking-wider bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                            <Lock className="w-2.5 h-2.5 shrink-0" /> {t("inst_pay_req_approval_badge", "Requires Approval")}
                           </span>
                         ) : (
-                          <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
-                            Approved
+                          <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full shrink-0">
+                            {t("inst_pay_approved_badge", "Approved")}
                           </span>
                         )}
                       </div>
                       <p className="text-xs text-zinc-500 mt-0.5">
                         {!isCashApproved 
-                          ? "Company policy restricts physical cash. Admin approval required."
-                          : "Physically collect cash and hand over with customer signature."
+                          ? t("inst_pay_cash_locked_desc", "Company policy restricts physical cash. Admin approval required.")
+                          : t("inst_pay_cash_ok_desc", "Physically collect cash and hand over with customer signature.")
                         }
                       </p>
                     </div>
@@ -257,20 +259,20 @@ export default function SubmitOfflinePaymentModal({
 
                   {/* Cash Request Button if not approved */}
                   {!isCashApproved && (
-                    <div className="pt-2 border-t border-zinc-200/60 dark:border-zinc-800 flex items-center justify-between">
-                      <span className="text-[11px] text-zinc-500 font-medium">Customer insists on cash?</span>
+                    <div className="pt-2 border-t border-zinc-200/60 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-[11px] text-zinc-500 font-medium">{t("inst_pay_insists_cash", "Customer insists on cash?")}</span>
                       {cashApprovalRequested ? (
                         <span className="text-[11px] font-bold text-amber-600 flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Request Sent to Admin Desk
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> {t("del_approval_sent", "Request Sent to Admin Desk")}
                         </span>
                       ) : (
                         <button
                           type="button"
                           onClick={handleRequestCashApproval}
                           disabled={isRequestingCashApproval}
-                          className="text-xs font-bold bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1.5 rounded-xl transition-all shadow-sm flex items-center gap-1 disabled:opacity-50"
+                          className="text-xs font-bold bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1.5 rounded-xl transition-all shadow-sm flex items-center gap-1 disabled:opacity-50 whitespace-normal h-auto"
                         >
-                          {isRequestingCashApproval ? <Loader2 className="w-3 h-3 animate-spin" /> : "Request Admin Approval"}
+                          {isRequestingCashApproval ? <Loader2 className="w-3 h-3 animate-spin" /> : t("del_req_cash_approval", "Request Admin Approval")}
                         </button>
                       )}
                     </div>
@@ -281,7 +283,7 @@ export default function SubmitOfflinePaymentModal({
               {/* Amount Input */}
               <div className="space-y-1.5">
                 <label className="text-xs font-black uppercase tracking-wider text-zinc-500">
-                  Amount to Collect (₹)
+                  {t("inst_pay_amt_lbl", "Amount to Collect (₹)")}
                 </label>
                 <div className="relative">
                   <IndianRupee className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
@@ -289,7 +291,7 @@ export default function SubmitOfflinePaymentModal({
                     type="number"
                     {...register("amount", { required: true, min: 1 })}
                     className="w-full pl-9 pr-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-base font-bold text-zinc-900 dark:text-white"
-                    placeholder="e.g. 5000"
+                    placeholder={t("inst_pay_amt_ph", "e.g. 5000")}
                   />
                 </div>
               </div>
@@ -297,13 +299,13 @@ export default function SubmitOfflinePaymentModal({
               {method === "upi" && (
                 <div className="space-y-1.5">
                   <label className="text-xs font-black uppercase tracking-wider text-zinc-500">
-                    UTR / Bank Reference Number
+                    {t("inst_pay_utr_lbl", "UTR / Bank Reference Number")}
                   </label>
                   <input
                     type="text"
                     {...register("utrNumber", { required: method === "upi" })}
                     className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none uppercase font-mono text-sm"
-                    placeholder="12-digit UTR number"
+                    placeholder={t("inst_pay_utr_ph", "12-digit UTR number")}
                   />
                 </div>
               )}
@@ -314,18 +316,18 @@ export default function SubmitOfflinePaymentModal({
                   type="button"
                   onClick={() => setIsQrModalOpen(true)}
                   disabled={!currentAmount || Number(currentAmount) <= 0}
-                  className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                  className="w-full min-h-12 h-auto py-3.5 px-4 whitespace-normal bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                 >
-                  <QrCode className="w-5 h-5" />
-                  Show On-Screen QR (₹{Number(currentAmount || 0).toLocaleString('en-IN')})
+                  <QrCode className="w-5 h-5 shrink-0" />
+                  {t("inst_pay_show_qr_btn", "Show On-Screen QR (₹{amount})", { amount: Number(currentAmount || 0).toLocaleString("en-IN") })}
                 </button>
               ) : (
                 <button
                   type="submit"
                   disabled={isSubmitting || (method === "cash" && !isCashApproved)}
-                  className="w-full py-3.5 bg-zinc-900 hover:bg-zinc-800 text-white font-black rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                  className="w-full min-h-12 h-auto py-3.5 px-4 whitespace-normal bg-zinc-900 hover:bg-zinc-800 text-white font-black rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                 >
-                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Submit for Verification"}
+                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin shrink-0" /> : t("inst_pay_submit_verify_btn", "Submit for Verification")}
                 </button>
               )}
             </form>
@@ -341,7 +343,7 @@ export default function SubmitOfflinePaymentModal({
         leadId={leadId}
         amount={Number(currentAmount) || expectedAmount || 0}
         paymentType="installation_final"
-        title="On-Site Handover Payment"
+        title={t("inst_pay_handover_qr_title", "On-Site Handover Payment")}
         onSuccess={() => {
           setIsQrModalOpen(false);
           onClose();

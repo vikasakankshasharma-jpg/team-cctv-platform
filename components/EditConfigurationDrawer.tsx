@@ -1,4 +1,5 @@
 "use client";
+import { useTranslation } from "@/hooks/useTranslation";
 
 import React, { useState } from "react";
 import { CCTVRequirement } from "@/types";
@@ -23,6 +24,7 @@ export function EditConfigurationDrawer({
   onUpdate,
   isUpdating = false
 }: EditConfigurationDrawerProps) {
+  const { t } = useTranslation();
   const [req, setReq] = useState<CCTVRequirement>(currentRequirement);
 
   const handleSave = () => {
@@ -33,15 +35,15 @@ export function EditConfigurationDrawer({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Configuration</DialogTitle>
+          <DialogTitle>{t("ecd_title")}</DialogTitle>
           <DialogDescription>
-            Tweak your system requirements and see the price update instantly.
+            {t("ecd_subtitle")}
           </DialogDescription>
         </DialogHeader>
         
         <div className="py-6 space-y-6">
           <div className="space-y-2">
-            <Label>Camera Quantity</Label>
+            <Label>{t("ecd_cam_qty")}</Label>
             <div className="flex items-center space-x-2">
               <Button variant="outline" size="icon" onClick={() => setReq(prev => ({...prev, camera_count: Math.max(1, prev.camera_count - 1)}))}>-</Button>
               <Input 
@@ -55,36 +57,36 @@ export function EditConfigurationDrawer({
           </div>
 
           <div className="space-y-2">
-            <Label>Recording Duration</Label>
+            <Label>{t("ecd_rec_days")}</Label>
             <Select 
               value={req.recording_days?.toString() || "15"} 
               onValueChange={(val) => setReq((prev: any) => ({...prev, recording_days: parseInt(val || "0"), recording_mode: parseInt(val || "0") === 0 ? "live_only" : "continuous"}))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select days" />
+                <SelectValue placeholder={t("ecd_sel_days")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="0">Live Viewing Only (No Recording)</SelectItem>
-                <SelectItem value="7">7 Days</SelectItem>
-                <SelectItem value="15">15 Days</SelectItem>
-                <SelectItem value="30">30 Days</SelectItem>
+                <SelectItem value="0">{t("ecd_live_only")}</SelectItem>
+                <SelectItem value="7">{t("ecd_days_n", "{n} Days", { n: "7" })}</SelectItem>
+                <SelectItem value="15">{t("ecd_days_n", "{n} Days", { n: "15" })}</SelectItem>
+                <SelectItem value="30">{t("ecd_days_n", "{n} Days", { n: "30" })}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label>Technology</Label>
+            <Label>{t("ecd_tech")}</Label>
             <Select 
               value={req.technology_preference === "WiFi" ? "Wireless" : (req.technology_preference || "IP")} 
               onValueChange={(val) => setReq((prev: any) => ({...prev, technology_preference: val}))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select tech" />
+                <SelectValue placeholder={t("ecd_sel_tech")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="IP">IP (Digital / Modern)</SelectItem>
-                <SelectItem value="HD">HD (Analog / Cost Effective)</SelectItem>
-                <SelectItem value="Wireless">Smart Wireless (Wi-Fi)</SelectItem>
+                <SelectItem value="IP">{t("ecd_tech_ip")}</SelectItem>
+                <SelectItem value="HD">{t("ecd_tech_hd")}</SelectItem>
+                <SelectItem value="Wireless">{t("ecd_tech_wifi")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -93,7 +95,7 @@ export function EditConfigurationDrawer({
             <div className="space-y-3 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700">
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-                  Camera Power Point Availability
+                  {t("iqr_cam_power_avail")}
                 </Label>
                 <Select
                   value={req.power_wiring_option || "socket_available"}
@@ -108,12 +110,12 @@ export function EditConfigurationDrawer({
                   }}
                 >
                   <SelectTrigger className="bg-white dark:bg-zinc-900">
-                    <SelectValue placeholder="Select power availability" />
+                    <SelectValue placeholder={t("ecd_sel_power")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="socket_available">Power Socket Nearby (Within 1.5m) - Included (₹0)</SelectItem>
-                    <SelectItem value="wire_needed">Need 2-Core Electrical Power Cabling (@ ₹10/m)</SelectItem>
-                    <SelectItem value="site_survey">Site Survey / Decide on Site Visit (Pay on Actuals)</SelectItem>
+                    <SelectItem value="socket_available">{t("ecd_pwr_socket")}</SelectItem>
+                    <SelectItem value="wire_needed">{t("ecd_pwr_wire")}</SelectItem>
+                    <SelectItem value="site_survey">{t("ecd_pwr_survey")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -121,7 +123,7 @@ export function EditConfigurationDrawer({
               {req.power_wiring_option === "wire_needed" && (
                 <div className="space-y-1.5 pt-1">
                   <Label className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
-                    Total 2-Core Electrical Wire Length (Meters)
+                    {t("ecd_wire_len")}
                   </Label>
                   <div className="flex items-center space-x-2">
                     <Button 
@@ -160,7 +162,7 @@ export function EditConfigurationDrawer({
                       +
                     </Button>
                     <span className="text-xs text-amber-700 dark:text-amber-300 font-medium ml-1">
-                      @ ₹10/m = ₹{((req.total_power_cable_meters || ((req.camera_count || 1) * 10)) * 10).toLocaleString("en-IN")}
+                      {t("ecd_per_m_total", "@ ₹10/m = ₹{amount}", { amount: ((req.total_power_cable_meters || ((req.camera_count || 1) * 10)) * 10).toLocaleString("en-IN") })}
                     </span>
                   </div>
                 </div>
@@ -168,16 +170,16 @@ export function EditConfigurationDrawer({
             </div>
           ) : (
             <div className="space-y-2">
-              <Label>Total Cable Length (Meters, all cameras combined)</Label>
+              <Label>{t("ecd_cable_len")}</Label>
               <Input 
                 type="number" 
                 value={req.total_cable_length_meters || (req.cable_length_meters ? req.cable_length_meters * (req.camera_count || 1) : "") || ""} 
-                placeholder="Leave blank for auto-calculation"
+                placeholder={t("ecd_cable_ph")}
                 onChange={(e) => setReq(prev => ({...prev, total_cable_length_meters: parseInt(e.target.value) || undefined, cable_length_meters: undefined}))}
               />
               {req.total_cable_length_meters && req.total_cable_length_meters > ((req.camera_count || 1) * 15) && (
                 <p className="text-xs text-red-500 font-medium mt-1">
-                  Exceeds {((req.camera_count || 1) * 15)}m free limit. Excess incurs a labor surcharge of ₹15/m.
+                  {t("ecd_cable_excess", "Exceeds {limit}m free limit. Excess incurs a labor surcharge of ₹15/m.", { limit: String((req.camera_count || 1) * 15) })}
                 </p>
               )}
             </div>
@@ -188,7 +190,7 @@ export function EditConfigurationDrawer({
             <div className="space-y-3 p-3 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl border border-amber-200 dark:border-amber-900/60">
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-200">
-                  Power Availability for {req.wifi_camera_count} Smart Wi-Fi Cameras
+                  {t("ecd_wifi_pwr", "Power Availability for {count} Smart Wi-Fi Cameras", { count: String(Number(req.wifi_camera_count) || 0) })}
                 </Label>
                 <Select
                   value={req.power_wiring_option || "socket_available"}
@@ -203,12 +205,12 @@ export function EditConfigurationDrawer({
                   }}
                 >
                   <SelectTrigger className="bg-white dark:bg-zinc-900">
-                    <SelectValue placeholder="Select power availability" />
+                    <SelectValue placeholder={t("ecd_sel_power")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="socket_available">Power Socket Nearby (Within 1.5m) - Included (₹0)</SelectItem>
-                    <SelectItem value="wire_needed">Need 2-Core Electrical Power Cabling (@ ₹10/m)</SelectItem>
-                    <SelectItem value="site_survey">Site Survey / Decide on Site Visit (Pay on Actuals)</SelectItem>
+                    <SelectItem value="socket_available">{t("ecd_pwr_socket")}</SelectItem>
+                    <SelectItem value="wire_needed">{t("ecd_pwr_wire")}</SelectItem>
+                    <SelectItem value="site_survey">{t("ecd_pwr_survey")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -216,7 +218,7 @@ export function EditConfigurationDrawer({
               {req.power_wiring_option === "wire_needed" && (
                 <div className="space-y-1.5 pt-1">
                   <Label className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
-                    Total 2-Core Electrical Wire Length (Meters)
+                    {t("ecd_wire_len")}
                   </Label>
                   <div className="flex items-center space-x-2">
                     <Button 
@@ -255,7 +257,7 @@ export function EditConfigurationDrawer({
                       +
                     </Button>
                     <span className="text-xs text-amber-700 dark:text-amber-300 font-medium ml-1">
-                      @ ₹10/m = ₹{((req.total_power_cable_meters || (Number(req.wifi_camera_count || 1) * 10)) * 10).toLocaleString("en-IN")}
+                      {t("ecd_per_m_total", "@ ₹10/m = ₹{amount}", { amount: ((req.total_power_cable_meters || (Number(req.wifi_camera_count || 1) * 10)) * 10).toLocaleString("en-IN") })}
                     </span>
                   </div>
                 </div>
@@ -264,28 +266,28 @@ export function EditConfigurationDrawer({
           )}
 
           <div className="space-y-2">
-            <Label>Site Internet / Wi-Fi Connection</Label>
+            <Label>{t("ecd_net_lbl")}</Label>
             <Select 
               value={req.broadband_status || "yes"} 
               onValueChange={(val: any) => setReq(prev => ({...prev, broadband_status: val, wants_remote_viewing: val !== "no"}))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select connection" />
+                <SelectValue placeholder={t("ecd_sel_net")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="yes">Existing Wi-Fi / Broadband (Free)</SelectItem>
-                <SelectItem value="wifi_extender">Have Wi-Fi, but Far Spots (Add Range Extender)</SelectItem>
-                <SelectItem value="sim_router">No Wi-Fi at Site - Close Spots (Include 4G SIM Router)</SelectItem>
-                <SelectItem value="independent_4g">No Wi-Fi at Site - Distant Spots (Independent 4G SIM per Camera)</SelectItem>
-                <SelectItem value="no">Offline (Local Recording Only)</SelectItem>
+                <SelectItem value="yes">{t("ecd_net_yes")}</SelectItem>
+                <SelectItem value="wifi_extender">{t("ecd_net_ext")}</SelectItem>
+                <SelectItem value="sim_router">{t("ecd_net_router")}</SelectItem>
+                <SelectItem value="independent_4g">{t("ecd_net_4g")}</SelectItem>
+                <SelectItem value="no">{t("ecd_net_offline")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
         <DialogFooter className="mt-6">
-          <Button onClick={handleSave} className="w-full" disabled={isUpdating}>
-            {isUpdating ? "Updating Quote..." : "Update Quote"}
+          <Button onClick={handleSave} className="w-full h-auto min-h-10 py-2.5 whitespace-normal text-center leading-snug" disabled={isUpdating}>
+            {isUpdating ? t("ecd_updating") : t("ecd_update_btn")}
           </Button>
         </DialogFooter>
       </DialogContent>

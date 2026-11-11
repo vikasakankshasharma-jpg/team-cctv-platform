@@ -2,14 +2,14 @@ import { type LucideIcon } from "lucide-react";
 import { BackButton } from "./BackButton";
 interface PageHeaderProps {
   icon: LucideIcon;
-  title: string;
-  description: string;
-  badge?: string;
+  title: React.ReactNode;
+  description: React.ReactNode;
+  badge?: React.ReactNode;
   action?: React.ReactNode;
 }
 
 /**
- * Elite reusable page header for all admin catalog/management pages.
+ * Reusable page header for all admin catalog/management pages.
  * Fully optimized for Dual-Mode (Day & Night).
  */
 export function PageHeader({ icon: Icon, title, description, badge, action }: PageHeaderProps) {
@@ -21,16 +21,16 @@ export function PageHeader({ icon: Icon, title, description, badge, action }: Pa
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
           <Icon className="w-5 h-5 text-primary" />
         </div>
-        <div>
-          <div className="flex items-center gap-3 mb-0.5">
-            <h1 className="text-xl font-semibold text-foreground tracking-tight leading-none">{title}</h1>
+        <div className="min-w-0">
+          <div className="flex items-center flex-wrap gap-2 sm:gap-3 mb-1">
+            <h1 className="text-xl font-semibold text-foreground tracking-tight leading-snug">{title}</h1>
             {badge && (
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider bg-secondary border border-border px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider bg-secondary border border-border px-2 py-0.5 rounded-full shrink-0">
                 {badge}
               </span>
             )}
           </div>
-          <p className="text-muted-foreground text-sm font-medium">{description}</p>
+          <p className="text-muted-foreground text-sm font-medium leading-relaxed">{description}</p>
         </div>
       </div>
       

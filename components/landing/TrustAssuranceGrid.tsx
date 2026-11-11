@@ -3,8 +3,10 @@
 import React, { useState } from "react";
 import { CreditCard, ShieldCheck, Wrench, Calendar, ArrowRight } from "lucide-react";
 import { SiteVisitBookingModal } from "@/components/checkout/SiteVisitBookingModal";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function TrustAssuranceGrid() {
+  const { t } = useTranslation();
   const [isSurveyModalOpen, setIsSurveyModalOpen] = useState(false);
 
   return (
@@ -17,9 +19,9 @@ export function TrustAssuranceGrid() {
             <CreditCard className="w-5 h-5" />
           </div>
           <div>
-            <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">CCTV on Easy EMI</h4>
+            <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">{t("tag_emi_title")}</h4>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mt-1 leading-relaxed font-medium">
-              Flexible 3 to 18 month plans starting from just ₹649/mo on easy monthly EMI.
+              {t("tag_emi_desc")}
             </p>
           </div>
         </div>
@@ -30,9 +32,9 @@ export function TrustAssuranceGrid() {
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">100% Genuine Brands</h4>
+            <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">{t("tag_genuine_title")}</h4>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mt-1 leading-relaxed font-medium">
-              Factory-sealed boxes from CP Plus, Hikvision & Prama with official 18% GST warranty invoice.
+              {t("tag_genuine_desc")}
             </p>
           </div>
         </div>
@@ -43,9 +45,9 @@ export function TrustAssuranceGrid() {
             <Wrench className="w-5 h-5" />
           </div>
           <div>
-            <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">Zero Labor Markup</h4>
+            <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">{t("tag_labor_title")}</h4>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mt-1 leading-relaxed font-medium">
-              Standard local fitting rates with 15 meters of free cable pulling labor included per camera.
+              {t("tag_labor_desc")}
             </p>
           </div>
         </div>
@@ -56,16 +58,16 @@ export function TrustAssuranceGrid() {
             <Calendar className="w-5 h-5" />
           </div>
           <div className="flex-1">
-            <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">100% Free Site Survey</h4>
+            <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">{t("tag_survey_title")}</h4>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mt-1 leading-relaxed font-medium mb-2">
-              Unsure about blind spots? An engineer visits your property with zero obligation.
+              {t("tag_survey_desc")}
             </p>
             <button
               type="button"
               onClick={() => setIsSurveyModalOpen(true)}
               className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer py-1"
             >
-              <span>Book Free Survey</span>
+              <span>{t("tag_book_survey")}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

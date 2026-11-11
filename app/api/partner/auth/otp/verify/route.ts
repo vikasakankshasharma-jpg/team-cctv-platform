@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 
 export async function POST(req: Request) {
+  let locale = resolveRequestLocale(req);
   try {
-    const { identifier, otp, type } = await req.json();
+    const body = await req.json();
+    locale = resolveRequestLocale(req, body);
+    const { identifier, otp, type } = body;
 
     if (!identifier || !otp || !type) {
-      return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
+      return NextResponse.json({ error: getApiMessage(locale, "missing_fields") }, { status: 400 });
     }
 
     // ── EMAIL OTP FLOW ────────────────────────────────────────────────────────
@@ -18,7 +22,7 @@ export async function POST(req: Request) {
         .get();
 
       if (!otpDoc.exists) {
-        return NextResponse.json({ error: "OTP not found or already used." }, { status: 404 });
+        return NextResponse.json({ error: getApiMessage(locale, "otp_not_found") }, { status: 404 });
       }
 
       const data = otpDoc.data()!;
@@ -27,11 +31,11 @@ export async function POST(req: Request) {
 
       if (now > expiry) {
         await otpDoc.ref.delete();
-        return NextResponse.json({ error: "OTP has expired. Please request a new code." }, { status: 400 });
+        return NextResponse.json({ error: getApiMessage(locale, "otp_expired") }, { status: 400 });
       }
 
       if (data.otp !== otp) {
-        return NextResponse.json({ error: "Invalid OTP code. Please try again." }, { status: 400 });
+        return NextResponse.json({ error: getApiMessage(locale, "otp_incorrect") }, { status: 400 });
       }
 
       // OTP is valid — delete it immediately (single-use)
@@ -84,7 +88,7 @@ export async function POST(req: Request) {
       const phoneNumber = decoded.phone_number;
 
       if (!phoneNumber) {
-        return NextResponse.json({ error: "Phone number not found in token." }, { status: 400 });
+        return NextResponse.json({ error: getApiMessage(locale, "phone_required") }, { status: 400 });
       }
 
       // Normalize to 10-digit form for lookup
@@ -99,7 +103,7 @@ export async function POST(req: Request) {
         .get();
 
       if (promoterSnap.empty) {
-        return NextResponse.json({ error: "No active partner account found for this phone number." }, { status: 404 });
+        return NextResponse.json({ error: getApiMessage(locale, "partner_not_found") }, { status: 404 });
       }
 
       const promoterRef = promoterSnap.docs[0].ref;
@@ -119,9 +123,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, customToken });
     }
 
-    return NextResponse.json({ error: "Invalid OTP type." }, { status: 400 });
+    return NextResponse.json({ error: getApiMessage(locale, "otp_invalid_method") }, { status: 400 });
   } catch (error) {
     console.error("[Partner OTP Verify] Error:", error);
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    return NextResponse.json({ error: getApiMessage(locale, "internal_error") }, { status: 500 });
   }
 }

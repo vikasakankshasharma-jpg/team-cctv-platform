@@ -244,7 +244,9 @@ export async function POST(request: NextRequest) {
       created_at: new Date().toISOString(),
       expires_at: new Date(Date.now() + ((settings as any).quote_validity_days || 7) * 24 * 60 * 60 * 1000).toISOString(),
       recalculated_on_server: true,
-      lead_id: lead_id // Ensure lead_id is present for root collection queries
+      lead_id: lead_id, // Ensure lead_id is present for root collection queries
+      promoter_id: leadData.promoter_id || null,
+      referral_code_used: leadData.referral_code || null,
     };
 
     const quotePromise1 = subQuoteRef.set(quoteData);

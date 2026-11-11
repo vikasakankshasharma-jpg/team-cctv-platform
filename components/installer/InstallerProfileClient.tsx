@@ -4,12 +4,14 @@ import { useState } from "react";
 import { Settings2, Save, User, Mail, Smartphone, Activity, BadgeDollarSign, Loader2, ShieldCheck, CheckCircle, Clock } from "lucide-react";
 import type { Installer } from "@/types";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface InstallerProfileClientProps {
   initialProfile: Partial<Installer>;
 }
 
 export function InstallerProfileClient({ initialProfile }: InstallerProfileClientProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -37,7 +39,7 @@ export function InstallerProfileClient({ initialProfile }: InstallerProfileClien
       });
       
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to update profile.");
+      if (!res.ok) throw new Error(data.error || t("inst_prof_update_err", "Failed to update profile."));
       
       setSuccess(true);
       setIsEditing(false);
@@ -56,20 +58,20 @@ export function InstallerProfileClient({ initialProfile }: InstallerProfileClien
       {/* ── HEADER ──────────────────────────────────────────────────────────── */}
       <div>
         <h1 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center shrink-0">
             <Settings2 className="w-5 h-5 text-indigo-500" />
           </div>
-          Installer Profile
+          {t("inst_prof_title", "Installer Profile")}
         </h1>
         <p className="text-sm font-medium text-zinc-500 mt-2 max-w-lg">
-          Manage your personal details and payout accounts. Bank details must be verified by admin after updating.
+          {t("inst_prof_desc", "Manage your personal details and payout accounts. Bank details must be verified by admin after updating.")}
         </p>
       </div>
 
       {success && (
         <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-500 px-5 py-4 rounded-2xl flex items-center gap-3 animate-in fade-in">
-          <ShieldCheck className="w-5 h-5" />
-          <span className="text-sm font-bold">Profile updated successfully.</span>
+          <ShieldCheck className="w-5 h-5 shrink-0" />
+          <span className="text-sm font-bold">{t("inst_prof_upd_ok", "Profile updated successfully.")}</span>
         </div>
       )}
 
@@ -81,17 +83,17 @@ export function InstallerProfileClient({ initialProfile }: InstallerProfileClien
 
       <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] overflow-hidden shadow-xl dark:shadow-2xl">
         
-        <div className="p-6 lg:p-8 border-b border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between">
-          <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Personal Details</h2>
+        <div className="p-6 lg:p-8 border-b border-zinc-100 dark:border-zinc-800/60 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">{t("inst_prof_personal", "Personal Details")}</h2>
           {!isEditing ? (
             <button
               onClick={() => setIsEditing(true)}
-              className="px-6 py-2.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white rounded-[14px] text-[10px] font-black uppercase tracking-[0.2em] transition-colors"
+              className="px-6 py-2.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white rounded-[14px] text-[10px] font-black uppercase tracking-[0.2em] transition-colors whitespace-normal h-auto"
             >
-              Edit Profile
+              {t("inst_prof_edit", "Edit Profile")}
             </button>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={() => {
                   setIsEditing(false);
@@ -104,17 +106,17 @@ export function InstallerProfileClient({ initialProfile }: InstallerProfileClien
                   });
                 }}
                 disabled={saving}
-                className="px-6 py-2.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white rounded-[14px] text-[10px] font-black uppercase tracking-[0.2em] transition-colors disabled:opacity-50"
+                className="px-6 py-2.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white rounded-[14px] text-[10px] font-black uppercase tracking-[0.2em] transition-colors disabled:opacity-50 whitespace-normal h-auto"
               >
-                Cancel
+                {t("del_cancel", "Cancel")}
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-2 px-6 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-[14px] text-[10px] font-black uppercase tracking-[0.2em] transition-colors shadow-lg shadow-indigo-500/20 disabled:opacity-50"
+                className="flex items-center gap-2 px-6 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-[14px] text-[10px] font-black uppercase tracking-[0.2em] transition-colors shadow-lg shadow-indigo-500/20 disabled:opacity-50 whitespace-normal h-auto"
               >
-                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                Save Changes
+                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" /> : <Save className="w-3.5 h-3.5 shrink-0" />}
+                {t("inst_prof_save", "Save Changes")}
               </button>
             </div>
           )}
@@ -123,7 +125,7 @@ export function InstallerProfileClient({ initialProfile }: InstallerProfileClien
         <div className="p-6 lg:p-8 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">Full Name</label>
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">{t("inst_prof_full_name", "Full Name")}</label>
               <div className="relative">
                 <User className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input 
@@ -137,7 +139,7 @@ export function InstallerProfileClient({ initialProfile }: InstallerProfileClien
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">Mobile Number</label>
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">{t("inst_log_mob_lbl", "Mobile Number")}</label>
               <div className="relative">
                 <Smartphone className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input 
@@ -151,7 +153,7 @@ export function InstallerProfileClient({ initialProfile }: InstallerProfileClien
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">Email Address</label>
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">{t("inst_log_email_lbl", "Email Address")}</label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input 
@@ -169,18 +171,18 @@ export function InstallerProfileClient({ initialProfile }: InstallerProfileClien
         
         {/* Bank details section */}
         <div className="p-6 lg:p-8 border-t border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-950/20 space-y-6">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Payout Account (Bank Details)</h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">{t("inst_prof_bank_title", "Payout Account (Bank Details)")}</h2>
             {initialProfile.bank_account_verified && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-widest">
-                <ShieldCheck className="w-3 h-3" /> Verified
+                <ShieldCheck className="w-3 h-3 shrink-0" /> {t("inst_prof_verified", "Verified")}
               </span>
             )}
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">Account Number</label>
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">{t("inst_prof_acc_num", "Account Number")}</label>
               <input 
                 type="text"
                 disabled={!isEditing}
@@ -190,7 +192,7 @@ export function InstallerProfileClient({ initialProfile }: InstallerProfileClien
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">IFSC Code</label>
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">{t("inst_prof_ifsc", "IFSC Code")}</label>
               <input 
                 type="text"
                 disabled={!isEditing}
@@ -203,13 +205,13 @@ export function InstallerProfileClient({ initialProfile }: InstallerProfileClien
         </div>
 
         <div className="border-t border-zinc-100 dark:border-zinc-800/60 p-6 lg:p-8 bg-zinc-50 dark:bg-zinc-950/50">
-          <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight mb-6">Performance & Stats</h2>
+          <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight mb-6">{t("inst_prof_stats_title", "Performance & Stats")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-2">
-                <Clock className="w-5 h-5 text-indigo-500" />
-                <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">SLA Score</span>
+                <Clock className="w-5 h-5 text-indigo-500 shrink-0" />
+                <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">{t("inst_prof_sla", "SLA Score")}</span>
               </div>
               <p className="text-3xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">
                 {initialProfile.sla_score}/100
@@ -218,18 +220,18 @@ export function InstallerProfileClient({ initialProfile }: InstallerProfileClien
 
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-2">
-                <Activity className="w-5 h-5 text-amber-500" />
-                <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Avg Rating</span>
+                <Activity className="w-5 h-5 text-amber-500 shrink-0" />
+                <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">{t("inst_prof_avg_rating", "Avg Rating")}</span>
               </div>
               <p className="text-3xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">
-                {initialProfile.avg_rating?.toFixed(1) || "N/A"}
+                {initialProfile.avg_rating?.toFixed(1) || t("inst_na", "N/A")}
               </p>
             </div>
             
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-2">
-                <CheckCircle className="w-5 h-5 text-emerald-500" />
-                <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Jobs Completed</span>
+                <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
+                <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">{t("inst_prof_jobs_done", "Jobs Completed")}</span>
               </div>
               <p className="text-3xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">
                 {initialProfile.jobs_completed}

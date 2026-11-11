@@ -182,9 +182,8 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     const labor = calculateLabor(selection, settings, effectiveTech, effectiveLaborMultiplier);
     lineItems.push(...labor.items);
     baseHardwareCost += labor.totalRetail;
-      actualLaborCost = labor.totalRetail;
-    // Labor purchase cost is usually 0 (internal staff) or a percentage (outsourced)
-    totalPurchaseCost += (labor.totalRetail * (settings.labor_cost_margin_percent || 0)) / 100;
+    actualLaborCost = labor.totalRetail;
+    totalPurchaseCost += labor.totalCost;
 
     // 3b. Cabling Cost (only if customer hasn't already done video cabling, OR if wireless camera needs electrical power wire)
     const hasHybridWifi = Number(selection.wifi_camera_count || 0) > 0 || (selection.mixed_camera_requirements && selection.mixed_camera_requirements.some(r => {
@@ -245,15 +244,20 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   }
 
   if (effectiveTravelFee > 0) {
+    const travelPayoutPct = settings.travel_fee_payout_percent ?? 85;
+    const travelCost = Math.round(effectiveTravelFee * (travelPayoutPct / 100));
     lineItems.push({
       product_id: "travel_fee",
       display_name: "Site Visit & Travel Fee",
       brand: "",
+      category: "service",
       qty: 1,
       unit_price: effectiveTravelFee,
-      line_total: effectiveTravelFee
+      line_total: effectiveTravelFee,
+      base_cost_at_quote: travelCost,
     });
     baseHardwareCost += effectiveTravelFee;
+    totalPurchaseCost += travelCost;
   }
 
   // 4b. Site Preparation Difficulty Surcharges (0% Margin Pass-Through as mandated by BUSINESS_RULES.md)
@@ -574,9 +578,11 @@ function calculateHardware(
           product_id: camera.id!,
           display_name: `${req.type}: ${camera.display_name}${featureLabel}`,
           brand: camera.brand,
+          category: "camera",
           qty,
           unit_price: unitPrice,
-          line_total: lineTotal
+          line_total: lineTotal,
+          ...(camera.base_cost !== undefined && camera.base_cost !== null ? { base_cost_at_quote: Number(camera.base_cost) } : {})
         });
         totalRetail += lineTotal;
         totalCost += (camera.base_cost || 0) * qty;
@@ -593,9 +599,11 @@ function calculateHardware(
         product_id: camera.id!,
         display_name: camera.display_name,
         brand: camera.brand,
+        category: "camera",
         qty,
         unit_price: unitPrice,
-        line_total: lineTotal
+        line_total: lineTotal,
+        ...(camera.base_cost !== undefined && camera.base_cost !== null ? { base_cost_at_quote: Number(camera.base_cost) } : {})
       });
       totalRetail += lineTotal;
       totalCost += (camera.base_cost || 0) * qty;
@@ -658,9 +666,11 @@ function calculateHardware(
         product_id: recorder.id!,
         display_name: recorder.display_name,
         brand: recorder.brand,
+        category: "recorder",
         qty: 1,
         unit_price: recorder.unit_price,
-        line_total: recorder.unit_price
+        line_total: recorder.unit_price,
+        ...(recorder.base_cost !== undefined && recorder.base_cost !== null ? { base_cost_at_quote: Number(recorder.base_cost) } : {})
       });
       totalRetail += recorder.unit_price;
       totalCost += (recorder.base_cost || 0);
@@ -686,9 +696,11 @@ function calculateHardware(
       product_id: hdd.id!,
       display_name: isSdCard ? `${hdd.display_name} (1 per camera)` : hdd.display_name,
       brand: hdd.brand,
+      category: "storage",
       qty: qty,
       unit_price: unitPrice,
       line_total: unitPrice * qty,
+      ...(hdd.base_cost !== undefined && hdd.base_cost !== null ? { base_cost_at_quote: Number(hdd.base_cost) } : {}),
       approx_days: (hdd as any).approx_days,
       is_refurbished: (hdd as any).is_refurbished,
       warranty_months: (hdd as any).warranty_months
@@ -712,9 +724,11 @@ function calculateHardware(
         product_id: sdCard.id!,
         display_name: `${sdCard.display_name} (For Wi-Fi Cameras, 1 per camera)`,
         brand: sdCard.brand,
+        category: "storage",
         qty: wifiCameraCount,
         unit_price: unitPrice,
-        line_total: unitPrice * wifiCameraCount
+        line_total: unitPrice * wifiCameraCount,
+        ...(sdCard.base_cost !== undefined && sdCard.base_cost !== null ? { base_cost_at_quote: Number(sdCard.base_cost) } : {})
       });
       totalRetail += unitPrice * wifiCameraCount;
       totalCost += (sdCard.base_cost || 0) * wifiCameraCount;
@@ -735,9 +749,11 @@ function calculateHardware(
       items.push({
         product_id: transmission.id!,
         display_name: transmission.display_name,
+        category: "power",
         qty,
         unit_price: unitPrice,
-        line_total: unitPrice * qty
+        line_total: unitPrice * qty,
+        ...(transmission.base_cost !== undefined && transmission.base_cost !== null ? { base_cost_at_quote: Number(transmission.base_cost) } : {})
       });
       totalRetail += unitPrice * qty;
       totalCost += (transmission.base_cost || 0) * qty;
@@ -753,9 +769,11 @@ function calculateHardware(
                items.push({
                  product_id: coreSwitch.id!,
                  display_name: coreSwitch.display_name,
+                 category: "accessory",
                  qty: 1,
                  unit_price: coreUnitPrice,
-                 line_total: coreUnitPrice
+                 line_total: coreUnitPrice,
+                 ...(coreSwitch.base_cost !== undefined && coreSwitch.base_cost !== null ? { base_cost_at_quote: Number(coreSwitch.base_cost) } : {})
                });
                totalRetail += coreUnitPrice;
                totalCost += (coreSwitch.base_cost || 0);
@@ -778,6 +796,11 @@ function calculateLabor(
 ) {
   const items: QuoteLineItem[] = [];
   let totalRetail = 0;
+  let totalCost = 0;
+
+  const laborPct = Number(settings.labor_cost_margin_percent ?? 0);
+  const pctOr = (retail: number, fallback: number) =>
+    laborPct > 0 ? Math.round(retail * (laborPct / 100)) : fallback;
 
   const upperTech = String(tech || "").toUpperCase();
   if (upperTech === "WIFI" || upperTech === "WIRELESS") {
@@ -792,19 +815,22 @@ function calculateLabor(
     }
     const installPref = (selection as any).installation_preference || "pro";
     if (installPref === "diy" || wifiQty <= 0) {
-      return { items, totalRetail: 0 };
+      return { items, totalRetail: 0, totalCost: 0 };
     }
     const wirelessRate = settings.labor_wireless_pro_per_camera ?? 349;
     const unitRate = Math.round(wirelessRate * locationMultiplier);
+    const unitCost = settings.cost_labor_wireless_per_camera ?? pctOr(unitRate, 200);
     const lineTotal = unitRate * wifiQty;
     items.push({
       product_id: "labor_wireless_pro_fitting",
       display_name: "Wireless Camera Wall Mounting, Power Concealment & App Setup",
+      category: "service",
       qty: wifiQty,
       unit_price: unitRate,
-      line_total: lineTotal
+      line_total: lineTotal,
+      base_cost_at_quote: unitCost,
     });
-    return { items, totalRetail: lineTotal };
+    return { items, totalRetail: lineTotal, totalCost: unitCost * wifiQty };
   }
 
   // Only charge labor for wired cameras - wireless cameras handled above
@@ -831,7 +857,7 @@ function calculateLabor(
   } else if (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined) {
     qty = (Number(selection.indoor_camera_count) || 0) + (Number(selection.outdoor_camera_count) || 0);
   }
-  if (qty <= 0 && hybridWifiQty <= 0) return { items, totalRetail: 0 };
+  if (qty <= 0 && hybridWifiQty <= 0) return { items, totalRetail: 0, totalCost: 0 };
 
   const isCablingDone = Boolean(selection.cabling_done);
 
@@ -846,44 +872,58 @@ function calculateLabor(
     if (qty <= smallJobThreshold) {
       // Small job rule: flat rate per camera (e.g. 1 cam = ₹500, 2 cams = ₹1,000)
       const unitRate = Math.round(smallJobFlatRate * locationMultiplier);
+      const unitCost = settings.cost_labor_small_job_rate ?? pctOr(unitRate, 350);
       const lineTotal = unitRate * qty;
       items.push({
         product_id: "labor_small_job_minimum",
         display_name: `Camera Installation & Setup (Small Job Flat Rate: ₹${unitRate}/cam)${locationMultiplier !== 1.0 ? ` (×${locationMultiplier} local rate)` : ""}`,
+        category: "service",
         qty,
         unit_price: unitRate,
-        line_total: lineTotal
+        line_total: lineTotal,
+        base_cost_at_quote: unitCost,
       });
       totalRetail += lineTotal;
+      totalCost += unitCost * qty;
     } else {
       // Standard installation (> 2 cameras):
       // HD: ₹200/cam, IP: ₹300/cam, plus ₹500 site visit charge
       const basePerCamRate = (tech === "IP" ? ipFittingRate : hdFittingRate);
       const unitRate = Math.round(basePerCamRate * locationMultiplier);
+      const unitCost = tech === "IP"
+        ? (settings.cost_labor_ip_fitting_only ?? pctOr(unitRate, 180))
+        : (settings.cost_labor_hd_fitting_only ?? pctOr(unitRate, 120));
       const lineTotal = unitRate * qty;
       items.push({
         product_id: "labor_fitting_only",
         display_name: `${tech} Camera Mounting & Termination (Existing Cabling)${locationMultiplier !== 1.0 ? ` (×${locationMultiplier} local rate)` : ""}`,
+        category: "service",
         qty,
         unit_price: unitRate,
-        line_total: lineTotal
+        line_total: lineTotal,
+        base_cost_at_quote: unitCost,
       });
       totalRetail += lineTotal;
+      totalCost += unitCost * qty;
 
       const effectiveVisit = Math.round(visitCharge * locationMultiplier);
       if (effectiveVisit > 0) {
+        const visitCost = settings.cost_labor_visit_charge ?? pctOr(effectiveVisit, 300);
         items.push({
           product_id: "labor_visit_charge",
           display_name: `Technician Site Visit & Mobilization Fee${locationMultiplier !== 1.0 ? ` (×${locationMultiplier} local rate)` : ""}`,
+          category: "service",
           qty: 1,
           unit_price: effectiveVisit,
-          line_total: effectiveVisit
+          line_total: effectiveVisit,
+          base_cost_at_quote: visitCost,
         });
         totalRetail += effectiveVisit;
+        totalCost += visitCost;
       }
     }
 
-    return { items, totalRetail };
+    return { items, totalRetail, totalCost };
   }
 
   // ── Scenario: Site REQUIRES cabling (Full Installation & Cabling or Mixed) ──
@@ -897,6 +937,9 @@ function calculateLabor(
     ? (settings.labor_ip_per_camera ?? defaultRate) 
     : (settings.labor_hd_per_camera ?? settings.labor_full_installation_rate ?? defaultRate);
   const rate = Math.round(baseRate * locationMultiplier);
+  const installUnitCost = tech === "IP"
+    ? (settings.cost_labor_ip_per_camera ?? pctOr(rate, 300))
+    : (settings.cost_labor_hd_per_camera ?? pctOr(rate, 250));
   const lineTotal = rate * cablingQty;
 
   items.push({
@@ -904,26 +947,35 @@ function calculateLabor(
     display_name: isMixed
       ? `Standard ${tech} Cabling & Installation (${cablingQty} camera spot${cablingQty > 1 ? "s" : ""})${locationMultiplier !== 1.0 ? ` (×${locationMultiplier} local rate)` : ""}`
       : `Standard ${tech} Installation & Termination${locationMultiplier !== 1.0 ? ` (×${locationMultiplier} local rate)` : ""}`,
+    category: "service",
     qty: cablingQty,
     unit_price: rate,
-    line_total: lineTotal
+    line_total: lineTotal,
+    base_cost_at_quote: installUnitCost,
   });
   totalRetail += lineTotal;
+  totalCost += installUnitCost * cablingQty;
 
   if (isMixed && fittingOnlyQty > 0) {
     const hdFittingRate = settings.labor_hd_fitting_only ?? 200;
     const ipFittingRate = settings.labor_ip_fitting_only ?? 300;
     const fittingRate = Math.round((tech === "IP" ? ipFittingRate : hdFittingRate) * locationMultiplier);
+    const fittingUnitCost = tech === "IP"
+      ? (settings.cost_labor_ip_fitting_only ?? pctOr(fittingRate, 180))
+      : (settings.cost_labor_hd_fitting_only ?? pctOr(fittingRate, 120));
     const fittingLineTotal = fittingRate * fittingOnlyQty;
 
     items.push({
       product_id: "labor_fitting_only",
       display_name: `${tech} Camera Mounting & Setup (${fittingOnlyQty} replacement${fittingOnlyQty > 1 ? "s" : ""} on existing cables)${locationMultiplier !== 1.0 ? ` (×${locationMultiplier} local rate)` : ""}`,
+      category: "service",
       qty: fittingOnlyQty,
       unit_price: fittingRate,
-      line_total: fittingLineTotal
+      line_total: fittingLineTotal,
+      base_cost_at_quote: fittingUnitCost,
     });
     totalRetail += fittingLineTotal;
+    totalCost += fittingUnitCost * fittingOnlyQty;
   }
 
   // Cabling Labor Surcharge
@@ -936,33 +988,41 @@ function calculateLabor(
   
   if (excessMeters > 0) {
     const excessLaborRate = 15; // ₹15 per extra meter
+    const excessLaborCost = Math.round(excessLaborRate * (laborPct > 0 ? laborPct / 100 : 0.65));
     const excessLineTotal = excessLaborRate * excessMeters;
     
     items.push({
       product_id: "labor_cabling_excess",
       display_name: `Excess Cabling Installation Labor (${excessMeters}m beyond ${freeLimit}m free limit)`,
+      category: "service",
       qty: excessMeters,
       unit_price: excessLaborRate,
-      line_total: excessLineTotal
+      line_total: excessLineTotal,
+      base_cost_at_quote: excessLaborCost,
     });
     totalRetail += excessLineTotal;
+    totalCost += excessLaborCost * excessMeters;
   }
 
   if (hybridWifiQty > 0) {
     const wirelessRate = settings.labor_wireless_pro_per_camera ?? 349;
     const unitRate = Math.round(wirelessRate * locationMultiplier);
+    const unitCost = settings.cost_labor_wireless_per_camera ?? pctOr(unitRate, 200);
     const lineTotal = unitRate * hybridWifiQty;
     items.push({
       product_id: "labor_wireless_pro_fitting",
       display_name: "Smart Wi-Fi Camera Wall Mounting & App Pairing",
+      category: "service",
       qty: hybridWifiQty,
       unit_price: unitRate,
-      line_total: lineTotal
+      line_total: lineTotal,
+      base_cost_at_quote: unitCost,
     });
     totalRetail += lineTotal;
+    totalCost += unitCost * hybridWifiQty;
   }
 
-  return { items, totalRetail };
+  return { items, totalRetail, totalCost };
 }
 
 function calculateCabling(
@@ -1040,6 +1100,7 @@ function calculateCabling(
         ? `2-Core Copper Electrical Power Wire (with PVC Conduit) (~${totalPowerMeters}m) @ ₹${finalRate}/m`
         : `2-Core Copper Electrical Power Wire (Open) (~${totalPowerMeters}m) @ ₹${finalRate}/m`,
       brand: elecProduct?.brand || "Standard Electrical",
+      category: "cable",
       qty: totalPowerMeters,
       unit_price: finalRate,
       line_total: lineTotal,
@@ -1242,7 +1303,8 @@ function calculateCabling(
             remainderMeters,
             totalRetail: comboRetail,
             totalCost: comboCost,
-            finalBundleRetail
+            finalBundleRetail,
+            finalBundleCost
           };
         }
       }
@@ -1258,9 +1320,11 @@ function calculateCabling(
     items.push({
       product_id: b.id!,
       display_name: `${isConduit ? "Conduit Pipe + " : ""}${b.display_name} (Bundle)`,
+      category: "cable",
       qty: bestCombination.bundleCount,
       unit_price: bestCombination.finalBundleRetail,
-      line_total: bestCombination.bundleCount * bestCombination.finalBundleRetail
+      line_total: bestCombination.bundleCount * bestCombination.finalBundleRetail,
+      base_cost_at_quote: Math.round(bestCombination.finalBundleCost ?? (b.base_cost || 0))
     });
   }
 
@@ -1268,9 +1332,11 @@ function calculateCabling(
     items.push({
       product_id: perMeterProductId,
       display_name: `${typeLabelStr} (~${bestCombination.remainderMeters}m) @ ₹${finalRatePerMeter}/m`,
+      category: "cable",
       qty: bestCombination.remainderMeters,
       unit_price: finalRatePerMeter,
-      line_total: bestCombination.remainderMeters * finalRatePerMeter
+      line_total: bestCombination.remainderMeters * finalRatePerMeter,
+      base_cost_at_quote: Number(costPerMeterFinal.toFixed(2))
     });
   }
 
@@ -1349,9 +1415,11 @@ function calculateConnectors(
       product_id: userConnector.id || (userConnector as any).sku,
       display_name: userConnector.display_name,
       brand: userConnector.brand || "",
+      category: "accessory",
       qty: wiredCameraCount,
       unit_price: rate,
-      line_total: lineTotal
+      line_total: lineTotal,
+      ...(userConnector.base_cost !== undefined && userConnector.base_cost !== null ? { base_cost_at_quote: Number(userConnector.base_cost) } : {})
     });
     totalRetail += lineTotal;
     totalCost += (userConnector.base_cost || 0) * wiredCameraCount;
@@ -1374,9 +1442,11 @@ function calculateConnectors(
       items.push({
         product_id: "connector_rj45",
         display_name: "RJ45 Connectors (Camera & Switch/Balun ends)",
+        category: "accessory",
         qty: qty,
         unit_price: retailPerPiece,
-        line_total: lineTotal
+        line_total: lineTotal,
+        base_cost_at_quote: costPerPiece
       });
       totalRetail += lineTotal;
       totalCost += costPerPiece * qty;
@@ -1388,9 +1458,11 @@ function calculateConnectors(
       items.push({
         product_id: "connector_bnc_dc",
         display_name: "BNC & DC Connector Set",
+        category: "accessory",
         qty: wiredCameraCount,
         unit_price: retailPerSet,
-        line_total: lineTotal
+        line_total: lineTotal,
+        base_cost_at_quote: costPerSet
       });
       totalRetail += lineTotal;
       totalCost += costPerSet * wiredCameraCount;
@@ -1404,9 +1476,11 @@ function calculateConnectors(
       product_id: userMount.id || (userMount as any).sku,
       display_name: userMount.display_name,
       brand: userMount.brand || "",
+      category: "accessory",
       qty: wiredCameraCount,
       unit_price: rate,
-      line_total: lineTotal
+      line_total: lineTotal,
+      ...(userMount.base_cost !== undefined && userMount.base_cost !== null ? { base_cost_at_quote: Number(userMount.base_cost) } : {})
     });
     totalRetail += lineTotal;
     totalCost += (userMount.base_cost || 0) * wiredCameraCount;
@@ -1419,9 +1493,11 @@ function calculateConnectors(
       product_id: "acc_junction_box",
       display_name: "PVC Weatherproof Camera Junction Box",
       brand: "TEAM CCTV",
+      category: "accessory",
       qty: wiredCameraCount,
       unit_price: junctionRate,
-      line_total: junctionTotal
+      line_total: junctionTotal,
+      base_cost_at_quote: junctionCost
     });
     totalRetail += junctionTotal;
     totalCost += junctionCost * wiredCameraCount;
@@ -1445,10 +1521,11 @@ function calculateAddons(params: {
   let totalCost = 0;
 
   const amcAddonId = (settings as any).amc_addon_id || "amc_1yr";
+  const dynamicAmcIds = new Set([amcAddonId, "amc_1yr", "amc_2yr", "amc_3yr"]);
 
-  // Skip the dynamic AMC here — it is handled below
-  // to avoid double-counting (price is % of hardware, not a fixed price).
-  let staticAddonIds = [...selectedAddonIds].filter(id => id !== amcAddonId);
+  // Skip the dynamic AMC IDs here — handled below as % of hardware
+  // to avoid double-counting and to attach service AMC fulfillment cost.
+  let staticAddonIds = [...selectedAddonIds].filter(id => !dynamicAmcIds.has(id));
 
   // Conditional injection for SIM Router (No Broadband + Close Locations)
   if (selection.broadband_status === "sim_router") {
@@ -1512,44 +1589,61 @@ function calculateAddons(params: {
     items.push({
       addon_id: addon.id || (addon as any).sku,
       display_name: addon.display_name,
+      category: addon.category || "accessory",
       price: price,
-      qty
+      qty,
+      ...(addon.base_cost !== undefined && addon.base_cost !== null ? { base_cost_at_quote: Number(addon.base_cost) } : {})
     });
     totalRetail += lineTotal;
     totalCost += (addon.base_cost || 0) * qty;
   });
 
-  // Dynamic AMC Logic (only runs once, price is % of hardware)
-  if (selectedAddonIds.includes(amcAddonId)) {
-    const pct = settings.amc_1yr_pct || 15;
+  // Dynamic AMC Logic (price is % of hardware; fulfillment visit cost is tracked in Service bucket)
+  const amcFulfillmentPct = settings.amc_fulfillment_cost_percent ?? 35;
+  const selectedAmcIds = Array.from(new Set(selectedAddonIds.filter(id => dynamicAmcIds.has(id))));
+  for (const amcId of selectedAmcIds) {
+    const is3Yr = amcId === "amc_3yr";
+    const is2Yr = amcId === "amc_2yr";
+    const pct = is3Yr
+      ? (settings.amc_3yr_pct || 10)
+      : is2Yr
+        ? (settings.amc_2yr_pct || 8)
+        : (settings.amc_1yr_pct || 15);
+    const labelPrefix = is3Yr ? "3-Year" : is2Yr ? "2-Year" : "1-Year";
     const amcPrice = Math.round(baseHardwareCost * (pct / 100));
-    
-    if (activeOffer?.type === "free_amc") {
-      // Show both lines so customer sees the saving
+    const amcFulfillmentCost = Math.round(amcPrice * (amcFulfillmentPct / 100));
+
+    if (activeOffer?.type === "free_amc" && amcId === amcAddonId) {
+      // Show both lines so customer sees the saving; technician PM visit liability remains a real service cost
       items.push({
-        addon_id: amcAddonId,
-        display_name: `1-Year Annual Maintenance Contract (${pct}%)`,
+        addon_id: amcId,
+        display_name: `${labelPrefix} Annual Maintenance Contract (${pct}%)`,
+        category: "service",
         price: amcPrice,
-        qty: 1
+        qty: 1,
+        base_cost_at_quote: amcFulfillmentCost
       });
       items.push({
         addon_id: "promo_free_amc",
         display_name: "Promotion: Free 1st Year AMC",
+        category: "service",
         price: -amcPrice,
-        qty: 1
+        qty: 1,
+        base_cost_at_quote: 0
       });
-      // Net zero — no change to totalRetail
+      // Net zero revenue — no change to totalRetail
     } else {
       items.push({
-        addon_id: amcAddonId,
-        display_name: `1-Year Annual Maintenance Contract (${pct}%)`,
+        addon_id: amcId,
+        display_name: `${labelPrefix} Annual Maintenance Contract (${pct}%)`,
+        category: "service",
         price: amcPrice,
-        qty: 1
+        qty: 1,
+        base_cost_at_quote: amcFulfillmentCost
       });
       totalRetail += amcPrice;
     }
-    // AMC purchase cost ≈ 30% of retail (technician visits)
-    totalCost += Math.round(amcPrice * 0.3);
+    totalCost += amcFulfillmentCost;
   }
 
   return { items, totalRetail, totalCost };

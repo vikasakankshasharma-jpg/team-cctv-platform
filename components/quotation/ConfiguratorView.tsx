@@ -191,7 +191,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         return prev.filter(p => !(p.plan_type === pricing.plan_type && p.technology === pricing.technology));
       }
       if (prev.length >= 3) {
-        toast.error("You can compare up to 3 quotes at a time.");
+        toast.error(t("cfg_err_compare_max", "You can compare up to 3 quotes at a time."));
         return prev;
       }
       return [...prev, pricing];
@@ -256,23 +256,36 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
     // Normalize "Analog" to "HD"
     const rawTech = (lead.wizard_answers?.["q_tech"] as string) || lead.technology_choice || "HD";
+    const rawTechLower = String(rawTech).toLowerCase();
+    const hybridWiredPref = String(lead.wizard_answers?.["hybrid_wired_technology"] || "").toLowerCase();
+    const isPureWirelessRaw = rawTechLower === "wireless" || rawTechLower === "wifi" || rawTechLower === "4g_solar";
     const wifiCountVal = Number(lead.wizard_answers?.["wifi_camera_count"]) || 0;
     const outdoorCountVal = Number(lead.wizard_answers?.["outdoor_camera_count"]) || 0;
     const indoorCountVal = Number(lead.wizard_answers?.["indoor_camera_count"]) || 0;
     const totalSplitCount = outdoorCountVal + indoorCountVal;
-    const wiredCountVal = totalSplitCount > wifiCountVal ? (totalSplitCount - wifiCountVal) : 0;
-    const isHybridSetup = (wifiCountVal > 0 && wiredCountVal > 0) || String(rawTech).toLowerCase() === "hybrid";
+    const rawMixedReqs = Array.isArray(lead.wizard_answers?.["mixed_camera_requirements"])
+      ? (lead.wizard_answers["mixed_camera_requirements"] as any[])
+      : [];
+    const hasMixedHybrid =
+      rawMixedReqs.some((m) => m?.technology === "Wireless") &&
+      rawMixedReqs.some((m) => m?.technology && m.technology !== "Wireless");
+    const wiredCountVal = (isPureWirelessRaw && lead.wizard_answers?.["is_hybrid"] !== true && !hasMixedHybrid) ? 0 : totalSplitCount;
+    const isHybridSetup =
+      (wifiCountVal > 0 && wiredCountVal > 0) ||
+      hasMixedHybrid ||
+      lead.wizard_answers?.["is_hybrid"] === true ||
+      rawTechLower === "hybrid";
 
     const normalizedTech: "HD" | "IP" | "Wireless" = 
-      isHybridSetup ? (String(rawTech).toLowerCase().includes("ip") ? "IP" : "HD")
-      : (rawTech === "Analog" || rawTech === "analog" || rawTech === "HD" || rawTech === "hd") ? "HD"
-      : (rawTech === "WiFi" || rawTech === "wifi" || rawTech === "Wireless" || rawTech === "wireless") ? "Wireless"
+      isHybridSetup ? ((hybridWiredPref === "ip" || rawTechLower.includes("ip")) ? "IP" : "HD")
+      : (rawTechLower === "analog" || rawTechLower === "hd") ? "HD"
+      : (rawTechLower === "wifi" || rawTechLower === "wireless" || rawTechLower === "4g_solar") ? "Wireless"
       : "IP";
 
     const initialSelection = {
       ...selection,
       technology: isHybridSetup ? "hybrid" : normalizedTech,
-      hybrid_wired_technology: (String(rawTech).toLowerCase().includes("ip") ? "IP" : "HD") as "HD" | "IP",
+      hybrid_wired_technology: ((hybridWiredPref === "ip" || rawTechLower.includes("ip")) ? "IP" : "HD") as "HD" | "IP",
       is_hybrid: isHybridSetup,
       camera_count: initialCamCount,
       indoor_camera_count: lead.wizard_answers?.["indoor_camera_count"] !== undefined ? Number(lead.wizard_answers["indoor_camera_count"]) : undefined,
@@ -441,7 +454,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   const customizationDiff = activePricing.total_payable - basePricing.total_payable;
 
   const baseOptionNum = typeof active_checkout_option?.option === "number" ? active_checkout_option.option : (selection.selected_camera_option || 2);
-  const baseTierName = (is_compare_mode && store_base_tier_name) ? store_base_tier_name : (activePricing.camera_device?.brand ? `${activePricing.camera_device.brand} Package` : "Selected Package");
+  const baseTierName = (is_compare_mode && store_base_tier_name) ? store_base_tier_name : (activePricing.camera_device?.brand ? `${activePricing.camera_device.brand} Package` : t("cfg_selected_pkg", "Selected Package"));
 
   const isCustomized = typeof active_checkout_option?.option === "string" 
     || !!selection.selected_camera_id 
@@ -564,18 +577,18 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);
         console.error("Quote save failed:", errorData);
-        throw new Error(extractErrorMessage(errorData, "Failed to save quote"));
+        throw new Error(extractErrorMessage(errorData, t("cfg_err_save", "Failed to save quote")));
       }
       const resData = await res.json();
       setSavedQuoteId(resData.data.id);
       
-      if (isAccepted) toast.success("Quotation Accepted! We will contact you shortly.");
-      else toast.success("Detailed Quotation Ready!");
+      if (isAccepted) toast.success(t("cfg_ok_accepted", "Quotation Accepted! We will contact you shortly."));
+      else toast.success(t("cfg_ok_ready", "Detailed Quotation Ready!"));
 
       router.push(`/quote/${currentLead.id}/review/${resData.data.id}`);
     } catch (err: any) {
       console.error(err);
-      toast.error(extractErrorMessage(err, "Error saving your quote. Please try again."));
+      toast.error(extractErrorMessage(err, t("cfg_err_saving_retry", "Error saving your quote. Please try again.")));
     } finally {
       setIsSaving(false);
     }
@@ -591,14 +604,14 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         body: JSON.stringify({ lead_id: currentLead.id, address: currentLead.address, quote_id: savedQuoteId || "pending", firebase_uid: currentLead.firebase_uid })
       });
       if (res.ok) {
-        toast.success("Visit Booked! Our technician will reach you shortly.");
+        toast.success(t("cfg_ok_visit", "Visit Booked! Our technician will reach you shortly."));
       } else {
         const errJson = await res.json().catch(() => null);
-        toast.error(extractErrorMessage(errJson, "Booking failed. Please try again."));
+        toast.error(extractErrorMessage(errJson, t("cfg_err_booking", "Booking failed. Please try again.")));
       }
     } catch (err) {
       console.error(err);
-      toast.error(extractErrorMessage(err, "Booking failed. Please try again."));
+      toast.error(extractErrorMessage(err, t("cfg_err_booking", "Booking failed. Please try again.")));
     } finally {
       setIsSaving(false);
     }
@@ -799,7 +812,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                       });
                       if (!res.ok) {
                         const errJson = await res.json().catch(() => null);
-                        throw new Error(extractErrorMessage(errJson, "Failed to submit price match"));
+                        throw new Error(extractErrorMessage(errJson, t("cfg_err_price_match", "Failed to submit price match")));
                       }
                       setPriceMatchSubmitted(true);
                       setShowPriceMatchUploader(false);

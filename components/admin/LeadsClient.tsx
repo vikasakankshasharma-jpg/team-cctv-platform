@@ -19,6 +19,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { KanbanBoard } from "./kanban/KanbanBoard";
+import { useTranslation } from "@/hooks/useTranslation";
+
+const LOCALE_MAP: Record<string, string> = {
+  en: "en-IN", hi: "hi-IN", mr: "mr-IN", gu: "gu-IN", ta: "ta-IN",
+  te: "te-IN", kn: "kn-IN", bn: "bn-IN", ml: "ml-IN", pa: "pa-IN", or: "or-IN",
+};
 
 interface LeadsClientProps {
   initialLeads: Lead[];
@@ -32,6 +38,7 @@ interface LeadsClientProps {
 }
 
 export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespeople = [], isAdmin = false, isSalesStaff = false, allowedPincodes = [], salespersonId }: LeadsClientProps) {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"standard" | "industrial">("standard");
   const [viewMode, setViewMode] = useState<"table" | "kanban">("kanban");
@@ -68,11 +75,11 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
           }
         });
       } else {
-        toast.error("No active price match request found");
+        toast.error(t("adm_lc_err_pm_none", "No active price match request found"));
       }
     } catch (err) {
       console.error(err);
-      toast.error("Error loading price match details");
+      toast.error(t("adm_lc_err_pm_load", "Error loading price match details"));
     }
   };
 
@@ -211,7 +218,7 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
       }
     } catch (error) {
       console.error("Error loading more leads:", error);
-      toast.error("Failed to load more leads");
+      toast.error(t("adm_lc_err_more", "Failed to load more leads"));
     } finally {
       setIsLoadingMore(false);
     }
@@ -344,23 +351,23 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         
         {/* Tabs and Dialer */}
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="flex items-center gap-1 p-1 bg-secondary/50 border border-border rounded-lg shadow-sm">
+        <div className="flex flex-col sm:flex-row flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-1 p-1 bg-secondary/50 border border-border rounded-lg shadow-sm">
             <button
               onClick={() => setActiveTab("standard")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === "standard" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-md text-xs font-semibold transition-all leading-snug ${activeTab === "standard" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
             >
-              Standard Matrix
-              <span className={`px-1.5 py-0.5 rounded-full text-[10px] leading-none font-bold ${activeTab === "standard" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground border border-border"}`}>
+              <span>{t("adm_lc_std_matrix", "Standard Matrix")}</span>
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] leading-none font-bold shrink-0 ${activeTab === "standard" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground border border-border"}`}>
                 {localLeads.length}
               </span>
             </button>
             <button
               onClick={() => setActiveTab("industrial")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === "industrial" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-md text-xs font-semibold transition-all leading-snug ${activeTab === "industrial" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
             >
-              Industrial Inquiries
-              <span className={`px-1.5 py-0.5 rounded-full text-[10px] leading-none font-bold ${activeTab === "industrial" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground border border-border"}`}>
+              <span>{t("adm_lc_ind_inq", "Industrial Inquiries")}</span>
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] leading-none font-bold shrink-0 ${activeTab === "industrial" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground border border-border"}`}>
                 {localIndLeads.length}
               </span>
             </button>
@@ -370,15 +377,15 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
             <div className="flex items-center gap-1 p-1 bg-secondary/50 border border-border rounded-lg shadow-sm">
               <button
                 onClick={() => setViewMode("table")}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === "table" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all leading-snug ${viewMode === "table" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
               >
-                Table View
+                {t("adm_lc_table", "Table View")}
               </button>
               <button
                 onClick={() => setViewMode("kanban")}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === "kanban" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all leading-snug ${viewMode === "kanban" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
               >
-                Kanban Board
+                {t("adm_lc_kanban", "Kanban Board")}
               </button>
             </div>
           )}
@@ -386,19 +393,19 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
           {isAdmin && (
             <button
               onClick={exportToCSV}
-              className="px-3 py-1.5 rounded-md text-xs font-semibold text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-all shadow-sm flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-md text-xs font-semibold text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-all shadow-sm flex items-center gap-1.5 leading-snug shrink-0"
             >
-              <Download className="w-3.5 h-3.5" />
-              Export CSV
+              <Download className="w-3.5 h-3.5 shrink-0" />
+              <span>{t("adm_lc_export_csv", "Export CSV")}</span>
             </button>
           )}
 
           {activeTab === "standard" && (
             <button
               onClick={() => setIsDialerOpen(true)}
-              className="px-4 py-1.5 rounded-md text-xs font-black text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 transition-all shadow-sm flex items-center gap-2 border border-green-600/50"
+              className="px-4 py-1.5 rounded-md text-xs font-black text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 transition-all shadow-sm flex items-center gap-2 border border-green-600/50 leading-snug shrink-0"
             >
-              🚀 Launch Dialer
+              {t("adm_lc_dialer", "🚀 Launch Dialer")}
             </button>
           )}
         </div>
@@ -409,31 +416,31 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
               type="text"
-              placeholder={activeTab === "standard" ? "Search Name, Mobile..." : "Search Mobile, Company..."}
+              placeholder={activeTab === "standard" ? t("adm_lc_search_std", "Search Name, Mobile...") : t("adm_lc_search_ind", "Search Mobile, Company...")}
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               className="pl-9 h-10 w-full bg-background border-border shadow-sm text-sm"
             />
           </div>
-          <div className="relative w-full md:w-40">
+          <div className="relative w-full md:w-44">
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <select 
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="h-10 w-full appearance-none bg-background border border-border text-foreground rounded-md pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring shadow-sm font-medium"
             >
-              <option value="all">All Statuses</option>
-              <option value="partial">Partial / Cart</option>
-              <option value="new">New</option>
-              <option value="attempted">Attempted</option>
-              <option value="contacted">Contacted</option>
-              <option value="unreachable">Unreachable</option>
-              <option value="busy">Busy</option>
-              <option value="technical_error">Technical Error</option>
-              <option value="site_visit">Site Visit</option>
-              <option value="quoted">Re-Quote</option>
-              <option value="won">Won</option>
-              <option value="lost">Lost</option>
+              <option value="all">{t("adm_lc_all_statuses", "All Statuses")}</option>
+              <option value="partial">{t("adm_lc_st_partial", "Partial / Cart")}</option>
+              <option value="new">{t("adm_leads_st_new", "New")}</option>
+              <option value="attempted">{t("adm_lc_st_attempted", "Attempted")}</option>
+              <option value="contacted">{t("adm_leads_st_contacted", "Contacted")}</option>
+              <option value="unreachable">{t("adm_lc_st_unreach", "Unreachable")}</option>
+              <option value="busy">{t("adm_lc_st_busy", "Busy")}</option>
+              <option value="technical_error">{t("adm_lc_st_techerr", "Technical Error")}</option>
+              <option value="site_visit">{t("adm_fu_act_visit", "Site Visit")}</option>
+              <option value="quoted">{t("adm_lc_st_requote", "Re-Quote")}</option>
+              <option value="won">{t("adm_leads_tab_won", "Won / Paid")}</option>
+              <option value="lost">{t("adm_leads_st_lost", "Lost")}</option>
             </select>
           </div>
         </div>
@@ -452,12 +459,12 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
             <table className="lead-table w-full">
             <thead>
               <tr>
-                <th>{activeTab === "standard" ? "Customer" : "Contact"}</th>
-                <th>{activeTab === "standard" ? "System" : "Volume"}</th>
-                <th>{activeTab === "standard" ? "Location" : "Site Type"}</th>
-                <th>{activeTab === "standard" ? "Source" : "Captured At"}</th>
-                <th className="text-center">Lifecycle Status</th>
-                <th className="text-right">Actions</th>
+                <th>{activeTab === "standard" ? t("adm_lc_col_cust", "Customer") : t("adm_lc_col_contact", "Contact")}</th>
+                <th>{activeTab === "standard" ? t("adm_lc_col_system", "System") : t("adm_lc_col_volume", "Volume")}</th>
+                <th>{activeTab === "standard" ? t("adm_lc_col_loc", "Location") : t("adm_lc_col_sitetype", "Site Type")}</th>
+                <th>{activeTab === "standard" ? t("adm_lc_col_source", "Source") : t("adm_lc_col_captured", "Captured At")}</th>
+                <th className="text-center">{t("adm_lc_col_life", "Lifecycle Status")}</th>
+                <th className="text-right">{t("adm_leads_th_actions", "Actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -466,8 +473,8 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                   <td colSpan={6} className="h-48 text-center">
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
                       <Users className="w-8 h-8 mb-4 opacity-50" />
-                      <p className="text-sm font-medium">No results found</p>
-                      <p className="text-xs">Adjust your search or filters to find leads.</p>
+                      <p className="text-sm font-medium">{t("adm_lc_no_res", "No results found")}</p>
+                      <p className="text-xs">{t("adm_lc_adj_search", "Adjust your search or filters to find leads.")}</p>
                     </div>
                   </td>
                 </tr>
@@ -476,29 +483,29 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                   <tr key={lead.id} onClick={() => { if(activeTab === "standard") setSelectedLeadForDrawer(lead as Lead) }}>
                     <td>
                       <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="cell-name">
-                            {activeTab === "standard" ? (lead as Lead).customer_name : "Industrial Lead"}
+                            {activeTab === "standard" ? (lead as Lead).customer_name : t("adm_lc_ind_lead", "Industrial Lead")}
                           </span>
                           {(lead as Lead).price_match_status === 'pending' && (
-                            <span className="status-pill sp-waitlist animate-pulse flex items-center gap-1">
-                              <Shield className="w-2.5 h-2.5" /> Price Match
+                            <span className="status-pill sp-waitlist animate-pulse flex items-center gap-1 leading-snug">
+                              <Shield className="w-2.5 h-2.5 shrink-0" /> {t("adm_leads_b_pm", "📸 Price Match")}
                             </span>
                           )}
                           {(lead as Lead).is_escalated && (
-                            <span className="status-pill sp-lost animate-pulse flex items-center gap-1">
-                              Escalated
+                            <span className="status-pill sp-lost animate-pulse flex items-center gap-1 leading-snug">
+                              {t("adm_lc_escalated", "Escalated")}
                             </span>
                           )}
                           {(lead as Lead).wizard_answers?.q_timeline === 'asap' && (
-                            <span className="status-pill sp-lost">Urgent</span>
+                            <span className="status-pill sp-lost leading-snug">{t("adm_lc_urgent", "Urgent")}</span>
                           )}
                           {(lead as Lead).next_followup_date === new Date().toISOString().split("T")[0] && (
-                            <span className="status-pill sp-new">Follow-up Today</span>
+                            <span className="status-pill sp-new leading-snug">{t("adm_lc_fu_today", "Follow-up Today")}</span>
                           )}
                         </div>
                         <div className="cell-phone flex items-center gap-1.5">
-                          <Phone className="w-3 h-3" /> 
+                          <Phone className="w-3 h-3 shrink-0" /> 
                           {activeTab === "standard" ? (lead as Lead).mobile_number : (lead as any).phone}
                         </div>
                       </div>
@@ -516,9 +523,9 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                           </div>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="font-semibold text-sm text-[var(--blue)]">
-                             {(lead as any).requested_camera_count} Units
+                             {(lead as any).requested_camera_count} {t("adm_lc_units", "Units")}
                           </span>
                           <span className="status-pill sp-new uppercase">
                             {(lead as any).technology}
@@ -531,15 +538,15 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                         (lead as Lead).address ? (
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-1.5 text-[12.5px] font-medium text-[var(--text)]">
-                              <MapPin className="w-3.5 h-3.5 text-[var(--primary)]" /> 
+                              <MapPin className="w-3.5 h-3.5 text-[var(--primary)] shrink-0" /> 
                               {(lead as Lead).address!.pincode}
                             </div>
                             <div className="text-[11px] text-[var(--muted)] truncate max-w-[160px]" title={(lead as Lead).address!.landmark1}>
-                                {(lead as Lead).address!.landmark1 || "No Landmark"}
+                                {(lead as Lead).address!.landmark1 || t("adm_lc_no_landmark", "No Landmark")}
                             </div>
                           </div>
                         ) : (
-                          <span className="text-[11px] font-medium text-[var(--muted)] italic">No Location</span>
+                          <span className="text-[11px] font-medium text-[var(--muted)] italic">{t("adm_lc_no_loc", "No Location")}</span>
                         )
                       ) : (
                         <span className="capitalize text-[11px] font-medium text-[var(--muted)]">
@@ -554,41 +561,41 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                             <span className="status-pill sp-site w-fit uppercase">
                               {(lead as Lead).referral_code}
                             </span>
-                            <span className="text-[11px] font-medium text-[var(--text)] truncate max-w-[120px]" title={(lead as Lead).promoter_name || "Unknown"}>
-                              {(lead as Lead).promoter_name || "Unknown Agent"}
+                            <span className="text-[11px] font-medium text-[var(--text)] truncate max-w-[120px]" title={(lead as Lead).promoter_name || t("adm_lc_unknown_agent", "Unknown Agent")}>
+                              {(lead as Lead).promoter_name || t("adm_lc_unknown_agent", "Unknown Agent")}
                             </span>
                           </div>
                         ) : (
                           <div className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--muted)]">
-                             <Waves className="w-3 h-3" /> Organic
+                             <Waves className="w-3 h-3 shrink-0" /> {t("adm_lc_organic", "Organic")}
                           </div>
                         )
                       ) : (
                         <span className="text-[11px] font-medium text-[var(--muted)]">
-                          {new Date(lead.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                          {new Date(lead.created_at).toLocaleDateString(LOCALE_MAP[locale] || 'en-IN', { day: '2-digit', month: 'short' })}
                         </span>
                       )}
                     </td>
                     <td className="text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-col items-center gap-2">
                         <LeadStatusBadge lead={lead} className="mb-1" />
-                          <div className="relative inline-block w-32">
+                          <div className="relative inline-block w-36">
                             <select 
                              value={lead.status}
                              onChange={(e) => handleStatusChange(lead.id!, e.target.value)}
                              disabled={isUpdating === lead.id}
-                             className={`status-pill appearance-none cursor-pointer text-center outline-none ${getStatusColor(lead.status)} ${isUpdating === lead.id ? 'opacity-50' : ''}`}
+                             className={`status-pill appearance-none cursor-pointer text-center outline-none w-full ${getStatusColor(lead.status)} ${isUpdating === lead.id ? 'opacity-50' : ''}`}
                             >
-                              <option value="partial">Partial</option>
-                              <option value="new">Incoming</option>
-                              <option value="contacted">Contacted</option>
-                              <option value="unreachable">Unreachable</option>
-                              <option value="busy">Busy</option>
-                              <option value="technical_error">Technical Error</option>
-                              <option value="site_visit">Site Visit</option>
-                              <option value="quoted">Re-Quote</option>
-                              <option value="won">Won</option>
-                              <option value="lost">Lost</option>
+                              <option value="partial">{t("adm_lc_st_partial", "Partial / Cart")}</option>
+                              <option value="new">{t("adm_lc_incoming", "Incoming")}</option>
+                              <option value="contacted">{t("adm_leads_st_contacted", "Contacted")}</option>
+                              <option value="unreachable">{t("adm_lc_st_unreach", "Unreachable")}</option>
+                              <option value="busy">{t("adm_lc_st_busy", "Busy")}</option>
+                              <option value="technical_error">{t("adm_lc_st_techerr", "Technical Error")}</option>
+                              <option value="site_visit">{t("adm_fu_act_visit", "Site Visit")}</option>
+                              <option value="quoted">{t("adm_lc_st_requote", "Re-Quote")}</option>
+                              <option value="won">{t("adm_leads_tab_won", "Won / Paid")}</option>
+                              <option value="lost">{t("adm_leads_st_lost", "Lost")}</option>
                             </select>
                             {isUpdating === lead.id && (
                               <Loader2 className="w-3 h-3 animate-spin absolute right-2 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
@@ -597,14 +604,14 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                           
                           {/* Salesperson Assignment Dropdown */}
                           {activeTab === "standard" && isAdmin && (
-                            <div className="relative w-32 mt-2">
+                            <div className="relative w-36 mt-2">
                                <select
                                  value={(lead as Lead).assigned_to_salesperson_id || "unassigned"}
                                  onChange={(e) => handleAssignSalesperson(lead.id!, e.target.value)}
                                  disabled={isAssigning === lead.id}
                                  className={`appearance-none bg-[var(--surface2)] border ${(lead as Lead).assigned_to_salesperson_id ? 'border-[var(--blue)] text-[var(--blue)]' : 'border-[var(--border2)] text-[var(--muted)]'} font-medium text-[10px] px-2 py-1 rounded-md w-full outline-none cursor-pointer text-center truncate ${isAssigning === lead.id ? 'opacity-50' : ''}`}
                                >
-                                 <option value="unassigned">Unassigned</option>
+                                 <option value="unassigned">{t("adm_lc_unassigned", "Unassigned")}</option>
                                  {salespeople.map(sp => (
                                    <option key={sp.id} value={sp.id}>{sp.name}</option>
                                  ))}
@@ -629,7 +636,7 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                               <button 
                                 onClick={() => handleOpenPriceMatch(lead)}
                                 className="flex items-center justify-center w-8 h-8 rounded-md bg-[var(--amber-dim)] text-[var(--amber)] hover:bg-[var(--amber)] hover:text-white hover:border-transparent transition-colors border border-[rgba(245,158,11,0.25)]"
-                                title="Review Price Match"
+                                title={t("adm_lc_rev_pm", "Review Price Match")}
                               >
                                 <Shield className="w-4 h-4" />
                               </button>
@@ -638,14 +645,14 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                               href={`/quote/${lead.id}`} 
                               target="_blank"
                               className="flex items-center justify-center w-8 h-8 rounded-md bg-[var(--blue-dim)] text-[var(--blue)] hover:bg-[var(--blue)] hover:text-white transition-colors"
-                              title="View Quote"
+                              title={t("adm_lc_view_quote", "View Quote")}
                             >
                               <Eye className="w-4 h-4" />
                             </Link>
                             <button 
                               onClick={() => setHistoryLead({ id: lead.id!, name: (lead as Lead).customer_name })}
                               className="flex items-center justify-center w-8 h-8 rounded-md bg-[var(--surface2)] text-[var(--muted)] hover:bg-[var(--amber-dim)] hover:text-[var(--amber)] transition-colors"
-                              title="View History"
+                              title={t("adm_lc_view_hist", "View History")}
                             >
                               <History className="w-4 h-4" />
                             </button>
@@ -655,9 +662,9 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                               href={(lead as Lead).competitor_quote_url} 
                               target="_blank" 
                               rel="noreferrer"
-                              className="flex items-center gap-1 text-[9px] font-semibold text-[var(--gold)] hover:underline"
+                              className="flex items-center gap-1 text-[9px] font-semibold text-[var(--gold)] hover:underline leading-snug"
                             >
-                              <Target className="w-3 h-3" /> Competitor Quote
+                              <Target className="w-3 h-3 shrink-0" /> {t("adm_lc_comp_quote", "Competitor Quote")}
                             </a>
                           )}
                         </div>
@@ -665,7 +672,7 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                         <a 
                           href={`tel:+91${(lead as any).phone}`}
                           className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-[var(--green-dim)] text-[var(--green)] hover:bg-[var(--green)] hover:text-white transition-colors"
-                          title="Call Lead"
+                          title={t("adm_lc_call_lead", "Call Lead")}
                         >
                           <Phone className="w-4 h-4" />
                         </a>
@@ -686,16 +693,16 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
           <button
             onClick={handleLoadMore}
             disabled={isLoadingMore}
-            className="group flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-full font-semibold text-sm transition-all hover:bg-primary/90 shadow-md active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+            className="group flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-full font-semibold text-sm transition-all hover:bg-primary/90 shadow-md active:scale-95 disabled:opacity-50 disabled:pointer-events-none leading-snug"
           >
             {isLoadingMore ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Loading...
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" /> {t("adm_lc_loading", "Loading...")}
               </>
             ) : (
               <>
-                Load More
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                {t("adm_lc_load_more", "Load More")}
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform shrink-0" />
               </>
             )}
           </button>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminAuth, adminDb, serverTimestamp } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
 import { rateLimit } from "@/lib/rate-limit";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 
 // Collision-safe Referral Code Generator for B2C Individual Referrers (e.g. RAHU7193)
 async function generateUniqueReferralCode(name: string): Promise<string> {
@@ -32,19 +33,22 @@ async function generateUniqueReferralCode(name: string): Promise<string> {
 }
 
 export async function POST(req: Request) {
+  let locale = resolveRequestLocale(req);
   const { success } = await rateLimit(req);
   if (!success) {
     return NextResponse.json(
-      { error: "Too many requests. Please try again shortly." },
+      { error: getApiMessage(locale, "too_many_requests") },
       { status: 429 }
     );
   }
 
   try {
-    const { fullName, mobile, otp } = await req.json();
+    const body = await req.json();
+    locale = resolveRequestLocale(req, body);
+    const { fullName, mobile, otp } = body;
 
     if (!mobile || !otp) {
-      return NextResponse.json({ error: "Mobile number and OTP are required." }, { status: 400 });
+      return NextResponse.json({ error: getApiMessage(locale, "phone_otp_required") }, { status: 400 });
     }
 
     const cleanPhone = mobile.toString().replace(/\D/g, "").slice(-10);
@@ -61,7 +65,7 @@ export async function POST(req: Request) {
       const otpDoc = await adminDb.collection(COLLECTIONS.OTP_VERIFICATIONS).doc(docId).get();
       if (!otpDoc.exists) {
         return NextResponse.json(
-          { error: "Verification code expired or not found. Please request a new code." },
+          { error: getApiMessage(locale, "otp_not_found") },
           { status: 404 }
         );
       }
@@ -73,13 +77,13 @@ export async function POST(req: Request) {
       if (now > expiry) {
         await otpDoc.ref.delete();
         return NextResponse.json(
-          { error: "Verification code has expired. Please request a new code." },
+          { error: getApiMessage(locale, "otp_expired") },
           { status: 400 }
         );
       }
 
       if (data.otp !== otp.toString().trim()) {
-        return NextResponse.json({ error: "Incorrect verification code." }, { status: 400 });
+        return NextResponse.json({ error: getApiMessage(locale, "otp_incorrect") }, { status: 400 });
       }
 
       // Single-use code consumed
@@ -168,6 +172,6 @@ export async function POST(req: Request) {
     });
   } catch (error: any) {
     console.error("[Refer & Earn Verify Error]", error);
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    return NextResponse.json({ error: getApiMessage(locale, "internal_error") }, { status: 500 });
   }
 }

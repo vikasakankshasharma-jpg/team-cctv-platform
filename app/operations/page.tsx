@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Job } from "@/types";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function OperationsDashboard() {
+  const { t } = useTranslation();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -16,7 +18,7 @@ export default function OperationsDashboard() {
   const fetchJobs = async () => {
     try {
       const res = await fetch(`/api/operations/jobs`);
-      if (!res.ok) throw new Error("Failed to load assigned jobs");
+      if (!res.ok) throw new Error(t("ops_load_jobs_err", "Failed to load assigned jobs"));
       const json = await res.json();
       setJobs(json.data || []);
     } catch (err: any) {
@@ -28,7 +30,7 @@ export default function OperationsDashboard() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-semibold text-white px-2">Assigned Jobs</h2>
+      <h2 className="text-2xl font-semibold text-white px-2">{t("ops_assigned_jobs", "Assigned Jobs")}</h2>
 
       {error && (
         <div className="bg-red-900/50 text-red-200 p-4 rounded-lg border border-red-700 mx-2">
@@ -42,7 +44,7 @@ export default function OperationsDashboard() {
         </div>
       ) : jobs.length === 0 ? (
         <div className="bg-gray-800 p-4 md:p-8 text-center rounded-lg shadow-sm border border-gray-700 text-gray-400 mx-2">
-          No jobs currently assigned to you.
+          {t("ops_no_assigned_jobs", "No jobs currently assigned to you.")}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-2">
@@ -54,7 +56,7 @@ export default function OperationsDashboard() {
                 isAlert ? "bg-orange-900/20 border-orange-700" : "bg-gray-800 border-gray-700"
               }`}>
                 <div>
-                  <div className="flex justify-between items-start mb-3">
+                  <div className="flex flex-wrap justify-between items-start gap-2 mb-3">
                     <span className="font-mono text-sm text-gray-400">#{job.id?.substring(0,8)}</span>
                     <span className={`px-2 py-1 text-xs font-bold uppercase rounded ${
                       job.status === "ASSIGNED" ? "bg-blue-900 text-blue-200" :
@@ -68,21 +70,21 @@ export default function OperationsDashboard() {
                   
                   {isAlert && (
                     <div className="text-xs font-semibold text-orange-400 mb-3 bg-orange-900/30 p-2 rounded">
-                      ⚠️ INVENTORY ALERT: Check Backorder Status
+                      {t("ops_inventory_alert", "⚠️ INVENTORY ALERT: Check Backorder Status")}
                     </div>
                   )}
 
                   <div className="text-sm text-gray-300 space-y-1 mb-4">
-                    <p>📍 {(job.address as any)?.city || (job.address as any)?.full_address || 'Location unavailable'}</p>
-                    <p>🗓️ {job.scheduled_at ? new Date(job.scheduled_at as string).toLocaleDateString() : 'Unscheduled'}</p>
+                    <p>📍 {(job.address as any)?.city || (job.address as any)?.full_address || t("ops_loc_unavail", "Location unavailable")}</p>
+                    <p>🗓️ {job.scheduled_at ? new Date(job.scheduled_at as string).toLocaleDateString() : t("ops_unscheduled", "Unscheduled")}</p>
                   </div>
                 </div>
 
                 <Link 
                   href={`/operations/jobs/${job.id}`}
-                  className="block text-center w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-md transition-colors text-sm font-medium"
+                  className="block text-center w-full bg-gray-700 hover:bg-gray-600 text-white py-2 px-3 rounded-md transition-colors text-sm font-medium"
                 >
-                  View Job Card &rarr;
+                  {t("ops_view_job_card", "View Job Card →")}
                 </Link>
               </div>
             );

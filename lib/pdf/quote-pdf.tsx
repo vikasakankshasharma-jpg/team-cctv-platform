@@ -1,6 +1,10 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
-import { QuoteSnapshot, PricingResult, QuoteLineItem, AppSettings } from '@/types';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { QuoteSnapshot, AppSettings } from '@/types';
+import { ensurePdfFontsForLocale, normalizePdfLocale } from '@/lib/pdf/pdf-fonts-indic';
+import { resolvePdfImageSrc } from '@/lib/pdf/pdf-image';
+import { getPdfLabels } from '@/lib/pdf/pdf-i18n';
+import { SPEECH_LOCALE_MAP } from '@/lib/i18n/mapping';
 
 // Create styles optimized for professional single-page layout
 const styles = StyleSheet.create({
@@ -226,18 +230,25 @@ const styles = StyleSheet.create({
   },
 });
 
-export const QuotePDFDocument = ({ quote, settings }: { quote: QuoteSnapshot; settings?: AppSettings }) => {
+export const QuotePDFDocument = ({ quote, settings, locale }: { quote: QuoteSnapshot & Record<string, any>; settings?: AppSettings; locale?: string }) => {
   const { 
     id, 
     customer_name, 
     customer_mobile, 
   } = quote;
 
+  const pdfLocale = normalizePdfLocale(locale ?? quote?.preferred_language ?? quote?.language ?? quote?.locale);
+  const pdfFont = ensurePdfFontsForLocale(pdfLocale);
+  const isEn = pdfLocale === 'en';
+  const noUpper = isEn ? {} : { textTransform: 'none' as const, letterSpacing: 0 };
+  const L = getPdfLabels(pdfLocale);
+  const dateLocale = SPEECH_LOCALE_MAP[pdfLocale] || 'en-IN';
+
   const companyName = settings?.company_legal_name || settings?.company_name || "TEAM CCTV";
-  const tagline = settings?.company_tagline || "Premium Security Solutions";
+  const tagline = settings?.company_tagline || "Complete Security Systems";
   const gstinDisplay = settings?.company_gstin && settings.company_gstin.trim().length > 0
-    ? `GSTIN: ${settings.company_gstin.trim()}`
-    : "GST Registration Pending";
+    ? `${L.gstinPrefix}: ${settings.company_gstin.trim()}`
+    : L.gstPending;
   const emailDisplay = settings?.company_email || "sales@teamcctv.com";
   const phoneDisplay = settings?.company_phone ? ` | Ph: ${settings.company_phone}` : "";
   const webDisplay = settings?.company_website || "cctvquotation.com";
@@ -304,29 +315,17 @@ export const QuotePDFDocument = ({ quote, settings }: { quote: QuoteSnapshot; se
     gst_amount: quote?.pricingSnapshot?.gst_amount ?? quote?.gst_amount ?? Math.round(resolvedSubtotal * 0.18)
   };
 
-  const validDate = effectiveValidUntil ? new Date(effectiveValidUntil).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A';
-  const createdDate = createdAt ? new Date(createdAt).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A';
+  const validDate = effectiveValidUntil ? new Date(effectiveValidUntil).toLocaleDateString(dateLocale, { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A';
+  const createdDate = createdAt ? new Date(createdAt).toLocaleDateString(dateLocale, { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A';
 
-  const formatCurrency = (amount: number) => `Rs. ${amount.toLocaleString('en-IN')}`;
+  const formatCurrency = (amount: number) => `₹${Math.round(amount).toLocaleString('en-IN')}`;
 
-  const rawLogo = settings?.pdf_logo_url || settings?.company_logo_url || "/logo-horizontal.jpg";
-  const logoUrl = (rawLogo && !rawLogo.startsWith("C:") && !rawLogo.includes("\\")) ? rawLogo : "/logo-horizontal.jpg";
-  let resolvedLogo = logoUrl;
-  if (typeof window === "undefined" && logoUrl.startsWith("/")) {
-    try {
-      const pathMod = require("path");
-      const fsMod = require("fs");
-      const localPath = pathMod.join(process.cwd(), "public", logoUrl.replace(/^\/+/, ""));
-      if (fsMod.existsSync(localPath)) {
-        resolvedLogo = localPath;
-      }
-    } catch (_) {}
-  }
+  const resolvedLogo = resolvePdfImageSrc(settings?.pdf_logo_url || settings?.company_logo_url, '/logo-horizontal.jpg');
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.watermark}>QUOTATION</Text>
+      <Page size="A4" style={[styles.page, { fontFamily: pdfFont }]}>
+        <Text style={[styles.watermark, noUpper, isEn ? {} : { fontSize: 34 }]}>{L.quotationTitle}</Text>
 
         {/* Header */}
         <View style={styles.headerRow}>
@@ -334,7 +333,7 @@ export const QuotePDFDocument = ({ quote, settings }: { quote: QuoteSnapshot; se
             {resolvedLogo ? (
               <Image src={resolvedLogo} style={styles.headerLogo} />
             ) : (
-              <Text style={styles.logoText}>{companyName}</Text>
+              <Text style={[styles.logoText, noUpper]}>{companyName}</Text>
             )}
             {tagline ? <Text style={styles.companyInfo}>{tagline}</Text> : null}
             {addressDisplay ? <Text style={styles.companyInfo}>{addressDisplay}</Text> : null}
@@ -342,18 +341,18 @@ export const QuotePDFDocument = ({ quote, settings }: { quote: QuoteSnapshot; se
             <Text style={styles.companyInfo}>{emailDisplay}{phoneDisplay}</Text>
           </View>
           <View style={styles.headerRight}>
-            <Text style={styles.quoteTitle}>QUOTATION</Text>
+            <Text style={[styles.quoteTitle, noUpper]}>{L.quotationTitle}</Text>
             <View style={styles.quoteMetaGrid}>
               <View style={styles.quoteMetaRow}>
-                <Text style={styles.quoteMetaLabel}>Quote Ref:</Text>
+                <Text style={styles.quoteMetaLabel}>{L.leadRef}:</Text>
                 <Text style={styles.quoteMetaValue}>{id ? `QT-${new Date().getFullYear()}-${id.substring(0, 6).toUpperCase()}` : 'DRAFT'}</Text>
               </View>
               <View style={styles.quoteMetaRow}>
-                <Text style={styles.quoteMetaLabel}>Date:</Text>
+                <Text style={styles.quoteMetaLabel}>{L.dateIssued}:</Text>
                 <Text style={styles.quoteMetaValue}>{createdDate}</Text>
               </View>
               <View style={styles.quoteMetaRow}>
-                <Text style={styles.quoteMetaLabel}>Valid Until:</Text>
+                <Text style={styles.quoteMetaLabel}>{L.validUntil}:</Text>
                 <Text style={styles.quoteMetaValue}>{validDate}</Text>
               </View>
             </View>
@@ -363,24 +362,24 @@ export const QuotePDFDocument = ({ quote, settings }: { quote: QuoteSnapshot; se
         {/* Prepared For Box */}
         <View style={styles.customerBox}>
           <View style={styles.customerInfoCol}>
-            <Text style={styles.preparedForLabel}>PREPARED FOR:</Text>
+            <Text style={[styles.preparedForLabel, noUpper]}>{L.preparedFor}:</Text>
             <Text style={styles.customerName}>{customer_name || 'Customer'}</Text>
-            <Text style={styles.customerPhone}>Phone: {customer_mobile || 'N/A'}</Text>
+            <Text style={styles.customerPhone}>Phone / Mobile: {customer_mobile || 'N/A'}</Text>
           </View>
           <View style={styles.metaInfoCol}>
-            <Text style={styles.preparedForLabel}>PROJECT DETAILS:</Text>
-            <Text style={styles.customerPhone}>Surveillance Security Quotation</Text>
-            <Text style={styles.customerPhone}>Doorstep Installation & Termination</Text>
+            <Text style={[styles.preparedForLabel, noUpper]}>{L.systemSpecs}:</Text>
+            <Text style={styles.customerPhone}>{L.scopeAndMaterials}</Text>
+            <Text style={styles.customerPhone}>{L.gstInclusiveBadge}</Text>
           </View>
         </View>
 
         {/* Table */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={styles.colDesc}>Description</Text>
-            <Text style={styles.colQty}>Qty</Text>
-            <Text style={styles.colUnit}>Unit Price</Text>
-            <Text style={styles.colTotal}>Total</Text>
+            <Text style={styles.colDesc}>{L.itemDescription}</Text>
+            <Text style={styles.colQty}>{L.qty}</Text>
+            <Text style={styles.colUnit}>{L.unitPrice}</Text>
+            <Text style={styles.colTotal}>{L.amount}</Text>
           </View>
 
           {pricing.items.map((item: any, i: number) => {
@@ -392,7 +391,7 @@ export const QuotePDFDocument = ({ quote, settings }: { quote: QuoteSnapshot; se
               <View key={`item-${i}`} style={styles.tableRow} wrap={false}>
                 <View style={styles.colDesc}>
                   <Text style={styles.itemTitle}>{name}</Text>
-                  <Text style={styles.itemBrand}>Brand: {item.brand || 'TEAM CCTV'}</Text>
+                  <Text style={styles.itemBrand}>{item.brand || 'TEAM CCTV'}</Text>
                 </View>
                 <Text style={[styles.colQty, styles.itemText]}>{qty}</Text>
                 <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(unitPrice)}</Text>
@@ -409,7 +408,7 @@ export const QuotePDFDocument = ({ quote, settings }: { quote: QuoteSnapshot; se
               <View key={`addon-${i}`} style={styles.tableRow} wrap={false}>
                 <View style={styles.colDesc}>
                   <Text style={styles.itemTitle}>{name}</Text>
-                  <Text style={styles.itemBrand}>Brand: Add-on</Text>
+                  <Text style={styles.itemBrand}>Add-on</Text>
                 </View>
                 <Text style={[styles.colQty, styles.itemText]}>{qty}</Text>
                 <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(price)}</Text>
@@ -421,8 +420,8 @@ export const QuotePDFDocument = ({ quote, settings }: { quote: QuoteSnapshot; se
           {pricing.labor_cost > 0 && (
             <View style={styles.tableRow} wrap={false}>
               <View style={styles.colDesc}>
-                <Text style={styles.itemTitle}>Labor & Installation</Text>
-                <Text style={styles.itemBrand}>Service</Text>
+                <Text style={styles.itemTitle}>Labor &amp; Installation</Text>
+                <Text style={styles.itemBrand}>{L.supportTitle}</Text>
               </View>
               <Text style={[styles.colQty, styles.itemText]}>1</Text>
               <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(pricing.labor_cost)}</Text>
@@ -434,16 +433,16 @@ export const QuotePDFDocument = ({ quote, settings }: { quote: QuoteSnapshot; se
         {/* Bottom Section */}
         <View style={styles.bottomSection} wrap={false}>
           <View style={styles.termsBox}>
-            <Text style={styles.termsTitle}>Terms & Conditions</Text>
-            <Text style={styles.termsText}>1. Prices are valid for {settings?.quote_validity_days || 7} days from the date of this quotation.</Text>
-            <Text style={styles.termsText}>2. Standard 1-Year Warranty on all hardware items unless specified otherwise.</Text>
-            <Text style={styles.termsText}>3. 1-Year Free AMC (Annual Maintenance Contract) included covering 2 free service visits.</Text>
-            <Text style={styles.termsText}>4. Additional cabling beyond the estimated requirement will be charged at actual per-meter rate as quoted above.</Text>
-            <Text style={styles.termsText}>5. Booking advance required for order confirmation, balance on completion of installation.</Text>
+            <Text style={styles.termsTitle}>{L.termsTitle}</Text>
+            <Text style={styles.termsText}>1. {L.validUntil}: {validDate} ({settings?.quote_validity_days || 7} days).</Text>
+            <Text style={styles.termsText}>2. {L.warranty1YrTitle}: {L.warranty1YrBody}</Text>
+            <Text style={styles.termsText}>3. {L.supportTitle}: {L.supportBody}</Text>
+            <Text style={styles.termsText}>4. {L.advanceTitle}: {L.advanceBody}</Text>
+            <Text style={styles.termsText}>5. {L.gstInclusiveBadge}</Text>
             {settings?.bank_account_no && (
               <View style={{ marginTop: 4, paddingTop: 4, borderTopWidth: 1, borderTopColor: '#e2e8f0' }}>
                 <Text style={[styles.termsText, { fontWeight: 'bold', color: '#1e293b' }]}>
-                  Bank Details: {settings.bank_name || 'Bank'} | A/c: {settings.bank_account_no} | IFSC: {settings.bank_ifsc || ''}
+                  {L.bankDetailsTitle}: {settings.bank_name || 'Bank'} | A/c: {settings.bank_account_no} | IFSC: {settings.bank_ifsc || ''}
                 </Text>
                 <Text style={styles.termsText}>
                   A/c Name: {settings.bank_account_name || companyName} {settings.bank_upi_id ? `| UPI: ${settings.bank_upi_id}` : ''}
@@ -454,20 +453,20 @@ export const QuotePDFDocument = ({ quote, settings }: { quote: QuoteSnapshot; se
 
           <View style={styles.totalsBox}>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Subtotal:</Text>
+              <Text style={styles.totalLabel}>{L.subtotal}:</Text>
               <Text style={styles.totalValue}>{formatCurrency(pricing.gross_subtotal)}</Text>
             </View>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Taxable Amount:</Text>
+              <Text style={styles.totalLabel}>{L.taxableValue}:</Text>
               <Text style={styles.totalValue}>{formatCurrency(pricing.gross_subtotal)}</Text>
             </View>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>GST ({pricing.gst_rate}%):</Text>
+              <Text style={styles.totalLabel}>{L.gstAt18} ({pricing.gst_rate}%):</Text>
               <Text style={styles.totalValue}>{formatCurrency(pricing.gst_amount)}</Text>
             </View>
             
             <View style={styles.grandTotalRow}>
-              <Text style={styles.grandTotalLabel}>Grand Total:</Text>
+              <Text style={styles.grandTotalLabel}>{L.totalPayable}:</Text>
               <Text style={styles.grandTotalValue}>{formatCurrency(pricing.total_payable)}</Text>
             </View>
           </View>
@@ -475,7 +474,7 @@ export const QuotePDFDocument = ({ quote, settings }: { quote: QuoteSnapshot; se
 
         {/* Micro Footer */}
         <Text style={styles.footerMicroText}>
-          Computer-generated quotation. Valid for {settings?.quote_validity_days || 7} days. | {companyName} ({webDisplay}) | Support: {emailDisplay}
+          {companyName} ({webDisplay}) | Support: {emailDisplay} | {L.gstInclusiveBadge}
         </Text>
       </Page>
     </Document>

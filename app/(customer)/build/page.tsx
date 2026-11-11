@@ -2,11 +2,12 @@ import React from "react";
 import BuilderClient from "@/components/build/BuilderClient";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 import type { Metadata } from "next";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { buildPageMetadata } from "@/lib/i18n/seo-metadata";
 
-export const metadata: Metadata = {
-  title: "Build Your CCTV System | CCTVQuotation by TEAM",
-  description: "Already know what you need? Select your cameras, recorder, storage, and accessories to get an instant quotation.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata("build", await getServerLocale());
+}
 
 export default function BuildPage() {
   return (

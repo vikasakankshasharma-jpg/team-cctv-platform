@@ -15,7 +15,7 @@ interface DownloadQuoteButtonProps {
 
 export function DownloadQuoteButton({ lead, quote, settings, className = "", forceWhatsAppFlow = false }: DownloadQuoteButtonProps) {
   const [loading, setLoading] = useState(false);
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const handleDownload = async () => {
     try {
@@ -23,7 +23,7 @@ export function DownloadQuoteButton({ lead, quote, settings, className = "", for
       const { pdf } = await import('@react-pdf/renderer');
       const { QuotePDFDocument } = await import('./QuotePDFDocument');
       
-      const doc = <QuotePDFDocument lead={lead} quote={quote} settings={settings} />;
+      const doc = <QuotePDFDocument lead={lead} quote={quote} settings={settings} locale={locale} />;
       const blob = await pdf(doc).toBlob();
       
       const url = URL.createObjectURL(blob);
@@ -36,7 +36,7 @@ export function DownloadQuoteButton({ lead, quote, settings, className = "", for
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Error generating PDF:", err);
-      alert("Failed to generate PDF. Please try again.");
+      alert(t('dlq_err_pdf', 'Failed to generate PDF. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ export function DownloadQuoteButton({ lead, quote, settings, className = "", for
 
   if (forceWhatsAppFlow) {
     const adminWhatsApp = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || "917357612865";
-    const waText = encodeURIComponent(`Hi TEAM CCTV, please send me the official PDF for my Quote ID: ${quote.id}`);
+    const waText = encodeURIComponent(t('dlq_wa_msg', `Hi TEAM CCTV, please send me the official PDF for my Quote ID: ${quote.id}`, { id: String(quote.id || '') }));
     
     return (
       <a
@@ -56,7 +56,7 @@ export function DownloadQuoteButton({ lead, quote, settings, className = "", for
         className={buttonClasses}
       >
         <MessageSquare className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" />
-        Get PDF on WhatsApp
+        {t('dlq_get_wa', 'Get PDF on WhatsApp')}
       </a>
     );
   }
@@ -70,7 +70,7 @@ export function DownloadQuoteButton({ lead, quote, settings, className = "", for
       {loading ? (
         <>
           <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-          Generating PDF...
+          {t('dlq_gen_pdf', 'Generating PDF...')}
         </>
       ) : (
         <>

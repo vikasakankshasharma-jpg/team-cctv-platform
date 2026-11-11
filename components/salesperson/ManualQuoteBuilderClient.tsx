@@ -3,26 +3,27 @@
 import { useState, useEffect, useMemo } from "react";
 import { Plus, Trash2, ArrowRight, Check, User, Phone, MapPin, Search, Copy, MessageSquare, AlertTriangle, Image as ImageIcon, ShoppingCart, Percent } from "lucide-react";
 import type { Product, VendorCategory } from "@/types";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface CartItem extends Product {
   quantity: number;
 }
 
-const CATEGORY_LABELS: Record<VendorCategory, string> = {
-  cctv_camera: "Cameras",
-  recorder: "Recorders",
-  storage: "Storage",
-  cable: "Cables",
-  connector: "Connectors",
-  power_device: "Power",
-  display: "Displays",
-  camera_mount: "Mounts",
-  rack: "Racks",
-  network: "Network",
-  hdmi_cable: "HDMI Cables",
-  accessories: "Accessories",
-  others: "Others",
-  unidentified: "Other"
+const CATEGORY_KEY_MAP: Record<VendorCategory, { key: string; fallback: string }> = {
+  cctv_camera: { key: "mqb_cat_cameras", fallback: "Cameras" },
+  recorder: { key: "mqb_cat_recorders", fallback: "Recorders" },
+  storage: { key: "mqb_cat_storage", fallback: "Storage" },
+  cable: { key: "mqb_cat_cables", fallback: "Cables" },
+  connector: { key: "mqb_cat_connectors", fallback: "Connectors" },
+  power_device: { key: "mqb_cat_power", fallback: "Power" },
+  display: { key: "mqb_cat_displays", fallback: "Displays" },
+  camera_mount: { key: "mqb_cat_mounts", fallback: "Mounts" },
+  rack: { key: "mqb_cat_racks", fallback: "Racks" },
+  network: { key: "mqb_cat_network", fallback: "Network" },
+  hdmi_cable: { key: "mqb_cat_hdmi", fallback: "HDMI Cables" },
+  accessories: { key: "mqb_cat_accessories", fallback: "Accessories" },
+  others: { key: "mqb_cat_others", fallback: "Others" },
+  unidentified: { key: "mqb_cat_others", fallback: "Other" },
 };
 
 const CATEGORIES_TO_SHOW: VendorCategory[] = [
@@ -31,6 +32,7 @@ const CATEGORIES_TO_SHOW: VendorCategory[] = [
 ];
 
 export default function ManualQuoteBuilderClient() {
+  const { t } = useTranslation();
 
 const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q: number) => void, className?: string }) => {
   const [localQty, setLocalQty] = useState<string | number>(qty);
@@ -114,7 +116,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
           wizard_answers: { city: leadForm.city, property_type: leadForm.property_type },
         }),
       });
-      if (!res.ok) throw new Error("Failed to create lead");
+      if (!res.ok) throw new Error(t("mqb_err_lead", "Failed to create lead"));
       const { id } = await res.json();
       setLeadId(id);
       setStep("pos");
@@ -193,8 +195,10 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
   }, [products, search, activeCategory]);
 
   const handleCreateQuote = async () => {
-    if (cart.length === 0) return setError("Add at least one item.");
-    if (discountPercent > salespersonMaxDiscount) return setError(`Max allowed discount is ${salespersonMaxDiscount}%`);
+    if (cart.length === 0) return setError(t("mqb_err_add_item", "Add at least one item."));
+    if (discountPercent > salespersonMaxDiscount) {
+      return setError(t("mqb_err_max_disc", "Max allowed discount is {max}%", { max: String(salespersonMaxDiscount) }));
+    }
 
     setLoading(true);
     setError(null);
@@ -230,7 +234,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to create quote");
+        throw new Error(data.error || t("mqb_err_quote", "Failed to create quote"));
       }
       const { id } = await res.json();
       setQuoteUrl(`${window.location.origin}/api/quote/${id}/download`);
@@ -251,7 +255,12 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
 
   const handleWhatsApp = () => {
     if (!quoteUrl) return;
-    const msg = encodeURIComponent(`Namaste ${leadForm.name} ji!\nHere is your custom CCTV Quotation:\n${quoteUrl}\n- TEAM CCTV`);
+    const msg = encodeURIComponent(
+      t("mqb_wa_msg", "Namaste {name} ji!\nHere is your custom CCTV Quotation:\n{url}\n- TEAM CCTV", {
+        name: leadForm.name,
+        url: quoteUrl,
+      })
+    );
     window.open(`https://wa.me/91${leadForm.mobile}?text=${msg}`, "_blank");
   };
 
@@ -263,30 +272,30 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
         <div className="max-w-2xl mx-auto">
           <form onSubmit={handleCreateLead} className="bg-card border border-border rounded-3xl p-4 md:p-8 space-y-6 shadow-sm">
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-1">Customer Walk-In</h2>
-              <p className="text-sm text-muted-foreground">Register the lead to start building their custom quote.</p>
+              <h2 className="text-2xl font-bold text-foreground mb-1">{t("mqb_walkin_title", "Customer Walk-In")}</h2>
+              <p className="text-sm text-muted-foreground">{t("mqb_walkin_sub", "Register the lead to start building their custom quote.")}</p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5"><User className="w-3 h-3"/> Name</label>
-                <input required value={leadForm.name} onChange={e => setLeadForm(f => ({...f, name: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground text-base sm:text-sm" placeholder="Ramesh Sharma" />
+                <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5"><User className="w-3 h-3"/> {t("mqb_lbl_name", "Name")}</label>
+                <input required value={leadForm.name} onChange={e => setLeadForm(f => ({...f, name: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground text-base sm:text-sm" placeholder={t("mqb_ph_name", "Ramesh Sharma")} />
               </div>
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5"><Phone className="w-3 h-3"/> Mobile</label>
-                <input required type="tel" pattern="[0-9]{10}" value={leadForm.mobile} onChange={e => setLeadForm(f => ({...f, mobile: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground text-base sm:text-sm" placeholder="10-digit number" />
+                <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5"><Phone className="w-3 h-3"/> {t("mqb_lbl_mobile", "Mobile")}</label>
+                <input required type="tel" pattern="[0-9]{10}" value={leadForm.mobile} onChange={e => setLeadForm(f => ({...f, mobile: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground text-base sm:text-sm" placeholder={t("mqb_ph_mobile", "10-digit number")} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <div>
-                    <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5"><MapPin className="w-3 h-3"/> City</label>
-                    <input required value={leadForm.city} onChange={e => setLeadForm(f => ({...f, city: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground text-base sm:text-sm" placeholder="Jaipur" />
+                    <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5"><MapPin className="w-3 h-3"/> {t("mqb_lbl_city", "City")}</label>
+                    <input required value={leadForm.city} onChange={e => setLeadForm(f => ({...f, city: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground text-base sm:text-sm" placeholder={t("mqb_ph_city", "Jaipur")} />
                  </div>
                  <div>
-                    <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5">Property</label>
+                    <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5">{t("mqb_lbl_property", "Property")}</label>
                     <select value={leadForm.property_type} onChange={e => setLeadForm(f => ({...f, property_type: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground text-base sm:text-sm">
-                      <option value="home">Home / Flat</option>
-                      <option value="shop">Shop / Office</option>
-                      <option value="factory">Factory</option>
+                      <option value="home">{t("mqb_prop_home", "Home / Flat")}</option>
+                      <option value="shop">{t("mqb_prop_office", "Shop / Office")}</option>
+                      <option value="factory">{t("mqb_prop_factory", "Factory")}</option>
                     </select>
                  </div>
               </div>
@@ -295,7 +304,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
             {error && <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-xl font-medium">{error}</div>}
 
             <button type="submit" disabled={loading} className="w-full py-4 bg-primary text-primary-foreground font-bold rounded-2xl hover:opacity-90 flex justify-center items-center gap-2">
-              {loading ? "Registering..." : "Open POS Terminal"} <ArrowRight className="w-4 h-4"/>
+              {loading ? t("mqb_registering", "Registering...") : t("mqb_open_pos", "Open POS Terminal")} <ArrowRight className="w-4 h-4"/>
             </button>
           </form>
         </div>
@@ -313,7 +322,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                 <Search className="w-5 h-5 absolute left-3 top-3.5 text-muted-foreground" />
                 <input 
                   value={search} onChange={e => setSearch(e.target.value)}
-                  placeholder="Search products by name or SKU..."
+                  placeholder={t("mqb_search_ph", "Search products by name or SKU...")}
                   className="w-full pl-10 pr-4 py-3 rounded-2xl border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
                 />
               </div>
@@ -328,7 +337,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                     onClick={() => setActiveCategory(cat)}
                     className={`whitespace-nowrap px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeCategory === cat ? "border-primary text-primary bg-primary/5" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
                   >
-                    {CATEGORY_LABELS[cat]}
+                    {t(CATEGORY_KEY_MAP[cat].key, CATEGORY_KEY_MAP[cat].fallback)}
                   </button>
                 ))}
               </div>
@@ -339,7 +348,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
               {filteredProducts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                   <ShoppingCart className="w-12 h-12 mb-4 opacity-20" />
-                  <p>No products found in this category.</p>
+                  <p>{t("mqb_no_prods", "No products found in this category.")}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -353,12 +362,14 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                         )}
                         {p.stock_quantity !== undefined && (
                           <div className={`absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold ${p.stock_quantity > 10 ? "bg-success/20 text-success" : p.stock_quantity > 0 ? "bg-warning/20 text-warning" : "bg-destructive/20 text-destructive"}`}>
-                            {p.stock_quantity > 0 ? `${p.stock_quantity} in stock` : "Out of stock"}
+                            {p.stock_quantity > 0 ? t("mqb_in_stock", "{count} in stock", { count: String(p.stock_quantity) }) : t("mqb_out_stock", "Out of stock")}
                           </div>
                         )}
                       </div>
                       <div className="flex-1">
-                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">{p.brand || CATEGORY_LABELS[p.category as VendorCategory] || p.category}</p>
+                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">
+                          {p.brand || (CATEGORY_KEY_MAP[p.category as VendorCategory] ? t(CATEGORY_KEY_MAP[p.category as VendorCategory].key, CATEGORY_KEY_MAP[p.category as VendorCategory].fallback) : p.category)}
+                        </p>
                         <h4 className="font-semibold text-sm leading-tight text-foreground line-clamp-2">{p.display_name}</h4>
                       </div>
                       <div className="flex items-center justify-between mt-auto">
@@ -376,11 +387,13 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
 
           {/* RIGHT PANE: CART */}
           <div className="w-full lg:w-[400px] xl:w-[450px] flex flex-col bg-card border border-border rounded-3xl overflow-hidden shadow-sm">
-            <div className="p-4 bg-muted/20 border-b border-border flex items-center justify-between">
+            <div className="p-4 bg-muted/20 border-b border-border flex flex-wrap items-center justify-between gap-2">
               <h2 className="font-bold text-lg flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-primary" /> Current Quote
+                <ShoppingCart className="w-5 h-5 text-primary" /> {t("mqb_curr_quote", "Current Quote")}
               </h2>
-              <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-full">{cart.length} items</span>
+              <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-full">
+                {t("mqb_items_count", "{count} items", { count: String(cart.length) })}
+              </span>
             </div>
 
             {/* Cart Items List */}
@@ -390,7 +403,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                   <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-3">
                     <Search className="w-6 h-6 text-muted-foreground/50" />
                   </div>
-                  Add products from the catalog to build the quote.
+                  {t("mqb_empty_cart", "Add products from the catalog to build the quote.")}
                 </div>
               ) : (
                 cart.map(item => (
@@ -400,7 +413,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-sm text-foreground truncate">{item.display_name}</h4>
-                      <p className="text-xs text-muted-foreground">₹{item.unit_price} / unit</p>
+                      <p className="text-xs text-muted-foreground">₹{item.unit_price} {t("mqb_per_unit", "/ unit")}</p>
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center bg-background rounded-lg border border-border h-8">
                           <button onClick={() => updateCartQty(item.id!, -1)} className="w-8 h-full flex items-center justify-center text-muted-foreground hover:text-foreground">-</button>
@@ -423,27 +436,29 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                 <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-xl flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-destructive shrink-0" />
                   <div>
-                    <h4 className="text-xs font-bold text-destructive uppercase tracking-wide">Margin Warning</h4>
-                    <p className="text-xs text-destructive/90 mt-0.5">Gross profit is critically low ({grossProfitPercent.toFixed(1)}%). Proceed with caution or seek manager approval.</p>
+                    <h4 className="text-xs font-bold text-destructive uppercase tracking-wide">{t("mqb_margin_warn_title", "Margin Warning")}</h4>
+                    <p className="text-xs text-destructive/90 mt-0.5">
+                      {t("mqb_margin_warn_desc", "Gross profit is critically low ({pct}%). Proceed with caution or seek manager approval.", { pct: grossProfitPercent.toFixed(1) })}
+                    </p>
                   </div>
                 </div>
               )}
 
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-muted-foreground">{t("mqb_subtotal", "Subtotal")}</span>
                   <span className="font-semibold">₹{subtotal.toLocaleString()}</span>
                 </div>
                 
                 <div className="flex items-center justify-between text-sm group">
-                  <span className="text-muted-foreground flex items-center gap-1"><Plus className="w-3 h-3"/> Installation</span>
+                  <span className="text-muted-foreground flex items-center gap-1"><Plus className="w-3 h-3"/> {t("mqb_installation", "Installation")}</span>
                   <input type="number" min="0" value={installationCost} onChange={e => setInstallationCost(Number(e.target.value) || 0)} className="w-24 px-3 py-1.5 bg-background border border-input rounded-lg text-right font-medium focus:ring-2 focus:ring-primary outline-none transition-all text-base sm:text-sm" placeholder="₹0" />
                 </div>
 
                 <div className="flex items-center justify-between text-sm group">
                   <div className="flex flex-col">
-                    <span className="text-success font-medium flex items-center gap-1"><Percent className="w-3 h-3"/> Discount</span>
-                    <span className="text-[10px] text-muted-foreground">Max limit: {salespersonMaxDiscount}%</span>
+                    <span className="text-success font-medium flex items-center gap-1"><Percent className="w-3 h-3"/> {t("mqb_discount", "Discount")}</span>
+                    <span className="text-[10px] text-muted-foreground">{t("mqb_max_limit", "Max limit:")} {salespersonMaxDiscount}%</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {discountAmount > 0 && <span className="text-xs font-semibold text-success">- ₹{discountAmount.toLocaleString()}</span>}
@@ -452,12 +467,12 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                 </div>
               </div>
 
-              <div className="flex justify-between items-center pt-4 border-t border-border mb-4">
+              <div className="flex flex-wrap justify-between items-center gap-2 pt-4 border-t border-border mb-4">
                 <div>
-                  <span className="font-bold text-lg text-foreground block">Total Payable</span>
+                  <span className="font-bold text-lg text-foreground block">{t("mqb_total_payable", "Total Payable")}</span>
                   {!Number.isNaN(grossProfitPercent) && cart.length > 0 && (
                     <span className={`text-[10px] font-bold uppercase tracking-wider ${isMarginTooLow ? "text-destructive" : "text-success"}`}>
-                      Est. Margin: {grossProfitPercent.toFixed(1)}%
+                      {t("mqb_est_margin", "Est. Margin:")} {grossProfitPercent.toFixed(1)}%
                     </span>
                   )}
                 </div>
@@ -467,7 +482,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
               {error && <div className="p-3 bg-destructive/10 text-destructive text-xs rounded-xl font-medium mb-4">{error}</div>}
 
               <button onClick={handleCreateQuote} disabled={loading || cart.length === 0 || discountPercent > salespersonMaxDiscount} className="w-full py-4 bg-primary text-primary-foreground font-bold rounded-2xl hover:bg-primary/90 disabled:opacity-50 transition-all flex items-center justify-center gap-2 text-lg">
-                {loading ? "Generating PDF..." : "Generate Quote"} <ArrowRight className="w-5 h-5" />
+                {loading ? t("mqb_generating_pdf", "Generating PDF...") : t("mqb_gen_quote", "Generate Quote")} <ArrowRight className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -482,22 +497,22 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
             <div className="w-20 h-20 rounded-full bg-success/20 flex items-center justify-center mx-auto mb-4 animate-in zoom-in">
               <Check className="w-10 h-10 text-success" />
             </div>
-            <h2 className="text-3xl font-black text-foreground">PDF Quote Ready!</h2>
-            <p className="text-muted-foreground text-lg">Share this beautiful PDF directly with <b>{leadForm.name}</b></p>
+            <h2 className="text-3xl font-black text-foreground">{t("mqb_pdf_ready", "PDF Quote Ready!")}</h2>
+            <p className="text-muted-foreground text-lg">{t("mqb_pdf_ready_sub", "Share this PDF directly with {name}.", { name: leadForm.name })}</p>
             
-            <div className="flex items-center gap-3 p-4 rounded-2xl bg-muted/50 border border-border">
-               <p className="text-sm font-mono text-muted-foreground flex-1 truncate text-left select-all">{quoteUrl}</p>
-               <button onClick={handleCopy} className={`p-3 rounded-xl transition-all font-bold flex items-center gap-2 ${copied ? "bg-success text-success-foreground" : "bg-primary text-primary-foreground hover:bg-primary/90"}`}>
-                 {copied ? <><Check className="w-4 h-4" /> Copied</> : <><Copy className="w-4 h-4" /> Copy Link</>}
+            <div className="flex flex-wrap items-center gap-3 p-4 rounded-2xl bg-muted/50 border border-border">
+               <p className="text-sm font-mono text-muted-foreground flex-1 min-w-0 truncate text-left select-all">{quoteUrl}</p>
+               <button onClick={handleCopy} className={`p-3 rounded-xl transition-all font-bold flex items-center gap-2 shrink-0 ${copied ? "bg-success text-success-foreground" : "bg-primary text-primary-foreground hover:bg-primary/90"}`}>
+                 {copied ? <><Check className="w-4 h-4" /> {t("mqb_copied", "Copied")}</> : <><Copy className="w-4 h-4" /> {t("prt_copy_link", "Copy Link")}</>}
                </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
                <button onClick={handleWhatsApp} className="flex items-center justify-center gap-2 py-4 bg-[#25D366] text-white font-bold rounded-2xl hover:bg-[#20bd5a] transition-colors shadow-lg shadow-[#25D366]/20">
-                 <MessageSquare className="w-5 h-5" /> Send via WhatsApp
+                 <MessageSquare className="w-5 h-5" /> {t("mqb_send_wa", "Send via WhatsApp")}
                </button>
                <button onClick={() => { setStep("lead"); setCart([]); setQuoteUrl(null); }} className="py-4 bg-secondary text-secondary-foreground font-bold rounded-2xl border border-border hover:bg-secondary/80 transition-colors">
-                 Create Another Quote
+                 {t("mqb_create_another", "Create Another Quote")}
                </button>
             </div>
           </div>

@@ -37,7 +37,7 @@ export default async function PartnerEdmPage() {
 
   return (
     <EdmGeneratorClient 
-      partnerName={session.promoterName || "Partner"}
+      partnerName={session.promoterName || ""}
       referralCode={referralCode}
       isB2B={isB2B}
       templates={templates}

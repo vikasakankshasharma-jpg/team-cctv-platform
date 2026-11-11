@@ -126,7 +126,7 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
               <span className="text-2xl font-semibold tracking-tight">{totalPrice.toLocaleString("en-IN")}</span>
             </div>
             <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
-              or ₹{Math.round((totalPrice * 1.06) / 12).toLocaleString("en-IN")}/mo (EMI)
+              {t('qrc_or_emi_mo', 'or ₹{amt}/mo (EMI)', { amt: Math.round((totalPrice * 1.06) / 12).toLocaleString("en-IN") })}
             </span>
           </div>
           
@@ -134,7 +134,7 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
             {quote?.error ? (
               <div className="px-4 py-2 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-xl text-xs font-semibold border border-red-200 dark:border-red-500/30 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                {quote.error_message || "Invalid configuration"}
+                {quote.error_message || t('scb_invalid_cfg', 'Invalid configuration')}
               </div>
             ) : (
               <>

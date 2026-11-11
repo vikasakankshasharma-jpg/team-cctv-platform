@@ -18,7 +18,7 @@ export function UnifiedLoginClient() {
             </div>
             <div>
               <h3 className="font-bold text-gray-900 text-lg"><TranslatedText tKey="customer_portal" defaultText="Customer Portal" /></h3>
-              <p className="text-sm text-gray-500 font-medium">View quotes, invoices & track installations</p>
+              <p className="text-sm text-gray-500 font-medium"><TranslatedText tKey="ul_cust_desc" defaultText="View quotes, invoices & track installations" /></p>
             </div>
           </div>
           <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
@@ -34,7 +34,7 @@ export function UnifiedLoginClient() {
             </div>
             <div>
               <h3 className="font-bold text-gray-900 text-lg"><TranslatedText tKey="staff_partner_portal" defaultText="Staff & Partner Portal" /></h3>
-              <p className="text-sm text-gray-500 font-medium">Internal staff, installers & affiliates</p>
+              <p className="text-sm text-gray-500 font-medium"><TranslatedText tKey="ul_staff_desc" defaultText="Internal staff, installers & affiliates" /></p>
             </div>
           </div>
           <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-gray-900 transition-colors" />

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { verifySession } from "@/lib/auth-server";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 
 export default async function OperationsLayout({ children }: { children: React.ReactNode }) {
   const session = await verifySession();
@@ -18,29 +19,29 @@ export default async function OperationsLayout({ children }: { children: React.R
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-zinc-900 transition-colors duration-300">
       <header className="bg-white/90 backdrop-blur-xl shadow-xs sticky top-0 z-10 border-b border-zinc-200/80">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-3">
           <div className="flex items-center gap-4">
             <Link href="/operations" className="text-xl font-black text-blue-600 tracking-tight">
-              Field Operations
+              <TranslatedText tKey="ops_field_operations" defaultText="Field Operations" />
             </Link>
           </div>
-          <div className="flex gap-4 items-center">
+          <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
             <Link 
               href="/operations/dispatch" 
               className="text-xs font-bold text-zinc-700 hover:text-blue-600 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 transition-colors"
             >
-              <MapPin className="w-3.5 h-3.5 text-blue-600" />
-              <span>Live Dispatch Map</span>
+              <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              <span><TranslatedText tKey="ops_live_dispatch_map" defaultText="Live Dispatch Map" /></span>
             </Link>
             <Link 
               href="/installer/route" 
               className="text-xs font-bold text-zinc-700 hover:text-blue-600 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-blue-50 transition-colors"
             >
-              <MapPin className="w-3.5 h-3.5 text-blue-600" />
-              <span>My Daily Route</span>
+              <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              <span><TranslatedText tKey="ops_my_daily_route" defaultText="My Daily Route" /></span>
             </Link>
             <span className="text-xs font-bold bg-zinc-100 text-zinc-700 border border-zinc-200 px-3 py-1 rounded-full">
-              ID: {session.user?.uid?.substring(0,6)}
+              <TranslatedText tKey="ops_id_prefix" defaultText="ID:" /> {session.user?.uid?.substring(0,6)}
             </span>
           </div>
         </div>

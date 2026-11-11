@@ -3,38 +3,40 @@
 import React from "react";
 import { CheckCircle2, XCircle, ShieldCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function DealerComparisonTable() {
+  const { t } = useTranslation();
   const comparisonItems = [
     {
-      title: "Brand Choice & Variations",
-      us: "Compare CP Plus, Hikvision & Prama side-by-side with live specs and multiple site options",
-      dealer: "Pushes only single brand stock sitting unsold in their local shop"
+      title: t("comp_item1_t"),
+      us: t("comp_item1_u"),
+      dealer: t("comp_item1_d")
     },
     {
-      title: "Payment on Easy EMI",
-      us: "Complete CCTV setup with installation available on easy monthly EMI",
-      dealer: "100% Cash upfront or immediate full transfer only — No EMI"
+      title: t("comp_item2_t"),
+      us: t("comp_item2_u"),
+      dealer: t("comp_item2_d")
     },
     {
-      title: "Advance Payment Risk",
-      us: "Just ₹500 Token to lock your booking; inspect hardware on delivery before paying rest",
-      dealer: "Demands 50% to 80% heavy cash advance before technician even arrives"
+      title: t("comp_item3_t"),
+      us: t("comp_item3_u"),
+      dealer: t("comp_item3_d")
     },
     {
-      title: "18% GST Bill & Warranty",
-      us: "Official 18% GST Tax invoice with genuine manufacturer serial number warranty",
-      dealer: "Often gives handwritten kacha slips; difficult to claim warranty later"
+      title: t("comp_item4_t"),
+      us: t("comp_item4_u"),
+      dealer: t("comp_item4_d")
     },
     {
-      title: "Transparent Pricing (BOM)",
-      us: "100% itemized Bill of Materials with 15 meters free cable pulling labor per camera",
-      dealer: "Vague lumpsum verbal estimate with hidden wiring and fitting charges on-site"
+      title: t("comp_item5_t"),
+      us: t("comp_item5_u"),
+      dealer: t("comp_item5_d")
     },
     {
-      title: "Physical Site Survey",
-      us: "100% Free engineer site visit with zero purchase obligation",
-      dealer: "Charges ₹300 to ₹500 inspection visit fee upfront"
+      title: t("comp_item6_t"),
+      us: t("comp_item6_u"),
+      dealer: t("comp_item6_d")
     }
   ];
 
@@ -46,13 +48,13 @@ export function DealerComparisonTable() {
         <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] mb-3 shadow-xs">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>The Smarter Way to Buy CCTV</span>
+            <span>{t("comp_badge")}</span>
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-            Why CCTVQuotation vs Local Dealer?
+            {t("comp_heading")}
           </h2>
           <p className="text-sm sm:text-base text-slate-600 dark:text-zinc-400 mt-3 font-medium">
-            See how transparent pricing, multi-brand comparisons, and easy EMI protect your money and property.
+            {t("comp_sub")}
           </p>
         </div>
 
@@ -67,8 +69,8 @@ export function DealerComparisonTable() {
                   <XCircle className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">Typical Offline Market</span>
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white">Local CCTV Mechanic / Shop</h3>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">{t("comp_offline_tag")}</span>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">{t("comp_offline_title")}</h3>
                 </div>
               </div>
 
@@ -88,7 +90,7 @@ export function DealerComparisonTable() {
             </div>
 
             <div className="mt-6 pt-4 border-t border-slate-100 dark:border-zinc-800 text-center text-xs font-semibold text-slate-400 dark:text-zinc-500">
-              Higher risk of hidden costs and grey-market warranties
+              {t("comp_offline_warn")}
             </div>
           </div>
 
@@ -96,7 +98,7 @@ export function DealerComparisonTable() {
           <div className="rounded-[32px] bg-gradient-to-b from-blue-50/60 to-white dark:from-blue-950/20 dark:to-zinc-900 border-2 border-blue-600 p-6 sm:p-8 flex flex-col justify-between shadow-xl shadow-blue-500/10 relative">
             <div className="absolute -top-3.5 right-8">
               <span className="px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-black uppercase tracking-widest shadow-md">
-                100% Guaranteed 🌟
+                {t("comp_us_badge")}
               </span>
             </div>
 
@@ -106,7 +108,7 @@ export function DealerComparisonTable() {
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">Verified Platform</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">{t("comp_us_tag")}</span>
                   <h3 className="text-xl font-black text-slate-900 dark:text-white">CCTVQuotation.com</h3>
                 </div>
               </div>
@@ -126,16 +128,16 @@ export function DealerComparisonTable() {
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-blue-100 dark:border-blue-900/40 flex items-center justify-between">
+            <div className="mt-6 pt-4 border-t border-blue-100 dark:border-blue-900/40 flex items-center justify-between gap-2">
               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Protected by TEAM Warranty</span>
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                <span>{t("comp_us_warranty")}</span>
               </span>
               <Link
                 href="/wizard"
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1 shadow-xs"
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1 shadow-xs shrink-0"
               >
-                <span>Get Quote</span>
+                <span>{t("get_quote")}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -166,7 +168,7 @@ export function DealerComparisonTable() {
               <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800">
                 <div className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-1 flex items-center gap-1.5">
                   <XCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                  <span>Local CCTV Mechanic / Shop</span>
+                  <span>{t("comp_offline_title")}</span>
                 </div>
                 <div className="text-xs sm:text-sm font-medium text-slate-600 dark:text-zinc-400 leading-snug">
                   {item.dealer}
@@ -176,16 +178,16 @@ export function DealerComparisonTable() {
           ))}
 
           {/* Mobile Bottom Quick Guarantee & CTA */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between shadow-md">
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between gap-2 shadow-md">
             <div>
-              <div className="text-xs font-black uppercase tracking-wider">100% Guaranteed Setup</div>
-              <div className="text-[11px] text-blue-100">Protected by TEAM 1-Year Warranty</div>
+              <div className="text-xs font-black uppercase tracking-wider">{t("comp_mobile_guar")}</div>
+              <div className="text-[11px] text-blue-100">{t("comp_us_warranty")}</div>
             </div>
             <Link
               href="/wizard"
-              className="px-4 py-2 rounded-xl bg-white text-blue-700 font-bold text-xs uppercase tracking-wider shadow-xs active:scale-95 transition-transform"
+              className="px-4 py-2 rounded-xl bg-white text-blue-700 font-bold text-xs uppercase tracking-wider shadow-xs active:scale-95 transition-transform shrink-0"
             >
-              Get Quote
+              {t("get_quote")}
             </Link>
           </div>
         </div>

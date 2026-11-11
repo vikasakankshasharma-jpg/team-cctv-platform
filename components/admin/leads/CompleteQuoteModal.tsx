@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface CompleteQuoteModalProps {
   isOpen: boolean;
@@ -40,6 +41,7 @@ export function CompleteQuoteModal({
   initialRequirement,
   onSuccess
 }: CompleteQuoteModalProps) {
+  const { t } = useTranslation();
   const [cameraCount, setCameraCount] = useState<number>(initialRequirement?.camera_count || 4);
   const [technology, setTechnology] = useState<"HD" | "IP">(initialRequirement?.technology_preference === "IP" ? "IP" : "HD");
   const [recordingDays, setRecordingDays] = useState<number>(initialRequirement?.recording_days || 15);
@@ -90,15 +92,15 @@ export function CompleteQuoteModal({
 
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`Quotation completed! Total Payable: ₹${data.total_payable?.toLocaleString("en-IN")}`);
+        toast.success(t("adm_qm_comp_toast_ok", "Quotation completed! Total Payable: ₹{total}", { total: String(data.total_payable?.toLocaleString("en-IN") || 0) }));
         onSuccess(data);
         onClose();
       } else {
-        toast.error(data.message || data.error || "Failed to complete quotation");
+        toast.error(data.message || data.error || t("adm_qm_comp_toast_err", "Failed to complete quotation"));
       }
     } catch (err: any) {
       console.error("Complete quote error:", err);
-      toast.error(err.message || "Network error while completing quotation");
+      toast.error(err.message || t("adm_qm_comp_net_err", "Network error while completing quotation"));
     } finally {
       setSubmitting(false);
     }
@@ -109,24 +111,24 @@ export function CompleteQuoteModal({
       <div className="relative w-full max-w-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="p-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-800/40">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-900/40">
+        <div className="p-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-800/40">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-900/40 shrink-0">
               <Zap className="w-5 h-5" />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-zinc-900 dark:text-white">
-                Complete & Finalize Quotation
+            <div className="min-w-0">
+              <h2 className="text-base font-bold text-zinc-900 dark:text-white leading-snug">
+                {t("adm_qm_comp_title", "Complete & Finalize Quotation")}
               </h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {customerName} • {customerMobile || "No Mobile"} • ID: {quoteId}
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                {customerName} • {customerMobile || "—"} • ID: {quoteId}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             disabled={submitting}
-            className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -136,20 +138,20 @@ export function CompleteQuoteModal({
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5 flex-1 text-xs">
           
           <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-900/40 text-emerald-900 dark:text-emerald-200">
-            <p className="font-bold flex items-center gap-1.5 text-xs">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-              Instant Server Pricing Authority
+            <p className="font-bold flex items-center gap-1.5 text-xs leading-snug">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>{t("adm_qm_comp_auth_t", "Instant Server Pricing Authority")}</span>
             </p>
             <p className="mt-0.5 text-[11px] opacity-90 leading-relaxed">
-              Completing this quotation will calculate the full Bill of Materials (BOM), SMPS power supply, cables, and storage, and advance status to <strong>Quote Sent</strong>.
+              {t("adm_qm_comp_auth_d", "Completing this quotation will calculate the full Bill of Materials (BOM), SMPS power supply, cables, and storage, and advance status to Quote Sent.")}
             </p>
           </div>
 
           {/* Camera Count & Tech */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1.5">
-                Camera Units Count:
+              <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1.5 leading-snug">
+                {t("adm_qm_comp_cam_cnt", "Camera Units Count:")}
               </label>
               <div className="flex items-center gap-2">
                 <Input
@@ -178,25 +180,25 @@ export function CompleteQuoteModal({
             </div>
 
             <div>
-              <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1.5">
-                Technology Tier:
+              <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1.5 leading-snug">
+                {t("adm_qm_comp_tech_lbl", "Camera Technology:")}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   type="button"
                   variant={technology === "HD" ? "default" : "outline"}
                   onClick={() => setTechnology("HD")}
-                  className={`h-10 text-xs font-bold ${technology === "HD" ? "bg-blue-600 hover:bg-blue-700" : ""}`}
+                  className={`min-h-[2.5rem] h-auto py-2 px-2 text-xs font-bold whitespace-normal leading-snug ${technology === "HD" ? "bg-blue-600 hover:bg-blue-700" : ""}`}
                 >
-                  HD (Analog / Coax)
+                  {t("adm_qm_comp_hd_coax", "HD (Analog / Coax)")}
                 </Button>
                 <Button
                   type="button"
                   variant={technology === "IP" ? "default" : "outline"}
                   onClick={() => setTechnology("IP")}
-                  className={`h-10 text-xs font-bold ${technology === "IP" ? "bg-indigo-600 hover:bg-indigo-700" : ""}`}
+                  className={`min-h-[2.5rem] h-auto py-2 px-2 text-xs font-bold whitespace-normal leading-snug ${technology === "IP" ? "bg-indigo-600 hover:bg-indigo-700" : ""}`}
                 >
-                  IP (Digital / PoE)
+                  {t("adm_qm_comp_ip_poe", "IP (Digital / PoE)")}
                 </Button>
               </div>
             </div>
@@ -205,8 +207,8 @@ export function CompleteQuoteModal({
           {/* Storage & Brand */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1.5">
-                Recording Days (Surveillance HDD):
+              <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1.5 leading-snug">
+                {t("adm_qm_comp_rec_days", "Recording Days (Surveillance HDD):")}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {[7, 15, 30].map((days) => (
@@ -215,24 +217,24 @@ export function CompleteQuoteModal({
                     type="button"
                     variant={recordingDays === days ? "default" : "outline"}
                     onClick={() => setRecordingDays(days)}
-                    className="h-9 text-xs font-bold"
+                    className="min-h-[2.25rem] h-auto py-1.5 px-2 text-xs font-bold whitespace-normal leading-snug"
                   >
-                    {days} Days
+                    {t("adm_qm_days_suffix", "{days} Days", { days: String(days) })}
                   </Button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1.5">
-                Brand Preference:
+              <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1.5 leading-snug">
+                {t("adm_qm_comp_brand_lbl", "Brand Preference:")}
               </label>
               <select
                 value={brandPreference}
                 onChange={(e) => setBrandPreference(e.target.value)}
                 className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
-                <option value="Mixed (Best Price)">Mixed (Best Price - Recommended)</option>
+                <option value="Mixed (Best Price)">{t("adm_qm_comp_brand_mix", "Mixed (Best Price)")}</option>
                 <option value="CP Plus">CP Plus (Orange Line)</option>
                 <option value="Hikvision">Hikvision (Enterprise)</option>
                 <option value="Dahua">Dahua (Commercial)</option>
@@ -242,60 +244,60 @@ export function CompleteQuoteModal({
 
           {/* Site Conditions & Difficulties */}
           <div className="space-y-2">
-            <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block">
-              Site Difficulty Flags (0% Margin Surcharges):
+            <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block leading-snug">
+              {t("adm_qm_comp_flags_lbl", "Site Difficulty Flags (0% Margin Surcharges):")}
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
               <label 
                 onClick={() => toggleFlag("requiresLadderFee")}
-                className={`p-2.5 rounded-xl border cursor-pointer flex items-center gap-2.5 transition-all ${
+                className={`p-2.5 rounded-xl border cursor-pointer flex items-center gap-2.5 transition-all leading-snug ${
                   flags.requiresLadderFee ? "bg-primary/5 border-primary font-bold text-primary" : "bg-zinc-50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-800"
                 }`}
               >
                 <input type="checkbox" checked={flags.requiresLadderFee} onChange={() => {}} className="hidden" />
-                <div className={`w-4 h-4 rounded flex items-center justify-center border ${flags.requiresLadderFee ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
+                <div className={`w-4 h-4 rounded flex items-center justify-center border shrink-0 ${flags.requiresLadderFee ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
                   {flags.requiresLadderFee && <Check className="w-3 h-3 stroke-[3]" />}
                 </div>
-                <span>Ladder / High Ceiling (&gt;12ft)</span>
+                <span>{t("adm_qm_flag_ladder", "Ladder / High Ceiling (>12ft)")}</span>
               </label>
 
               <label 
                 onClick={() => toggleFlag("requiresMarbleSurcharge")}
-                className={`p-2.5 rounded-xl border cursor-pointer flex items-center gap-2.5 transition-all ${
+                className={`p-2.5 rounded-xl border cursor-pointer flex items-center gap-2.5 transition-all leading-snug ${
                   flags.requiresMarbleSurcharge ? "bg-primary/5 border-primary font-bold text-primary" : "bg-zinc-50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-800"
                 }`}
               >
                 <input type="checkbox" checked={flags.requiresMarbleSurcharge} onChange={() => {}} className="hidden" />
-                <div className={`w-4 h-4 rounded flex items-center justify-center border ${flags.requiresMarbleSurcharge ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
+                <div className={`w-4 h-4 rounded flex items-center justify-center border shrink-0 ${flags.requiresMarbleSurcharge ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
                   {flags.requiresMarbleSurcharge && <Check className="w-3 h-3 stroke-[3]" />}
                 </div>
-                <span>Marble / Italian Core Drill</span>
+                <span>{t("adm_qm_flag_marble", "Marble / Italian Core Drill")}</span>
               </label>
 
               <label 
                 onClick={() => toggleFlag("requiresFurnishedSurcharge")}
-                className={`p-2.5 rounded-xl border cursor-pointer flex items-center gap-2.5 transition-all ${
+                className={`p-2.5 rounded-xl border cursor-pointer flex items-center gap-2.5 transition-all leading-snug ${
                   flags.requiresFurnishedSurcharge ? "bg-primary/5 border-primary font-bold text-primary" : "bg-zinc-50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-800"
                 }`}
               >
                 <input type="checkbox" checked={flags.requiresFurnishedSurcharge} onChange={() => {}} className="hidden" />
-                <div className={`w-4 h-4 rounded flex items-center justify-center border ${flags.requiresFurnishedSurcharge ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
+                <div className={`w-4 h-4 rounded flex items-center justify-center border shrink-0 ${flags.requiresFurnishedSurcharge ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
                   {flags.requiresFurnishedSurcharge && <Check className="w-3 h-3 stroke-[3]" />}
                 </div>
-                <span>Concealed Interior Routing</span>
+                <span>{t("adm_qm_flag_concealed", "Concealed Interior Routing")}</span>
               </label>
 
               <label 
                 onClick={() => toggleFlag("requiresHeavyDrillingSurcharge")}
-                className={`p-2.5 rounded-xl border cursor-pointer flex items-center gap-2.5 transition-all ${
+                className={`p-2.5 rounded-xl border cursor-pointer flex items-center gap-2.5 transition-all leading-snug ${
                   flags.requiresHeavyDrillingSurcharge ? "bg-primary/5 border-primary font-bold text-primary" : "bg-zinc-50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-800"
                 }`}
               >
                 <input type="checkbox" checked={flags.requiresHeavyDrillingSurcharge} onChange={() => {}} className="hidden" />
-                <div className={`w-4 h-4 rounded flex items-center justify-center border ${flags.requiresHeavyDrillingSurcharge ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
+                <div className={`w-4 h-4 rounded flex items-center justify-center border shrink-0 ${flags.requiresHeavyDrillingSurcharge ? "bg-primary border-primary text-white" : "border-zinc-400"}`}>
                   {flags.requiresHeavyDrillingSurcharge && <Check className="w-3 h-3 stroke-[3]" />}
                 </div>
-                <span>Heavy Concrete Core Cutting</span>
+                <span>{t("adm_qm_flag_heavy", "Heavy Concrete Core Cutting")}</span>
               </label>
             </div>
           </div>
@@ -303,8 +305,8 @@ export function CompleteQuoteModal({
           {/* Commercial Discount & Notes */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1">
-                Special Commercial Discount (₹ Flat):
+              <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1 leading-snug">
+                {t("adm_qm_comp_disc_lbl", "Special Commercial Discount (₹ Flat):")}
               </label>
               <Input
                 type="number"
@@ -317,44 +319,44 @@ export function CompleteQuoteModal({
             </div>
 
             <div>
-              <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1">
-                Admin Notes:
+              <label className="font-bold uppercase tracking-wider text-muted-foreground text-[10px] block mb-1 leading-snug">
+                {t("adm_qm_comp_notes_lbl", "Admin Notes:")}
               </label>
               <Input
                 type="text"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="e.g. Discussed with client on call"
+                placeholder={t("adm_qm_comp_notes_ph", "e.g. Discussed with client on call")}
                 className="h-9 text-xs"
               />
             </div>
           </div>
 
           {/* Submit Actions */}
-          <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-end gap-3">
+          <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-end gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               disabled={submitting}
-              className="text-xs font-semibold"
+              className="text-xs font-semibold h-auto py-2 px-4 whitespace-normal leading-snug"
             >
-              Cancel
+              {t("adm_qm_del_cancel", "Cancel")}
             </Button>
             <Button
               type="submit"
               disabled={submitting}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-2 px-5"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-2 px-5 py-2 h-auto whitespace-normal leading-snug"
             >
               {submitting ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Calculating & Saving...</span>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                  <span>{t("adm_qm_comp_saving", "Calculating & Saving...")}</span>
                 </>
               ) : (
                 <>
-                  <Zap className="w-3.5 h-3.5" />
-                  <span>Finalize & Complete Quotation</span>
+                  <Zap className="w-3.5 h-3.5 shrink-0" />
+                  <span>{t("adm_qm_comp_submit", "Finalize & Complete Quotation")}</span>
                 </>
               )}
             </Button>

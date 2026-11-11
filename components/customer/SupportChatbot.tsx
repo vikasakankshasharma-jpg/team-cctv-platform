@@ -1,18 +1,79 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, X, Send, Bot, User, Loader2, Wrench, ShieldCheck, Video } from "lucide-react";
+import { MessageSquare, X, Send, Bot, User, Loader2, Wrench, ShieldCheck, Video, Mic, MicOff } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/useTranslation";
+import { SPEECH_LOCALE_MAP, languageNames } from "@/lib/i18n/mapping";
 
 export function SupportChatbot() {
+  const { t, locale } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([
-    { role: "assistant", content: "Hi! I am your AI Tech Support Assistant. Is your CCTV system giving you trouble, or do you have a question about your AMC plan?" }
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>(() => [
+    { role: "assistant", content: t("sup_bot_welcome") }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    return () => {
+      try {
+        recognitionRef.current?.stop();
+      } catch {
+        // Ignore cleanup errors
+      }
+    };
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      try {
+        recognitionRef.current?.stop();
+      } catch {
+        // Ignore
+      }
+      setIsListening(false);
+      return;
+    }
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setMessages((prev) => [...prev, { role: "assistant", content: t("ai_voice_unsupported") }]);
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    recognition.lang = SPEECH_LOCALE_MAP[locale] || "en-IN";
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((res: any) => res[0].transcript)
+        .join("");
+      setInput(transcript);
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+    try {
+      recognition.start();
+    } catch {
+      setIsListening(false);
+    }
+  };
+
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length === 1 && prev[0].role === "assistant") {
+        return [{ role: "assistant", content: t("sup_bot_welcome") }];
+      }
+      return prev;
+    });
+  }, [locale]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -35,7 +96,7 @@ export function SupportChatbot() {
         body: JSON.stringify({
           messages: [...messages, { role: "user", content: userMsg }],
           pageContext: "/customer/dashboard",
-          locale: "en"
+          locale: locale
         })
       });
 
@@ -43,10 +104,10 @@ export function SupportChatbot() {
       if (res.ok) {
         setMessages(prev => [...prev, { role: "assistant", content: data.content }]);
       } else {
-        setMessages(prev => [...prev, { role: "assistant", content: "Sorry, I am having trouble connecting to the support server right now." }]);
+        setMessages(prev => [...prev, { role: "assistant", content: t("sup_bot_server_err") }]);
       }
     } catch (e) {
-      setMessages(prev => [...prev, { role: "assistant", content: "Connection error. Please try again." }]);
+      setMessages(prev => [...prev, { role: "assistant", content: t("sup_bot_conn_err") }]);
     } finally {
       setLoading(false);
     }
@@ -78,9 +139,9 @@ export function SupportChatbot() {
           <CardHeader className="bg-blue-600 rounded-t-xl text-white py-4">
             <CardTitle className="text-lg flex items-center gap-2">
               <Bot className="w-5 h-5" /> 
-              Smart Support
+              {t("sup_bot_title")}
             </CardTitle>
-            <p className="text-xs text-blue-100 opacity-90">AI Technician trained on TEAM CCTV manuals</p>
+            <p className="text-xs text-blue-100 opacity-90">{t("sup_bot_subtitle")}</p>
           </CardHeader>
           
           <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20" ref={scrollRef}>
@@ -103,9 +164,9 @@ export function SupportChatbot() {
           </CardContent>
           
           <div className="px-4 pb-2 pt-2 bg-white dark:bg-zinc-950 flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
-            <button onClick={() => handleQuickAction("Why is my DVR beeping?")} className="text-xs bg-muted hover:bg-muted/80 border border-border px-3 py-1.5 rounded-full flex items-center gap-1"><Wrench className="w-3 h-3 text-red-500"/> DVR Beeping</button>
-            <button onClick={() => handleQuickAction("Can't view cameras on my phone")} className="text-xs bg-muted hover:bg-muted/80 border border-border px-3 py-1.5 rounded-full flex items-center gap-1"><Video className="w-3 h-3 text-blue-500"/> App Offline</button>
-            <button onClick={() => handleQuickAction("How do I renew my AMC?")} className="text-xs bg-muted hover:bg-muted/80 border border-border px-3 py-1.5 rounded-full flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500"/> AMC Renewal</button>
+            <button onClick={() => handleQuickAction(t("sup_bot_q_dvr"))} className="text-xs bg-muted hover:bg-muted/80 border border-border px-3 py-1.5 rounded-full flex items-center gap-1"><Wrench className="w-3 h-3 text-red-500"/> {t("sup_bot_pill_dvr")}</button>
+            <button onClick={() => handleQuickAction(t("sup_bot_q_app"))} className="text-xs bg-muted hover:bg-muted/80 border border-border px-3 py-1.5 rounded-full flex items-center gap-1"><Video className="w-3 h-3 text-blue-500"/> {t("sup_bot_pill_app")}</button>
+            <button onClick={() => handleQuickAction(t("sup_bot_q_amc"))} className="text-xs bg-muted hover:bg-muted/80 border border-border px-3 py-1.5 rounded-full flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500"/> {t("sup_bot_pill_amc")}</button>
           </div>
 
           <CardFooter className="p-3 bg-white dark:bg-zinc-950 border-t border-border">
@@ -117,15 +178,29 @@ export function SupportChatbot() {
                 type="text"
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder="Ask a technical question..."
+                placeholder={t("sup_bot_placeholder")}
                 className="flex-1 bg-muted/50 border border-border rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
                 disabled={loading}
               />
               <button
+                type="button"
+                onClick={toggleListening}
+                disabled={loading}
+                aria-label={t("ai_voice_input", { lang: languageNames[locale] || locale })}
+                title={t("ai_voice_input", { lang: languageNames[locale] || locale })}
+                className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors border ${
+                  isListening
+                    ? "bg-red-500 text-white border-red-500 animate-pulse"
+                    : "bg-muted/60 text-muted-foreground border-border hover:text-foreground"
+                }`}
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </button>
+              <button
                 id="chatbot-send-btn"
                 type="submit"
                 disabled={!input.trim() || loading}
-                className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center disabled:opacity-50 hover:bg-blue-700 transition-colors"
+                className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 disabled:opacity-50 hover:bg-blue-700 transition-colors"
               >
                 <Send className="w-4 h-4 ml-0.5" />
               </button>

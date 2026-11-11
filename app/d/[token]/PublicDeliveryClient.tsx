@@ -5,8 +5,10 @@ import { PackageCheck, KeyRound, CheckCircle2, AlertCircle, Clock, Shield } from
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function PublicDeliveryClient({ quoteId, quote }: { quoteId: string; quote: any }) {
+  const { t } = useTranslation();
   const [otp, setOtp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(quote.delivery_status === "DELIVERED");
@@ -21,12 +23,12 @@ export default function PublicDeliveryClient({ quoteId, quote }: { quoteId: stri
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (otp.length !== 4) {
-      toast.error("Please enter a valid 4-digit OTP");
+      toast.error(t("pdel_err_otp", "Please enter a valid 4-digit OTP"));
       return;
     }
     
     if (isInternalCashCollection && !cashCollected) {
-      toast.error("Please confirm cash collection");
+      toast.error(t("pdel_err_cash", "Please confirm cash collection"));
       return;
     }
 
@@ -46,13 +48,13 @@ export default function PublicDeliveryClient({ quoteId, quote }: { quoteId: stri
       const data = await res.json();
       
       if (!res.ok) {
-        throw new Error(data.error || "Failed to verify OTP");
+        throw new Error(data.error || t("pdel_err_verify", "Failed to verify OTP"));
       }
       
       setIsSuccess(true);
-      toast.success("Delivery confirmed successfully!");
+      toast.success(t("pdel_ok", "Delivery confirmed successfully!"));
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong");
+      toast.error(err.message || t("werr_title", "Something went wrong"));
     } finally {
       setIsSubmitting(false);
     }
@@ -64,8 +66,8 @@ export default function PublicDeliveryClient({ quoteId, quote }: { quoteId: stri
         <div className="mx-auto w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-6">
           <CheckCircle2 className="w-12 h-12 text-green-500" />
         </div>
-        <h2 className="text-3xl font-bold text-zinc-900 mb-2">Delivery Confirmed ✓</h2>
-        <p className="text-zinc-500 mb-8">Thank you! The material delivery has been successfully verified.</p>
+        <h2 className="text-3xl font-bold text-zinc-900 mb-2">{t("pdel_confirmed", "Delivery Confirmed ✓")}</h2>
+        <p className="text-zinc-500 mb-8">{t("pdel_confirmed_desc", "Thank you! The material delivery has been successfully verified.")}</p>
       </div>
     );
   }
@@ -93,15 +95,15 @@ export default function PublicDeliveryClient({ quoteId, quote }: { quoteId: stri
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-8 flex gap-3 text-amber-800">
           <Clock className="w-5 h-5 shrink-0 mt-0.5 text-amber-600" />
           <p className="text-sm font-medium">
-            ⏳ Waiting for Customer Payment. The customer needs to complete their 90% payment before you can verify delivery. Please wait or contact support.
+            {t("pdel_wait_pay", "⏳ Waiting for Customer Payment. The customer needs to complete their 90% payment before you can verify delivery. Please wait or contact support.")}
           </p>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <label className="flex items-center gap-2 text-sm font-medium text-zinc-700">
-              <KeyRound className="w-4 h-4" />
-              Ask customer for 4-digit Delivery PIN
+              <KeyRound className="w-4 h-4 shrink-0" />
+              {t("pdel_ask_pin", "Ask customer for 4-digit Delivery PIN")}
             </label>
             <Input
               type="text"
@@ -119,14 +121,14 @@ export default function PublicDeliveryClient({ quoteId, quote }: { quoteId: stri
           {isThirdParty && (
              <div className="bg-red-50 text-red-700 border border-red-200 rounded-xl p-4 text-sm font-medium flex items-start gap-2">
                <AlertCircle className="w-5 h-5 shrink-0" />
-               <p>Do NOT collect cash. Online payment only.</p>
+               <p>{t("pdel_no_cash", "Do NOT collect cash. Online payment only.")}</p>
              </div>
           )}
 
           {isInternalCashCollection && (
             <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 space-y-4">
               <div>
-                <p className="text-sm text-blue-800 font-medium mb-1">Balance to Collect</p>
+                <p className="text-sm text-blue-800 font-medium mb-1">{t("pdel_bal_collect", "Balance to Collect")}</p>
                 <p className="text-2xl font-bold text-blue-900">₹{balanceToCollect.toLocaleString('en-IN')}</p>
               </div>
               <label className="flex items-start gap-3 cursor-pointer">
@@ -137,7 +139,7 @@ export default function PublicDeliveryClient({ quoteId, quote }: { quoteId: stri
                   className="mt-1 w-4 h-4 text-indigo-600 rounded border-blue-300 focus:ring-indigo-500"
                 />
                 <span className="text-sm text-blue-900 font-medium">
-                  I confirm I have collected ₹{balanceToCollect.toLocaleString('en-IN')} in cash/UPI
+                  {t("pdel_confirm_cash", "I confirm I have collected ₹{amount} in cash/UPI", { amount: balanceToCollect.toLocaleString('en-IN') })}
                 </span>
               </label>
             </div>
@@ -145,10 +147,10 @@ export default function PublicDeliveryClient({ quoteId, quote }: { quoteId: stri
 
           <Button
             type="submit"
-            className="w-full h-14 text-lg rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 transition-all active:scale-[0.98]"
+            className="w-full min-h-[56px] h-auto py-3 text-lg rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] whitespace-normal text-center leading-snug"
             disabled={isSubmitting || otp.length !== 4 || (isInternalCashCollection && !cashCollected)}
           >
-            {isSubmitting ? "Verifying..." : "Verify Delivery"}
+            {isSubmitting ? t("pdel_verifying", "Verifying...") : t("pdel_verify_btn", "Verify Delivery")}
           </Button>
         </form>
       )}

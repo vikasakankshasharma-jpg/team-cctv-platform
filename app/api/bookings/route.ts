@@ -5,28 +5,31 @@ import { ApiResponse } from "@/lib/api-response";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
 import { COLLECTIONS } from "@/lib/constants";
 import { Msg91WhatsAppProvider } from "@/lib/whatsapp/msg91-provider";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 
 /**
  * ENTERPRISE BOOKING SYSTEM
  * Handles site visit scheduling with ownership verification and audit logging.
  */
 export async function POST(request: NextRequest) {
+  let locale = resolveRequestLocale(request);
   const { success } = await rateLimit(request);
   if (!success) {
-    return ApiResponse.error("Too many requests", "RATE_LIMIT_EXCEEDED", 429);
+    return ApiResponse.error(getApiMessage(locale, "too_many_requests"), "RATE_LIMIT_EXCEEDED", 429);
   }
 
   try {
     const body = await request.json();
+    locale = resolveRequestLocale(request, body);
     const { lead_id, address, quote_id, firebase_uid } = body;
 
     if (!lead_id || !address) {
-      return ApiResponse.badRequest("Missing lead_id or address");
+      return ApiResponse.badRequest(getApiMessage(locale, "booking_missing_fields"));
     }
 
 
     if (!adminDb) {
-       return ApiResponse.error("Database not initialized", "INTERNAL_ERROR", 500);
+       return ApiResponse.error(getApiMessage(locale, "internal_error"), "INTERNAL_ERROR", 500);
     }
 
     // 1. Ownership & Existence Verification
@@ -52,12 +55,12 @@ export async function POST(request: NextRequest) {
       const leadDoc = await leadRef.get();
       
       if (!leadDoc.exists) {
-        return ApiResponse.error("Lead not found", "NOT_FOUND", 404);
+        return ApiResponse.error(getApiMessage(locale, "lead_not_found"), "NOT_FOUND", 404);
       }
       
       leadData = leadDoc.data();
       if (firebase_uid && leadData?.firebase_uid !== firebase_uid) {
-        return ApiResponse.forbidden("You do not have permission to book for this lead.");
+        return ApiResponse.forbidden(getApiMessage(locale, "booking_forbidden"));
       }
     }
 
@@ -139,12 +142,21 @@ export async function POST(request: NextRequest) {
     // 5. Send WhatsApp Notification
     if (customer_mobile && !isTestBooking) {
       try {
+        const { resolveCustomerLocale } = await import("@/lib/whatsapp/customer-notifications-i18n");
+        const custLocale = await resolveCustomerLocale({
+          preferredLanguage: body?.preferred_language,
+          leadData,
+          leadId: actualLeadId,
+          phone: customer_mobile,
+          cookieLocale: request.cookies.get("team_locale")?.value,
+        });
         const msg91 = new Msg91WhatsAppProvider();
         await msg91.sendSurveyConfirm({
           phone: customer_mobile,
           customerName: customer_name,
           date: preferred_date,
-          timeSlot: time_slot
+          timeSlot: time_slot,
+          preferredLanguage: custLocale,
         });
       } catch (waError) {
         console.error("Failed to send WhatsApp survey confirmation:", waError);
@@ -154,11 +166,11 @@ export async function POST(request: NextRequest) {
 
     return ApiResponse.success({ 
       id: bookingRef.id, 
-      message: "Site visit booked successfully" 
+      message: getApiMessage(locale, "booking_success") 
     }, 201);
 
   } catch (error: any) {
     console.error("Critical error in bookings API:", error);
-    return ApiResponse.error("Internal server error", "INTERNAL_ERROR", 500, error.message);
+    return ApiResponse.error(getApiMessage(locale, "internal_error"), "INTERNAL_ERROR", 500, error.message);
   }
 }

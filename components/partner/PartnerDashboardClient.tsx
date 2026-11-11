@@ -1,9 +1,10 @@
 "use client";
 
-import { Copy, IndianRupee, Target, TrendingUp, CheckCircle2, ChevronRight, Activity, Clock, AlertTriangle, Map } from "lucide-react";
+import { Copy, IndianRupee, Target, CheckCircle2, ChevronRight, Activity, Clock, AlertTriangle, Map } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { EDMGenerator } from "./EDMGenerator";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface PartnerDashboardClientProps {
   partnerName: string;
@@ -35,20 +36,21 @@ interface PartnerDashboardClientProps {
 }
 
 export function PartnerDashboardClient({ partnerName, referralCode, stats, recentWins, pipeline, slaBreachesCount = 0, templates = [] }: PartnerDashboardClientProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(referralCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   const CARDS = [
-    { label: "Total Earned", value: `₹${stats.totalEarned.toLocaleString('en-IN')}`, icon: IndianRupee, color: "text-amber-500", bg: "bg-amber-500/10" },
-    { label: "Pending Payout", value: `₹${stats.pendingPayout.toLocaleString('en-IN')}`, icon: Clock, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "Total Paid", value: `₹${stats.totalPaid.toLocaleString('en-IN')}`, icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { label: "Total Referrals", value: stats.totalLeads.toString(), icon: Target, color: "text-purple-500", bg: "bg-purple-500/10" },
+    { label: t("prt_kpi_earned", "Total Earned"), value: `₹${stats.totalEarned.toLocaleString('en-IN')}`, icon: IndianRupee, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { label: t("prt_kpi_pending", "Pending Payout"), value: `₹${stats.pendingPayout.toLocaleString('en-IN')}`, icon: Clock, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { label: t("prt_kpi_paid", "Total Paid"), value: `₹${stats.totalPaid.toLocaleString('en-IN')}`, icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { label: t("prt_kpi_referrals", "Total Referrals"), value: stats.totalLeads.toString(), icon: Target, color: "text-purple-500", bg: "bg-purple-500/10" },
   ];
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://cctvquotation.com";
+  const waShareUrl = `${origin}/wa/${referralCode}`;
+  const webShareUrl = `${origin}/?ref=${referralCode}`;
+  const welcomeName = partnerName || t("prt_fallback_name", "Partner");
+  const welcomeParts = t("inst_dash_welcome", "Welcome back, {name}", { name: "__NAME__" }).split("__NAME__");
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -60,28 +62,28 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
         <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Partner Dashboard</span>
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">{t("prt_dash_badge", "Partner Dashboard")}</span>
             </div>
             <h1 className="text-3xl lg:text-4xl font-black text-zinc-900 dark:text-white tracking-tight">
-              Welcome back, <span className="text-amber-600 dark:text-amber-500">{partnerName}</span>.
+              {welcomeParts[0]}<span className="text-amber-600 dark:text-amber-500">{welcomeName}</span>{welcomeParts[1] ?? ""}.
             </h1>
             <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mt-2 max-w-lg leading-relaxed">
-              Here is the live overview of your referral pipeline and commission ledger. Share your referral code to increase earnings.
+              {t("prt_dash_sub", "Here is the live overview of your referral pipeline and commission ledger. Share your referral code to increase earnings.")}
             </p>
           </div>
 
           <div className="flex flex-col items-start md:items-end gap-2 w-full md:w-auto">
-            <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Share to Earn</span>
+            <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">{t("prt_share_title", "Share to Earn")}</span>
             
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
               {/* WhatsApp Share Card */}
               <div className="group flex flex-col items-center bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-4 rounded-[20px] transition-all w-full sm:w-auto">
-                <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-500 uppercase tracking-widest mb-3">Share on WhatsApp</span>
+                <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-500 uppercase tracking-widest mb-3 text-center">{t("prt_share_wa", "Share on WhatsApp")}</span>
                 <div className="flex items-center gap-3">
                   <div className="w-[80px] h-[80px] bg-white rounded-xl p-1.5 shadow-sm border border-emerald-100 shrink-0">
                     <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(typeof window !== "undefined" ? `${window.location.origin}/wa/${referralCode}` : `https://cctvquotation.com/wa/${referralCode}`)}`} 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(waShareUrl)}`} 
                       alt="WhatsApp QR Code" 
                       className="w-full h-full object-contain rounded-lg"
                     />
@@ -89,20 +91,20 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
                   <div className="flex flex-col gap-2">
                     <button 
                       onClick={() => {
-                        navigator.clipboard.writeText(typeof window !== "undefined" ? `${window.location.origin}/wa/${referralCode}` : `https://cctvquotation.com/wa/${referralCode}`);
+                        navigator.clipboard.writeText(waShareUrl);
                         setCopied(true);
                         setTimeout(() => setCopied(false), 2000);
                       }}
-                      className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:scale-105 transition-transform flex items-center gap-2"
+                      className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 h-auto whitespace-normal rounded-lg text-xs font-bold shadow-sm hover:scale-105 transition-transform flex items-center gap-2"
                     >
-                      <Copy className="w-3.5 h-3.5" /> Copy Link
+                      <Copy className="w-3.5 h-3.5 shrink-0" /> {t("prt_copy_link", "Copy Link")}
                     </button>
                     <a 
-                      href={`https://wa.me/?text=${encodeURIComponent(`Get an instant CCTV quotation from TEAM CCTV: ${typeof window !== "undefined" ? window.location.origin : "https://cctvquotation.com"}/wa/${referralCode}`)}`}
+                      href={`https://wa.me/?text=${encodeURIComponent(t("prt_wa_share_text", "Get an instant CCTV quotation from TEAM CCTV: {url}", { url: waShareUrl }))}`}
                       target="_blank"
-                      className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:scale-105 transition-transform text-center"
+                      className="bg-emerald-500 text-white px-3 py-1.5 h-auto whitespace-normal rounded-lg text-xs font-bold shadow-sm hover:scale-105 transition-transform text-center"
                     >
-                      Forward 🚀
+                      {t("prt_forward_btn", "Forward 🚀")}
                     </a>
                   </div>
                 </div>
@@ -110,11 +112,11 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
 
               {/* Website Share Card */}
               <div className="group flex flex-col items-center bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-4 rounded-[20px] transition-all w-full sm:w-auto">
-                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-500 uppercase tracking-widest mb-3">Share Website</span>
+                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-500 uppercase tracking-widest mb-3 text-center">{t("prt_share_web", "Share Website")}</span>
                 <div className="flex items-center gap-3">
                   <div className="w-[80px] h-[80px] bg-white rounded-xl p-1.5 shadow-sm border border-amber-100 shrink-0">
                     <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(typeof window !== "undefined" ? window.location.origin + '/?ref=' + referralCode : '')}`} 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(typeof window !== "undefined" ? webShareUrl : '')}`} 
                       alt="Website QR Code" 
                       className="w-full h-full object-contain rounded-lg"
                     />
@@ -122,20 +124,20 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
                   <div className="flex flex-col gap-2">
                     <button 
                       onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/?ref=${referralCode}`);
+                        navigator.clipboard.writeText(webShareUrl);
                         setCopied(true);
                         setTimeout(() => setCopied(false), 2000);
                       }}
-                      className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:scale-105 transition-transform flex items-center gap-2"
+                      className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 h-auto whitespace-normal rounded-lg text-xs font-bold shadow-sm hover:scale-105 transition-transform flex items-center gap-2"
                     >
-                      <Copy className="w-3.5 h-3.5" /> Copy Link
+                      <Copy className="w-3.5 h-3.5 shrink-0" /> {t("prt_copy_link", "Copy Link")}
                     </button>
                   </div>
                 </div>
               </div>
 
             </div>
-            {copied && <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest text-right mt-1 w-full animate-in slide-in-from-top-1">Link Copied!</span>}
+            {copied && <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest text-right mt-1 w-full animate-in slide-in-from-top-1">{t("prt_link_copied", "Link Copied!")}</span>}
           </div>
         </div>
       </div>
@@ -167,22 +169,22 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
       {pipeline && (
         <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-4 md:p-8 shadow-xl dark:shadow-2xl">
           <div className="mb-6">
-            <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Referral Pipeline</h2>
-            <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Real-time status of your referred leads</p>
+            <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">{t("prt_pipeline_title", "Referral Pipeline")}</h2>
+            <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mt-1">{t("prt_pipeline_sub", "Real-time status of your referred leads")}</p>
           </div>
           
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
             {[
-              { label: "New", value: pipeline.new, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20" },
-              { label: "Contacted", value: pipeline.contacted, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20" },
-              { label: "Site Visit", value: pipeline.site_visit, color: "text-purple-500", bg: "bg-purple-500/10", border: "border-purple-500/20" },
-              { label: "Quoted", value: pipeline.quoted, color: "text-indigo-500", bg: "bg-indigo-500/10", border: "border-indigo-500/20" },
-              { label: "Won", value: pipeline.won, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
-              { label: "Lost", value: pipeline.lost, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" },
+              { id: "new", label: t("inst_st_new", "New"), value: pipeline.new, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+              { id: "contacted", label: t("inst_st_contacted", "Contacted"), value: pipeline.contacted, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20" },
+              { id: "site_visit", label: t("inst_st_site_visit", "Site Visit"), value: pipeline.site_visit, color: "text-purple-500", bg: "bg-purple-500/10", border: "border-purple-500/20" },
+              { id: "quoted", label: t("prt_st_quoted", "Quoted"), value: pipeline.quoted, color: "text-indigo-500", bg: "bg-indigo-500/10", border: "border-indigo-500/20" },
+              { id: "won", label: t("inst_st_won", "Won"), value: pipeline.won, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+              { id: "lost", label: t("inst_st_lost", "Lost"), value: pipeline.lost, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" },
             ].map(stage => (
-              <div key={stage.label} className={`flex flex-col items-center justify-center p-4 rounded-2xl border ${stage.border} ${stage.bg} text-center`}>
+              <div key={stage.id} className={`flex flex-col items-center justify-center p-4 rounded-2xl border ${stage.border} ${stage.bg} text-center`}>
                 <span className={`text-2xl font-black ${stage.color}`}>{stage.value}</span>
-                <span className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] mt-2">{stage.label}</span>
+                <span className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] mt-2 leading-snug break-words">{stage.label}</span>
               </div>
             ))}
           </div>
@@ -192,18 +194,18 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* ── SLA TRACKER ────────────────────────────────────────────────────── */}
         <div className="xl:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] overflow-hidden shadow-xl dark:shadow-2xl flex flex-col">
-          <div className="p-6 border-b border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950/40">
+          <div className="p-6 border-b border-zinc-100 dark:border-zinc-800/60 flex flex-wrap items-center justify-between gap-2 bg-zinc-50 dark:bg-zinc-950/40">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center shadow-inner">
+              <div className="w-10 h-10 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center shadow-inner shrink-0">
                 <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-500" />
               </div>
               <div>
-                <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">SLA Action Required</h2>
-                <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Acknowledge within 24h</p>
+                <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">{t("prt_sla_title", "SLA Action Required")}</h2>
+                <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mt-1">{t("prt_sla_sub", "Acknowledge within 24h")}</p>
               </div>
             </div>
-            <Link href="/partner/leads" className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary/80 transition-colors">
-              View All
+            <Link href="/partner/leads" className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary/80 transition-colors whitespace-normal">
+              {t("prt_view_all", "View All")}
             </Link>
           </div>
           <div className="p-6 flex-1 flex flex-col justify-center items-center text-center">
@@ -212,9 +214,9 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
                  <div className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/50 flex items-center justify-center text-red-500 mb-4 animate-pulse">
                    <AlertTriangle className="w-8 h-8" />
                  </div>
-                 <h3 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tight">{slaBreachesCount} Leads Escalated</h3>
+                 <h3 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tight">{t("prt_sla_escalated", "{count} Leads Escalated", { count: String(slaBreachesCount) })}</h3>
                  <p className="text-sm font-medium text-zinc-500 mt-2 max-w-sm">
-                   You have SLA breaches that require immediate attention.
+                   {t("prt_sla_breach_desc", "You have SLA breaches that require immediate attention.")}
                  </p>
                </>
              ) : (
@@ -222,9 +224,9 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
                  <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center text-emerald-500 mb-4">
                    <CheckCircle2 className="w-8 h-8" />
                  </div>
-                 <h3 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tight">All Clear</h3>
+                 <h3 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tight">{t("prt_all_clear", "All Clear")}</h3>
                  <p className="text-sm font-medium text-zinc-500 mt-2 max-w-sm">
-                   You have no pending leads requiring immediate SLA acknowledgment. Great work!
+                   {t("prt_all_clear_desc", "You have no pending leads requiring immediate SLA acknowledgment. Great work!")}
                  </p>
                </>
              )}
@@ -234,12 +236,12 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
         {/* ── TERRITORY HEATMAP ──────────────────────────────────────────────── */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] overflow-hidden shadow-xl dark:shadow-2xl flex flex-col">
           <div className="p-6 border-b border-zinc-100 dark:border-zinc-800/60 flex items-center gap-3 bg-zinc-50 dark:bg-zinc-950/40">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shadow-inner">
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shadow-inner shrink-0">
               <Map className="w-5 h-5 text-blue-600 dark:text-blue-500" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Territory Heatmap</h2>
-              <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Demand Hotspots</p>
+              <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">{t("prt_heatmap_title", "Territory Heatmap")}</h2>
+              <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mt-1">{t("prt_heatmap_sub", "Demand Hotspots")}</p>
             </div>
           </div>
           <div className="p-6 flex-1 flex flex-col">
@@ -250,25 +252,25 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
                    ))}
                 </div>
              </div>
-             <p className="text-[10px] font-bold text-center text-zinc-400 uppercase tracking-widest mt-4">Simulated Regional Activity</p>
+             <p className="text-[10px] font-bold text-center text-zinc-400 uppercase tracking-widest mt-4">{t("prt_heatmap_sim", "Simulated Regional Activity")}</p>
           </div>
         </div>
       </div>
 
       {/* ── RECENT WINS ────────────────────────────────────────────────────── */}
       <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] overflow-hidden shadow-xl dark:shadow-2xl">
-        <div className="p-6 lg:p-8 border-b border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between">
+        <div className="p-6 lg:p-8 border-b border-zinc-100 dark:border-zinc-800/60 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shadow-inner">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shadow-inner shrink-0">
               <Activity className="w-5 h-5 text-emerald-600 dark:text-emerald-500" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Recent Captured Leads</h2>
-              <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Last 5 successful conversions</p>
+              <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">{t("prt_recent_wins_title", "Recent Captured Leads")}</h2>
+              <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mt-1">{t("prt_recent_wins_sub", "Last 5 successful conversions")}</p>
             </div>
           </div>
-          <Link href="/partner/commissions" className="hidden sm:flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-500 hover:text-amber-700 dark:hover:text-amber-400 transition-colors">
-            View Ledger <ChevronRight className="w-3.5 h-3.5" />
+          <Link href="/partner/commissions" className="hidden sm:flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-500 hover:text-amber-700 dark:hover:text-amber-400 transition-colors whitespace-normal">
+            {t("prt_view_ledger", "View Ledger")} <ChevronRight className="w-3.5 h-3.5 shrink-0" />
           </Link>
         </div>
 
@@ -276,18 +278,18 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
           <table className="w-full text-left text-sm">
             <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-100 dark:border-zinc-800/60 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-600">
               <tr>
-                <th className="px-4 md:px-8 py-5">Date</th>
-                <th className="px-4 md:px-8 py-5">Customer</th>
-                <th className="px-4 md:px-8 py-5 text-right">Commission Earned</th>
-                <th className="px-4 md:px-8 py-5 text-center">Status</th>
+                <th className="px-4 md:px-8 py-5">{t("prt_col_date", "Date")}</th>
+                <th className="px-4 md:px-8 py-5">{t("prt_col_customer", "Customer")}</th>
+                <th className="px-4 md:px-8 py-5 text-right">{t("prt_col_comm", "Commission Earned")}</th>
+                <th className="px-4 md:px-8 py-5 text-center">{t("prt_col_status", "Status")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/40 font-medium">
               {recentWins.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-4 md:px-8 py-10 md:py-20 text-center">
-                    <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs">No captured leads yet</p>
-                    <p className="text-zinc-500 text-sm mt-2">Share your code to start generating commissions.</p>
+                    <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs">{t("prt_no_wins", "No captured leads yet")}</p>
+                    <p className="text-zinc-500 text-sm mt-2">{t("prt_no_wins_desc", "Share your code to start generating commissions.")}</p>
                   </td>
                 </tr>
               ) : (
@@ -297,7 +299,7 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
                       {new Date(win.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                     </td>
                     <td className="px-4 md:px-8 py-5">
-                      <span className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">{win.customer_name}</span>
+                      <span className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">{win.customer_name || t("del_cust_fallback", "Customer")}</span>
                     </td>
                     <td className="px-4 md:px-8 py-5 text-right">
                       <span className="font-black text-emerald-600 dark:text-emerald-500 text-base">
@@ -310,9 +312,9 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
                           ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20"
                           : "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-500 border-amber-200 dark:border-amber-500/20"
                       }`}>
-                        {win.status === "paid" && <CheckCircle2 className="w-3 h-3" />}
-                        {win.status === "pending" && <Clock className="w-3 h-3" />}
-                        {win.status}
+                        {win.status === "paid" && <CheckCircle2 className="w-3 h-3 shrink-0" />}
+                        {win.status === "pending" && <Clock className="w-3 h-3 shrink-0" />}
+                        {win.status === "paid" ? t("prt_status_paid", "Paid") : t("prt_status_pending", "Pending")}
                       </span>
                     </td>
                   </tr>

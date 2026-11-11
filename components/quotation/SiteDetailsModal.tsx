@@ -221,7 +221,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
                 {isFetchingPincode ? (
                   <div className="flex items-center gap-2 text-blue-600 text-xs font-bold">
                     <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                    Fetching regional details...
+                    {t('sdm_fetching_area', 'Fetching regional details...')}
                   </div>
                 ) : postOffices.length > 0 ? (
                   <>
@@ -256,7 +256,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
                   </>
                 ) : (
                   <div className="text-xs font-bold text-amber-600 bg-amber-50 p-2 rounded-lg">
-                    System could not auto-fetch the area. Please ensure pincode is valid or enter details manually.
+                    {t('sdm_auto_fetch_fail', 'System could not auto-fetch the area. Please ensure pincode is valid or enter details manually.')}
                   </div>
                 )}
               </div>
@@ -269,7 +269,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
                 type="text"
                 value={landmark1}
                 onChange={(e) => setLandmark1(e.target.value)}
-                placeholder="Near Metro, Opp. Temple..."
+                placeholder={t('sdm_ph_landmark1', 'Near Metro, Opp. Temple...')}
                 className="w-full bg-zinc-50 border border-zinc-200 hover:border-zinc-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl px-4 py-3.5 outline-none transition-all text-sm font-medium text-zinc-900 placeholder:text-zinc-300"
               />
             </div>
@@ -280,7 +280,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
               <textarea
                 value={fullAddress}
                 onChange={(e) => setFullAddress(e.target.value)}
-                placeholder="Building, Wing, Unit No., Street..."
+                placeholder={t('sdm_ph_address', 'Building, Wing, Unit No., Street...')}
                 rows={2}
                 className="w-full bg-zinc-50 border border-zinc-200 hover:border-zinc-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl px-4 py-3.5 outline-none transition-all text-sm font-medium text-zinc-900 placeholder:text-zinc-300 resize-none"
               />
@@ -293,7 +293,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
                 type="text"
                 value={landmark2}
                 onChange={(e) => setLandmark2(e.target.value)}
-                placeholder="Above Coffee Shop, Blue Gate..."
+                placeholder={t('sdm_ph_landmark2', 'Above Coffee Shop, Blue Gate...')}
                 className="w-full bg-zinc-50 border border-zinc-200 hover:border-zinc-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl px-4 py-3.5 outline-none transition-all text-sm font-medium text-zinc-900 placeholder:text-zinc-300"
               />
             </div>
@@ -382,7 +382,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
             <div className="flex items-center gap-2 px-4 py-3 bg-zinc-50 rounded-2xl border border-zinc-100">
               <Lock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
               <span className="text-[10px] font-bold text-zinc-400 leading-snug">
-                Your location data is only used for your installation appointment and is never sold.
+                {t('sdm_privacy_note', 'Your location data is only used for your installation appointment and is never sold.')}
               </span>
             </div>
           </div>

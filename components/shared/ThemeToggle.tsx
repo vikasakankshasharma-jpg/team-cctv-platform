@@ -3,9 +3,11 @@
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Sun, Moon } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
 
   // Avoid hydration mismatch — render nothing until client-side
@@ -31,8 +33,8 @@ export function ThemeToggle() {
     <button
       id="theme-toggle-btn"
       onClick={toggleTheme}
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={isDark ? t("theme_switch_light", "Switch to light mode") : t("theme_switch_dark", "Switch to dark mode")}
+      title={isDark ? t("theme_switch_light", "Switch to light mode") : t("theme_switch_dark", "Switch to dark mode")}
       className={[
         "group relative w-10 h-10 rounded-2xl flex items-center justify-center",
         "border transition-all duration-200",

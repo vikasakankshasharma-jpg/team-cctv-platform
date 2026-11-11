@@ -1,20 +1,13 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, Image } from '@react-pdf/renderer';
 import type { Lead, PricingResult, AppSettings } from '@/types';
-import { FONT_REGULAR, FONT_SEMIBOLD, FONT_BOLD } from '@/lib/pdf-fonts';
+import { ensurePdfFontsForLocale, normalizePdfLocale } from '@/lib/pdf/pdf-fonts-indic';
+import { resolvePdfImageSrc } from '@/lib/pdf/pdf-image';
+import { getPdfLabels, buildQuoteTerms } from '@/lib/pdf/pdf-i18n';
+import { SPEECH_LOCALE_MAP } from '@/lib/i18n/mapping';
 
 const formatCurrency = (amount: number) => 
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
-
-// Register fonts using embedded base64 data URIs — zero network requests, works everywhere
-Font.register({
-  family: 'Inter',
-  fonts: [
-    { src: FONT_REGULAR },
-    { src: FONT_SEMIBOLD, fontWeight: 600 },
-    { src: FONT_BOLD, fontWeight: 700 }
-  ]
-});
 
 const styles = StyleSheet.create({
   page: {
@@ -219,30 +212,35 @@ interface QuotePDFProps {
   settings: AppSettings | null;
   issueDate?: string;
   validUntilDate?: string;
+  locale?: string;
 }
 
-export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilDate }: QuotePDFProps) {
+export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilDate, locale }: QuotePDFProps) {
+  const pdfLocale = normalizePdfLocale(locale || (lead as any)?.preferred_language || (quote as any)?.preferred_language);
+  const pdfFont = ensurePdfFontsForLocale(pdfLocale);
+  const L = getPdfLabels(pdfLocale);
+  const dateLocale = SPEECH_LOCALE_MAP[pdfLocale] || 'en-IN';
 
-  const quoteDate = issueDate || new Date().toLocaleDateString('en-IN', {
+  const quoteDate = issueDate || new Date().toLocaleDateString(dateLocale, {
     day: '2-digit',
     month: 'short',
     year: 'numeric'
   });
   
   // eslint-disable-next-line react-hooks/purity
-  const validUntil = validUntilDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', {
+  const validUntil = validUntilDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(dateLocale, {
     day: '2-digit',
     month: 'short',
     year: 'numeric'
   });
 
   const companyName = settings?.company_legal_name || settings?.company_name || "TEAM CCTV";
-  const tagline = settings?.company_tagline || "Premium Security Solutions";
+  const tagline = settings?.company_tagline || L.companyTagline;
   const gstinDisplay = settings?.company_gstin && settings.company_gstin.trim().length > 0
-    ? `GSTIN: ${settings.company_gstin.trim()}`
-    : "GST Registration Pending";
+    ? `${L.gstinPrefix}: ${settings.company_gstin.trim()}`
+    : L.gstPending;
   const emailDisplay = settings?.company_email || "sales@teamcctv.com";
-  const phoneDisplay = settings?.company_phone ? `\nPh: ${settings.company_phone}` : "";
+  const phoneDisplay = settings?.company_phone ? `\n${L.phoneShort}: ${settings.company_phone}` : "";
   const addressParts = [
     settings?.company_address_line1,
     settings?.company_address_line2,
@@ -250,29 +248,17 @@ export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilD
     settings?.company_state ? `${settings.company_state}${settings.company_pincode ? ` - ${settings.company_pincode}` : ''}` : settings?.company_pincode
   ].filter(Boolean);
   const addressDisplay = addressParts.length > 0 ? `\n${addressParts.join(", ")}` : "";
-  const rawLogo = settings?.pdf_logo_url || settings?.company_logo_url || "/logo-horizontal.jpg";
-  const logoUrl = (rawLogo && !rawLogo.startsWith("C:") && !rawLogo.includes("\\")) ? rawLogo : "/logo-horizontal.jpg";
-  let resolvedLogo = logoUrl;
-  if (typeof window === "undefined" && logoUrl.startsWith("/")) {
-    try {
-      const pathMod = require("path");
-      const fsMod = require("fs");
-      const localPath = pathMod.join(process.cwd(), "public", logoUrl.replace(/^\/+/, ""));
-      if (fsMod.existsSync(localPath)) {
-        resolvedLogo = localPath;
-      }
-    } catch (_) {}
-  }
+  const resolvedLogo = resolvePdfImageSrc(settings?.pdf_logo_url || settings?.company_logo_url, "/logo-horizontal.jpg");
   
   // Default terms tailored for CCTV quotation
-  const defaultTerms = "1. Prices are valid for " + (settings?.quote_validity_days || 7) + " days from the date of this quotation.\n2. Standard 1-Year Warranty on all hardware items unless specified otherwise.\n3. 1-Year Free AMC (Annual Maintenance Contract) included covering 2 free service visits.\n4. Additional cabling beyond the estimated requirement will be charged at ₹" + (settings?.wire_cost_per_meter || 20) + "/meter.\n5. 50% advance payment required for order confirmation, balance on completion of installation.";
+  const defaultTerms = buildQuoteTerms(pdfLocale, settings?.quote_validity_days || 7, settings?.wire_cost_per_meter || 20);
   
   const termsText = settings?.pdf_terms || defaultTerms;
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.watermark}>QUOTATION</Text>
+      <Page size="A4" style={[styles.page, { fontFamily: pdfFont }]}>
+        <Text style={[styles.watermark, pdfLocale !== 'en' ? { fontSize: 64 } : {}]}>{L.watermarkQuote}</Text>
 
         {/* Header */}
         <View style={styles.header}>
@@ -292,17 +278,17 @@ export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilD
           </View>
           
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>QUOTATION</Text>
+            <Text style={[styles.title, pdfLocale !== 'en' ? { fontSize: 18 } : {}]}>{L.quotationTitle}</Text>
             <View style={styles.quoteMeta}>
-              <Text style={styles.metaLabel}>Quote Ref:</Text>
+              <Text style={styles.metaLabel}>{L.leadRef}:</Text>
               <Text style={styles.metaValue}>{lead.id ? lead.id.slice(0, 8).toUpperCase() : 'DRF-101'}</Text>
             </View>
             <View style={styles.quoteMeta}>
-              <Text style={styles.metaLabel}>Date:</Text>
+              <Text style={styles.metaLabel}>{L.dateIssued}:</Text>
               <Text style={styles.metaValue}>{quoteDate}</Text>
             </View>
             <View style={styles.quoteMeta}>
-              <Text style={styles.metaLabel}>Valid Until:</Text>
+              <Text style={styles.metaLabel}>{L.validUntil}:</Text>
               <Text style={styles.metaValue}>{validUntil}</Text>
             </View>
           </View>
@@ -310,11 +296,11 @@ export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilD
 
         {/* Customer Details */}
         <View style={styles.customerSection}>
-          <Text style={styles.sectionTitle}>Prepared For:</Text>
-          <Text style={styles.customerName}>{lead.customer_name || 'Valued Customer'}</Text>
+          <Text style={[styles.sectionTitle, pdfLocale !== 'en' ? { textTransform: 'none' } : {}]}>{L.preparedFor}:</Text>
+          <Text style={styles.customerName}>{lead.customer_name || L.valuedCustomer}</Text>
           <Text style={styles.customerDetails}>
-            Phone: {lead.mobile_number}
-            {lead.address?.full_address && `\nAddress: ${lead.address.full_address}`}
+            {L.phoneLabel}: {lead.mobile_number}
+            {lead.address?.full_address && `\n${L.installationSite}: ${lead.address.full_address}`}
             {lead.address?.pincode && ` - ${lead.address.pincode}`}
           </Text>
         </View>
@@ -322,10 +308,10 @@ export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilD
         {/* Items Table */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderCell, styles.colProduct]}>Description</Text>
-            <Text style={[styles.tableHeaderCell, styles.colQty]}>Qty</Text>
-            <Text style={[styles.tableHeaderCell, styles.colPrice]}>Unit Price</Text>
-            <Text style={[styles.tableHeaderCell, styles.colTotal]}>Total</Text>
+            <Text style={[styles.tableHeaderCell, styles.colProduct]}>{L.itemDescription}</Text>
+            <Text style={[styles.tableHeaderCell, styles.colQty]}>{L.qty}</Text>
+            <Text style={[styles.tableHeaderCell, styles.colPrice]}>{L.unitPrice}</Text>
+            <Text style={[styles.tableHeaderCell, styles.colTotal]}>{L.amount}</Text>
           </View>
           
           {/* Hardware Items */}
@@ -333,7 +319,11 @@ export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilD
             <View style={styles.tableRow} key={`item-${i}`}>
               <View style={[styles.tableCell, styles.colProduct]}>
                 <Text style={styles.productName}>{item.display_name}</Text>
-                {item.brand && <Text style={styles.productBrand}>Brand: {item.brand}</Text>}
+                {item.brand && (
+                  <Text style={styles.productBrand}>
+                    {L.brandLabel}: {item.brand === "Budget Brand" || item.brand === "Budget" ? L.budgetBrandLabel : item.brand}
+                  </Text>
+                )}
               </View>
               <Text style={[styles.tableCell, styles.colQty]}>{item.qty}</Text>
               <Text style={[styles.tableCell, styles.colPrice]}>{formatCurrency(item.unit_price)}</Text>
@@ -346,7 +336,7 @@ export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilD
             <View style={styles.tableRow} key={`addon-${i}`}>
               <View style={[styles.tableCell, styles.colProduct]}>
                 <Text style={styles.productName}>{addon.display_name}</Text>
-                <Text style={styles.productBrand}>Accessory / Service</Text>
+                <Text style={styles.productBrand}>{L.accessoryService}</Text>
               </View>
               <Text style={[styles.tableCell, styles.colQty]}>{addon.qty || 1}</Text>
               <Text style={[styles.tableCell, styles.colPrice]}>{formatCurrency(addon.price)}</Text>
@@ -358,8 +348,8 @@ export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilD
           {quote.labor_cost > 0 && (
             <View style={styles.tableRow}>
               <View style={[styles.tableCell, styles.colProduct]}>
-                <Text style={styles.productName}>Professional Installation & Setup</Text>
-                <Text style={styles.productBrand}>Service</Text>
+                <Text style={styles.productName}>{L.proInstall}</Text>
+                <Text style={styles.productBrand}>{L.serviceLabel}</Text>
               </View>
               <Text style={[styles.tableCell, styles.colQty]}>1</Text>
               <Text style={[styles.tableCell, styles.colPrice]}>{formatCurrency(quote.labor_cost)}</Text>
@@ -372,39 +362,40 @@ export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilD
         <View style={styles.totalsSection}>
           <View style={styles.totalsBox}>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Subtotal:</Text>
+              <Text style={styles.totalLabel}>{L.subtotal}:</Text>
               <Text style={styles.totalValue}>{formatCurrency(quote.gross_subtotal)}</Text>
             </View>
             
             {quote.referral_discount > 0 && (
               <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>Discount Applied:</Text>
+                <Text style={styles.totalLabel}>{L.discountApplied}:</Text>
                 <Text style={[styles.totalValue, { color: '#16A34A' }]}>-{formatCurrency(quote.referral_discount)}</Text>
               </View>
             )}
             
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Taxable Amount:</Text>
+              <Text style={styles.totalLabel}>{L.taxableValue}:</Text>
               <Text style={styles.totalValue}>{formatCurrency(quote.net_taxable_amount)}</Text>
             </View>
 
             {quote.gst_amount > 0 && (
               <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>GST ({(quote.gst_rate * 100).toFixed(0)}%):</Text>
+                <Text style={styles.totalLabel}>{L.gstAt18} ({(quote.gst_rate * 100).toFixed(0)}%):</Text>
                 <Text style={styles.totalValue}>{formatCurrency(quote.gst_amount)}</Text>
               </View>
             )}
 
             <View style={styles.grandTotalRow}>
-              <Text style={styles.grandTotalLabel}>Grand Total:</Text>
+              <Text style={styles.grandTotalLabel}>{L.totalPayable}:</Text>
               <Text style={styles.grandTotalValue}>{formatCurrency(quote.total_payable)}</Text>
             </View>
+            <Text style={{ fontSize: 7.5, color: '#16A34A', textAlign: 'right', marginTop: 4 }}>{L.gstInclusiveBadge}</Text>
           </View>
         </View>
 
         {/* Footer / Terms */}
         <View style={styles.footer}>
-          <Text style={styles.termsTitle}>Terms & Conditions</Text>
+          <Text style={[styles.termsTitle, pdfLocale !== 'en' ? { textTransform: 'none' } : {}]}>{L.termsTitle}</Text>
           <Text style={styles.termsText}>{termsText}</Text>
         </View>
       </Page>

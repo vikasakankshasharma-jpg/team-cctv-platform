@@ -4,6 +4,8 @@ import { adminDb, adminStorage } from "@/lib/firebase-admin";
 const SETTINGS_DOC_ID = "app_config";
 import { renderToStream } from "@react-pdf/renderer";
 import { QuotePDFDocument } from "@/lib/pdf-generator";
+import { resolveRequestLocale } from "@/lib/i18n/api-messages";
+import { resolveCustomerLocale } from "@/lib/whatsapp/customer-notifications-i18n";
 import type { Lead, Quote, AppSettings } from "@/types";
 
 export async function GET(
@@ -38,10 +40,19 @@ export async function GET(
     const lead = { id: leadDoc.id, ...leadDoc.data() } as Lead;
     const quote = { id: quoteDoc.id, ...quoteDoc.data() } as Quote;
     const settings = (settingsDoc.data() || { company_name: "TEAM CCTV" }) as AppSettings;
+    const reqLocale = resolveRequestLocale(request);
+    const pdfLocale =
+      reqLocale !== "en"
+        ? reqLocale
+        : await resolveCustomerLocale({
+            quoteData: quote as any,
+            leadData: lead as any,
+            phone: lead.mobile_number,
+          });
 
     // 2. Render PDF to memory
     const pdfStream = await renderToStream(
-      <QuotePDFDocument quote={quote} lead={lead} settings={settings} quoteId={quoteId} sharedToNumber={sharedTo} />
+      <QuotePDFDocument quote={quote} lead={lead} settings={settings} quoteId={quoteId} sharedToNumber={sharedTo} locale={pdfLocale} />
     );
 
     // Convert NodeJS Readable stream to ArrayBuffer for Storage upload
@@ -53,7 +64,7 @@ export async function GET(
 
     // 3. Upload to Firebase Storage
     const bucket = adminStorage.bucket();
-    const filePath = `quotes/${lead.firebase_uid}/${quoteId}.pdf`;
+    const filePath = `quotes/${lead.firebase_uid}/${quoteId}_${pdfLocale}.pdf`;
     const file = bucket.file(filePath);
 
     await file.save(pdfBuffer, {

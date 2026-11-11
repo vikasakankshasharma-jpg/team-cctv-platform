@@ -7,6 +7,12 @@ import { getLeadActivities, addLeadActivity, updateNextFollowUp } from "@/app/ac
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PaymentStagesWidget } from "@/components/shared/PaymentStagesWidget";
+import { useTranslation } from "@/hooks/useTranslation";
+
+const LOCALE_MAP: Record<string, string> = {
+  en: "en-IN", hi: "hi-IN", mr: "mr-IN", gu: "gu-IN", ta: "ta-IN",
+  te: "te-IN", kn: "kn-IN", bn: "bn-IN", ml: "ml-IN", pa: "pa-IN", or: "or-IN",
+};
 
 
 interface LeadDetailsDrawerProps {
@@ -18,6 +24,7 @@ interface LeadDetailsDrawerProps {
 }
 
 export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatusChange }: LeadDetailsDrawerProps) {
+  const { t, locale } = useTranslation();
   const [activities, setActivities] = useState<LeadActivity[]>([]);
   const [loading, setLoading] = useState(false);
   const [noteContent, setNoteContent] = useState("");
@@ -42,14 +49,14 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
   const handleAddActivity = async (type: "note" | "call" | "call_attempted" | "site_visit") => {
     if (!lead?.id) return;
     if (type === "note" && !noteContent.trim()) {
-      toast.error("Please enter a note.");
+      toast.error(t("adm_drw_toast_enter_note", "Please enter a note."));
       return;
     }
     
     const content = type === "note" ? noteContent : 
-                    type === "call" ? "Call Connected successfully" :
-                    type === "call_attempted" ? "Call Attempted (No Answer/Busy)" :
-                    `Logged a ${type}`;
+                    type === "call" ? t("adm_drw_call_conn", "Call Connected") :
+                    type === "call_attempted" ? t("adm_drw_call_att", "Call Attempted") :
+                    t("adm_drw_log_type", "Logged {type}", { type: t("adm_fu_act_visit", "Site Visit") });
     
     const res = await addLeadActivity(lead.id, {
       type,
@@ -59,14 +66,14 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
     });
     
     if (res.success) {
-      toast.success("Activity logged");
+      toast.success(t("adm_drw_toast_logged", "Activity logged"));
       if (res.newStatus) {
-        toast.success(`Lead automatically advanced to ${res.newStatus.replace('_', ' ').toUpperCase()}`);
+        toast.success(t("adm_drw_auto_adv", "Lead automatically advanced to {status}", { status: res.newStatus.replace('_', ' ').toUpperCase() }));
       }
       setNoteContent("");
       loadActivities();
     } else {
-      toast.error("Failed to log activity");
+      toast.error(t("adm_drw_toast_log_err", "Failed to log activity"));
     }
   };
 
@@ -74,10 +81,10 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
     if (!lead?.id) return;
     const res = await updateNextFollowUp(lead.id, followUpDate || null);
     if (res.success) {
-      toast.success("Follow-up date updated");
+      toast.success(t("adm_drw_toast_fu_ok", "Follow-up date updated"));
       loadActivities();
     } else {
-      toast.error("Failed to update follow-up");
+      toast.error(t("adm_drw_toast_fu_err", "Failed to update follow-up"));
     }
   };
 
@@ -120,54 +127,54 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
           
           {/* Left Panel: Details */}
           <div className="w-full md:w-1/2 p-6 overflow-y-auto border-b md:border-b-0 md:border-r border-border custom-scrollbar">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">Lead Details</h3>
+            <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">{t("adm_drw_details", "Lead Details")}</h3>
             
             <div className="space-y-6">
-              <div className="flex gap-4">
-                <div className="flex-1 p-4 rounded-xl bg-secondary/50 border border-border">
-                  <span className="block text-xs font-medium text-muted-foreground mb-1"><Building className="inline w-3 h-3 mr-1"/> Property</span>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex-1 min-w-[140px] p-4 rounded-xl bg-secondary/50 border border-border">
+                  <span className="block text-xs font-medium text-muted-foreground mb-1"><Building className="inline w-3 h-3 mr-1"/> {t("adm_drw_prop", "Property")}</span>
                   <span className="font-semibold text-sm capitalize">{lead.property_type}</span>
                 </div>
-                <div className="flex-1 p-4 rounded-xl bg-secondary/50 border border-border">
-                  <span className="block text-xs font-medium text-muted-foreground mb-1"><Activity className="inline w-3 h-3 mr-1"/> Technology</span>
+                <div className="flex-1 min-w-[140px] p-4 rounded-xl bg-secondary/50 border border-border">
+                  <span className="block text-xs font-medium text-muted-foreground mb-1"><Activity className="inline w-3 h-3 mr-1"/> {t("adm_drw_tech", "Technology")}</span>
                   <span className="font-semibold text-sm uppercase">{lead.technology_choice}</span>
                 </div>
 
-              <div className="p-3.5 rounded-xl border border-border bg-card">
+              <div className="w-full p-3.5 rounded-xl border border-border bg-card">
                 <span className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                  ⏱️ Site Work Timeline
+                  {t("adm_drw_timeline", "⏱️ Site Work Timeline")}
                 </span>
                 <div className="text-sm font-bold text-foreground">
                   {(() => {
-                    const t = (lead.timeline || (lead.wizard_answers?.q_timeline as string) || (lead.wizard_answers?.timeline as string) || "").toLowerCase();
-                    if (t === "asap" || t.includes("immediately") || lead.priority === "HOT") {
-                      return <span className="text-red-600 font-extrabold flex items-center gap-1">⚡ ASAP / Immediate (1-2 Days)</span>;
+                    const tl = (lead.timeline || (lead.wizard_answers?.q_timeline as string) || (lead.wizard_answers?.timeline as string) || "").toLowerCase();
+                    if (tl === "asap" || tl.includes("immediately") || lead.priority === "HOT") {
+                      return <span className="text-red-600 font-extrabold flex items-center gap-1">{t("adm_leads_tl_asap", "⚡ ASAP (1-2 Days)")}</span>;
                     }
-                    if (t === "week" || t.includes("week")) {
-                      return <span className="text-orange-600 font-bold flex items-center gap-1">📅 Within a Week</span>;
+                    if (tl === "week" || tl.includes("week")) {
+                      return <span className="text-orange-600 font-bold flex items-center gap-1">{t("adm_leads_tl_week", "📅 Within a Week")}</span>;
                     }
-                    if (t === "month" || t.includes("month")) {
-                      return <span className="text-blue-600 font-bold flex items-center gap-1">🗓️ This Month / Construction</span>;
+                    if (tl === "month" || tl.includes("month")) {
+                      return <span className="text-blue-600 font-bold flex items-center gap-1">{t("adm_leads_tl_month", "🗓️ This Month")}</span>;
                     }
-                    return <span className="text-muted-foreground">🔍 Just Planning / Comparing</span>;
+                    return <span className="text-muted-foreground">{t("adm_leads_tl_plan", "🔍 Planning")}</span>;
                   })()}
                 </div>
               </div>
               </div>
               
               <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                <span className="block text-xs font-medium text-primary mb-2">Quote Management</span>
+                <span className="block text-xs font-medium text-primary mb-2">{t("adm_drw_qmgt", "Quote Management")}</span>
                 <div className="flex gap-2">
-                  <a href={`/admin/leads/${lead.id}/quote-builder`} className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full">
-                    <FileText className="w-4 h-4 mr-2" />
-                    Create Custom Quote
+                  <a href={`/admin/leads/${lead.id}/quote-builder`} className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 min-h-[2.5rem] h-auto px-4 py-2 w-full whitespace-normal text-center leading-snug">
+                    <FileText className="w-4 h-4 mr-2 shrink-0" />
+                    {t("adm_drw_create_cust_q", "Create Custom Quote")}
                   </a>
                 </div>
               </div>
 
               {lead.address && (
                 <div className="p-4 rounded-xl bg-secondary/50 border border-border">
-                  <span className="block text-xs font-medium text-muted-foreground mb-2"><MapPin className="inline w-3 h-3 mr-1"/> Location</span>
+                  <span className="block text-xs font-medium text-muted-foreground mb-2"><MapPin className="inline w-3 h-3 mr-1"/> {t("adm_lc_col_loc", "Location")}</span>
                   <p className="text-sm font-medium">{lead.address.pincode}</p>
                   <p className="text-sm text-muted-foreground mt-1">{lead.address.landmark1}</p>
                 </div>
@@ -175,7 +182,7 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
 
               {lead.wizard_answers && Object.keys(lead.wizard_answers).length > 0 && (
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Wizard Answers</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("adm_drw_wiz_ans", "Wizard Answers")}</h4>
                   <div className="space-y-2">
                     {Object.entries(lead.wizard_answers).map(([key, val]: [string, any]) => (
                       <div key={key} className="flex justify-between p-3 rounded-lg bg-card border border-border text-sm">
@@ -211,7 +218,7 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
           <div className="w-full md:w-1/2 flex flex-col h-full bg-muted/10">
             {/* Follow-up Scheduler */}
             <div className="p-4 border-b border-border bg-card">
-              <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Next Follow-Up</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">{t("adm_drw_next_fu", "Next Follow-Up")}</label>
               <div className="flex gap-2">
                 <input 
                   type="date" 
@@ -219,8 +226,8 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
                   onChange={e => setFollowUpDate(e.target.value)}
                   className="flex-1 h-10 px-3 bg-background border border-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary"
                 />
-                <Button onClick={handleSetFollowUp} disabled={followUpDate === lead.next_followup_date}>
-                  Set
+                <Button onClick={handleSetFollowUp} disabled={followUpDate === lead.next_followup_date} className="shrink-0">
+                  {t("adm_drw_set", "Set")}
                 </Button>
               </div>
             </div>
@@ -230,7 +237,7 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
               {loading ? (
                 <div className="flex justify-center p-4 md:p-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
               ) : activities.length === 0 ? (
-                <div className="text-center p-4 md:p-8 text-sm text-muted-foreground">No activities recorded yet.</div>
+                <div className="text-center p-4 md:p-8 text-sm text-muted-foreground">{t("adm_drw_no_act", "No activities recorded yet.")}</div>
               ) : (
                 activities.map(act => (
                   <div key={act.id} className="relative pl-6 pb-2 border-l-2 border-border last:border-transparent last:pb-0">
@@ -238,12 +245,12 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
                       ${act.type === 'note' ? 'bg-blue-500' : act.type === 'call' ? 'bg-green-500' : act.type === 'call_attempted' ? 'bg-orange-500' : act.type === 'system' ? 'bg-zinc-500' : 'bg-primary'}
                     `} />
                     <div className="bg-card border border-border rounded-lg p-3 shadow-sm">
-                      <div className="flex justify-between items-start mb-1">
+                      <div className="flex flex-wrap justify-between items-start gap-2 mb-1">
                         <span className="text-xs font-bold capitalize text-muted-foreground">{act.type.replace('_', ' ')}</span>
-                        <span className="text-[10px] text-muted-foreground">{new Date(act.created_at as string).toLocaleString()}</span>
+                        <span className="text-[10px] text-muted-foreground">{new Date(act.created_at as string).toLocaleString(LOCALE_MAP[locale] || 'en-IN')}</span>
                       </div>
                       <p className="text-sm font-medium">{act.content}</p>
-                      <p className="text-[10px] text-muted-foreground mt-2 font-medium">by {act.created_by_name}</p>
+                      <p className="text-[10px] text-muted-foreground mt-2 font-medium">{t("adm_drw_by", "by")} {act.created_by_name}</p>
                     </div>
                   </div>
                 ))
@@ -252,22 +259,22 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
 
             {/* Input Box */}
             <div className="p-4 border-t border-border bg-card">
-              <div className="flex gap-2 mb-2">
-                <Button size="sm" variant="outline" onClick={() => handleAddActivity("call")} className="text-xs font-semibold h-8 border-green-500/30 text-green-600 bg-green-500/5 hover:bg-green-500/10 px-2">
-                  <Phone className="w-3 h-3 mr-1.5" /> Call Connected
+              <div className="flex flex-wrap gap-2 mb-2">
+                <Button size="sm" variant="outline" onClick={() => handleAddActivity("call")} className="text-xs font-semibold min-h-[2rem] h-auto py-1 border-green-500/30 text-green-600 bg-green-500/5 hover:bg-green-500/10 px-2.5 whitespace-normal leading-snug">
+                  <Phone className="w-3 h-3 mr-1.5 shrink-0" /> {t("adm_drw_call_conn", "Call Connected")}
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => handleAddActivity("call_attempted")} className="text-xs font-semibold h-8 border-orange-500/30 text-orange-600 bg-orange-500/5 hover:bg-orange-500/10 px-2">
-                  <Phone className="w-3 h-3 mr-1.5 opacity-60" /> Call Attempted
+                <Button size="sm" variant="outline" onClick={() => handleAddActivity("call_attempted")} className="text-xs font-semibold min-h-[2rem] h-auto py-1 border-orange-500/30 text-orange-600 bg-orange-500/5 hover:bg-orange-500/10 px-2.5 whitespace-normal leading-snug">
+                  <Phone className="w-3 h-3 mr-1.5 opacity-60 shrink-0" /> {t("adm_drw_call_att", "Call Attempted")}
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => handleAddActivity("site_visit")} className="text-xs font-semibold h-8 border-purple-500/30 text-purple-600 bg-purple-500/5 hover:bg-purple-500/10 px-2">
-                  <MapPin className="w-3 h-3 mr-1.5" /> Site Visit
+                <Button size="sm" variant="outline" onClick={() => handleAddActivity("site_visit")} className="text-xs font-semibold min-h-[2rem] h-auto py-1 border-purple-500/30 text-purple-600 bg-purple-500/5 hover:bg-purple-500/10 px-2.5 whitespace-normal leading-snug">
+                  <MapPin className="w-3 h-3 mr-1.5 shrink-0" /> {t("adm_fu_act_visit", "Site Visit")}
                 </Button>
               </div>
               <div className="relative">
                 <textarea 
                   value={noteContent}
                   onChange={e => setNoteContent(e.target.value)}
-                  placeholder="Type a note..."
+                  placeholder={t("adm_drw_note_ph", "Type a note...")}
                   className="w-full h-24 p-3 pr-12 bg-background border border-border rounded-lg text-sm resize-none outline-none focus:ring-1 focus:ring-primary shadow-inner"
                 />
                 <button 

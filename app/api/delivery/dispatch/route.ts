@@ -122,14 +122,18 @@ export async function POST(req: Request) {
 
     // We can also trigger WhatsApp notifications here
     const { sendCustomerWhatsApp } = await import("@/lib/notification-service");
-    
+    const { resolveCustomerLocale, getCustomerNotifications } = await import("@/lib/whatsapp/customer-notifications-i18n");
+    const custLocale = await resolveCustomerLocale({ quoteData, phone: quoteData.customer_mobile });
+    const notif = getCustomerNotifications(custLocale);
+
     // To Customer
-    let customerMessage = `Hello ${quoteData.customer_name || 'Customer'}, your CCTV materials have been dispatched! Please complete your payment of ₹${paymentAmount} to receive your secure Delivery OTP: ${paymentUrl}`;
-    
-    if (staffRole !== "third_party") {
-      customerMessage += `\n\nAlternatively, you can pay in cash to the delivery person.`;
-    }
-    
+    const customerMessage = notif.deliveryDispatched({
+      name: quoteData.customer_name || "",
+      amount: Number(paymentAmount || 0).toLocaleString("en-IN"),
+      paymentUrl,
+      allowCash: staffRole !== "third_party",
+    });
+
     await sendCustomerWhatsApp(quoteData.customer_mobile || "", customerMessage);
 
     // To Staff

@@ -3,6 +3,7 @@ import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
 import { rateLimit } from "@/lib/rate-limit";
 import { ApiResponse } from "@/lib/api-response";
 import { z } from "zod";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 
 const B2CJoinSchema = z.object({
   name: z.string().min(2),
@@ -24,17 +25,19 @@ async function getUniqueReferralCode(name: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
+  let locale = resolveRequestLocale(req);
   const { success } = await rateLimit(req);
   if (!success) {
-    return ApiResponse.error("Too many requests", "RATE_LIMIT_EXCEEDED", 429);
+    return ApiResponse.error(getApiMessage(locale, "too_many_requests"), "RATE_LIMIT_EXCEEDED", 429);
   }
 
   try {
     const body = await req.json();
+    locale = resolveRequestLocale(req, body);
     const validation = B2CJoinSchema.safeParse(body);
     
     if (!validation.success) {
-      return ApiResponse.badRequest("Validation failed", validation.error.format());
+      return ApiResponse.badRequest(getApiMessage(locale, "lead_validation_failed"), validation.error.format());
     }
 
     const data = validation.data;
@@ -42,7 +45,7 @@ export async function POST(req: NextRequest) {
     // Check if mobile already exists
     const existing = await adminDb.collection("promoters").where("mobile_number", "==", data.mobile_number).get();
     if (!existing.empty) {
-      return ApiResponse.badRequest("You are already registered! Please login to your dashboard.");
+      return ApiResponse.badRequest(getApiMessage(locale, "partner_already_registered"));
     }
 
     const referralCode = await getUniqueReferralCode(data.name);
@@ -70,9 +73,17 @@ export async function POST(req: NextRequest) {
     // Send WhatsApp notification
     try {
       const { sendCustomerWhatsApp } = await import("@/lib/notification-service");
+      const { resolveCustomerLocale, getCustomerNotifications } = await import("@/lib/whatsapp/customer-notifications-i18n");
+      const custLocale = await resolveCustomerLocale({
+        preferredLanguage: body?.preferred_language,
+        cookieLocale: req.cookies.get("team_locale")?.value,
+        phone: data.mobile_number,
+      });
+      const notif = getCustomerNotifications(custLocale);
+      const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://teamcctv.in"}/partner/login`;
       await sendCustomerWhatsApp(
         data.mobile_number,
-        `🎉 Welcome to TEAM CCTV Refer & Earn, ${data.name}!\n\nYour unique Referral Code is: *${referralCode}*\n\nShare this code with friends. They get a ₹500 discount, and you earn ₹500 cash per installation!\n\nLogin to your dashboard: https://teamcctv.in/partner/login`
+        notif.referEarnWelcome({ name: data.name, code: referralCode, portalUrl })
       );
     } catch (e) {
       console.error("Failed to send welcome notification", e);
@@ -85,6 +96,6 @@ export async function POST(req: NextRequest) {
     }, 201);
   } catch (err: any) {
     console.error("[B2C Join Error]", err);
-    return ApiResponse.error("Registration failed", "INTERNAL_ERROR", 500);
+    return ApiResponse.error(getApiMessage(locale, "internal_error"), "INTERNAL_ERROR", 500);
   }
 }

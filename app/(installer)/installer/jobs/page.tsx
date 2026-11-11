@@ -3,6 +3,7 @@ import { verifyInstallerSession } from "@/lib/auth-installer";
 import { adminDb } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
 import { InstallerPipeline } from "@/components/installer/InstallerPipeline";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 import type { Lead } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -55,10 +56,10 @@ export default async function InstallerJobsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-          My Jobs
+          <TranslatedText tKey="inst_jobs_title" defaultText="My Jobs" />
         </h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          All leads and site visits exclusively assigned to you.
+          <TranslatedText tKey="inst_jobs_desc" defaultText="All leads and site visits exclusively assigned to you." />
         </p>
       </div>
 

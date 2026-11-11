@@ -2,17 +2,19 @@ import { NextRequest } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { rateLimit } from "@/lib/rate-limit";
 import { ApiResponse } from "@/lib/api-response";
+import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
 
 export async function GET(req: NextRequest) {
+  const locale = resolveRequestLocale(req);
   const { success } = await rateLimit(req);
   if (!success) {
-    return ApiResponse.error("Too many requests", "RATE_LIMIT_EXCEEDED", 429);
+    return ApiResponse.error(getApiMessage(locale, "too_many_requests"), "RATE_LIMIT_EXCEEDED", 429);
   }
 
   const code = req.nextUrl.searchParams.get("code");
   
   if (!code || code.trim().length === 0) {
-    return ApiResponse.badRequest("Referral code is required");
+    return ApiResponse.badRequest(getApiMessage(locale, "referral_required"));
   }
 
   try {
@@ -24,7 +26,7 @@ export async function GET(req: NextRequest) {
       .get();
 
     if (promoterSnap.empty) {
-      return ApiResponse.success({ valid: false, message: "Invalid or inactive referral code" });
+      return ApiResponse.success({ valid: false, message: getApiMessage(locale, "referral_invalid") });
     }
 
     const promoter = promoterSnap.docs[0].data();
@@ -42,11 +44,14 @@ export async function GET(req: NextRequest) {
       discount_value: discountValue,
       min_order_value: promoter.min_order_value || 0,
       message: discountType === "flat" && promoter.min_order_value
-        ? `Referral code applied! Flat ₹${discountValue} discount on minimum purchase of ₹${promoter.min_order_value}.`
-        : "Referral code applied successfully!"
+        ? getApiMessage(locale, "referral_applied_flat", {
+            discount: discountValue,
+            minOrder: promoter.min_order_value,
+          })
+        : getApiMessage(locale, "referral_applied")
     });
   } catch (error) {
     console.error("[Validate Referral Error]", error);
-    return ApiResponse.error("Failed to validate referral code", "INTERNAL_ERROR", 500);
+    return ApiResponse.error(getApiMessage(locale, "referral_failed"), "INTERNAL_ERROR", 500);
   }
 }

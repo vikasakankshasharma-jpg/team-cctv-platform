@@ -15,6 +15,8 @@ import {
 import { useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useI18nStore } from "@/lib/i18n/store";
+import { getCityData } from "@/lib/city-data";
+import { SPEECH_LOCALE_MAP, type LocaleCode } from "@/lib/i18n/mapping";
 
 interface CityLandingPageProps {
   residentialStartingPrice?: number;
@@ -45,26 +47,27 @@ export default function CityLandingPage({
   residentialStartingPrice = 17999,
   commercialStartingPrice = 32999
 }: CityLandingPageProps) {
-  const currentMonthYear = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
   const searchParams = useSearchParams();
   const pincodeParam = searchParams.get("pincode");
   
   const { t, locale } = useTranslation();
   const { isManuallySet, setLocaleFromPincode } = useI18nStore();
-  
-  // Dynamically derive translated variables on render based on current locale.
-  
-  // Wait, I should not use useState inside an inline hack.
-  // Better approach:
+
+  const bcpLocale = SPEECH_LOCALE_MAP[locale as LocaleCode] || "en-IN";
+  const currentMonthYear = new Intl.DateTimeFormat(bcpLocale, {
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+
   let localizedCityName = defaultCityName;
   let localizedNeighborhoods = defaultNeighborhoods;
-  
-  if (citySlug && typeof window !== "undefined") {
-    // get localized data synchronously
-    const { getCityData } = require("@/lib/city-data");
+  let localizedCommercialAreas = commercialAreas;
+
+  if (citySlug) {
     const localizedData = getCityData(citySlug, locale);
     localizedCityName = localizedData.name;
     localizedNeighborhoods = localizedData.neighborhoods;
+    localizedCommercialAreas = localizedData.commercialAreas;
   }
 
   const servedParam = searchParams.get('served');
@@ -85,11 +88,11 @@ export default function CityLandingPage({
   }, [pincodeParam, isManuallySet, setLocaleFromPincode]);
 
   const brandPrefix = brand ? `${brand} ` : "";
-  const derivedTagline = tagline || t('landing_hero_highlight', `Serving All of {city} with {brand} Security`).replace('{city}', localizedCityName).replace('{brand}', brand || "Premium");
+  const derivedTagline = tagline || t('city_hero_tagline', 'Serving All of {city} with {brand} Security').replace('{city}', localizedCityName).replace('{brand}', brand || t('trusted_word', 'Trusted'));
   const derivedDescription = description || (
     intent === "quotation"
-      ? t('protect_home', `Compare exact {brand} CCTV camera pricing and installation setup costs online in under 2 minutes for your {city} property.`).replace('{city}', localizedCityName).replace('{brand}', brandPrefix)
-      : t('protect_home', `Protect your home or business in {city} with certified {brand} CCTV systems. Get an exact, transparent quote online in under 2 minutes.`).replace('{city}', localizedCityName).replace('{brand}', brandPrefix)
+      ? t('city_hero_desc_quote', `Compare exact {brand} CCTV camera pricing and installation setup costs online in under 2 minutes for your {city} property.`).replace('{city}', localizedCityName).replace('{brand}', brandPrefix).replace(/\s{2,}/g, ' ').trim()
+      : t('city_hero_desc_install', `Protect your home or business in {city} with certified {brand} CCTV systems. Get an exact, transparent quote online in under 2 minutes.`).replace('{city}', localizedCityName).replace('{brand}', brandPrefix).replace(/\s{2,}/g, ' ').trim()
   );
   const derivedCtaText = ctaText || (
     intent === "quotation" 
@@ -98,7 +101,7 @@ export default function CityLandingPage({
   );
   
   const mainTitle = intent === "quotation"
-    ? `Get Instant ${brandPrefix}CCTV Quotation`
+    ? t('city_instant_quote_title', `Get Instant ${brandPrefix}CCTV Quotation`, { brand: brandPrefix })
     : t('prof_installation', `Professional ${brandPrefix}CCTV Installation`);
 
   return (
@@ -106,7 +109,7 @@ export default function CityLandingPage({
         
         {servedParam === 'false' && (
           <div className="bg-amber-100 dark:bg-amber-900/40 border-b border-amber-200 dark:border-amber-800 p-3 text-center text-amber-800 dark:text-amber-200 text-sm font-medium">
-            We are actively expanding to {pincodeParam || 'your area'}. Prices shown are for the nearest active hub ({localizedCityName}) as a reference.
+            {t('city_expanding_notice', `We are actively expanding to ${pincodeParam || 'your area'}. Prices shown are for the nearest active hub (${localizedCityName}) as a reference.`, { area: pincodeParam || 'your area', city: localizedCityName })}
           </div>
         )}
       
@@ -139,7 +142,7 @@ export default function CityLandingPage({
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-zinc-900 dark:text-white tracking-tight max-w-4xl mb-3 sm:mb-4 leading-[1.1] animate-in fade-in slide-in-from-bottom-8 duration-1000">
             {mainTitle}{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-indigo-500 italic inline-block">
-              {t('landing_hero_highlight', 'Across {city}.').replace('{city}', localizedCityName)}
+              {t('city_hero_highlight', 'Across {city}.').replace('{city}', localizedCityName)}
             </span>
           </h1>
 
@@ -159,7 +162,7 @@ export default function CityLandingPage({
             {/* Phone icon on mobile, full button on sm+ */}
             <a
               href="tel:+917357612865"
-              aria-label="Call local support"
+              aria-label={t('city_call_support', 'Call local support')}
               className="flex sm:hidden items-center justify-center gap-3 w-full py-4 rounded-[28px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold touch-manipulation"
             >
               <PhoneCall className="w-5 h-5 text-blue-600" />
@@ -200,7 +203,7 @@ export default function CityLandingPage({
                     {t('landing_residential_tag', 'Residential')}
                   </div>
                   <h3 className="text-2xl font-black mb-2">{t('landing_residential_title', 'Standard 4-Camera Setup')}</h3>
-                  <div className="text-4xl font-black text-zinc-900 dark:text-white mb-6">₹{residentialStartingPrice.toLocaleString("en-IN")} <span className="text-xl text-zinc-400 font-medium">onwards</span></div>
+                  <div className="text-4xl font-black text-zinc-900 dark:text-white mb-6">₹{residentialStartingPrice.toLocaleString("en-IN")} <span className="text-xl text-zinc-400 font-medium">{t('city_onwards', 'onwards')}</span></div>
                   <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8 leading-relaxed">
                     {t('landing_residential_desc', 'Perfect for independent houses and retail stores. Includes {brand} cameras, 4-channel DVR, wiring with 15m free labor per camera, and doorstep fitting.').replace('{brand}', brand || "CP Plus")}
                   </p>
@@ -230,9 +233,9 @@ export default function CityLandingPage({
                     {t('landing_commercial_tag', 'Commercial')}
                   </div>
                   <h3 className="text-2xl font-black mb-2">{t('landing_commercial_title', '8 to 16-Camera Networks')}</h3>
-                  <div className="text-4xl font-black text-white mb-6">₹{commercialStartingPrice.toLocaleString("en-IN")} <span className="text-xl text-zinc-400 font-medium">onwards</span></div>
+                  <div className="text-4xl font-black text-white mb-6">₹{commercialStartingPrice.toLocaleString("en-IN")} <span className="text-xl text-zinc-400 font-medium">{t('city_onwards', 'onwards')}</span></div>
                   <p className="text-zinc-300 text-sm mb-8 leading-relaxed">
-                    {t('landing_commercial_desc', 'Ideal for offices, showrooms, and warehouses in {commercialAreas}. Multi-camera surveillance network with mobile live viewing and professional setup.').replace('{commercialAreas}', commercialAreas)}
+                    {t('landing_commercial_desc', 'Ideal for offices, showrooms, and warehouses in {commercialAreas}. Multi-camera surveillance network with mobile live viewing and professional setup.').replace('{commercialAreas}', localizedCommercialAreas)}
                   </p>
                   <ul className="space-y-4 mb-8">
                      {[

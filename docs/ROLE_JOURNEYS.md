@@ -9,7 +9,7 @@ The platform serves distinct personas with strict route boundaries, tailored cap
 - **Entry Points:** Landing page (`/`), geo-pages (`/[city]`), or Service Area Pincode Gate.
 - **Core Journey:**
   1. **Location & Funnel Choice:** Enters Pincode/Location via Mappls location gate. Selects **Guided Setup** (5-step wizard) or **Custom Build** (Pro Builder).
-  2. **Early Lead Gate (Custom Build):** Verifies Name and Mobile Number via WhatsApp OTP before entering hardware customizer to prevent drop-off.
+  2. **Early Lead Gate (Custom Build & Wizard OTP):** Verifies Name and Mobile Number via unified MSG91 WhatsApp OTP (`Msg91WhatsAppProvider.sendOtpTemplate`) before entering hardware customizer or unlocking final quotation options. `WhatsAppOtpNotice` provides a native `whatsapp://send?phone=...` launcher for mobile/desktop WhatsApp apps plus adaptive mobile (`wa.me`) / desktop (`web.whatsapp.com`) fallback, and all form/API errors are unwrapped through `extractErrorMessage()` so `[object Object]` never appears.
   3. **Quotation Review & Brand Unification:** Evaluates generated Bill of Materials; uses **"Match My Brand"** to dynamically unify components under CP Plus or Hikvision if desired.
   4. **Four Checkout Choices:**
      - *Option 1: Pay Full Upfront (Smart Pay):* 2% instant discount applied; generates an official **TAX INVOICE** (not Advance Receipt) with **PAID** watermark, `amountDue: 0`, and discount itemization.
@@ -78,19 +78,19 @@ The platform serves distinct personas with strict route boundaries, tailored cap
 - **Core Journey:**
   1. **Partner QR Code:** Downloads branded QR code and digital flyers linked to their unique partner referral code.
   2. **Storefront & Client Sharing:** Displays QR code in physical shops or attaches referral code to client project proposals.
-  3. **Commercial Economics:** Partner earns a **2% commission** on the total quote value; the customer receives an instant **3% discount**.
+  3. **Commercial Economics:** Partner earns a **2% commission** (or configurable `commission_slabs` / promoter override via `resolvePromoterCommission()`) on the total quote value, deducted inside the **Services** bucket of deal profit; the customer receives an instant **3% discount**.
   4. **Lead Pipeline:** Tracks referred client stages (Quotation → Booked → Installed → Paid).
 
 ---
 
 ## 6. B2C Individual Referral Partners ("Refer & Earn")
 - **Profile:** Everyday consumers, existing satisfied customers, and social media referrers.
-- **Onboarding:** Open self-signup via mobile number (WhatsApp OTP verified).
+- **Onboarding:** Open self-signup via mobile number verified through unified MSG91 WhatsApp OTP (`Msg91WhatsAppProvider.sendOtpTemplate` + `WhatsAppOtpNotice` cross-device app launcher and `extractErrorMessage()` sanitized feedback).
 - **Core Journey:**
   1. **Instant Code Generation:** Receives unique personal referral code upon mobile verification.
   2. **Dynamic Festive & Occasion EDMs:** Downloads festive graphics (Diwali, Holi, New Year, National Days, Home Security alerts) pre-embedded with their referral code and discount badge.
   3. **Social Sharing:** Posts EDMs to WhatsApp Status, Facebook, Instagram, and local community groups.
-  4. **Commercial Economics:** Referrer earns **₹500 flat incentive** per completed installation; the referee receives an instant **₹500 discount**.
+  4. **Commercial Economics:** Referrer earns **₹500 flat incentive** per completed installation (deducted inside the **Services** bucket); the referee receives an instant **₹500 discount**.
   5. **Status Tracking:** Tracks referred friends and earned rewards.
 
 ---
@@ -99,8 +99,8 @@ The platform serves distinct personas with strict route boundaries, tailored cap
 - **Profile:** Business owner and executive ops director managing platforms, catalogs, margins, and finances.
 - **Entry Point:** `/admin`
 - **Core Journey:**
-  1. **Global Control & Analytics:** Monitors real-time revenue, active bookings, conversion rates, and geographic demand heatmaps.
-  2. **Catalog & Margin Engine (`/admin/catalog-manager`, `/admin/settings`):** Configures dynamic category margins (`margin_hdd`, `margin_cctv_camera`, etc.), adds/duplicates products, and manages inventory status.
+  1. **Global Control & Analytics (`/admin/analytics/profitability`, `/admin/leads/[leadId]/deal`):** Monitors real-time revenue, active bookings, conversion rates, geographic demand heatmaps, and True Net Pocket Profit (Products vs Services including Paid/Promo AMC & referral commissions, minus PG MDR, warranty reserve, consumables & local ops overheads).
+  2. **Catalog & Margin Engine (`/admin/catalog-manager`, `/admin/settings`):** Configures dynamic category margins (`margin_hdd`, `margin_cctv_camera`, etc.) and overhead reserves (`amc_fulfillment_cost_percent`, `payment_gateway_fee_percent`, `warranty_reserve_percent`, `logistics_consumables_per_job`, `travel_fee_payout_percent`), adds/duplicates products, and manages inventory status.
   3. **Cash Collection Authority (`/admin/leads`):** Reviews and approves/rejects field cash collection requests (`/api/admin/leads/[leadId]/approve-cash`) to safeguard field cash transactions.
   4. **Geographic Coverage & Delivery Micro-Hubs Management (`/admin/coverage`):**
      - Manages State → District → Tehsil → PINCODE hierarchy.
