@@ -9,6 +9,7 @@ import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
 import { ApiResponse } from "@/lib/api-response";
 import { isMaintenanceMode } from "@/lib/kill-switch";
 import { mergeAppSettings } from "@/lib/cached-settings";
+import { executeSafeQuotationCalculation, toHttpErrorResponse } from "@/lib/quotation-boundary";
 
 /** 
  * ENTERPRISE-GRADE QUOTE PERSISTENCE
@@ -186,25 +187,38 @@ export async function POST(request: NextRequest) {
     }
 
     const effectiveSurchargeFlags = (selection as any).site_surcharge_flags || (leadData as any).site_surcharge_flags || (selection as any).site_surcharges || {};
+    const requestId = request.headers.get("x-request-id") || `req_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-    const pricing = calculatePricing({
-      selection: selection as any, // Cast to any to bypass strict null checking from Zod schema vs internal type
-      products,
-      addons,
-      settings,
-      cablingDone: (selection as any).cabling_done !== undefined ? Boolean((selection as any).cabling_done) : (leadData.cabling_done || false),
-      cablingMeters,              // FIX: Now matches the client cabling calculation exactly
-      site_surcharge_flags: effectiveSurchargeFlags,
-      referralDiscountPercent: appliedReferralDiscountPercent, // Injected via global settings
-      referralDiscountFlat: 0,
-      activeOffer: leadData.active_offer,
-      geoRules,
-      locationParams: {
-        pincode: (selection as any).lead_pincode || leadData.address?.pincode,
-        city: leadData.address?.city || (wizardAnswers.city as string),
-        state: leadData.address?.state || (wizardAnswers.state as string)
-      }
-    });
+    const safeCalc = executeSafeQuotationCalculation(
+      () =>
+        calculatePricing({
+          selection: selection as any, // Cast to any to bypass strict null checking from Zod schema vs internal type
+          products,
+          addons,
+          settings,
+          cablingDone: (selection as any).cabling_done !== undefined ? Boolean((selection as any).cabling_done) : (leadData.cabling_done || false),
+          cablingMeters,              // FIX: Now matches the client cabling calculation exactly
+          site_surcharge_flags: effectiveSurchargeFlags,
+          referralDiscountPercent: appliedReferralDiscountPercent, // Injected via global settings
+          referralDiscountFlat: 0,
+          activeOffer: leadData.active_offer,
+          geoRules,
+          locationParams: {
+            pincode: (selection as any).lead_pincode || leadData.address?.pincode,
+            city: leadData.address?.city || (wizardAnswers.city as string),
+            state: leadData.address?.state || (wizardAnswers.state as string)
+          }
+        }),
+      { requestId, source: "api_quotes_post" }
+    );
+
+    if (!safeCalc.success) {
+      console.error(`[Quotation Safety Boundary Intercept] RequestId: ${safeCalc.requestId}, Code: ${safeCalc.code}, Internal: ${safeCalc.internalMessage}`);
+      const httpErr = toHttpErrorResponse(safeCalc);
+      return ApiResponse.error(httpErr.body.error.message, httpErr.body.error.code, httpErr.status, undefined, requestId);
+    }
+
+    const pricing = safeCalc.data;
 
     // 3.5 ZERO-TRUST VALIDATION
     if (selection.expected_total_payable !== undefined && selection.expected_total_payable !== null) {

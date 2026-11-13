@@ -1,5 +1,5 @@
 
-import { Product, CCTVRequirement, CCTVConfiguration, ResolvedSystem } from "@/types";
+import type { Product, CCTVRequirement, CCTVConfiguration, ResolvedSystem } from "@/types";
 import { isBrandMatch as isBrandMatchFromUtils } from "./brand-utils";
 
 export function isTechMatch(p: any, targetTech: string): boolean {

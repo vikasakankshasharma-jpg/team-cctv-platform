@@ -5,6 +5,7 @@
  */
 
 import { generatePricingSnapshot } from "./pricing-engine";
+import { executeSafeQuotationCalculation, type SafeQuotationExecution } from "./quotation-boundary";
 import type {
   ResolvedSystem,
   CCTVRequirement,
@@ -15,6 +16,7 @@ import type {
 } from "../types";
 
 export { generatePricingSnapshot } from "./pricing-engine";
+export type { SafeQuotationExecution } from "./quotation-boundary";
 
 export interface CalculatePricingV2Params {
   resolvedSystem: ResolvedSystem;
@@ -39,5 +41,20 @@ export function calculatePricingV2(params: CalculatePricingV2Params): QuoteDeliv
     params.referralDiscountPercent || 0,
     params.referralDiscountFlat || 0,
     params.products || []
+  );
+}
+
+/**
+ * Phase 6.1.2: Delivery boundary safe execution wrapper for calculatePricingV2.
+ * Preserves the domain return type of calculatePricingV2 while providing a safe
+ * envelope for external delivery layers.
+ */
+export function calculatePricingV2Safe(
+  params: CalculatePricingV2Params,
+  context?: { requestId?: string }
+): SafeQuotationExecution<QuoteDelivery> {
+  return executeSafeQuotationCalculation(
+    () => calculatePricingV2(params),
+    { requestId: context?.requestId, source: "calculatePricingV2" }
   );
 }

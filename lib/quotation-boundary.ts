@@ -80,6 +80,19 @@ export function validateMoneyIntegrity(pricing: Record<string, any>): void {
     });
   }
 
+  // Industrial / Manual quote check: If requiresIndustrialQuote is true or plan_type is MANUAL_QUOTE,
+  // zero total and empty BOM are legitimate business states requiring an engineer site survey.
+  const isIndustrialOrManual =
+    pricing.requiresIndustrialQuote === true ||
+    pricing.isIndustrial === true ||
+    pricing.plan_type === "MANUAL_QUOTE" ||
+    pricing.is_manual_quote === true ||
+    pricing.requiresManualQuote === true;
+
+  if (isIndustrialOrManual) {
+    return;
+  }
+
   const numericFieldsToCheck = [
     { key: "total_payable", name: "Total Payable", canBeZero: false },
     { key: "taxable_amount", name: "Taxable Base", canBeZero: false, altKeys: ["net_taxable_amount"] },
@@ -149,24 +162,27 @@ export function validateMoneyIntegrity(pricing: Record<string, any>): void {
         });
       }
 
-      if (typeof it.unit_price === "number" && !Number.isFinite(it.unit_price)) {
+      const unitPrice = it.unit_price ?? it.price;
+      if (typeof unitPrice === "number" && !Number.isFinite(unitPrice)) {
         throw new QuotationBoundaryError({
           code: "CALCULATION_ERROR",
-          message: `Line item ${it.sku || it.name} has non-finite unit_price: ${it.unit_price}`,
+          message: `Line item ${it.sku || it.product_id || it.name || it.display_name} has non-finite unit_price: ${unitPrice}`,
         });
       }
 
-      if (typeof it.total_price === "number" && !Number.isFinite(it.total_price)) {
+      const totalPrice = it.total_price ?? it.line_total;
+      if (typeof totalPrice === "number" && !Number.isFinite(totalPrice)) {
         throw new QuotationBoundaryError({
           code: "CALCULATION_ERROR",
-          message: `Line item ${it.sku || it.name} has non-finite total_price: ${it.total_price}`,
+          message: `Line item ${it.sku || it.product_id || it.name || it.display_name} has non-finite total_price: ${totalPrice}`,
         });
       }
 
-      if (typeof it.quantity === "number" && (!Number.isFinite(it.quantity) || it.quantity < 0)) {
+      const qty = it.quantity ?? it.qty;
+      if (typeof qty === "number" && (!Number.isFinite(qty) || qty < 0)) {
         throw new QuotationBoundaryError({
           code: "CALCULATION_ERROR",
-          message: `Line item ${it.sku || it.name} has invalid quantity: ${it.quantity}`,
+          message: `Line item ${it.sku || it.product_id || it.name || it.display_name} has invalid quantity: ${qty}`,
         });
       }
     }
@@ -186,7 +202,17 @@ export function validateCatalogIntegrity(items: readonly any[]): void {
   }
 
   for (const item of items) {
-    const sku = String(item.sku || item.id || "").trim();
+    const sku = String(
+      item.sku ||
+      item.id ||
+      item.product_id ||
+      item.productId ||
+      (item.product && (item.product.sku || item.product.id)) ||
+      item.name ||
+      item.display_name ||
+      ""
+    ).trim();
+
     if (!sku) {
       throw new QuotationBoundaryError({
         code: "CATALOG_ERROR",
@@ -196,12 +222,13 @@ export function validateCatalogIntegrity(items: readonly any[]): void {
     }
 
     // Check for silent unpriced items (unit_price is 0 or negative without being an approved zero-price promo)
+    const unitPrice = item.unit_price ?? item.price;
     const isFreePromo = item.is_promo === true || item.is_free === true || sku.includes("promo_free_amc");
-    if (typeof item.unit_price === "number" && item.unit_price <= 0 && !isFreePromo) {
+    if (typeof unitPrice === "number" && unitPrice <= 0 && !isFreePromo) {
       throw new QuotationBoundaryError({
         code: "CATALOG_ERROR",
         message: `Line item ${sku} has zero or negative unit_price without being an approved promotional SKU.`,
-        internalDetails: { sku, unit_price: item.unit_price },
+        internalDetails: { sku, unit_price: unitPrice },
       });
     }
   }
@@ -224,9 +251,16 @@ export function executeSafeQuotationCalculation<T>(
 
     // Verify money integrity if result is a pricing object
     if (result && typeof result === "object") {
+      const isIndustrialOrManual =
+        (result as any).requiresIndustrialQuote === true ||
+        (result as any).isIndustrial === true ||
+        (result as any).plan_type === "MANUAL_QUOTE" ||
+        (result as any).is_manual_quote === true ||
+        (result as any).requiresManualQuote === true;
+
       validateMoneyIntegrity(result as Record<string, any>);
       const items = (result as any).line_items || (result as any).items || (result as any).bom;
-      if (Array.isArray(items)) {
+      if (Array.isArray(items) && !isIndustrialOrManual) {
         validateCatalogIntegrity(items);
       }
     }
@@ -302,3 +336,53 @@ export function executeSafeQuotationCalculation<T>(
     };
   }
 }
+
+/**
+ * Maps a SafeQuotationError to a canonical HTTP API response envelope.
+ * Strictly guarantees that internal error messages, stack traces, and database internals
+ * are never transmitted over the wire to external clients.
+ */
+export function toHttpErrorResponse(error: SafeQuotationError): {
+  status: number;
+  body: {
+    success: false;
+    error: {
+      code: QuotationErrorCode;
+      message: string;
+      requestId?: string;
+      isRetryable: boolean;
+    };
+  };
+} {
+  let status = 500;
+  switch (error.code) {
+    case "VALIDATION_ERROR":
+      status = 400;
+      break;
+    case "CATALOG_ERROR":
+    case "CALCULATION_ERROR":
+      status = 422;
+      break;
+    case "INFRASTRUCTURE_ERROR":
+      status = 503;
+      break;
+    case "INTERNAL_ERROR":
+    default:
+      status = 500;
+      break;
+  }
+
+  return {
+    status,
+    body: {
+      success: false,
+      error: {
+        code: error.code,
+        message: error.customerMessage,
+        requestId: error.requestId,
+        isRetryable: error.isRetryable,
+      },
+    },
+  };
+}
+

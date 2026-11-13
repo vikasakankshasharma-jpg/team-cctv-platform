@@ -1,4 +1,4 @@
-import { PlanType, Product, VendorCategory } from "@/types";
+import type { PlanType, Product, VendorCategory } from "@/types";
 import { reverseInclusiveGst, roundCurrency } from "./gst-utils";
 
 export interface MarginPolicyConfig {
