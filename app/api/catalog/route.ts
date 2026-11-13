@@ -47,7 +47,8 @@ export async function GET(req: NextRequest) {
       } else {
           const isStorage = cat.includes("storage") || cat.includes("hdd") || cat.includes("hard disk") || (data.storage_type && data.storage_type.toLowerCase().includes("hard disk"));
           const effectiveCat = isStorage ? "storage" : (cat || "cctv_camera");
-          const calc = MarginEngine.calculateUnitPricing(baseCost, effectiveCat, "recommended", marginPolicy, data.brand);
+          const authoritativeUnitPrice = Number(data.unit_price ?? data.price ?? 0) || undefined;
+          const calc = MarginEngine.calculateUnitPricing(baseCost, effectiveCat, "recommended", marginPolicy, data.brand, authoritativeUnitPrice);
           return calc.sellingPriceExTax;
       }
     };

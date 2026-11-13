@@ -238,9 +238,13 @@ export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumbe
             const qty = Number(item.qty ?? item.quantity ?? 1);
             const unitPrice = Number(item.unit_price ?? item.unitPrice ?? 0);
             const lineTotal = Number(item.line_total ?? qty * unitPrice);
+            const itemName = String(item.display_name || item.name || 'CCTV Hardware')
+              .replace(/\s*\(\s*-?\s*(?:outdoor|indoor)\s*\)/gi, '')
+              .replace(/\s{2,}/g, ' ')
+              .trim();
             return (
               <View key={i} style={styles.tableRow}>
-                <Text style={styles.colDesc}>{item.display_name || item.name || 'CCTV Hardware'}</Text>
+                <Text style={styles.colDesc}>{itemName}</Text>
                 <Text style={styles.colQty}>{qty}</Text>
                 <Text style={styles.colRate}>₹{unitPrice.toLocaleString('en-IN')}</Text>
                 <Text style={styles.colTotal}>₹{lineTotal.toLocaleString('en-IN')}</Text>
@@ -265,29 +269,17 @@ export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumbe
         <View style={styles.summaryContainer} wrap={false}>
           <View style={styles.summaryCard}>
             <View style={styles.summaryRow}>
-              <Text style={styles.summLabel}>Hardware Subtotal</Text>
-              <Text style={styles.summVal}>₹{Number(quote.base_hardware_cost ?? (quote as any).pricingSnapshot?.gross_subtotal ?? 0).toLocaleString('en-IN')}</Text>
+              <Text style={styles.summLabel}>{L.taxableValue}</Text>
+              <Text style={styles.summVal}>₹{Number(quote.net_taxable_amount ?? quote.gross_subtotal ?? quote.base_hardware_cost ?? (quote as any).pricingSnapshot?.gross_subtotal ?? 0).toLocaleString('en-IN')}</Text>
             </View>
-            {(quote.labor_cost || 0) > 0 && (
-              <View style={styles.summaryRow}>
-                <Text style={styles.summLabel}>Installation & Labor</Text>
-                <Text style={styles.summVal}>₹{quote.labor_cost.toLocaleString('en-IN')}</Text>
-              </View>
-            )}
-            {(quote.cabling_cost || 0) > 0 && (
-              <View style={styles.summaryRow}>
-                <Text style={styles.summLabel}>Estimated Cabling</Text>
-                <Text style={styles.summVal}>₹{quote.cabling_cost.toLocaleString('en-IN')}</Text>
-              </View>
-            )}
             {(quote.referral_discount || 0) > 0 && (
               <View style={styles.summaryRow}>
-                <Text style={[styles.summLabel, { color: '#16a34a' }]}>Referral Discount</Text>
+                <Text style={[styles.summLabel, { color: '#16a34a' }]}>{L.discountApplied}</Text>
                 <Text style={[styles.summVal, { color: '#16a34a' }]}>-₹{quote.referral_discount.toLocaleString('en-IN')}</Text>
               </View>
             )}
-            <View style={[styles.summaryRow, { marginTop: 8, paddingTop: 8, borderTop: '1px solid #e2e8f0' }]}>
-              <Text style={styles.summLabel}>{L.gstAt18} ({quote.gst_rate ?? 18}%)</Text>
+            <View style={[styles.summaryRow, { marginTop: 6, paddingTop: 6, borderTop: '1px solid #e2e8f0' }]}>
+              <Text style={styles.summLabel}>{L.gstAt18} ({quote.gst_rate && quote.gst_rate <= 1 ? Math.round(quote.gst_rate * 100) : (quote.gst_rate ?? 18)}%)</Text>
               <Text style={styles.summVal}>₹{Number(quote.gst_amount ?? (quote as any).pricingSnapshot?.gst_amount ?? 0).toLocaleString('en-IN')}</Text>
             </View>
             <View style={styles.totalRow}>
@@ -303,20 +295,20 @@ export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumbe
           <View style={[styles.infoCol, { backgroundColor: '#fff' }]}>
             <Text style={[styles.infoLabel, pdfLocale !== 'en' ? { textTransform: 'none' } : {}]}>{L.termsTitle}</Text>
             <Text style={[styles.blockText, { fontSize: 8 }]}>
-              1. 10% as an advance.{"\n"}
-              2. 80% at the time of material received at Site and before starting Installation work.{"\n"}
-              3. Remaining 10% after completion of work and handover the Site.{"\n"}
-              4. 1-Year Comprehensive On-Site Warranty.{"\n"}
+              1. {L.bookingAdvance500}: Flat ₹500 booking token locks quote pricing &amp; site visit.{"\n"}
+              2. {L.deliveryPayment90} at material delivery before installation starts.{"\n"}
+              3. {L.finalPayment10} after final testing &amp; site handover.{"\n"}
+              4. {L.warranty1YrTitle}: {L.warranty1YrBody}{"\n"}
               5. Validity: {settings.quote_validity_days || 7} Days from {dateStr}.
             </Text>
           </View>
           <View style={[styles.infoCol, { backgroundColor: '#fff' }]}>
             <Text style={[styles.infoLabel, pdfLocale !== 'en' ? { textTransform: 'none' } : {}]}>{L.bankDetailsTitle}</Text>
             <Text style={[styles.blockText, { fontSize: 8 }]}>
-              A/c Name: TEAM CCTV SOLUTIONS{"\n"}
-              A/c No: 50200062325372 (HDFC BANK){"\n"}
-              IFSC: HDFC0001844{"\n"}
-              UPI ID: teamcctv@okhdfc
+              A/c Name: {settings.bank_account_name || settings.company_legal_name || settings.company_name || "TEAM CCTV SOLUTIONS"}{"\n"}
+              A/c No: {settings.bank_account_no || "Pending"} ({settings.bank_name || "Bank"}){"\n"}
+              IFSC: {settings.bank_ifsc || "Pending"}{"\n"}
+              {settings.bank_upi_id ? `UPI ID: ${settings.bank_upi_id}` : ""}
             </Text>
           </View>
         </View>

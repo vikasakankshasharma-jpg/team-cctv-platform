@@ -97,3 +97,7 @@ pricing_table.md
 debug-*.json
 
 *.xlsx
+ 
+# certification regression artifacts
+tests/certification/regression/.tmp/
+tests/certification/regression/last-regression-result.json

@@ -209,7 +209,8 @@ export async function POST(request: Request) {
             // Hardware and accessories use MarginEngine (resolving price/margin conflicts)
             const isStorage = cat.includes("storage") || cat.includes("hdd") || cat.includes("hard disk") || (dbProduct.storage_type && dbProduct.storage_type.toLowerCase().includes("hard disk"));
             const effectiveCat = isStorage ? "storage" : (cat || "cctv_camera");
-            const calc = MarginEngine.calculateUnitPricing(baseCost, effectiveCat, "recommended", marginPolicy, dbProduct.brand);
+            const authoritativeUnitPrice = Number(dbProduct.unit_price ?? dbProduct.price ?? 0) || undefined;
+            const calc = MarginEngine.calculateUnitPricing(baseCost, effectiveCat, "recommended", marginPolicy, dbProduct.brand, authoritativeUnitPrice);
             verifiedUnitPrice = calc.sellingPriceExTax;
         }
 

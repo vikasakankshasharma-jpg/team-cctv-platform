@@ -10,6 +10,7 @@
  */
 
 import { calculateCommission, resolvePromoterCommission } from "./commission";
+import { reverseInclusiveGst, roundCurrency } from "./gst-utils";
 
 export type ProfitItemCategory =
   | "camera"
@@ -638,9 +639,13 @@ export function calculateQuotationProfitBreakup(
   const opsServiceProfit = opsServiceRevenue - opsServiceCost;
 
   // Referral / Partner / Salesperson Commission Deduction (User rule: counts inside Services)
+  const fallbackQuoteGross = roundCurrency(Math.max(0, productNet + quoteServiceNet));
   const preliminaryQuoteNetTaxable = Math.max(
     0,
-    Number(pricing.net_taxable_amount ?? (productNet + quoteServiceNet))
+    Number(
+      pricing.net_taxable_amount ??
+        reverseInclusiveGst(fallbackQuoteGross, gstRate).taxableAmount
+    )
   );
 
   let referralCommissionCost = 0;
@@ -798,11 +803,18 @@ export function calculateQuotationProfitBreakup(
   const overallProfit = Math.round((overallNetRevenue - overallCost) * 100) / 100;
   const overallMarginPercent = overallNetRevenue > 0 ? Number(((overallProfit / overallNetRevenue) * 100).toFixed(2)) : 0;
 
-  const baseGstAmount = Number(pricing.gst_amount ?? Math.round((productNet + quoteServiceNet) * (gstRate / 100)));
-  const baseTotalPayable = Number(pricing.total_payable ?? (productNet + quoteServiceNet + baseGstAmount));
+  const fallbackTotalPayable = roundCurrency(Math.max(0, productNet + quoteServiceNet));
+  const hasExplicitTotalPayable = pricing.total_payable !== undefined && pricing.total_payable !== null;
+  const hasExplicitGstAmount = pricing.gst_amount !== undefined && pricing.gst_amount !== null;
+  const baseTotalPayable = hasExplicitTotalPayable
+    ? Number(pricing.total_payable)
+    : fallbackTotalPayable;
+  const baseGstAmount = hasExplicitGstAmount
+    ? Number(pricing.gst_amount)
+    : reverseInclusiveGst(baseTotalPayable, gstRate).gstAmount;
   const standaloneAmcGst = Math.max(0, standaloneAmcPaidGross - standaloneAmcRevenue);
-  const gstAmount = baseGstAmount + standaloneAmcGst;
-  const totalPayable = baseTotalPayable + standaloneAmcPaidGross;
+  const gstAmount = roundCurrency(baseGstAmount + standaloneAmcGst);
+  const totalPayable = roundCurrency(baseTotalPayable + standaloneAmcPaidGross);
 
   // Operating Overheads (Payment Gateway MDR, 1st-Yr Warranty Visit Reserve, Consumables & Logistics)
   const pgFeePct = Number(settings?.payment_gateway_fee_percent ?? 2.36);
@@ -869,9 +881,9 @@ export function calculateQuotationProfitBreakup(
     );
   }
 
-  // Supply-Only comparison simulation
-  const supplyOnlyPayable = Math.round(productNet * (1 + gstRate / 100));
-  const savingsForCustomer = Math.max(0, totalPayable - supplyOnlyPayable);
+  // Supply-Only comparison simulation (hardware revenue is already GST-inclusive)
+  const supplyOnlyPayable = reverseInclusiveGst(productNet, gstRate).grossAmount;
+  const savingsForCustomer = Math.max(0, roundCurrency(totalPayable - supplyOnlyPayable));
 
   return {
     products: {

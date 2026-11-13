@@ -1,4 +1,5 @@
 import { PlanType, Product, VendorCategory } from "@/types";
+import { reverseInclusiveGst, roundCurrency } from "./gst-utils";
 
 export interface MarginPolicyConfig {
   anchor_margin: Record<PlanType, number>;
@@ -83,10 +84,36 @@ export const MarginEngine = {
     vendorCategory: string, 
     tier: PlanType, 
     policy: MarginPolicyConfig = DEFAULT_MARGIN_POLICY,
-    productBrand?: string
+    productBrand?: string,
+    authoritativeUnitPrice?: number | null
   ): PricingCalculationResult {
-    
-    // Fail-safe: if base cost is missing, return 0 (ON_DEMAND items with null baseCost)
+    const hasAuthoritativePrice =
+      typeof authoritativeUnitPrice === 'number' &&
+      Number.isFinite(authoritativeUnitPrice) &&
+      authoritativeUnitPrice > 0;
+
+    // Product-level unit_price is authoritative when positive; margin/policy stays diagnostic metadata.
+    if (hasAuthoritativePrice) {
+      const sellingPrice = roundCurrency(authoritativeUnitPrice as number);
+      const safeBaseCost =
+        baseCost !== null && baseCost !== undefined && Number.isFinite(Number(baseCost))
+          ? Number(baseCost)
+          : 0;
+      const workingCost = safeBaseCost;
+      const marginAmount = roundCurrency(sellingPrice - workingCost);
+      const marginPercent =
+        workingCost > 0 ? Number((marginAmount / workingCost).toFixed(4)) : 0;
+
+      return {
+        baseCost: safeBaseCost,
+        workingCost,
+        marginPercent,
+        marginAmount,
+        sellingPriceExTax: sellingPrice
+      };
+    }
+
+    // Fail-safe: if base cost is missing and no authoritative unit_price is provided, return 0 (ON_DEMAND items with null baseCost)
     if (baseCost === null || baseCost === undefined) {
       return { baseCost: 0, workingCost: 0, marginPercent: 0, marginAmount: 0, sellingPriceExTax: 0 };
     }
@@ -163,7 +190,8 @@ export const MarginEngine = {
   },
 
   /**
-   * Calculates the document total, applies GST, and rounds according to policy.
+   * Calculates the document total from GST-inclusive prices, applies geo-overlay & rounding,
+   * and decomposes reverse GST cleanly without adding GST twice.
    */
   calculateDocumentTotals(
     lineItems: { sellingPriceExTax: number; qty: number }[],
@@ -171,38 +199,30 @@ export const MarginEngine = {
     geoMultiplier: number = 1.0,
     policy: MarginPolicyConfig = DEFAULT_MARGIN_POLICY
   ) {
-    // 1. Sum up line items
+    // 1. Sum up GST-inclusive line items and surcharges
     let rawSubtotal = lineItems.reduce((sum, item) => sum + (item.sellingPriceExTax * item.qty), 0);
-    
-    // 2. Add surcharges (ladder, drilling, etc.)
     rawSubtotal += surchargeExTaxTotal;
 
-    // 3. Apply Geo-Overlay (Surge or discount)
-    const finalExTax = rawSubtotal * geoMultiplier;
+    // 2. Apply Geo-Overlay (Surge or discount) to GST-inclusive gross total
+    const grossTotalRaw = rawSubtotal * geoMultiplier;
 
-    // 4. Calculate GST
-    const gstAmountRaw = finalExTax * policy.gst_rate;
-    const totalPayableRaw = finalExTax + gstAmountRaw;
-
-    // 5. Apply Rounding
-    let finalPayable = totalPayableRaw;
+    // 3. Apply Rounding to gross payable
+    let finalPayable = grossTotalRaw;
     if (policy.rounding_mode === 'nearest_10') {
-      finalPayable = Math.round(totalPayableRaw / 10) * 10;
+      finalPayable = Math.round(grossTotalRaw / 10) * 10;
     } else if (policy.rounding_mode === 'nearest_1') {
-      finalPayable = Math.round(totalPayableRaw);
+      finalPayable = Math.round(grossTotalRaw);
     }
 
-    // Since we rounded the total, the GST needs to be mathematically precise against the total?
-    // Usually standard ERP practice: Total Payable is fixed, ExTax = Total / (1 + GST)
-    const derivedExTax = finalPayable / (1 + policy.gst_rate);
-    const derivedGst = finalPayable - derivedExTax;
+    // 4. Reverse GST decomposition from GST-inclusive payable
+    const tax = reverseInclusiveGst(finalPayable, policy.gst_rate);
 
     return {
-      rawSubtotal,
+      rawSubtotal: roundCurrency(rawSubtotal),
       geoMultiplier,
-      finalExTax: derivedExTax,
-      gstAmount: derivedGst,
-      totalPayable: finalPayable
+      finalExTax: tax.taxableAmount,
+      gstAmount: tax.gstAmount,
+      totalPayable: tax.grossAmount
     };
   }
 };

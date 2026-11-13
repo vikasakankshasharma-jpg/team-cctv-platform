@@ -45,12 +45,35 @@ function registerFontPair(family: string, filePrefix: string) {
       family,
       fonts: [
         { src: resolveFontSrc(`${filePrefix}-Regular.ttf`), fontWeight: 400 },
-        { src: resolveFontSrc(`${filePrefix}-Regular.ttf`), fontWeight: 500 },
-        { src: resolveFontSrc(`${filePrefix}-Bold.ttf`), fontWeight: 600 },
         { src: resolveFontSrc(`${filePrefix}-Bold.ttf`), fontWeight: 700 },
-        { src: resolveFontSrc(`${filePrefix}-Bold.ttf`), fontWeight: 800 },
       ],
     });
+    // Pre-populate fontkit's internal glyph->codePoints cache via glyphForCodePoint()
+    // before TTFSubset._addGlyph() can visit composite sub-glyphs (e.g. U+00B7 -> '.')
+    // with empty codePoints=[], which otherwise corrupts ToUnicode CMaps and line wrapping.
+    const fontFamilies = (Font as any).getRegisteredFonts?.();
+    const sources: Array<any> = fontFamilies?.[family]?.sources || [];
+    for (const srcObj of sources) {
+      if (!srcObj || srcObj.__warmPatched || typeof srcObj.load !== "function") continue;
+      srcObj.__warmPatched = true;
+      const origLoad = srcObj.load.bind(srcObj);
+      srcObj.load = async () => {
+        const res = await origLoad();
+        const fontData = srcObj.data;
+        if (fontData && !fontData.__glyphsWarmed && typeof fontData.glyphForCodePoint === "function") {
+          fontData.__glyphsWarmed = true;
+          const cps: number[] = Array.isArray(fontData.characterSet) ? fontData.characterSet : [];
+          for (let i = 0; i < cps.length; i++) {
+            try {
+              fontData.glyphForCodePoint(cps[i]);
+            } catch {
+              // Non-fatal
+            }
+          }
+        }
+        return res;
+      };
+    }
     registeredFamilies.add(family);
   } catch (err) {
     console.warn(`[PDF Fonts] Failed to register ${family}:`, err);

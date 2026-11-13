@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
+import { formatCleanAddress } from "@/lib/pdf/pdf-helpers";
 
 export async function GET(
   request: Request,
@@ -138,7 +139,9 @@ export async function POST(
         customer_name: sanitizedBilling.customer_name || quoteSnap.data()?.customer_name,
         company_name: sanitizedBilling.company_name,
         gstin: sanitizedBilling.gstin,
-        installationAddress: sanitizedBilling.address_line1 ? `${sanitizedBilling.address_line1}, ${sanitizedBilling.city} ${sanitizedBilling.pincode}` : quoteSnap.data()?.installationAddress,
+        installationAddress: sanitizedBilling.address_line1
+          ? formatCleanAddress(sanitizedBilling.address_line1, sanitizedBilling.city, sanitizedBilling.pincode)
+          : quoteSnap.data()?.installationAddress,
         coordinates: sanitizedBilling.coordinates || null,
         google_maps_link: sanitizedBilling.google_maps_link || "",
         updated_at: serverTimestamp(),

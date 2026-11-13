@@ -4,6 +4,15 @@ import { QuoteSnapshot, AppSettings } from '@/types';
 import { ensurePdfFontsForLocale, normalizePdfLocale } from '@/lib/pdf/pdf-fonts-indic';
 import { resolvePdfImageSrc } from '@/lib/pdf/pdf-image';
 import { getPdfLabels } from '@/lib/pdf/pdf-i18n';
+import {
+  calculateGstBreakup,
+  cleanPdfItemName,
+  formatCleanAddress,
+  formatDocNumber,
+  formatPdfDate,
+  formatPdfINR,
+  parsePdfDate,
+} from '@/lib/pdf/pdf-helpers';
 import { SPEECH_LOCALE_MAP } from '@/lib/i18n/mapping';
 
 // Create styles optimized for professional single-page layout
@@ -253,32 +262,36 @@ export const QuotePDFDocument = ({ quote, settings, locale }: { quote: QuoteSnap
   const phoneDisplay = settings?.company_phone ? ` | Ph: ${settings.company_phone}` : "";
   const webDisplay = settings?.company_website || "cctvquotation.com";
 
-  const addressParts = [
+  const addressDisplay = formatCleanAddress(
     settings?.company_address_line1,
     settings?.company_address_line2,
     settings?.company_city,
     settings?.company_state ? `${settings.company_state}${settings.company_pincode ? ` - ${settings.company_pincode}` : ''}` : settings?.company_pincode
-  ].filter(Boolean);
-  const addressDisplay = addressParts.length > 0 ? addressParts.join(", ") : "";
+  );
 
   const validUntil = quote.validUntil || quote.valid_until || quote.expires_at;
-  const createdAt = quote.createdAt || quote.created_at || (quote._serverCreatedAt?.toDate ? quote._serverCreatedAt.toDate() : null) || new Date();
-  const effectiveValidUntil = validUntil || new Date(new Date(createdAt).getTime() + (settings?.quote_validity_days || 7) * 24 * 60 * 60 * 1000);
+  const createdAt = quote.createdAt || quote.created_at || quote._serverCreatedAt;
+  const createdDateObj = parsePdfDate(createdAt) || new Date();
+  const effectiveValidUntil = validUntil || new Date(createdDateObj.getTime() + (settings?.quote_validity_days || 7) * 24 * 60 * 60 * 1000);
 
-  let rawItems: any[] = [];
+  let rawItemsAll: any[] = [];
   if (Array.isArray(quote?.items) && quote.items.length > 0) {
-    rawItems = quote.items;
-  } else if (Array.isArray(quote?.configurationSnapshot?.items)) {
-    rawItems = quote.configurationSnapshot.items;
-  } else if (Array.isArray(quote?.pricingSnapshot?.breakdown?.items)) {
-    rawItems = quote.pricingSnapshot.breakdown.items;
-  } else if (Array.isArray(quote?.pricingSnapshot?.items)) {
-    rawItems = quote.pricingSnapshot.items;
-  } else if (Array.isArray(quote?.hardware_cart)) {
-    rawItems = quote.hardware_cart;
-  } else if (Array.isArray(quote?.configuration_snapshot)) {
-    rawItems = quote.configuration_snapshot;
+    rawItemsAll = quote.items;
+  } else if (Array.isArray(quote?.configurationSnapshot?.items) && quote.configurationSnapshot.items.length > 0) {
+    rawItemsAll = quote.configurationSnapshot.items;
+  } else if (Array.isArray(quote?.pricingSnapshot?.breakdown?.items) && quote.pricingSnapshot.breakdown.items.length > 0) {
+    rawItemsAll = quote.pricingSnapshot.breakdown.items;
+  } else if (Array.isArray(quote?.pricingSnapshot?.items) && quote.pricingSnapshot.items.length > 0) {
+    rawItemsAll = quote.pricingSnapshot.items;
+  } else if (Array.isArray(quote?.pricingSnapshot?.line_items) && quote.pricingSnapshot.line_items.length > 0) {
+    rawItemsAll = quote.pricingSnapshot.line_items;
+  } else if (Array.isArray(quote?.hardware_cart) && quote.hardware_cart.length > 0) {
+    rawItemsAll = quote.hardware_cart;
+  } else if (Array.isArray(quote?.configuration_snapshot) && quote.configuration_snapshot.length > 0) {
+    rawItemsAll = quote.configuration_snapshot;
   }
+
+  const rawItems = rawItemsAll.filter((it: any) => Number(it?.unit_price ?? it?.unitPrice ?? it?.price ?? 0) >= 0);
 
   // Check if labor is already included inside rawItems to avoid duplicate rows
   const hasLaborInItems = rawItems.some((item: any) => {
@@ -288,37 +301,56 @@ export const QuotePDFDocument = ({ quote, settings, locale }: { quote: QuoteSnap
     return pid.includes("labor") || pid.includes("install") || cat === "labor" || cat === "installation" || title.includes("installation") || title.includes("labor");
   });
 
-  const calculatedItemsTotal = rawItems.reduce((acc: number, item: any) => {
-    const qty = item.qty || item.quantity || 1;
-    const price = item.unit_price || item.unitPrice || item.price || 0;
-    return acc + (item.line_total || item.lineTotal || (qty * price));
-  }, 0);
+  const addons = Array.isArray(quote?.addons) ? quote.addons : (quote?.pricingSnapshot?.addons || quote?.addons_snapshot || []);
+  const laborCost = hasLaborInItems ? 0 : Number(quote?.pricingSnapshot?.labor_cost ?? quote?.labor_cost ?? 0);
 
-  const resolvedSubtotal = quote?.pricingSnapshot?.gross_subtotal
-    ?? quote?.gross_subtotal
-    ?? quote?.pricingSnapshot?.net_taxable_amount
-    ?? quote?.net_taxable_amount
-    ?? quote?.pricingSnapshot?.taxable_amount
-    ?? calculatedItemsTotal;
+  const calculatedItemsTotal =
+    rawItems.reduce((acc: number, item: any) => {
+      const qty = Number(item.qty || item.quantity || 1);
+      const price = Number(item.unit_price || item.unitPrice || item.price || 0);
+      return acc + Number(item.line_total || item.lineTotal || (qty * price));
+    }, 0) +
+    addons.reduce((acc: number, a: any) => acc + Number(a.price || a.unit_price || 0) * Number(a.qty || a.quantity || 1), 0) +
+    laborCost;
 
-  const resolvedTotal = quote?.pricingSnapshot?.total_payable
-    ?? quote?.total_payable
-    ?? (resolvedSubtotal + (quote?.pricingSnapshot?.gst_amount ?? quote?.gst_amount ?? Math.round(resolvedSubtotal * 0.18)));
+  const discountAmount = Number(
+    quote?.negotiated_discount ||
+    quote?.full_payment_discount ||
+    quote?.discount_amount ||
+    quote?.pricingSnapshot?.discount_amount ||
+    0
+  );
+
+  const gstRate = Number(quote?.pricingSnapshot?.gst_rate ?? quote?.gst_rate ?? 18);
+  const breakup = calculateGstBreakup({
+    itemsSubtotalExTax: calculatedItemsTotal || Number(quote?.pricingSnapshot?.gross_subtotal ?? quote?.gross_subtotal ?? 0),
+    discountAmount,
+    gstPercent: gstRate,
+    storedTotalPayable: quote?.pricingSnapshot?.total_payable ?? quote?.total_payable,
+    storedNetTaxable: quote?.pricingSnapshot?.net_taxable_amount ?? quote?.net_taxable_amount ?? quote?.pricingSnapshot?.gross_subtotal,
+    storedGstAmount: quote?.pricingSnapshot?.gst_amount ?? quote?.gst_amount,
+    discountIsPostTax: Number(quote?.full_payment_discount || 0) > 0,
+  });
 
   const pricing = {
-    total_payable: resolvedTotal,
+    total_payable: breakup.totalPayable,
     items: rawItems,
-    addons: Array.isArray(quote?.addons) ? quote.addons : (quote?.pricingSnapshot?.addons || quote?.addons_snapshot || []),
-    labor_cost: hasLaborInItems ? 0 : (quote?.pricingSnapshot?.labor_cost ?? quote?.labor_cost ?? 0),
-    gross_subtotal: resolvedSubtotal,
-    gst_rate: quote?.pricingSnapshot?.gst_rate ?? quote?.gst_rate ?? 18,
-    gst_amount: quote?.pricingSnapshot?.gst_amount ?? quote?.gst_amount ?? Math.round(resolvedSubtotal * 0.18)
+    addons,
+    labor_cost: laborCost,
+    gross_subtotal: breakup.grossSubtotal,
+    net_taxable: breakup.netTaxable,
+    discount_amount: breakup.discountAmount,
+    gst_rate: gstRate,
+    gst_amount: breakup.gstAmount,
+    cgst_amount: breakup.cgstAmount,
+    sgst_amount: breakup.sgstAmount,
   };
 
-  const validDate = effectiveValidUntil ? new Date(effectiveValidUntil).toLocaleDateString(dateLocale, { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A';
-  const createdDate = createdAt ? new Date(createdAt).toLocaleDateString(dateLocale, { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A';
+  const validDate = formatPdfDate(effectiveValidUntil, dateLocale, 'short');
+  const createdDate = formatPdfDate(createdDateObj, dateLocale, 'short');
+  const quoteRefDisplay = formatDocNumber(quote?.quote_number || id, 'quote', createdDateObj);
 
-  const formatCurrency = (amount: number) => `₹${Math.round(amount).toLocaleString('en-IN')}`;
+  const formatCurrency = (amount: number) => formatPdfINR(amount);
 
   const resolvedLogo = resolvePdfImageSrc(settings?.pdf_logo_url || settings?.company_logo_url, '/logo-horizontal.jpg');
 
@@ -345,7 +377,7 @@ export const QuotePDFDocument = ({ quote, settings, locale }: { quote: QuoteSnap
             <View style={styles.quoteMetaGrid}>
               <View style={styles.quoteMetaRow}>
                 <Text style={styles.quoteMetaLabel}>{L.leadRef}:</Text>
-                <Text style={styles.quoteMetaValue}>{id ? `QT-${new Date().getFullYear()}-${id.substring(0, 6).toUpperCase()}` : 'DRAFT'}</Text>
+                <Text style={styles.quoteMetaValue}>{quoteRefDisplay}</Text>
               </View>
               <View style={styles.quoteMetaRow}>
                 <Text style={styles.quoteMetaLabel}>{L.dateIssued}:</Text>
@@ -363,8 +395,12 @@ export const QuotePDFDocument = ({ quote, settings, locale }: { quote: QuoteSnap
         <View style={styles.customerBox}>
           <View style={styles.customerInfoCol}>
             <Text style={[styles.preparedForLabel, noUpper]}>{L.preparedFor}:</Text>
-            <Text style={styles.customerName}>{customer_name || 'Customer'}</Text>
-            <Text style={styles.customerPhone}>Phone / Mobile: {customer_mobile || 'N/A'}</Text>
+            <Text style={styles.customerName}>
+              {quote?.billing_details?.full_name || quote?.billing_details?.customer_name || customer_name || L.valuedCustomer}
+            </Text>
+            <Text style={styles.customerPhone}>
+              {quote?.billing_details?.phone || quote?.customer_phone || customer_mobile || 'N/A'}
+            </Text>
           </View>
           <View style={styles.metaInfoCol}>
             <Text style={[styles.preparedForLabel, noUpper]}>{L.systemSpecs}:</Text>
@@ -383,15 +419,15 @@ export const QuotePDFDocument = ({ quote, settings, locale }: { quote: QuoteSnap
           </View>
 
           {pricing.items.map((item: any, i: number) => {
-            const name = item.display_name || item.name || item.title || "CCTV Component";
+            const name = cleanPdfItemName(item.display_name || item.name || item.title || "CCTV Component");
             const qty = item.qty || item.quantity || 1;
             const unitPrice = item.unit_price || item.unitPrice || item.price || 0;
             const lineTotal = item.line_total || item.lineTotal || (qty * unitPrice);
             return (
-              <View key={`item-${i}`} style={styles.tableRow} wrap={false}>
+              <View key={`item-${i}`} style={[styles.tableRow, pricing.items.length > 10 ? { paddingVertical: 2.5 } : {}]} wrap={false}>
                 <View style={styles.colDesc}>
                   <Text style={styles.itemTitle}>{name}</Text>
-                  <Text style={styles.itemBrand}>{item.brand || 'TEAM CCTV'}</Text>
+                  {item.brand ? <Text style={styles.itemBrand}>{item.brand}</Text> : null}
                 </View>
                 <Text style={[styles.colQty, styles.itemText]}>{qty}</Text>
                 <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(unitPrice)}</Text>
@@ -453,16 +489,22 @@ export const QuotePDFDocument = ({ quote, settings, locale }: { quote: QuoteSnap
 
           <View style={styles.totalsBox}>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>{L.subtotal}:</Text>
-              <Text style={styles.totalValue}>{formatCurrency(pricing.gross_subtotal)}</Text>
-            </View>
-            <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>{L.taxableValue}:</Text>
-              <Text style={styles.totalValue}>{formatCurrency(pricing.gross_subtotal)}</Text>
+              <Text style={styles.totalValue}>{formatCurrency(pricing.net_taxable)}</Text>
+            </View>
+            {pricing.discount_amount > 0 ? (
+              <View style={styles.totalRow}>
+                <Text style={[styles.totalLabel, { color: '#16a34a' }]}>{L.discountApplied}:</Text>
+                <Text style={[styles.totalValue, { color: '#16a34a' }]}>-{formatCurrency(pricing.discount_amount)}</Text>
+              </View>
+            ) : null}
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>{`CGST @ ${pricing.gst_rate / 2}%:`}</Text>
+              <Text style={styles.totalValue}>{formatCurrency(pricing.cgst_amount)}</Text>
             </View>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>{L.gstAt18} ({pricing.gst_rate}%):</Text>
-              <Text style={styles.totalValue}>{formatCurrency(pricing.gst_amount)}</Text>
+              <Text style={styles.totalLabel}>{`SGST @ ${pricing.gst_rate / 2}%:`}</Text>
+              <Text style={styles.totalValue}>{formatCurrency(pricing.sgst_amount)}</Text>
             </View>
             
             <View style={styles.grandTotalRow}>

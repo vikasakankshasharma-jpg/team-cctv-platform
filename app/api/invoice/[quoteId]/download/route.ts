@@ -17,6 +17,7 @@ export async function GET(
     const { quoteId } = await params;
     
     let doc = await adminDb.collection("quotes").doc(quoteId).get();
+    let linkedInvoiceData: any = null;
     
     if (!doc.exists) {
       doc = await adminDb.collection("quotes").doc(quoteId.toUpperCase()).get();
@@ -32,6 +33,16 @@ export async function GET(
         if (!invSnap.empty) {
           doc = invSnap.docs[0] as any;
         }
+      }
+    } else {
+      // Also merge linked invoice record if one exists (ensures latest invoice_number / paid amounts)
+      try {
+        const invDoc = await adminDb.collection("invoices").doc(doc.id).get();
+        if (invDoc.exists) {
+          linkedInvoiceData = invDoc.data();
+        }
+      } catch {
+        // Non-fatal
       }
     }
 
@@ -75,12 +86,16 @@ export async function GET(
     const billingDetails = quoteData.billing_details || leadData?.billing_details;
 
     const quote = {
-      id: quoteId,
-      customer_name: billingDetails?.customer_name || quoteData.customer_name || quoteData.customerName || leadData.customer_name || leadData.name || "Customer",
+      id: doc.id || quoteId,
+      customer_name: billingDetails?.customer_name || billingDetails?.full_name || quoteData.customer_name || quoteData.customerName || leadData.customer_name || leadData.name || "Customer",
       customer_mobile: billingDetails?.phone || quoteData.customer_mobile || quoteData.customerMobile || leadData.mobile_number || leadData.phone || "N/A",
       company_name: billingDetails?.company_name || quoteData.company_name || leadData.company_name || "",
       gstin: billingDetails?.gstin || quoteData.gstin || quoteData.gst_number || leadData.gst_number || "",
       billing_details: billingDetails,
+      ...(linkedInvoiceData ? {
+        invoice_number: linkedInvoiceData.invoice_number,
+        payment_id: linkedInvoiceData.payment_id || quoteData.payment_id,
+      } : {}),
       ...quoteData
     };
 

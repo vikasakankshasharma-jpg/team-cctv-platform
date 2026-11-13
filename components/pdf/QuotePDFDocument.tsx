@@ -378,12 +378,15 @@ export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilD
               <Text style={styles.totalValue}>{formatCurrency(quote.net_taxable_amount)}</Text>
             </View>
 
-            {quote.gst_amount > 0 && (
-              <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>{L.gstAt18} ({(quote.gst_rate * 100).toFixed(0)}%):</Text>
-                <Text style={styles.totalValue}>{formatCurrency(quote.gst_amount)}</Text>
-              </View>
-            )}
+            {quote.gst_amount > 0 && (() => {
+              const displayGstPct = quote.gst_rate > 1 ? quote.gst_rate : (quote.gst_rate * 100);
+              return (
+                <View style={styles.totalRow}>
+                  <Text style={styles.totalLabel}>{L.gstAt18} ({displayGstPct.toFixed(0)}%):</Text>
+                  <Text style={styles.totalValue}>{formatCurrency(quote.gst_amount)}</Text>
+                </View>
+              );
+            })()}
 
             <View style={styles.grandTotalRow}>
               <Text style={styles.grandTotalLabel}>{L.totalPayable}:</Text>

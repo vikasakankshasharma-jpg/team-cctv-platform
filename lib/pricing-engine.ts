@@ -23,6 +23,7 @@ import type {
 import { getCatalogCapacity } from "./catalog-capacity";
 import { MarginEngine, DEFAULT_MARGIN_POLICY } from "./margin-engine";
 import { calculateQuotationProfitBreakup } from "./quotation-profit";
+import { normalizeGstPercent, reverseInclusiveGst, roundCurrency } from "./gst-utils";
 
 export interface PricingEngineParams {
   selection: ConfiguratorSelection;
@@ -132,14 +133,43 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   // Derive and synchronize totalCameraCount from mixed_camera_requirements or indoor/outdoor counts
   if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
     const mixedSum = selection.mixed_camera_requirements.reduce((sum, r) => sum + (Number(r.count) || 0), 0);
-    if (mixedSum > 0) {
-      selection.camera_count = mixedSum;
-    }
+    selection.camera_count = mixedSum;
   } else if (!selection.selected_camera_id && (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined)) {
     const sum = (Number(selection.indoor_camera_count) || 0) + (Number(selection.outdoor_camera_count) || 0);
     if (sum > 0) {
       selection.camera_count = sum;
     }
+  }
+
+  // Boundary guard: camera_count <= 0 (or non-finite / negative) is invalid — reject before BOM generation
+  const validatedCameraCount = Number(selection.camera_count);
+  if (!Number.isFinite(validatedCameraCount) || validatedCameraCount <= 0) {
+    const gstRate = normalizeGstPercent(settings?.gst_rate, 18);
+    const invalidResult: PricingResult = {
+      plan_type: selection.plan_type,
+      technology: selection.technology,
+      items: [],
+      addons: [],
+      base_hardware_cost: 0,
+      cabling_cost: 0,
+      labor_cost: 0,
+      addons_total: 0,
+      gross_subtotal: 0,
+      referral_discount: 0,
+      net_taxable_amount: 0,
+      gst_rate: gstRate,
+      gst_amount: 0,
+      total_payable: 0,
+      requiresIndustrialQuote: false,
+      total_purchase_cost: 0,
+      gross_profit_value: 0,
+      gross_profit_percent: 0,
+      margin_warnings: [],
+      error: true,
+      error_message: "At least 1 camera is required for a quotation."
+    };
+    invalidResult.margin_breakup = calculateQuotationProfitBreakup(invalidResult, settings);
+    return invalidResult;
   }
 
   // 0. Industrial Threshold Check — dynamic based on recorder catalog capacity
@@ -290,26 +320,50 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   if (effectiveSurchargeFlags.requiresFurnishedSurcharge) addSurcharge("surcharge_furnished", "Furnished Site Care & Cleanup Premium", prepCfg.furnishedSiteSurcharge ?? 300);
   if (effectiveSurchargeFlags.requiresHeavyDrillingSurcharge) addSurcharge("surcharge_wall_drilling", "Heavy Wall/Floor Penetration Surcharge", prepCfg.heavyWallDrillingSurcharge ?? 600);
 
-  // 5. Final Financial Aggregation & Taxes
-  const grossSubtotal = baseHardwareCost + addonsTotal;
+  // 5. Final Financial Aggregation & Reverse-GST Decomposition (18% GST-inclusive)
+  const grossSubtotal = roundCurrency(baseHardwareCost + addonsTotal);
   
-  // Apply Referral Discounts
+  // Apply Referral Discounts BEFORE reverse-GST decomposition
   const referralDiscount = Math.round(grossSubtotal * (referralDiscountPercent / 100)) + referralDiscountFlat;
-  const netTaxableAmount = Math.max(0, grossSubtotal - referralDiscount);
+  const payableAfterDiscount = Math.max(0, roundCurrency(grossSubtotal - referralDiscount));
   
-  const gstRate = settings.gst_rate !== undefined ? settings.gst_rate : 18;
-  const gstAmount = Math.round(netTaxableAmount * (gstRate / 100));
-  const totalPayable = netTaxableAmount + gstAmount;
+  const {
+    gstRate,
+    taxableAmount: netTaxableAmount,
+    gstAmount,
+    grossAmount: totalPayable
+  } = reverseInclusiveGst(payableAfterDiscount, settings.gst_rate);
 
-  // 6. Margin Analysis (Audit)
-  const grossProfitValue = netTaxableAmount - totalPurchaseCost;
-  const grossProfitPercent = netTaxableAmount > 0 ? (grossProfitValue / netTaxableAmount) * 100 : 0;
+  // 6. Margin Analysis (Audit — both customer totalPayable & distributor purchase cost are GST-paid)
+  const grossProfitValue = roundCurrency(totalPayable - totalPurchaseCost);
+  const grossProfitPercent = totalPayable > 0 ? (grossProfitValue / totalPayable) * 100 : 0;
   
   if (settings.minimum_margin_threshold && grossProfitPercent < settings.minimum_margin_threshold) {
     marginWarnings.push(`Low Margin Alert: ${grossProfitPercent.toFixed(1)}% (Threshold: ${settings.minimum_margin_threshold}%)`);
   }
 
-  const hasMultipleTechs = selection.mixed_camera_requirements?.some(req => req.technology && req.technology !== effectiveTech);
+  const normalizeTechToken = (raw?: string | null): string => {
+    const t = String(raw || "").trim().toUpperCase();
+    if (!t) return "";
+    if (t === "WIFI" || t === "WI-FI" || t === "WIRELESS" || t === "4G" || t === "SOLAR") return "WIRELESS";
+    if (t === "IP" || t === "NETWORK" || t === "POE") return "IP";
+    if (t === "HD" || t === "ANALOG" || t === "COAX") return "HD";
+    return t;
+  };
+  const distinctMixedTechs = new Set<string>();
+  const normalizedEffective = normalizeTechToken(effectiveTech);
+  for (const req of selection.mixed_camera_requirements || []) {
+    if (Number(req?.count ?? 0) <= 0) continue;
+    let t = normalizeTechToken(req.technology);
+    if (!t) {
+      const typeStr = String(req.type || "").toLowerCase();
+      t = (typeStr.includes("wifi") || typeStr.includes("wi-fi") || typeStr.includes("wireless") || typeStr.includes("4g") || typeStr.includes("solar"))
+        ? "WIRELESS"
+        : normalizedEffective;
+    }
+    if (t) distinctMixedTechs.add(t);
+  }
+  const hasMultipleTechs = distinctMixedTechs.size > 1;
   if (hasMultipleTechs) {
     marginWarnings.push(`Warning: Mixed technology configurations (e.g. IP and HD) may require multiple recorders, which is not currently supported in auto-quoting.`);
   }
@@ -391,16 +445,16 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     base_hardware_cost: Math.round(baseHardwareCost - actualLaborCost - actualCablingCost),
     cabling_cost: actualCablingCost,
     labor_cost: actualLaborCost,
-    addons_total: Math.round(addonsTotal),
-    gross_subtotal: Math.round(grossSubtotal),
+    addons_total: roundCurrency(addonsTotal),
+    gross_subtotal: grossSubtotal,
     referral_discount: referralDiscount,
-    net_taxable_amount: Math.round(netTaxableAmount),
+    net_taxable_amount: netTaxableAmount,
     gst_rate: gstRate,
     gst_amount: gstAmount,
-    total_payable: Math.round(totalPayable),
+    total_payable: totalPayable,
     requiresIndustrialQuote: isIndustrial,
     total_purchase_cost: Math.round(totalPurchaseCost),
-    gross_profit_value: Math.round(grossProfitValue),
+    gross_profit_value: grossProfitValue,
     gross_profit_percent: Number(grossProfitPercent.toFixed(2)),
     margin_warnings: marginWarnings,
     storage_overflow: storageOverflowFlag,
@@ -561,14 +615,20 @@ function calculateHardware(
         let featureLabel = "";
         if (req.features && req.features.length > 0) {
           const names = req.features
-            .filter(f => f !== "bullet" && f !== "dome")
+            .map(f => String(f || "").trim())
+            .filter(f => {
+              const norm = f.toLowerCase().replace(/^-+/, "").trim();
+              return norm && norm !== "bullet" && norm !== "dome" && norm !== "outdoor" && norm !== "indoor";
+            })
             .map(f => {
-              if (f === "color") return "Color Night Vision";
-              if (f === "audio" || f === "mic") return "Audio/Mic";
-                if (f === "2-way" || f === "two-way") return "2-Way Audio";
-              if (f === "ptz") return "PTZ";
-              if (f === "solar") return "Solar";
-              if (f === "4g") return "4G";
+              const norm = f.toLowerCase();
+              if (norm === "color") return "Color Night Vision";
+              if (norm === "audio" || norm === "mic") return "Audio/Mic";
+              if (norm === "2-way" || norm === "two-way") return "2-Way Audio";
+              if (norm === "ptz") return "PTZ";
+              if (norm === "solar") return "Solar";
+              if (norm === "4g") return "4G";
+              if (norm === "wifi" || norm === "wi-fi") return "Wi-Fi";
               return f;
             });
           if (names.length > 0) featureLabel = ` (${names.join(", ")})`;
@@ -1353,6 +1413,138 @@ function calculateCabling(
   return { items, totalRetail: bestCombination.totalRetail, totalCost: bestCombination.totalCost };
 }
 
+function isQuotableCatalogAccessory(p: any): boolean {
+  if (!p) return false;
+  const price = Number(p.unit_price ?? p.price ?? 0);
+  const cost = Number(p.base_cost ?? 0);
+  return (
+    p.is_active !== false &&
+    p.is_deleted !== true &&
+    p.stock_status !== "discontinued" &&
+    p.is_quotation_eligible !== false &&
+    (price > 0 || cost > 0)
+  );
+}
+
+function isPackAccessory(p: any): boolean {
+  const name = String(p?.display_name || p?.technical_name || p?.name || "");
+  return /\bpack\s*of\s*\d+\b/i.test(name);
+}
+
+function findCatalogAccessoryByIds(catalogPool: any[], ids: string[]): any | null {
+  for (const id of ids) {
+    const match = catalogPool.find(
+      (p) => isQuotableCatalogAccessory(p) && (p.id === id || p.sku === id)
+    );
+    if (match) return match;
+  }
+  return null;
+}
+
+function resolveCatalogHdConnectors(catalogPool: any[]): { bnc: any | null; dc: any | null; combined: any | null } {
+  const bnc =
+    findCatalogAccessoryByIds(catalogPool, ["connector_bnc_copper"]) ||
+    catalogPool.find((p) => {
+      if (!isQuotableCatalogAccessory(p) || isPackAccessory(p) || p.category !== "connector") return false;
+      const text = `${p.id || ""} ${p.sku || ""} ${p.display_name || ""}`.toLowerCase();
+      return text.includes("bnc") && !/\bdc\b|\bset\b/i.test(text);
+    }) ||
+    null;
+
+  const dc =
+    findCatalogAccessoryByIds(catalogPool, ["connector_dc_pin"]) ||
+    catalogPool.find((p) => {
+      if (!isQuotableCatalogAccessory(p) || isPackAccessory(p) || p.category !== "connector") return false;
+      const text = `${p.id || ""} ${p.sku || ""} ${p.display_name || ""}`.toLowerCase();
+      return /\bdc\b/.test(text) && !text.includes("bnc");
+    }) ||
+    null;
+
+  const combined =
+    !bnc && !dc
+      ? findCatalogAccessoryByIds(catalogPool, ["connector_bnc_dc", "conn_bnc_dc"])
+      : null;
+
+  return { bnc, dc, combined };
+}
+
+function resolveCatalogRj45Connector(catalogPool: any[]): any | null {
+  return (
+    catalogPool.find((p) => {
+      if (!isQuotableCatalogAccessory(p) || isPackAccessory(p)) return false;
+      if (p.category !== "connector" && !String(p.id || "").includes("rj45")) return false;
+      const text = `${p.id || ""} ${p.sku || ""} ${p.display_name || ""}`.toLowerCase();
+      return text.includes("rj45");
+    }) || null
+  );
+}
+
+function resolveCatalogJunctionBox(catalogPool: any[], targetTech: "HD" | "IP"): any | null {
+  if (targetTech === "IP") {
+    return (
+      findCatalogAccessoryByIds(catalogPool, ["mount_pvc_junction_box_ip_475"]) ||
+      catalogPool.find((p) => {
+        if (!isQuotableCatalogAccessory(p) || p.category !== "camera_mount") return false;
+        const text = `${p.id || ""} ${p.sku || ""} ${p.display_name || ""}`.toLowerCase();
+        return text.includes("ip") || text.includes("4.75") || text.includes("475");
+      }) ||
+      findCatalogAccessoryByIds(catalogPool, ["mount_pvc_junction_box_4x4"]) ||
+      catalogPool.find((p) => isQuotableCatalogAccessory(p) && p.category === "camera_mount") ||
+      null
+    );
+  }
+  return (
+    findCatalogAccessoryByIds(catalogPool, ["mount_pvc_junction_box_4x4"]) ||
+    catalogPool.find((p) => {
+      if (!isQuotableCatalogAccessory(p) || p.category !== "camera_mount") return false;
+      const text = `${p.id || ""} ${p.sku || ""} ${p.display_name || ""}`.toLowerCase();
+      return !/ip[_ -]?475|\bfor ip\b|4\.75/i.test(text);
+    }) ||
+    catalogPool.find((p) => isQuotableCatalogAccessory(p) && p.category === "camera_mount") ||
+    null
+  );
+}
+
+function countWiredByTech(
+  selection: ConfiguratorSelection,
+  tech: string,
+  wiredCameraCount: number
+): { hdCount: number; ipCount: number } {
+  const upperTech = String(tech || "HD").toUpperCase();
+  const mixed = selection.mixed_camera_requirements;
+  if (Array.isArray(mixed) && mixed.length > 0) {
+    let hdCount = 0;
+    let ipCount = 0;
+    for (const req of mixed) {
+      const t = (req.type || "").toLowerCase();
+      const techStr = String(req.technology || "").toUpperCase();
+      if (
+        t.includes("solar") ||
+        t.includes("4g") ||
+        t.includes("wifi") ||
+        t.includes("wi-fi") ||
+        t.includes("wireless") ||
+        techStr === "WIRELESS" ||
+        techStr === "WIFI"
+      ) {
+        continue;
+      }
+      const cnt = Number(req.count) || 0;
+      if (techStr === "IP" || (!techStr && upperTech === "IP")) {
+        ipCount += cnt;
+      } else {
+        hdCount += cnt;
+      }
+    }
+    if (hdCount + ipCount > 0) {
+      return { hdCount, ipCount };
+    }
+  }
+  return upperTech === "IP"
+    ? { hdCount: 0, ipCount: wiredCameraCount }
+    : { hdCount: wiredCameraCount, ipCount: 0 };
+}
+
 function calculateConnectors(
   selection: ConfiguratorSelection,
   settings: AppSettings,
@@ -1367,7 +1559,11 @@ function calculateConnectors(
     return { items, totalRetail: 0, totalCost: 0 };
   }
   
-  let wiredCameraCount = Number(selection.camera_count) || 1;
+  const rawCamCount = Number(selection.camera_count);
+  let wiredCameraCount = Number.isFinite(rawCamCount) ? rawCamCount : 0;
+  if (wiredCameraCount <= 0 && (!selection.mixed_camera_requirements || selection.mixed_camera_requirements.length === 0)) {
+    return { items, totalRetail: 0, totalCost: 0 };
+  }
   if (selection.wifi_camera_count && Number(selection.wifi_camera_count) > 0) {
     wiredCameraCount = Math.max(0, wiredCameraCount - Number(selection.wifi_camera_count));
   } else if (selection.mixed_camera_requirements && selection.mixed_camera_requirements?.length > 0) {
@@ -1394,113 +1590,143 @@ function calculateConnectors(
 
   let totalRetail = 0;
   let totalCost = 0;
+  const catalogPool = [...products, ...addons];
 
   // Check if user explicitly selected a connector or camera mount
   const userConnectorId = (selection.selected_addons || []).find(id => {
-    const a = addons.find(x => x.id === id) || products.find(x => x.id === id || x.sku === id);
+    const a = catalogPool.find(x => x.id === id || (x as any).sku === id);
     return a && a.category === "connector";
   });
-  const userConnector = userConnectorId ? (addons.find(x => x.id === userConnectorId) || products.find(x => x.id === userConnectorId || x.sku === userConnectorId)) : null;
+  const userConnector = userConnectorId ? catalogPool.find(x => x.id === userConnectorId || (x as any).sku === userConnectorId) : null;
   
   const userMountId = (selection.selected_addons || []).find(id => {
-    const a = addons.find(x => x.id === id) || products.find(x => x.id === id || x.sku === id);
+    const a = catalogPool.find(x => x.id === id || (x as any).sku === id);
     return a && a.category === "camera_mount";
   });
-  const userMount = userMountId ? (addons.find(x => x.id === userMountId) || products.find(x => x.id === userMountId || x.sku === userMountId)) : null;
+  const userMount = userMountId ? catalogPool.find(x => x.id === userMountId || (x as any).sku === userMountId) : null;
 
-  if (userConnector) {
-    const rate = userConnector.unit_price || (userConnector as any).price || 0;
-    const lineTotal = rate * wiredCameraCount;
+  const { hdCount, ipCount } = countWiredByTech(selection, tech, wiredCameraCount);
+  const pushCatalogLine = (prod: any, qty: number) => {
+    const rate = prod.unit_price || prod.price || 0;
+    const lineTotal = rate * qty;
     items.push({
-      product_id: userConnector.id || (userConnector as any).sku,
-      display_name: userConnector.display_name,
-      brand: userConnector.brand || "",
+      product_id: prod.id || prod.sku,
+      display_name: prod.display_name || prod.name,
+      brand: prod.brand || "",
       category: "accessory",
-      qty: wiredCameraCount,
+      qty,
       unit_price: rate,
       line_total: lineTotal,
-      ...(userConnector.base_cost !== undefined && userConnector.base_cost !== null ? { base_cost_at_quote: Number(userConnector.base_cost) } : {})
+      ...(prod.base_cost !== undefined && prod.base_cost !== null ? { base_cost_at_quote: Number(prod.base_cost) } : {})
     });
     totalRetail += lineTotal;
-    totalCost += (userConnector.base_cost || 0) * wiredCameraCount;
+    totalCost += (Number(prod.base_cost) || 0) * qty;
+  };
+
+  if (userConnector) {
+    pushCatalogLine(userConnector, wiredCameraCount);
   } else {
     const connectorMarginPct = (settings as any).margin_connectors || 50;
-    const useRJ45 = tech === "IP" || selection.cable_type === "cat6";
-    if (useRJ45) {
-      const costPerPiece = settings.connector_rj45_cost || 5;
-      const retailPerPiece = Math.round(costPerPiece * (1 + connectorMarginPct / 100));
-      let qty = wiredCameraCount;
-      if (tech === "IP") {
-        const transmission = resolveTransmission(selection, [...products, ...addons] as any[], tech);
-        const transQty = transmission ? Math.ceil(wiredCameraCount / (transmission.max_cameras || 4)) : 1;
-        qty = (wiredCameraCount * 2) + (transQty * 2); // 2 per camera + 2 per PoE switch for uplink
+    const isCat6Hd = selection.cable_type === "cat6";
+    const rj45HdQty = isCat6Hd ? hdCount * 2 : 0;
+    let rj45IpQty = 0;
+    if (ipCount > 0) {
+      const transmission = resolveTransmission({ ...selection, camera_count: ipCount }, catalogPool as any[], "IP");
+      const transQty = transmission ? Math.ceil(ipCount / (transmission.max_cameras || 4)) : 1;
+      rj45IpQty = (ipCount * 2) + (transQty * 2); // 2 per camera + 2 per PoE switch for uplink
+    }
+    const totalRj45Qty = rj45IpQty + rj45HdQty;
+
+    if (totalRj45Qty > 0) {
+      const catalogRj45 = resolveCatalogRj45Connector(catalogPool);
+      if (catalogRj45) {
+        pushCatalogLine(catalogRj45, totalRj45Qty);
       } else {
-        qty = wiredCameraCount * 2; // Cat6 Balun ends
+        const costPerPiece = settings.connector_rj45_cost || 5;
+        const retailPerPiece = Math.round(costPerPiece * (1 + connectorMarginPct / 100));
+        const lineTotal = retailPerPiece * totalRj45Qty;
+        items.push({
+          product_id: "connector_rj45",
+          display_name: "RJ45 Connectors (Camera & Switch/Balun ends)",
+          category: "accessory",
+          qty: totalRj45Qty,
+          unit_price: retailPerPiece,
+          line_total: lineTotal,
+          base_cost_at_quote: costPerPiece
+        });
+        totalRetail += lineTotal;
+        totalCost += costPerPiece * totalRj45Qty;
       }
-      
-      const lineTotal = retailPerPiece * qty;
-      items.push({
-        product_id: "connector_rj45",
-        display_name: "RJ45 Connectors (Camera & Switch/Balun ends)",
-        category: "accessory",
-        qty: qty,
-        unit_price: retailPerPiece,
-        line_total: lineTotal,
-        base_cost_at_quote: costPerPiece
-      });
-      totalRetail += lineTotal;
-      totalCost += costPerPiece * qty;
-    } else {
-      // BNC ₹15 + DC ₹5 = ₹20 per camera (purchase cost for a complete set)
-      const costPerSet = settings.connector_bnc_dc_cost || 20;
-      const retailPerSet = Math.round(costPerSet * (1 + connectorMarginPct / 100));
-      const lineTotal = retailPerSet * wiredCameraCount;
-      items.push({
-        product_id: "connector_bnc_dc",
-        display_name: "BNC & DC Connector Set",
-        category: "accessory",
-        qty: wiredCameraCount,
-        unit_price: retailPerSet,
-        line_total: lineTotal,
-        base_cost_at_quote: costPerSet
-      });
-      totalRetail += lineTotal;
-      totalCost += costPerSet * wiredCameraCount;
+    }
+
+    if (hdCount > 0 && !isCat6Hd) {
+      const { bnc, dc, combined } = resolveCatalogHdConnectors(catalogPool);
+      if (bnc || dc) {
+        if (bnc) pushCatalogLine(bnc, hdCount * 2); // 2 BNC connectors per coax camera (camera + DVR)
+        if (dc) pushCatalogLine(dc, hdCount);      // 1 DC power pin per coax camera
+      } else if (combined) {
+        pushCatalogLine(combined, hdCount);
+      } else {
+        // Synthetic fallback ONLY when no quotation-eligible Firestore connector SKU exists
+        const costPerSet = settings.connector_bnc_dc_cost || 20;
+        const retailPerSet = Math.round(costPerSet * (1 + connectorMarginPct / 100));
+        const lineTotal = retailPerSet * hdCount;
+        items.push({
+          product_id: "connector_bnc_dc",
+          display_name: "BNC & DC Connector Set",
+          category: "accessory",
+          qty: hdCount,
+          unit_price: retailPerSet,
+          line_total: lineTotal,
+          base_cost_at_quote: costPerSet
+        });
+        totalRetail += lineTotal;
+        totalCost += costPerSet * hdCount;
+      }
     }
   }
 
   if (userMount) {
-    const rate = userMount.unit_price || (userMount as any).price || 0;
-    const lineTotal = rate * wiredCameraCount;
-    items.push({
-      product_id: userMount.id || (userMount as any).sku,
-      display_name: userMount.display_name,
-      brand: userMount.brand || "",
-      category: "accessory",
-      qty: wiredCameraCount,
-      unit_price: rate,
-      line_total: lineTotal,
-      ...(userMount.base_cost !== undefined && userMount.base_cost !== null ? { base_cost_at_quote: Number(userMount.base_cost) } : {})
-    });
-    totalRetail += lineTotal;
-    totalCost += (userMount.base_cost || 0) * wiredCameraCount;
+    pushCatalogLine(userMount, wiredCameraCount);
   } else {
-    const junctionCost = (settings as any).junction_box_cost || 20; // Purchase cost from price list
+    const hdMount = hdCount > 0 ? resolveCatalogJunctionBox(catalogPool, "HD") : null;
+    const ipMount = ipCount > 0 ? resolveCatalogJunctionBox(catalogPool, "IP") : null;
+    const junctionCost = (settings as any).junction_box_cost || 20;
     const junctionMarginPct = (settings as any).margin_junction_box || 50;
     const junctionRate = Math.round(junctionCost * (1 + junctionMarginPct / 100));
-    const junctionTotal = junctionRate * wiredCameraCount;
-    items.push({
-      product_id: "acc_junction_box",
-      display_name: "PVC Weatherproof Camera Junction Box",
-      brand: "TEAM CCTV",
-      category: "accessory",
-      qty: wiredCameraCount,
-      unit_price: junctionRate,
-      line_total: junctionTotal,
-      base_cost_at_quote: junctionCost
-    });
-    totalRetail += junctionTotal;
-    totalCost += junctionCost * wiredCameraCount;
+
+    const pushSyntheticJunction = (qty: number) => {
+      const junctionTotal = junctionRate * qty;
+      items.push({
+        product_id: "acc_junction_box",
+        display_name: "PVC Weatherproof Camera Junction Box",
+        brand: "TEAM CCTV",
+        category: "accessory",
+        qty,
+        unit_price: junctionRate,
+        line_total: junctionTotal,
+        base_cost_at_quote: junctionCost
+      });
+      totalRetail += junctionTotal;
+      totalCost += junctionCost * qty;
+    };
+
+    const hdMountId = hdMount ? (hdMount.id || hdMount.sku) : "acc_junction_box";
+    const ipMountId = ipMount ? (ipMount.id || ipMount.sku) : "acc_junction_box";
+
+    if (hdCount > 0 && ipCount > 0 && hdMountId === ipMountId) {
+      if (hdMount) pushCatalogLine(hdMount, hdCount + ipCount);
+      else pushSyntheticJunction(hdCount + ipCount);
+    } else {
+      if (hdCount > 0) {
+        if (hdMount) pushCatalogLine(hdMount, hdCount);
+        else pushSyntheticJunction(hdCount);
+      }
+      if (ipCount > 0) {
+        if (ipMount) pushCatalogLine(ipMount, ipCount);
+        else pushSyntheticJunction(ipCount);
+      }
+    }
   }
 
   return { items, totalRetail, totalCost };
@@ -1698,10 +1924,7 @@ function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, prod
   }
 
   const subtotal = baseHardware + laborTotal + cableTotal + amcTotal;
-  const gstRate = settings.gst_rate !== undefined ? settings.gst_rate : 18;
-  const gstAmount = Math.round(subtotal * (gstRate / 100));
-  
-  return subtotal + gstAmount;
+  return reverseInclusiveGst(subtotal, settings.gst_rate).grossAmount;
 }
 
 function resolveCamera(selection: ConfiguratorSelection, products: Product[], addons: Addon[], settings: AppSettings, tech: string) {
@@ -2422,6 +2645,11 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
     return cap > 0 ? cap : (a.max_cameras && a.max_cameras > 0 ? a.max_cameras : 999);
   };
 
+  const withMaxCameras = <T extends Record<string, any>>(item: T, cap: number): T => ({
+    ...item,
+    max_cameras: cap,
+  });
+
   if (selection.selected_power_id) {
     const pinned = addons.find(a => a.id === selection.selected_power_id);
     if (pinned && pinned.is_active !== false && (pinned as any).is_deleted !== true) {
@@ -2429,8 +2657,7 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
       const matchHardware = isIP ? isPoe(pinned) : isSmps(pinned);
       const cap = getCapacity(pinned);
       if (matchTech && matchHardware && cap >= selection.camera_count) {
-        (pinned as any).max_cameras = cap;
-        return pinned;
+        return withMaxCameras(pinned, cap);
       }
     }
     // Disqualified or incompatible pinned power supply - fall through to auto-resolution!
@@ -2478,14 +2705,12 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
     if (validFallbacks.length > 0) {
       sortPowerDevices(validFallbacks);
       const fallback = validFallbacks[0];
-      (fallback as any).max_cameras = getCapacity(fallback);
-      return fallback;
+      return withMaxCameras(fallback, getCapacity(fallback));
     }
     
     fallbackOptions.sort((a, b) => getCapacity(b) - getCapacity(a));
     const fallback = fallbackOptions[0];
-    (fallback as any).max_cameras = getCapacity(fallback);
-    return fallback;
+    return withMaxCameras(fallback, getCapacity(fallback));
   }
 
   const validOptions = options.filter(o => getCapacity(o) >= selection.camera_count);
@@ -2494,8 +2719,7 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
     // If none meet capacity, pick the largest one available
     options.sort((a, b) => getCapacity(b) - getCapacity(a));
     const finalTrans = options[0];
-    (finalTrans as any).max_cameras = getCapacity(finalTrans);
-    return finalTrans;
+    return withMaxCameras(finalTrans, getCapacity(finalTrans));
   }
 
   // Handle Brand Matching for Power Supplies / PoE
@@ -2518,8 +2742,7 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
 
   sortPowerDevices(candidates);
   const finalTrans = candidates[0];
-  if (finalTrans) (finalTrans as any).max_cameras = getCapacity(finalTrans);
-  return finalTrans;
+  return finalTrans ? withMaxCameras(finalTrans, getCapacity(finalTrans)) : undefined;
 }
 
 function resolveUnitPrice(product: Product, qty: number) {
@@ -2544,6 +2767,43 @@ export function generatePricingSnapshot(
   referralDiscountFlat: number = 0,
   products: Product[] = []
 ): QuoteDelivery {
+  const rawReqCount = req?.camera_count;
+  const resolvedCameraCount = Array.isArray(resolvedSystem?.cameras)
+    ? resolvedSystem.cameras.reduce((sum, cam) => sum + (Number(cam?.qty) || 0), 0)
+    : 0;
+  const invalidReqCount =
+    rawReqCount !== undefined &&
+    rawReqCount !== null &&
+    (!Number.isFinite(Number(rawReqCount)) || Number(rawReqCount) <= 0);
+
+  if (invalidReqCount || resolvedCameraCount <= 0) {
+    const gstRate = normalizeGstPercent(settings?.gst_rate);
+    return {
+      error: true,
+      error_message: "At least 1 camera is required for a quotation.",
+      plan_type: resolvedSystem?.plan_type || "custom",
+      technology: resolvedSystem?.plan_type?.split("_")[0] || "HD",
+      items: [],
+      addons: [],
+      base_hardware_cost: 0,
+      cabling_cost: 0,
+      labor_cost: 0,
+      addons_total: 0,
+      gross_subtotal: 0,
+      referral_discount: 0,
+      net_taxable_amount: 0,
+      gst_rate: gstRate,
+      gst_amount: 0,
+      total_payable: 0,
+      total_purchase_cost: 0,
+      gross_profit_value: 0,
+      gross_profit_percent: 0,
+      margin_warnings: ["Invalid camera count: at least 1 camera is required."],
+      recommendation_reasons: [],
+      margin_breakup: calculateQuotationProfitBreakup(null, settings)
+    };
+  }
+
   const lineItems: any[] = [];
   const quoteAddons: any[] = [];
   
@@ -2576,32 +2836,44 @@ export function generatePricingSnapshot(
   }
   const planType = (resolvedSystem.plan_type || "recommended") as PlanType;
 
+  const resolveAuthUnitPrice = (prod: any, qty: number): number | undefined => {
+    if (!prod) return undefined;
+    const resolved = resolveUnitPrice(prod, qty);
+    if (typeof resolved === "number" && Number.isFinite(resolved) && resolved > 0) {
+      return resolved;
+    }
+    const fallbackPrice = Number(prod.price ?? 0);
+    return Number.isFinite(fallbackPrice) && fallbackPrice > 0 ? fallbackPrice : undefined;
+  };
+
   // 1. Cameras
   for (const cam of resolvedSystem.cameras) {
     const qty = cam.qty;
-    const baseCost = cam.product.base_cost || cam.product.unit_price || 0;
-    const calc = MarginEngine.calculateUnitPricing(baseCost, cam.product.category, planType, marginPolicy, cam.product.brand);
+    const baseCost = cam.product.base_cost ?? cam.product.unit_price ?? 0;
+    const authUnitPrice = resolveAuthUnitPrice(cam.product, qty);
+    const calc = MarginEngine.calculateUnitPricing(baseCost, cam.product.category, planType, marginPolicy, cam.product.brand, authUnitPrice);
     
     lineItems.push({
       product_id: cam.product.id,
       display_name: cam.product.display_name,
       qty,
       unit_price: calc.sellingPriceExTax,
-      line_total: calc.sellingPriceExTax * qty,
+      line_total: roundCurrency(calc.sellingPriceExTax * qty),
       base_cost_at_quote: baseCost,
       stock_status_at_quote: cam.product.stock_status,
       brand: cam.product.brand,
       hsn_code: cam.product.hsn_code || "8525",
       gst_rate: cam.product.gst_rate ?? 18
     });
-    baseHardwareCost += calc.sellingPriceExTax * qty;
+    baseHardwareCost += roundCurrency(calc.sellingPriceExTax * qty);
     totalPurchaseCost += calc.workingCost * qty;
   }
 
   // 2. Recorder
   if (resolvedSystem.recorder) {
-    const baseCost = resolvedSystem.recorder.base_cost || resolvedSystem.recorder.unit_price || 0;
-    const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.recorder.category, planType, marginPolicy, resolvedSystem.recorder.brand);
+    const baseCost = resolvedSystem.recorder.base_cost ?? resolvedSystem.recorder.unit_price ?? 0;
+    const authUnitPrice = resolveAuthUnitPrice(resolvedSystem.recorder, 1);
+    const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.recorder.category, planType, marginPolicy, resolvedSystem.recorder.brand, authUnitPrice);
     lineItems.push({
       product_id: resolvedSystem.recorder.id,
       display_name: resolvedSystem.recorder.display_name,
@@ -2620,53 +2892,53 @@ export function generatePricingSnapshot(
 
   // 3. Storage
     if (resolvedSystem.storage) {
-      const baseCost = resolvedSystem.storage.base_cost || resolvedSystem.storage.unit_price || 0;
-      const calc = MarginEngine.calculateUnitPricing(baseCost, "storage", planType, marginPolicy, resolvedSystem.storage.brand);
-      
       const nameStr = (resolvedSystem.storage.display_name || "").toLowerCase();
       const isSdCard = resolvedSystem.storage.category === "memory_card" || nameStr.includes("sd card") || nameStr.includes("micro sd") || nameStr.includes("memory card");
       const storageQty = isSdCard ? req.camera_count : 1;
+      const baseCost = resolvedSystem.storage.base_cost ?? resolvedSystem.storage.unit_price ?? 0;
+      const authUnitPrice = resolveAuthUnitPrice(resolvedSystem.storage, storageQty);
+      const calc = MarginEngine.calculateUnitPricing(baseCost, "storage", planType, marginPolicy, resolvedSystem.storage.brand, authUnitPrice);
 
       lineItems.push({
         product_id: resolvedSystem.storage.id,
         display_name: resolvedSystem.storage.display_name,
         qty: storageQty,
         unit_price: calc.sellingPriceExTax,
-        line_total: calc.sellingPriceExTax * storageQty,
+        line_total: roundCurrency(calc.sellingPriceExTax * storageQty),
         base_cost_at_quote: baseCost,
         stock_status_at_quote: resolvedSystem.storage.stock_status,
         brand: resolvedSystem.storage.brand,
         hsn_code: resolvedSystem.storage.hsn_code || "8471",
         gst_rate: resolvedSystem.storage.gst_rate ?? 18
       });
-      baseHardwareCost += (calc.sellingPriceExTax * storageQty);
+      baseHardwareCost += roundCurrency(calc.sellingPriceExTax * storageQty);
       totalPurchaseCost += (calc.workingCost * storageQty);
     }
 
   // 4. Power Supply
     if (resolvedSystem.power) {
-      const baseCost = resolvedSystem.power.base_cost || resolvedSystem.power.unit_price || 0;
-      const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.power.category, planType, marginPolicy, resolvedSystem.power.brand);
-      
       let pwrQty = 1;
       const maxCams = resolvedSystem.power.max_cameras || resolvedSystem.power.channels || 0;
       if (maxCams > 0 && maxCams < req.camera_count) {
          pwrQty = Math.ceil(req.camera_count / maxCams);
       }
+      const baseCost = resolvedSystem.power.base_cost ?? resolvedSystem.power.unit_price ?? 0;
+      const authUnitPrice = resolveAuthUnitPrice(resolvedSystem.power, pwrQty);
+      const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.power.category, planType, marginPolicy, resolvedSystem.power.brand, authUnitPrice);
 
       lineItems.push({
         product_id: resolvedSystem.power.id,
         display_name: resolvedSystem.power.display_name,
         qty: pwrQty,
         unit_price: calc.sellingPriceExTax,
-        line_total: calc.sellingPriceExTax * pwrQty,
+        line_total: roundCurrency(calc.sellingPriceExTax * pwrQty),
         base_cost_at_quote: baseCost,
         stock_status_at_quote: resolvedSystem.power.stock_status,
         brand: resolvedSystem.power.brand,
         hsn_code: resolvedSystem.power.hsn_code || "8504",
         gst_rate: resolvedSystem.power.gst_rate ?? 18
       });
-      baseHardwareCost += (calc.sellingPriceExTax * pwrQty);
+      baseHardwareCost += roundCurrency(calc.sellingPriceExTax * pwrQty);
       totalPurchaseCost += (calc.workingCost * pwrQty);
     }
 
@@ -2691,30 +2963,113 @@ export function generatePricingSnapshot(
     totalPurchaseCost += cabling.totalCost;
   }
     
-    // 6. Connectors (Derived from Settings)
-  if (resolvedSystem.connectors_qty > 0) {
-    const isIP = resolvedSystem.plan_type?.includes("IP");
-    const baseCost = isIP ? (settings.connector_rj45_cost || 5) : (settings.connector_bnc_dc_cost || 20);
-    // Use 'connector' so it picks up policy.margin_connectors (usually 50%)
-    const calc = MarginEngine.calculateUnitPricing(baseCost, 'connector', planType, marginPolicy);
-    const qty = resolvedSystem.connectors_qty;
+  // 6 & 7 counts: Wired camera count
+  const wiredCameraCount = resolvedSystem.cameras.reduce((sum: number, c: any) => {
+    const pTech = String(c.product?.technology || "").toLowerCase();
+    const isWire = c.product?.technologies?.some((t: string) => String(t).toLowerCase() === "wireless" || String(t).toLowerCase() === "wifi") || pTech === "wireless" || pTech === "wifi";
+    return isWire ? sum : (sum + Number(c.qty));
+  }, 0);
 
-    lineItems.push({
-      product_id: isIP ? "conn_rj45" : "conn_bnc_dc",
-      display_name: isIP ? "RJ45 Connectors" : "BNC & DC Connectors",
-      qty,
-      unit_price: calc.sellingPriceExTax,
-      line_total: calc.sellingPriceExTax * qty,
-      base_cost_at_quote: baseCost
-    });
-    baseHardwareCost += calc.sellingPriceExTax * qty;
-    totalPurchaseCost += calc.workingCost * qty;
+  // 6. Connectors & Junction Boxes (Catalog-Backed SKUs first, synthetic fallback only if catalog lacks SKUs)
+  if (wiredCameraCount > 0 || resolvedSystem.connectors_qty > 0) {
+    const isIP = Boolean(resolvedSystem.plan_type?.includes("IP"));
+    const isCat6Hd = !isIP && req?.cable_type === "cat6";
+    const catalogPool = [...products, ...addons];
+    const selectedAddonSet = new Set(selectedAddonIds || []);
+    const hasUserConnectorAddon = catalogPool.some(p => selectedAddonSet.has(p.id) && p.category === "connector");
+    const hasUserMountAddon = catalogPool.some(p => selectedAddonSet.has(p.id) && p.category === "camera_mount");
+
+    const pushSnapAccessory = (prod: any, qty: number, fallbackCat: string) => {
+      const baseCost = prod.base_cost ?? prod.unit_price ?? 0;
+      const authUnitPrice = resolveAuthUnitPrice(prod, qty);
+      const calc = MarginEngine.calculateUnitPricing(baseCost, prod.category || fallbackCat, planType, marginPolicy, prod.brand, authUnitPrice);
+      lineItems.push({
+        product_id: prod.id || prod.sku,
+        display_name: prod.display_name || prod.name,
+        brand: prod.brand || "",
+        category: "accessory",
+        qty,
+        unit_price: calc.sellingPriceExTax,
+        line_total: roundCurrency(calc.sellingPriceExTax * qty),
+        ...(prod.base_cost !== undefined && prod.base_cost !== null ? { base_cost_at_quote: Number(prod.base_cost) } : {})
+      });
+      baseHardwareCost += roundCurrency(calc.sellingPriceExTax * qty);
+      totalPurchaseCost += calc.workingCost * qty;
+    };
+
+    if (!hasUserConnectorAddon) {
+      if (isIP || isCat6Hd) {
+        const qty = resolvedSystem.connectors_qty > 0
+          ? resolvedSystem.connectors_qty
+          : (isIP ? wiredCameraCount * 2 + 2 : wiredCameraCount * 2);
+        const catalogRj45 = resolveCatalogRj45Connector(catalogPool);
+        if (catalogRj45) {
+          pushSnapAccessory(catalogRj45, qty, "connector");
+        } else {
+          const baseCost = settings.connector_rj45_cost || 5;
+          const calc = MarginEngine.calculateUnitPricing(baseCost, "connector", planType, marginPolicy);
+          lineItems.push({
+            product_id: "conn_rj45",
+            display_name: "RJ45 Connectors",
+            category: "accessory",
+            qty,
+            unit_price: calc.sellingPriceExTax,
+            line_total: calc.sellingPriceExTax * qty,
+            base_cost_at_quote: baseCost
+          });
+          baseHardwareCost += calc.sellingPriceExTax * qty;
+          totalPurchaseCost += calc.workingCost * qty;
+        }
+      } else {
+        const camQty = wiredCameraCount > 0 ? wiredCameraCount : Math.max(1, resolvedSystem.connectors_qty);
+        const { bnc, dc, combined } = resolveCatalogHdConnectors(catalogPool);
+        if (bnc || dc) {
+          if (bnc) pushSnapAccessory(bnc, camQty * 2, "connector");
+          if (dc) pushSnapAccessory(dc, camQty, "connector");
+        } else if (combined) {
+          pushSnapAccessory(combined, camQty, "connector");
+        } else {
+          const baseCost = settings.connector_bnc_dc_cost || 20;
+          const calc = MarginEngine.calculateUnitPricing(baseCost, "connector", planType, marginPolicy);
+          lineItems.push({
+            product_id: "conn_bnc_dc",
+            display_name: "BNC & DC Connectors",
+            category: "accessory",
+            qty: camQty,
+            unit_price: calc.sellingPriceExTax,
+            line_total: calc.sellingPriceExTax * camQty,
+            base_cost_at_quote: baseCost
+          });
+          baseHardwareCost += calc.sellingPriceExTax * camQty;
+          totalPurchaseCost += calc.workingCost * camQty;
+        }
+      }
+    }
+
+    if (!hasUserMountAddon && wiredCameraCount > 0) {
+      const mount = resolveCatalogJunctionBox(catalogPool, isIP ? "IP" : "HD");
+      if (mount) {
+        pushSnapAccessory(mount, wiredCameraCount, "camera_mount");
+      } else {
+        const junctionBase = (settings as any).junction_box_cost || 20;
+        const calc = MarginEngine.calculateUnitPricing(junctionBase, "junction_box", planType, marginPolicy);
+        lineItems.push({
+          product_id: "acc_junction_box",
+          display_name: "PVC Weatherproof Camera Junction Box",
+          brand: "TEAM CCTV",
+          category: "accessory",
+          qty: wiredCameraCount,
+          unit_price: calc.sellingPriceExTax,
+          line_total: calc.sellingPriceExTax * wiredCameraCount,
+          base_cost_at_quote: junctionBase
+        });
+        baseHardwareCost += calc.sellingPriceExTax * wiredCameraCount;
+        totalPurchaseCost += calc.workingCost * wiredCameraCount;
+      }
+    }
   }
 
   // 7. Labor & Prep (Derived from Settings rather than hardcoded 500/400)
-  const wiredCameraCount = resolvedSystem.cameras.reduce((sum: number, c: any) => {
-    return c.product.technologies?.includes("Wireless") ? sum : (sum + Number(c.qty));
-  }, 0);
 
   if (wiredCameraCount > 0) {
     const isIP = resolvedSystem.plan_type?.includes("IP");
@@ -2857,9 +3212,10 @@ export function generatePricingSnapshot(
     for (const [addonId, qty] of Object.entries(addonCounts)) {
       const addonObj = addons.find((a: any) => a.id === addonId);
       if (addonObj) {
-        const baseCost = addonObj.base_cost || addonObj.unit_price || 0;
-        const calc = MarginEngine.calculateUnitPricing(baseCost, 'accessory', planType, marginPolicy);
-        const lineTotal = calc.sellingPriceExTax * qty;
+        const baseCost = addonObj.base_cost ?? addonObj.unit_price ?? 0;
+        const authUnitPrice = resolveAuthUnitPrice(addonObj, qty);
+        const calc = MarginEngine.calculateUnitPricing(baseCost, addonObj.category || 'accessory', planType, marginPolicy, addonObj.brand, authUnitPrice);
+        const lineTotal = roundCurrency(calc.sellingPriceExTax * qty);
         
         quoteAddons.push({
           addon_id: addonObj.id,
@@ -2890,24 +3246,27 @@ export function generatePricingSnapshot(
   // 10. Geo Multiplier
   const geoMultiplier = (settings as any).geo_multiplier || 1.0;
 
-
-
-  // 11. Final Financials with MarginEngine
+  // 11. Final Financials with MarginEngine (All Prices & Costs are 18% GST-Inclusive)
   const mappedLineItems = lineItems.map(li => ({ sellingPriceExTax: li.unit_price, qty: li.qty }));
   const totals = MarginEngine.calculateDocumentTotals(mappedLineItems, 0, geoMultiplier, marginPolicy);
 
-  const rawSubtotal = totals.rawSubtotal;
-  
-  // Calculate Referral Discount (New Logic)
-  const referralDiscount = Math.round(rawSubtotal * (referralDiscountPercent / 100)) + referralDiscountFlat;
-  const netTaxableAmount = Math.max(0, totals.finalExTax - referralDiscount);
-  
-  const gstRate = marginPolicy.gst_rate < 1 ? Math.round(marginPolicy.gst_rate * 100) : marginPolicy.gst_rate;
-  const gstAmount = Math.round(netTaxableAmount * (gstRate / 100));
-  const totalPayable = netTaxableAmount + gstAmount;
+  const baseGross = totals.totalPayable;
+  const grossSubtotal = roundCurrency(baseGross);
 
-  const grossProfitValue = netTaxableAmount - totalPurchaseCost;
-  const grossProfitPercent = netTaxableAmount > 0 ? (grossProfitValue / netTaxableAmount) * 100 : 0;
+  // Apply referral discount on gross GST-inclusive total BEFORE reverse-GST decomposition
+  const referralDiscount = roundCurrency(
+    Math.round(grossSubtotal * (referralDiscountPercent / 100)) + referralDiscountFlat
+  );
+  const payableAfterDiscount = Math.max(0, roundCurrency(grossSubtotal - referralDiscount));
+  const gstDecomp = reverseInclusiveGst(payableAfterDiscount, marginPolicy.gst_rate);
+
+  const netTaxableAmount = gstDecomp.taxableAmount;
+  const gstRate = gstDecomp.gstRate;
+  const gstAmount = gstDecomp.gstAmount;
+  const totalPayable = gstDecomp.grossAmount;
+
+  const grossProfitValue = roundCurrency(totalPayable - totalPurchaseCost);
+  const grossProfitPercent = totalPayable > 0 ? (grossProfitValue / totalPayable) * 100 : 0;
 
   return {
     plan_type: resolvedSystem.plan_type,
@@ -2918,7 +3277,7 @@ export function generatePricingSnapshot(
     cabling_cost: cablingCost,
     labor_cost: laborCost,
     addons_total: addonsTotal,
-    gross_subtotal: rawSubtotal,
+    gross_subtotal: grossSubtotal,
     referral_discount: referralDiscount,
     net_taxable_amount: netTaxableAmount,
     gst_rate: gstRate,
@@ -2933,14 +3292,14 @@ export function generatePricingSnapshot(
       items: lineItems,
       addons: quoteAddons,
       labor_cost: laborCost,
-      gross_subtotal: rawSubtotal,
+      gross_subtotal: grossSubtotal,
       referral_discount: referralDiscount,
       net_taxable_amount: netTaxableAmount,
       gst_rate: gstRate,
       gst_amount: gstAmount,
       total_payable: totalPayable,
       total_purchase_cost: totalPurchaseCost
-    })
+    }, settings)
   };
 }
 

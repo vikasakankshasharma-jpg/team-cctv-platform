@@ -104,15 +104,38 @@ export async function POST(req: Request) {
 
         const paidAmount = paymentEntity.amount / 100;
         const prevPaid = dQuoteData.amount_paid || 0;
+        const newPaidTotal = prevPaid + paidAmount;
+        const fullOrderTotal = Number(
+          dQuoteData.total_payable_after_discount ??
+          dQuoteData.negotiated_final_price ??
+          dQuoteData.pricingSnapshot?.total_payable ??
+          dQuoteData.total_payable ??
+          dQuoteData.total ??
+          0
+        );
+        const newDueTotal = fullOrderTotal > 0 ? Math.max(0, Math.round(fullOrderTotal - newPaidTotal)) : 0;
 
         await dQuoteRef.update({
           payment_status: "delivery_paid",
-          amount_paid: prevPaid + paidAmount,
+          amount_paid: newPaidTotal,
+          amount_due: newDueTotal,
           delivery_amount: paidAmount,
           delivery_payment_id: paymentEntity.id,
-        payment_history: arrayUnion(buildPaymentRecord(paymentEntity, "delivery_90")),
+          payment_history: arrayUnion(buildPaymentRecord(paymentEntity, "delivery_90")),
           updated_at: serverTimestamp(),
         });
+
+        try {
+          await adminDb.collection("invoices").doc(quoteId).set({
+            payment_status: "delivery_paid",
+            amount_paid: newPaidTotal,
+            amount_due: newDueTotal,
+            delivery_amount: paidAmount,
+            updated_at: serverTimestamp(),
+          }, { merge: true });
+        } catch {
+          // Non-fatal if invoice record was created manually
+        }
 
         const dLeadId = dQuoteData.lead_id || dQuoteData.leadId;
         if (dLeadId) {
@@ -165,12 +188,25 @@ export async function POST(req: Request) {
           status: "COMPLETED",
           payment_status: "paid",
           amount_paid: iPrevPaid + iPaidAmount,
+          amount_due: 0,
           installation_amount: iPaidAmount,
           installation_payment_id: paymentEntity.id,
-        payment_history: arrayUnion(buildPaymentRecord(paymentEntity, "installation_final")),
+          payment_history: arrayUnion(buildPaymentRecord(paymentEntity, "installation_final")),
           completed_at: new Date().toISOString(),
           updated_at: serverTimestamp(),
         });
+
+        try {
+          await adminDb.collection("invoices").doc(quoteId).set({
+            status: "PAID",
+            payment_status: "paid",
+            amount_paid: iPrevPaid + iPaidAmount,
+            amount_due: 0,
+            updated_at: serverTimestamp(),
+          }, { merge: true });
+        } catch {
+          // Non-fatal
+        }
 
         const iLeadId = iQuoteData.lead_id || iQuoteData.leadId;
         if (iLeadId) {

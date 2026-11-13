@@ -32,39 +32,24 @@ export interface SkuCrosswalkResult {
   margin_drift_skus: string[];
 }
 
-function normalizeSku(sku: string): string {
-  return sku.trim().toUpperCase().replace(/[\s_-]+/g, "");
-}
-
-function roundRupee(value: number): number {
-  return Math.round(value);
+function normalizeSku(sku: unknown): string {
+  return String(sku ?? "").trim().toUpperCase().replace(/[\s_-]+/g, "");
 }
 
 function approvedMarginPercent(product: FrozenProduct): number | undefined {
-  if (typeof product.margin_percent === "number" && Number.isFinite(product.margin_percent)) {
-    return product.margin_percent;
-  }
-  if (typeof product.margin === "number" && Number.isFinite(product.margin)) {
-    return product.margin;
+  const candidates = [product.margin_percent, (product as FrozenProduct & { margin_percentage?: unknown }).margin_percentage, product.margin];
+  for (const value of candidates) {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
   }
   return undefined;
 }
 
 function expectedUnitPrice(product: FrozenProduct): number | undefined {
-  if (typeof product.base_cost !== "number" || !Number.isFinite(product.base_cost)) {
-    return undefined;
-  }
+  if (typeof product.base_cost !== "number" || !Number.isFinite(product.base_cost)) return undefined;
   const margin = approvedMarginPercent(product);
-  if (margin === undefined) {
-    return undefined;
-  }
-  return roundRupee(product.base_cost * (1 + margin / 100));
+  return margin === undefined ? undefined : Math.round((product.base_cost * (100 + margin)) / 100);
 }
 
-/**
- * Reconciles source price-list records against frozen catalog SKUs using exact
- * normalized matching, whole-rupee margin rounding, and bidirectional coverage checks.
- */
 export function buildSkuCrosswalk(
   sourceProducts: readonly FrozenProduct[],
   catalogProducts: readonly FrozenProduct[],
@@ -72,23 +57,19 @@ export function buildSkuCrosswalk(
 ): SkuCrosswalkResult {
   const sourceBySku = new Map<string, FrozenProduct[]>();
   for (const source of sourceProducts) {
-    const key = normalizeSku(source.sku);
-    const existing = sourceBySku.get(key) ?? [];
-    existing.push(source);
-    sourceBySku.set(key, existing);
+    const key = normalizeSku(source.sku ?? source.id);
+    const rows = sourceBySku.get(key) ?? [];
+    rows.push(source);
+    sourceBySku.set(key, rows);
   }
-
-  // Duplicate source sheet rows are reported separately from catalog ambiguity.
-  const duplicateSourceSkus = Array.from(sourceBySku.entries())
-    .filter(([, products]) => products.length > 1)
-    .map(([key]) => key);
+  const duplicateSourceSkus = [...sourceBySku.entries()].filter(([, rows]) => rows.length > 1).map(([key]) => key);
 
   const catalogBySku = new Map<string, FrozenProduct[]>();
   for (const product of catalogProducts) {
-    const key = normalizeSku(product.sku);
-    const existing = catalogBySku.get(key) ?? [];
-    existing.push(product);
-    catalogBySku.set(key, existing);
+    const key = normalizeSku(product.sku ?? product.id);
+    const rows = catalogBySku.get(key) ?? [];
+    rows.push(product);
+    catalogBySku.set(key, rows);
   }
 
   const entries: SkuCrosswalkEntry[] = [];
@@ -98,98 +79,38 @@ export function buildSkuCrosswalk(
   const marginDriftSkus: string[] = [];
 
   for (const source of sourceProducts) {
-    const key = normalizeSku(source.sku);
+    const sourceSku = String(source.sku ?? source.id ?? "").trim();
+    const key = normalizeSku(sourceSku);
     const candidates = catalogBySku.get(key) ?? [];
-
+    if (!sourceSku) continue;
     if (candidates.length === 0) {
-      unmappedSourceSkus.push(source.sku);
-      entries.push({
-        source_sku: source.sku,
-        catalog_skus: [],
-        status: "UNMAPPED",
-        source_base_cost: source.base_cost,
-        source_unit_price: source.unit_price,
-        reason: "Source SKU has no catalog SKU match.",
-      });
+      unmappedSourceSkus.push(sourceSku);
+      entries.push({ source_sku: sourceSku, catalog_skus: [], status: "UNMAPPED", source_base_cost: source.base_cost, source_unit_price: source.unit_price, reason: "Source SKU has no catalog SKU match." });
       continue;
     }
-
     if (candidates.length > 1) {
-      ambiguousSourceSkus.push(source.sku);
-      entries.push({
-        source_sku: source.sku,
-        catalog_skus: candidates.map((product) => product.sku),
-        status: "AMBIGUOUS",
-        source_base_cost: source.base_cost,
-        source_unit_price: source.unit_price,
-        reason: "Multiple catalog products share the normalized SKU.",
-      });
+      ambiguousSourceSkus.push(sourceSku);
+      entries.push({ source_sku: sourceSku, catalog_skus: candidates.map((p) => String(p.sku ?? p.id ?? "").trim()), status: "AMBIGUOUS", source_base_cost: source.base_cost, source_unit_price: source.unit_price, reason: "Multiple catalog products share the normalized SKU." });
       continue;
     }
-
     const catalog = candidates[0];
-
-    const costDelta =
-      typeof source.base_cost === "number" && typeof catalog.base_cost === "number"
-        ? catalog.base_cost - source.base_cost
-        : undefined;
+    const costDelta = typeof source.base_cost === "number" && typeof catalog.base_cost === "number" ? catalog.base_cost - source.base_cost : undefined;
     const costDrift = costDelta !== undefined && Math.abs(costDelta) > toleranceRupees;
-
     const expectedPrice = expectedUnitPrice(catalog);
-    const unitPriceDelta =
-      expectedPrice !== undefined && typeof catalog.unit_price === "number"
-        ? catalog.unit_price - expectedPrice
-        : undefined;
+    const unitPriceDelta = expectedPrice !== undefined && typeof catalog.unit_price === "number" ? catalog.unit_price - expectedPrice : undefined;
     const marginDrift = unitPriceDelta !== undefined && Math.abs(unitPriceDelta) > toleranceRupees;
-
     let status: "MATCHED" | "COST_DRIFT" | "MARGIN_DRIFT" = "MATCHED";
-    if (costDrift) {
-      status = "COST_DRIFT";
-      costDriftSkus.push(source.sku);
-    } else if (marginDrift) {
-      status = "MARGIN_DRIFT";
-      marginDriftSkus.push(source.sku);
-    }
-
-    entries.push({
-      source_sku: source.sku,
-      catalog_skus: [catalog.sku],
-      status,
-      source_base_cost: source.base_cost,
-      catalog_base_cost: catalog.base_cost,
-      source_unit_price: source.unit_price,
-      catalog_unit_price: catalog.unit_price,
-      approved_margin_percent: approvedMarginPercent(catalog),
-      expected_unit_price: expectedPrice,
-      base_cost_delta: costDelta,
-      unit_price_delta: unitPriceDelta,
-      reason:
-        status === "MATCHED"
-          ? "Exact normalized SKU match with no detected cost/margin drift."
-          : status === "COST_DRIFT"
-            ? "Catalog base cost differs from source price sheet."
-            : "Catalog unit price differs from approved rounded margin price.",
-    });
+    if (costDrift) { status = "COST_DRIFT"; costDriftSkus.push(sourceSku); }
+    else if (marginDrift) { status = "MARGIN_DRIFT"; marginDriftSkus.push(sourceSku); }
+    entries.push({ source_sku: sourceSku, catalog_skus: [String(catalog.sku ?? catalog.id ?? "").trim()], status, source_base_cost: source.base_cost, catalog_base_cost: catalog.base_cost, source_unit_price: source.unit_price, catalog_unit_price: catalog.unit_price, approved_margin_percent: approvedMarginPercent(catalog), expected_unit_price: expectedPrice, base_cost_delta: costDelta, unit_price_delta: unitPriceDelta, reason: status === "MATCHED" ? "Exact normalized SKU match with no detected cost/margin drift." : status === "COST_DRIFT" ? "Catalog base cost differs from source price sheet." : "Catalog unit price differs from approved rounded margin price." });
   }
 
-  const sourceSkuSet = new Set(sourceProducts.map((product) => normalizeSku(product.sku)));
+  const sourceSkuSet = new Set(sourceProducts.map((p) => normalizeSku(p.sku ?? p.id)));
   const missingActiveCatalogSkus = catalogProducts
-    .filter(
-      (product) =>
-        product.is_active === true &&
-        product.is_deleted !== true &&
-        product.is_quotation_eligible !== false,
-    )
-    .filter((product) => !sourceSkuSet.has(normalizeSku(product.sku)))
-    .map((product) => product.sku);
+    .filter((p) => p.is_active === true && p.is_deleted !== true && p.is_quotation_eligible !== false)
+    .filter((p) => !sourceSkuSet.has(normalizeSku(p.sku ?? p.id)))
+    .map((p) => String(p.sku ?? p.id ?? "").trim())
+    .filter(Boolean);
 
-  return {
-    entries,
-    missing_active_catalog_skus: missingActiveCatalogSkus,
-    duplicate_source_skus: duplicateSourceSkus,
-    unmapped_source_skus: unmappedSourceSkus,
-    ambiguous_source_skus: ambiguousSourceSkus,
-    cost_drift_skus: costDriftSkus,
-    margin_drift_skus: marginDriftSkus,
-  };
+  return { entries, missing_active_catalog_skus: missingActiveCatalogSkus, duplicate_source_skus: duplicateSourceSkus, unmapped_source_skus: unmappedSourceSkus, ambiguous_source_skus: ambiguousSourceSkus, cost_drift_skus: costDriftSkus, margin_drift_skus: marginDriftSkus };
 }

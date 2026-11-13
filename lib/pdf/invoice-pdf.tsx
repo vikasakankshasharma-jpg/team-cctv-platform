@@ -3,17 +3,27 @@ import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/render
 import { AppSettings } from '@/types';
 import { ensurePdfFontsForLocale, normalizePdfLocale } from '@/lib/pdf/pdf-fonts-indic';
 import { resolvePdfImageSrc } from '@/lib/pdf/pdf-image';
-import { getPdfLabels } from '@/lib/pdf/pdf-i18n';
+import { formatHardwarePackageTitle, getPdfLabels } from '@/lib/pdf/pdf-i18n';
+import {
+  calculateGstBreakup,
+  cleanPdfItemName,
+  computeRemainingMilestones,
+  formatCleanAddress,
+  formatDocNumber,
+  formatPdfDate,
+  formatPdfINR,
+  getIndianStateCode,
+} from '@/lib/pdf/pdf-helpers';
 import { SPEECH_LOCALE_MAP } from '@/lib/i18n/mapping';
 
-// Create styles optimized for professional single-page layout
+// Compact 1-page Tax Invoice / Payment Receipt layout
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 24,
-    paddingBottom: 24,
-    paddingHorizontal: 28,
+    paddingTop: 18,
+    paddingBottom: 28,
+    paddingHorizontal: 22,
     fontFamily: 'Helvetica',
-    fontSize: 8.5,
+    fontSize: 8.2,
     color: '#0f172a',
     position: 'relative',
   },
@@ -21,285 +31,323 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 8,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
   },
   headerLeft: {
     flexDirection: 'column',
-    maxWidth: '56%',
+    maxWidth: '55%',
   },
   headerLogo: {
-    width: 140,
-    height: 34,
+    width: 132,
+    height: 30,
     objectFit: 'contain',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   logoText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 2,
-    color: '#000000',
-    letterSpacing: 0.5,
+    color: '#0f172a',
+    letterSpacing: 0.4,
   },
   companyInfo: {
-    fontSize: 7.5,
+    fontSize: 7,
     color: '#64748b',
-    lineHeight: 1.35,
+    lineHeight: 1.3,
   },
   headerRight: {
     flexDirection: 'column',
     alignItems: 'flex-end',
-    maxWidth: '44%',
+    maxWidth: '45%',
+  },
+  statusBadge: {
+    paddingVertical: 2.5,
+    paddingHorizontal: 7,
+    borderRadius: 3,
+    borderWidth: 0.8,
+    marginBottom: 4,
+    alignSelf: 'flex-end',
+  },
+  statusBadgeText: {
+    color: '#ffffff',
+    fontSize: 6.8,
+    fontWeight: 'bold',
+    letterSpacing: 0.6,
   },
   invoiceTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 3.5,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
+    textAlign: 'right',
   },
   quoteMetaGrid: {
     flexDirection: 'column',
+    alignItems: 'flex-end',
   },
   quoteMetaRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: 2,
+    marginBottom: 1.5,
   },
   quoteMetaLabel: {
     color: '#64748b',
-    fontSize: 7.5,
-    marginRight: 8,
+    fontSize: 7,
+    marginRight: 6,
     textAlign: 'right',
   },
   quoteMetaValue: {
-    fontSize: 7.5,
+    fontSize: 7,
     fontWeight: 'bold',
     textAlign: 'right',
     color: '#0f172a',
   },
-  paidBadge: {
-    position: 'absolute',
-    top: 14,
-    right: 24,
-    backgroundColor: '#22c55e',
-    paddingVertical: 3,
+  packageStrip: {
+    backgroundColor: '#f1f5f9',
+    borderLeftWidth: 2.5,
+    borderLeftColor: '#0f1f3d',
+    paddingVertical: 3.5,
     paddingHorizontal: 8,
-    borderRadius: 3,
-    transform: 'rotate(6deg)',
-    borderWidth: 1,
-    borderColor: '#16a34a',
-    zIndex: 10,
+    marginBottom: 7,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  paidBadgeText: {
-    color: '#ffffff',
+  packageStripText: {
     fontSize: 7.5,
     fontWeight: 'bold',
-    letterSpacing: 0.8,
-    textAlign: 'center',
+    color: '#0f172a',
   },
   customerSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
-    padding: 8,
+    marginBottom: 7,
+    padding: 6.5,
     backgroundColor: '#f8fafc',
     borderRadius: 4,
-    borderWidth: 1,
+    borderWidth: 0.8,
     borderColor: '#e2e8f0',
   },
   customerInfoCol: {
-    width: '49%',
+    width: '51%',
+    paddingRight: 8,
   },
   paymentInfoCol: {
     width: '49%',
+    borderLeftWidth: 0.5,
+    borderLeftColor: '#e2e8f0',
+    paddingLeft: 8,
   },
   sectionHeading: {
-    fontSize: 7,
+    fontSize: 6.5,
     fontWeight: 'bold',
     color: '#64748b',
-    marginBottom: 3,
+    marginBottom: 2,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   customerName: {
-    fontSize: 9.5,
+    fontSize: 8.8,
     fontWeight: 'bold',
-    marginBottom: 2,
+    marginBottom: 1.5,
     color: '#0f172a',
   },
   customerPhone: {
-    fontSize: 7.5,
+    fontSize: 7,
     color: '#475569',
-    lineHeight: 1.3,
+    lineHeight: 1.28,
   },
   paymentRow: {
     flexDirection: 'row',
-    marginBottom: 2,
+    marginBottom: 1.5,
   },
   paymentLabel: {
-    fontSize: 7.5,
+    fontSize: 7,
     color: '#64748b',
-    width: 72,
+    width: 68,
   },
   paymentValue: {
-    fontSize: 7.5,
+    fontSize: 7,
     fontWeight: 'bold',
     color: '#0f172a',
     flex: 1,
   },
   table: {
     width: '100%',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: '#f1f5f9',
-    paddingVertical: 5,
-    paddingHorizontal: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
     borderBottomWidth: 1,
     borderBottomColor: '#cbd5e1',
     borderTopWidth: 1,
     borderTopColor: '#cbd5e1',
   },
-  colDesc: { width: '46%', fontWeight: 'bold' },
-  colHsn: { width: '14%', textAlign: 'center', fontWeight: 'bold' },
-  colQty: { width: '10%', textAlign: 'center', fontWeight: 'bold' },
-  colUnit: { width: '14%', textAlign: 'right', fontWeight: 'bold' },
-  colTotal: { width: '16%', textAlign: 'right', fontWeight: 'bold' },
+  colDesc: { width: '44%', fontWeight: 'bold', paddingRight: 6 },
+  colHsn: { width: '13%', textAlign: 'center', fontWeight: 'bold' },
+  colGst: { width: '8%', textAlign: 'center', fontWeight: 'bold' },
+  colQty: { width: '7%', textAlign: 'center', fontWeight: 'bold' },
+  colUnit: { width: '13%', textAlign: 'right', fontWeight: 'bold' },
+  colTotal: { width: '15%', textAlign: 'right', fontWeight: 'bold' },
   tableRow: {
     flexDirection: 'row',
-    paddingVertical: 3.5,
-    paddingHorizontal: 8,
+    alignItems: 'center',
+    paddingHorizontal: 6,
     borderBottomWidth: 0.5,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: '#e2e8f0',
   },
   itemTitle: {
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: 'bold',
     color: '#0f172a',
-    marginBottom: 1,
+    lineHeight: 1.25,
   },
   itemBrand: {
-    fontSize: 6.5,
+    fontSize: 6.2,
     color: '#64748b',
+    marginTop: 0.5,
   },
   itemText: {
-    fontSize: 7.5,
+    fontSize: 7.3,
     color: '#334155',
   },
   bottomSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 4,
+    gap: 10,
+    alignItems: 'flex-start',
   },
   termsBox: {
-    width: '58%',
+    width: '57%',
   },
   termsTitle: {
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: 'bold',
     color: '#0f172a',
-    marginBottom: 3,
+    marginBottom: 2,
   },
   termsHighlight: {
-    fontSize: 7.2,
+    fontSize: 6.8,
     fontWeight: 'bold',
     color: '#15803d',
-    marginBottom: 4,
-    lineHeight: 1.3,
+    marginBottom: 2.5,
+    lineHeight: 1.28,
   },
   termsText: {
-    fontSize: 6.5,
+    fontSize: 6.3,
     color: '#64748b',
-    lineHeight: 1.3,
+    lineHeight: 1.28,
+  },
+  bankWrap: {
+    marginTop: 4,
+    paddingTop: 3.5,
+    borderTopWidth: 0.5,
+    borderTopColor: '#cbd5e1',
   },
   totalsBox: {
-    width: '38%',
+    width: '41%',
     flexDirection: 'column',
   },
-
   paymentHistoryBox: {
-    marginTop: 8,
+    marginTop: 5,
     borderTopWidth: 0.5,
-    borderTopColor: '#e2e8f0',
-    paddingTop: 6,
+    borderTopColor: '#cbd5e1',
+    paddingTop: 4,
   },
   phTitle: {
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: 'bold',
     color: '#0f172a',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   phRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 2.5,
+    paddingVertical: 1.5,
     borderBottomWidth: 0.5,
     borderBottomColor: '#f1f5f9',
   },
-  phColStage: { width: '35%', fontSize: 7, color: '#334155' },
-  phColDate: { width: '25%', fontSize: 7, color: '#64748b' },
-  phColMethod: { width: '20%', fontSize: 7, color: '#64748b' },
-  phColAmount: { width: '20%', fontSize: 7, fontWeight: 'bold', textAlign: 'right', color: '#0f172a' },
-
+  phColStage: { width: '38%', fontSize: 6.3, color: '#334155' },
+  phColDate: { width: '24%', fontSize: 6.3, color: '#64748b' },
+  phColMethod: { width: '18%', fontSize: 6.3, color: '#64748b' },
+  phColAmount: { width: '20%', fontSize: 6.3, fontWeight: 'bold', textAlign: 'right', color: '#0f172a' },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 2.5,
+    marginBottom: 2,
   },
   totalLabel: {
-    fontSize: 7.5,
+    fontSize: 7.2,
     color: '#64748b',
   },
   totalValue: {
-    fontSize: 7.5,
+    fontSize: 7.2,
     fontWeight: 'bold',
     color: '#0f172a',
   },
   grandTotalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 3,
-    paddingTop: 4,
+    marginTop: 2.5,
+    paddingTop: 3.5,
     borderTopWidth: 1,
     borderTopColor: '#cbd5e1',
   },
   grandTotalLabel: {
-    fontSize: 9,
+    fontSize: 8.2,
     fontWeight: 'bold',
     color: '#0f172a',
   },
   grandTotalValue: {
-    fontSize: 10.5,
+    fontSize: 9.8,
     fontWeight: 'bold',
     color: '#16a34a',
   },
   watermark: {
     position: 'absolute',
-    top: 320,
-    left: 28,
-    right: 28,
-    fontSize: 60,
+    top: 310,
+    left: 24,
+    right: 24,
+    fontSize: 54,
     fontWeight: 'bold',
     textAlign: 'center',
     transform: 'rotate(-30deg)',
     zIndex: -1,
-    opacity: 0.08,
+    opacity: 0.06,
   },
-  footerMicroText: {
+  footerBar: {
     position: 'absolute',
     bottom: 8,
-    left: 28,
-    right: 28,
-    textAlign: 'center',
-    fontSize: 6.5,
+    left: 22,
+    right: 22,
+    borderTopWidth: 0.5,
+    borderTopColor: '#e2e8f0',
+    paddingTop: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  footerMicroText: {
+    fontSize: 6.3,
     color: '#94a3b8',
+  },
+  pageNum: {
+    fontSize: 6.5,
+    fontWeight: 'bold',
+    color: '#64748b',
   },
 });
 
 /**
  * Derives the statutory Indian GST HSN (Goods) or SAC (Services) code.
- * Follows explicit product/addon configuration or category standard fallbacks.
  */
 function getHsnSacCode(item: any): string {
   if (item?.hsn_code && String(item.hsn_code).trim().length > 0) return String(item.hsn_code).trim();
@@ -309,44 +357,38 @@ function getHsnSacCode(item: any): string {
   const name = String(item?.display_name || item?.name || item?.product_id || '').toLowerCase();
   const cat = String(item?.category || '').toLowerCase();
 
-  // Services & Labor (SAC 9987 - Maintenance, repair and installation services)
   if (
-    cat === 'service' || 
-    cat === 'labor' || 
-    name.includes('labor') || 
-    name.includes('installation') || 
-    name.includes('fitting') || 
-    name.includes('visit') || 
-    name.includes('fee') || 
-    name.includes('surcharge')
+    cat === 'service' ||
+    cat === 'labor' ||
+    cat === 'amc' ||
+    name.includes('labor') ||
+    name.includes('installation') ||
+    name.includes('fitting') ||
+    name.includes('visit') ||
+    name.includes('fee') ||
+    name.includes('surcharge') ||
+    name.includes('amc')
   ) {
     return '9987';
   }
-  // Cables & Wires (HSN 8544 - Insulated wire, cable and optical fiber)
   if (cat === 'cable' || name.includes('cable') || name.includes('wire') || name.includes('cat6') || name.includes('coaxial') || name.includes('patch cord')) {
     return '8544';
   }
-  // Recorders (HSN 8521 - Video recording apparatus: DVR / NVR / XVR)
   if (cat === 'recorder' || name.includes('nvr') || name.includes('dvr') || name.includes('xvr')) {
     return '8521';
   }
-  // Storage Devices (HSN 8471 - Storage units: HDD, MicroSD, SSD)
   if (cat === 'storage' || name.includes('hdd') || name.includes('hard disk') || name.includes('microsd') || name.includes('sd card') || name.includes('ssd')) {
     return '8471';
   }
-  // Power Supplies & Adapters (HSN 8504 - Static converters, power supply units)
   if (cat === 'power_device' || cat === 'power' || name.includes('power') || name.includes('smps') || name.includes('adapter') || name.includes('poe')) {
     return '8504';
   }
-  // Connectors & Plugs (HSN 8536 - Electrical apparatus for making connections)
   if (cat === 'connector' || name.includes('connector') || name.includes('bnc') || name.includes('dc pin') || name.includes('rj45')) {
     return '8536';
   }
-  // Racks & Enclosures (HSN 8529 - Apparatus housings & racks)
   if (cat === 'rack' || name.includes('rack') || name.includes('enclosure')) {
     return '8529';
   }
-  // CCTV Cameras (HSN 8525 - CCTV & Surveillance cameras)
   return '8525';
 }
 
@@ -365,241 +407,277 @@ export const InvoicePDFDocument = ({ quote, settings, locale }: { quote: any; se
   const dateLocale = SPEECH_LOCALE_MAP[pdfLocale] || 'en-IN';
 
   const companyName = settings?.company_legal_name || settings?.company_name || "TEAM CCTV";
-  const tagline = settings?.company_tagline || "Security Systems & Surveillance Automation";
+  const tagline = settings?.company_tagline || L.companyTagline;
   const sellerGstin = settings?.company_gstin && settings.company_gstin.trim().length > 0 ? settings.company_gstin.trim() : "";
   const sellerState = settings?.company_state || "Rajasthan";
-  const sellerStateCode = settings?.company_state_code || (sellerGstin.length >= 2 ? sellerGstin.substring(0, 2) : "08");
+  const sellerStateCode = getIndianStateCode(settings?.company_state_code || sellerState, sellerGstin, "08");
   const sellerEmail = settings?.company_email || "sales@teamcctv.com";
-  const sellerPhone = settings?.company_phone ? ` | Ph: ${settings.company_phone}` : "";
+  const sellerPhone = settings?.company_phone ? ` | ${L.phoneShort}: ${settings.company_phone}` : "";
   const sellerWeb = settings?.company_website || "cctvquotation.com";
 
-  const addressParts = [
+  const sellerAddress = formatCleanAddress(
     settings?.company_address_line1,
     settings?.company_address_line2,
     settings?.company_city,
     settings?.company_state ? `${settings.company_state}${settings.company_pincode ? ` - ${settings.company_pincode}` : ''}` : settings?.company_pincode
-  ].filter(Boolean);
-  const sellerAddress = addressParts.length > 0 ? addressParts.join(", ") : "";
+  );
 
   const createdAt = quote?.createdAt || quote?.created_at;
   const paidAt = quote?.paid_at || quote?.paidAt || quote?.payment_date || createdAt;
+  const createdDate = formatPdfDate(createdAt, dateLocale, 'short') !== 'N/A'
+    ? formatPdfDate(createdAt, dateLocale, 'short')
+    : formatPdfDate(new Date(), dateLocale, 'short');
+  const paidDate = formatPdfDate(paidAt, dateLocale, 'short') !== 'N/A'
+    ? formatPdfDate(paidAt, dateLocale, 'short')
+    : createdDate;
 
-  const formatDate = (dateVal: any) => {
-    if (!dateVal) return 'N/A';
-    try {
-      const d = typeof dateVal === 'object' && typeof dateVal?.toDate === 'function'
-        ? dateVal.toDate()
-        : new Date(dateVal);
-      if (isNaN(d.getTime())) return 'N/A';
-      return d.toLocaleDateString(dateLocale, { year: 'numeric', month: 'short', day: '2-digit' });
-    } catch {
-      return 'N/A';
-    }
-  };
-
-  const createdDate = formatDate(createdAt) !== 'N/A' ? formatDate(createdAt) : new Date().toLocaleDateString(dateLocale, { year: 'numeric', month: 'short', day: '2-digit' });
-  const paidDate = formatDate(paidAt) !== 'N/A' ? formatDate(paidAt) : createdDate;
-
-  const rawItems = 
+  // Support all BOM shapes: pricingSnapshot.items, pricingSnapshot.line_items, breakdown.items, quote.items, lineItems
+  const rawItemsAll =
     (Array.isArray(quote?.pricingSnapshot?.items) && quote.pricingSnapshot.items.length > 0) ? quote.pricingSnapshot.items :
+    (Array.isArray(quote?.pricingSnapshot?.line_items) && quote.pricingSnapshot.line_items.length > 0) ? quote.pricingSnapshot.line_items :
+    (Array.isArray(quote?.pricingSnapshot?.breakdown?.items) && quote.pricingSnapshot.breakdown.items.length > 0) ? quote.pricingSnapshot.breakdown.items :
     (Array.isArray(quote?.items) && quote.items.length > 0) ? quote.items :
     (Array.isArray(quote?.line_items) && quote.line_items.length > 0) ? quote.line_items :
     (Array.isArray(quote?.lineItems) && quote.lineItems.length > 0) ? quote.lineItems :
     (Array.isArray(quote?.configuration_snapshot) && quote.configuration_snapshot.length > 0) ? quote.configuration_snapshot :
     [];
 
-  const rawAddons = 
+  // Filter out negative pseudo-items so discounts live in the summary block cleanly
+  const rawItems = rawItemsAll.filter((it: any) => Number(it?.unit_price ?? it?.unitPrice ?? it?.price ?? 0) >= 0);
+  const legacyNegDiscount = rawItemsAll
+    .filter((it: any) => Number(it?.unit_price ?? it?.unitPrice ?? it?.price ?? 0) < 0)
+    .reduce((s: number, it: any) => s + Math.abs(Number(it?.line_total ?? it?.lineTotal ?? (Number(it?.unit_price ?? it?.unitPrice ?? 0) * Number(it?.qty ?? it?.quantity ?? 1)))), 0);
+
+  const rawAddons =
     (Array.isArray(quote?.pricingSnapshot?.addons) && quote.pricingSnapshot.addons.length > 0) ? quote.pricingSnapshot.addons :
     (Array.isArray(quote?.addons) && quote.addons.length > 0) ? quote.addons :
     (Array.isArray(quote?.selected_addons) && quote.selected_addons.length > 0) ? quote.selected_addons :
     (Array.isArray(quote?.addons_snapshot) && quote.addons_snapshot.length > 0) ? quote.addons_snapshot :
     [];
 
-  const rawTotalPayable = 
-    quote?.pricingSnapshot?.total_payable || 
-    quote?.total_payable || 
-    quote?.totalPayable || 
-    quote?.total || 
-    quote?.amount || 
-    0;
+  const laborCost =
+    Number(quote?.pricingSnapshot?.labor_cost || quote?.labor_cost || quote?.laborCost || 0);
 
-  // Determine if Smart Pay (2% discount) or any full payment discount was applied
-  const isFullPaymentType = 
-    quote?.payment_type === 'full' || 
-    quote?.payment_type === 'full_discount' || 
-    quote?.payment_type === 'full_discounted';
+  const hasExplicitLaborRow = rawItems.some((it: any) => {
+    const t = String(it?.display_name || it?.name || '').toLowerCase();
+    return t.includes('installation') || t.includes('labor');
+  });
 
-  const discountAmount = Number(
-    quote?.full_payment_discount || 
-    quote?.discount_amount || 
-    (quote?.payment_type === 'full_discount' || quote?.payment_type === 'full_discounted'
-      ? (rawTotalPayable - (quote?.total_payable_after_discount || quote?.razorpay_order_amount || Math.round(rawTotalPayable * 0.98)))
-      : 0) ||
+  const computedItemsSubtotal =
+    rawItems.reduce((sum: number, it: any) => {
+      const q = Number(it?.qty ?? it?.quantity ?? 1);
+      const u = Number(it?.unit_price ?? it?.unitPrice ?? it?.price ?? 0);
+      return sum + Number(it?.line_total ?? it?.lineTotal ?? it?.amount ?? q * u);
+    }, 0) +
+    rawAddons.reduce((sum: number, ad: any) => {
+      const q = Number(ad?.qty ?? ad?.quantity ?? 1);
+      const u = Number(ad?.price ?? ad?.unit_price ?? 0);
+      return sum + Number(ad?.total ?? q * u);
+    }, 0) +
+    (!hasExplicitLaborRow && laborCost > 0 ? laborCost : 0);
+
+  const rawTotalPayable = Number(
+    quote?.pricingSnapshot?.total_payable ||
+    quote?.total_payable ||
+    quote?.totalPayable ||
+    quote?.total ||
+    quote?.amount ||
     0
   );
 
-  const totalPayableAfterDiscount = Number(
-    quote?.total_payable_after_discount ?? 
-    (discountAmount > 0 ? rawTotalPayable - discountAmount : rawTotalPayable)
+  const isSmartPayDiscount =
+    quote?.payment_type === 'full_discount' ||
+    quote?.payment_type === 'full_discounted' ||
+    Number(quote?.full_payment_discount || 0) > 0;
+
+  const isFullPaymentType =
+    quote?.payment_type === 'full' || isSmartPayDiscount;
+
+  const discountAmount = Math.max(
+    legacyNegDiscount,
+    Number(
+      quote?.full_payment_discount ||
+      quote?.negotiated_discount ||
+      quote?.discount_amount ||
+      quote?.pricingSnapshot?.discount_amount ||
+      (isSmartPayDiscount && rawTotalPayable > 0
+        ? (rawTotalPayable - (quote?.total_payable_after_discount || quote?.razorpay_order_amount || Math.round(rawTotalPayable * 0.98)))
+        : 0) ||
+      0
+    )
   );
 
-  const totalPayable = (discountAmount > 0 || quote?.total_payable_after_discount)
-    ? totalPayableAfterDiscount
-    : rawTotalPayable;
+  const gstRate = Number(
+    quote?.pricingSnapshot?.gst_rate ||
+    quote?.gst_percent ||
+    quote?.gstPercent ||
+    quote?.gst_rate ||
+    18
+  );
 
-  const grossSubtotal = 
-    quote?.pricingSnapshot?.gross_subtotal || 
-    quote?.gross_subtotal || 
-    quote?.subtotal || 
-    (rawTotalPayable > 0 ? Math.round(rawTotalPayable / 1.18) : 0);
+  const storedNetTaxable = Number(
+    quote?.pricingSnapshot?.net_taxable_amount ||
+    quote?.pricingSnapshot?.gross_subtotal ||
+    quote?.gross_subtotal ||
+    quote?.subtotal ||
+    0
+  );
 
-  const gstRate = 
-    quote?.pricingSnapshot?.gst_rate || 
-    quote?.gst_percent || 
-    quote?.gstPercent || 
-    quote?.gst_rate || 
-    18;
+  const breakup = calculateGstBreakup({
+    itemsSubtotalExTax: computedItemsSubtotal > 0 ? computedItemsSubtotal : storedNetTaxable,
+    discountAmount,
+    gstPercent: gstRate,
+    storedTotalPayable: quote?.total_payable_after_discount && discountAmount > 0 ? undefined : rawTotalPayable,
+    storedNetTaxable: storedNetTaxable > 0 ? storedNetTaxable : undefined,
+    storedGstAmount: Number(quote?.pricingSnapshot?.gst_amount || quote?.gst_amount || 0),
+    discountIsPostTax: isSmartPayDiscount,
+  });
 
-  const gstAmount = 
-    quote?.pricingSnapshot?.gst_amount || 
-    quote?.gst_amount || 
-    quote?.gstAmount || 
-    Math.max(0, rawTotalPayable - grossSubtotal);
+  const totalPayable =
+    typeof quote?.total_payable_after_discount === 'number' && discountAmount > 0
+      ? Math.round(quote.total_payable_after_discount)
+      : breakup.totalPayable;
 
-  const laborCost = 
-    quote?.pricingSnapshot?.labor_cost || 
-    quote?.labor_cost || 
-    quote?.laborCost || 
-    0;
-
-  // Authoritative Paid and Due calculation
+  // Authoritative payment & stage determination
   const rawPaid = Number(
-    quote?.amount_paid ?? 
-    quote?.paid_amount ?? 
-    quote?.booking_amount ?? 
-    (quote?.payment_status === 'advance_paid' || quote?.status === 'BOOKED' || String(quote?.payment_type || '').includes('advance') ? 500 : 0)
+    quote?.amount_paid ??
+    quote?.paid_amount ??
+    (quote?.payment_status === 'advance_paid' || quote?.status === 'BOOKED' ? (quote?.booking_amount || 500) : 0)
   );
-  const amountPaid = isNaN(rawPaid) ? 0 : rawPaid;
+  const amountPaid = isNaN(rawPaid) ? 0 : Math.max(0, Math.round(rawPaid));
+  const payStatus = String(quote?.payment_status || '').toLowerCase();
 
-  const isQuoteStatusPaid = 
-    quote?.status === 'PAID' || 
-    quote?.status === 'COMPLETED' || 
-    quote?.payment_status === 'paid' || 
-    quote?.payment_status === 'captured';
+  const isQuoteStatusPaid =
+    quote?.status === 'PAID' ||
+    quote?.status === 'COMPLETED' ||
+    payStatus === 'paid' ||
+    payStatus === 'captured';
 
-  // Fully paid if:
-  // 1) explicitly status PAID / payment_status paid / captured
-  // 2) payment_type is full or full_discount
-  // 3) quote.amount_due === 0 and amountPaid > 500
-  // 4) amountPaid covers totalPayable (with 1 rupee rounding tolerance)
+  const isDeliveryPaid =
+    payStatus === 'delivery_paid' ||
+    (Array.isArray(quote?.payment_history) && quote.payment_history.some((p: any) => p.stage === 'delivery_90'));
+
   const isFullyPaid = totalPayable > 0 && (
     isQuoteStatusPaid ||
     isFullPaymentType ||
     (quote?.amount_due === 0 && amountPaid > 500) ||
-    (amountPaid >= (totalPayable - 1) && quote?.status !== 'BOOKED' && quote?.payment_status !== 'advance_paid')
+    (amountPaid >= (totalPayable - 1) && quote?.status !== 'BOOKED' && payStatus !== 'advance_paid' && !isDeliveryPaid)
   );
-  
-  // Advance/Partial paid if booking advance was paid (e.g. ₹500) but full total is not yet settled
-  const isAdvancePaid = !isFullyPaid && (
-    amountPaid > 0 || 
-    quote?.payment_status === 'advance_paid' || 
-    quote?.status === 'BOOKED' || 
+
+  const isAdvancePaid = !isFullyPaid && !isDeliveryPaid && (
+    amountPaid > 0 ||
+    payStatus === 'advance_paid' ||
+    quote?.status === 'BOOKED' ||
     String(quote?.payment_type || '').includes('advance')
   );
 
-  const effectivePaid = isFullyPaid 
+  const effectivePaid = isFullyPaid
     ? (amountPaid > 0 ? amountPaid : totalPayable)
-    : (amountPaid > 0 ? amountPaid : 500);
+    : (isDeliveryPaid || isAdvancePaid)
+      ? (amountPaid > 0 ? amountPaid : 500)
+      : 0;
 
-  const amountDue = isFullyPaid 
-    ? 0 
-    : (typeof quote?.amount_due === 'number' && quote.amount_due >= 0 && quote.amount_due <= totalPayable
-        ? quote.amount_due
-        : Math.max(0, totalPayable - effectivePaid));
+  const milestones = computeRemainingMilestones({
+    totalPayable,
+    amountPaid: effectivePaid,
+    paymentStatus: quote?.payment_status,
+    explicitAmountDue: typeof quote?.amount_due === 'number' ? quote.amount_due : undefined,
+    hasDeliveryPayment: isDeliveryPaid,
+  });
 
   const pricing = {
-    raw_total: rawTotalPayable,
-    discount_amount: discountAmount,
+    raw_total: rawTotalPayable || breakup.grossSubtotal + breakup.gstAmount,
+    discount_amount: breakup.discountAmount,
     total_payable: totalPayable,
     amount_paid: effectivePaid,
-    amount_due: amountDue,
+    amount_due: milestones.amountDue,
+    net_taxable: breakup.netTaxable,
+    gst_rate: gstRate,
+    gst_amount: breakup.gstAmount,
+    cgst_amount: breakup.cgstAmount,
+    sgst_amount: breakup.sgstAmount,
     items: rawItems,
     addons: rawAddons,
     labor_cost: laborCost,
-    gross_subtotal: grossSubtotal,
-    gst_rate: gstRate,
-    gst_amount: gstAmount,
   };
 
-  const formatCurrency = (amount: number) => '₹' + Math.round(Number(amount) || 0).toLocaleString('en-IN');
+  const invoiceRef =
+    quote?.invoice_number
+      ? String(quote.invoice_number).toUpperCase()
+      : formatDocNumber(id || quote?.quote_number, 'invoice', createdAt);
 
-  const totalGstRate = pricing.gst_rate || 18;
-  const cgstRate = totalGstRate / 2;
-  const sgstRate = totalGstRate / 2;
-  const cgstAmount = Math.round(((pricing.gst_amount || 0) / 2) * 100) / 100;
-  const sgstAmount = Math.max(0, (pricing.gst_amount || 0) - cgstAmount);
-
-  const invoiceRef = id ? `INV-${new Date().getFullYear()}-${id.substring(0, 6).toUpperCase()}` : `INV-${new Date().getFullYear()}-000000`;
-
+  // Buyer & Tax State Details
   const billing = quote?.billing_details || {};
   const isBusiness = Boolean(billing.is_business || quote?.company_name || quote?.gstin || quote?.gst_number);
-  const billedName = isBusiness 
-    ? (billing.company_name || quote?.company_name || customer_name || 'Business Client')
-    : (customer_name || quote?.customerName || quote?.customer?.name || 'Customer');
+  const rawContactName = billing.customer_name || billing.full_name || customer_name || quote?.customerName || quote?.customer?.name;
+  const billedName = isBusiness
+    ? (billing.company_name || quote?.company_name || rawContactName || 'Business Client')
+    : (rawContactName || L.valuedCustomer);
 
-  const contactPerson = isBusiness && (customer_name || billing.customer_name) ? (customer_name || billing.customer_name) : '';
-  const buyerGstin = billing.gstin || quote?.gstin || quote?.gst_number || 'URP (Unregistered Person)';
-  const phoneVal = billing.phone || customer_mobile || quote?.customerMobile || quote?.customer?.phone || quote?.phone || 'N/A';
-  const emailVal = billing.email || quote?.customer_email || quote?.email || '';
+  const contactPerson = isBusiness && rawContactName && rawContactName !== billedName ? rawContactName : '';
+  const buyerGstin = billing.gstin || quote?.gstin || quote?.gst_number || L.unregisteredPerson;
+  const phoneVal = billing.phone || customer_mobile || quote?.customerMobile || quote?.customer?.phone || 'N/A';
+  const emailVal = billing.email || quote?.customer_email || quote?.customerEmail || quote?.customer?.email || '';
 
-  const addressLine1 = billing.address_line1 || quote?.installationAddress || quote?.address?.full_address || quote?.address?.street || '';
-  const cityStateZip = [
-    billing.address_line2,
-    billing.city || quote?.requirementSnapshot?.city || quote?.city,
-    billing.state || 'Rajasthan',
-    billing.pincode || quote?.requirementSnapshot?.lead_pincode || quote?.pincode
-  ].filter(Boolean).join(', ');
+  const addressLine1 = formatCleanAddress(billing.address_line1 || billing.street || quote?.installationAddress);
+  const buyerCity = billing.city || quote?.city || quote?.requirementSnapshot?.city || '';
+  const buyerState = billing.state || quote?.state || sellerState;
+  const buyerPin = billing.pincode || quote?.pincode || quote?.requirementSnapshot?.lead_pincode || '';
+  const cityStateZip = formatCleanAddress(
+    buyerCity,
+    buyerState && buyerPin ? `${buyerState} ${buyerPin}` : (buyerState || buyerPin)
+  );
 
-  const stateCode = billing.state_code || (billing.gstin && billing.gstin.length >= 2 ? billing.gstin.substring(0, 2) : sellerStateCode);
+  const stateCode = getIndianStateCode(
+    billing.state_code || buyerState,
+    billing.gstin || quote?.gstin || quote?.gst_number,
+    sellerStateCode
+  );
   const isInterState = stateCode !== sellerStateCode;
-  const placeOfSupply = `${billing.state || sellerState} (${stateCode})`;
+  const placeOfSupply = `${buyerState} (${stateCode})`;
 
-  // Authoritative document title, badges and status
+  // Determine Visual Status / Titles (100% localized)
   let documentTitle = L.invoiceTitle;
-  let badgeText = 'PAID';
+  let badgeText = isEn ? 'PAID & SETTLED' : 'PAID (भुगतान पूर्ण)';
   let invoiceStatusColor = '#16a34a';
   let invoiceStatusBorder = '#15803d';
-  let supplyTypeLabel = isBusiness ? 'B2B (Tax Invoice)' : 'B2C (Retail Invoice)';
-  let invoiceTypeDesc = isBusiness ? 'GST Input Credit Eligible' : 'Standard Retail Invoice';
+  let supplyTypeLabel = isBusiness ? 'B2B (GST Input Credit)' : (isEn ? 'B2C (Tax Invoice)' : 'B2C (टैक्स इनवॉइस)');
+  let invoiceTypeDesc = isBusiness ? 'GST Input Credit Eligible' : (isEn ? 'Standard Tax Invoice' : 'स्टैंडर्ड टैक्स इनवॉइस');
 
-  if (isAdvancePaid) {
-    documentTitle = isEn ? 'ADVANCE RECEIPT' : L.bookingAdvance500;
-    badgeText = 'ADVANCE PAID';
-    invoiceStatusColor = '#d97706'; // Amber / Warning
+  if (isDeliveryPaid) {
+    documentTitle = L.deliveryReceiptTitle;
+    badgeText = isEn ? 'DELIVERY PAID (90%)' : 'डिलीवरी PAID (90%)';
+    invoiceStatusColor = '#0284c7';
+    invoiceStatusBorder = '#0369a1';
+    supplyTypeLabel = isEn ? 'B2C / Partial Stage 2' : 'B2C (डिलीवरी रसीद)';
+    invoiceTypeDesc = `${L.deliveryPayment90} · ${L.amountPaidLabel}: ${formatPdfINR(pricing.amount_paid)}`;
+  } else if (isAdvancePaid) {
+    documentTitle = L.advanceReceiptTitle;
+    badgeText = isEn ? 'ADVANCE PAID' : 'एडवांस PAID';
+    invoiceStatusColor = '#d97706';
     invoiceStatusBorder = '#b45309';
-    supplyTypeLabel = isBusiness ? 'B2B (Advance Booking Receipt)' : 'B2C (Advance Booking Receipt)';
-    invoiceTypeDesc = `${L.bookingAdvance500} (₹${pricing.amount_paid.toLocaleString('en-IN')})`;
+    supplyTypeLabel = isEn ? 'B2C (Advance Receipt)' : 'B2C (बुकिंग टोकन रसीद)';
+    invoiceTypeDesc = `${L.bookingAdvance500} (${formatPdfINR(pricing.amount_paid)})`;
   } else if (!isFullyPaid) {
-    documentTitle = isEn ? 'PROFORMA INVOICE' : L.quotationTitle;
-    badgeText = 'UNPAID';
-    invoiceStatusColor = '#dc2626';
-    invoiceStatusBorder = '#b91c1c';
-    supplyTypeLabel = isBusiness ? 'B2B (Proforma Quotation)' : 'B2C (Proforma Quotation)';
-    invoiceTypeDesc = 'Payment Pending';
-  } else if (discountAmount > 0) {
-    invoiceTypeDesc = `Full Payment (₹${pricing.amount_paid.toLocaleString('en-IN')} - 2% Smart Pay Discount)`;
+    documentTitle = L.proformaTitle;
+    badgeText = isEn ? 'UNPAID / PROFORMA' : 'PROFORMA / बकाया';
+    invoiceStatusColor = '#64748b';
+    invoiceStatusBorder = '#475569';
+    supplyTypeLabel = 'B2C (Proforma)';
+  } else if (pricing.discount_amount > 0 && isSmartPayDiscount) {
+    invoiceTypeDesc = `${L.totalPayable} (${formatPdfINR(pricing.amount_paid)} - ${L.smartPayDiscountLabel})`;
   }
 
+  const packageTitle = formatHardwarePackageTitle(quote);
+  const totalRowCount = pricing.items.length + pricing.addons.length + (!hasExplicitLaborRow && laborCost > 0 ? 1 : 0);
+  const rowPadV = totalRowCount > 11 ? 2.2 : totalRowCount > 8 ? 3 : 3.8;
+  const hasHistory = Array.isArray(quote?.payment_history) && quote.payment_history.length > 0;
+
   return (
-    <Document>
+    <Document title={`${companyName} — ${documentTitle} #${invoiceRef}`}>
       <Page size="A4" style={[styles.page, { fontFamily: pdfFont }]}>
         {/* Watermark */}
         <Text style={[styles.watermark, noUpper, { color: invoiceStatusColor }]}>{badgeText}</Text>
-
-        {/* Top-Right Stamp Badge */}
-        <View style={[styles.paidBadge, { backgroundColor: invoiceStatusColor, borderColor: invoiceStatusBorder }]}>
-          <Text style={[styles.paidBadgeText, noUpper]}>{badgeText}</Text>
-        </View>
 
         {/* Header */}
         <View style={styles.headerRow}>
@@ -607,6 +685,7 @@ export const InvoicePDFDocument = ({ quote, settings, locale }: { quote: any; se
             {(() => {
               const resolvedLogo = resolvePdfImageSrc(settings?.pdf_logo_url || settings?.company_logo_url, '/logo-horizontal.jpg');
               return resolvedLogo ? (
+                // eslint-disable-next-line jsx-a11y/alt-text
                 <Image src={resolvedLogo} style={styles.headerLogo} />
               ) : (
                 <Text style={styles.logoText}>{companyName}</Text>
@@ -615,11 +694,15 @@ export const InvoicePDFDocument = ({ quote, settings, locale }: { quote: any; se
             {tagline ? <Text style={styles.companyInfo}>{tagline}</Text> : null}
             {sellerAddress ? <Text style={styles.companyInfo}>{sellerAddress}</Text> : null}
             <Text style={styles.companyInfo}>
-              {sellerGstin ? `${L.gstinPrefix}: ${sellerGstin}` : L.gstPending} | State: {sellerState} ({sellerStateCode})
+              {sellerGstin ? `${L.gstinPrefix}: ${sellerGstin}` : L.gstPending} | {sellerState} ({sellerStateCode})
             </Text>
-            <Text style={styles.companyInfo}>Email: {sellerEmail}{sellerPhone} | Web: {sellerWeb}</Text>
+            <Text style={styles.companyInfo}>{sellerEmail}{sellerPhone} | {sellerWeb}</Text>
           </View>
+
           <View style={styles.headerRight}>
+            <View style={[styles.statusBadge, { backgroundColor: invoiceStatusColor, borderColor: invoiceStatusBorder }]}>
+              <Text style={[styles.statusBadgeText, noUpper]}>{badgeText}</Text>
+            </View>
             <Text style={[styles.invoiceTitle, { color: invoiceStatusColor }, noUpper]}>{documentTitle}</Text>
             <View style={styles.quoteMetaGrid}>
               <View style={styles.quoteMetaRow}>
@@ -631,45 +714,64 @@ export const InvoicePDFDocument = ({ quote, settings, locale }: { quote: any; se
                 <Text style={styles.quoteMetaValue}>{createdDate}</Text>
               </View>
               <View style={styles.quoteMetaRow}>
-                <Text style={styles.quoteMetaLabel}>Supply Type:</Text>
+                <Text style={styles.quoteMetaLabel}>{L.supplyTypeLabel}:</Text>
                 <Text style={styles.quoteMetaValue}>{supplyTypeLabel}</Text>
               </View>
               <View style={styles.quoteMetaRow}>
-                <Text style={styles.quoteMetaLabel}>Status:</Text>
+                <Text style={styles.quoteMetaLabel}>{L.statusLabel}:</Text>
                 <Text style={[styles.quoteMetaValue, { color: invoiceStatusColor }]}>
-                  {isAdvancePaid ? `ADVANCE PAID (₹${pricing.amount_paid})` : badgeText}
+                  {isAdvancePaid || isDeliveryPaid
+                    ? `${badgeText} (${formatPdfINR(pricing.amount_paid)})`
+                    : badgeText}
                 </Text>
               </View>
             </View>
           </View>
         </View>
 
+        {/* Hardware Package Title Strip (AGENTS.md compliant) */}
+        {packageTitle ? (
+          <View style={styles.packageStrip}>
+            <Text style={styles.packageStripText}>{packageTitle}</Text>
+            <Text style={[styles.packageStripText, { color: '#15803d', fontSize: 6.8 }]}>{L.gstIncluded18}</Text>
+          </View>
+        ) : null}
+
         {/* Customer and Payment Details Section */}
         <View style={styles.customerSection}>
           <View style={styles.customerInfoCol}>
             <Text style={[styles.sectionHeading, noUpper]}>{L.billTo}:</Text>
             <Text style={styles.customerName}>{billedName}</Text>
-            {contactPerson && isBusiness && (
-              <Text style={styles.customerPhone}>Attn: {contactPerson}</Text>
-            )}
+            {contactPerson ? <Text style={styles.customerPhone}>Attn: {contactPerson}</Text> : null}
             <Text style={styles.customerPhone}>
               <Text style={{ fontWeight: 'bold' }}>{L.gstinPrefix}: </Text>{buyerGstin}
             </Text>
-            <Text style={styles.customerPhone}>Place of Supply: {placeOfSupply}</Text>
+            <Text style={styles.customerPhone}>{L.placeOfSupplyLabel}: {placeOfSupply}</Text>
             {addressLine1 ? <Text style={styles.customerPhone}>{addressLine1}</Text> : null}
             {cityStateZip ? <Text style={styles.customerPhone}>{cityStateZip}</Text> : null}
-            <Text style={styles.customerPhone}>Phone / Mobile: {phoneVal} {emailVal ? `| ${emailVal}` : ''}</Text>
+            <Text style={styles.customerPhone}>
+              {L.phoneShort}: {phoneVal}{emailVal ? ` | ${emailVal}` : ''}
+            </Text>
           </View>
+
           <View style={styles.paymentInfoCol}>
             <Text style={[styles.sectionHeading, noUpper]}>{L.paymentMilestones}:</Text>
             <View style={styles.paymentRow}>
-              <Text style={styles.paymentLabel}>Payment ID:</Text>
+              <Text style={styles.paymentLabel}>{L.paymentIdLabel}:</Text>
               <Text style={styles.paymentValue}>
-                {quote?.payment_id || quote?.paymentId || quote?.razorpay_payment_id || quote?.cf_payment_id || (isAdvancePaid ? `ADVANCE-ONLINE (₹${pricing.amount_paid})` : (isFullyPaid ? 'PAID (ONLINE)' : 'PENDING'))}
+                {quote?.payment_id || quote?.paymentId || quote?.razorpay_payment_id || quote?.cf_payment_id || (
+                  isAdvancePaid
+                    ? `ADVANCE-ONLINE (${formatPdfINR(pricing.amount_paid)})`
+                    : isDeliveryPaid
+                      ? `STAGE-2-PAID (${formatPdfINR(pricing.amount_paid)})`
+                      : isFullyPaid
+                        ? 'PAID (ONLINE)'
+                        : 'PENDING'
+                )}
               </Text>
             </View>
             <View style={styles.paymentRow}>
-              <Text style={styles.paymentLabel}>Method:</Text>
+              <Text style={styles.paymentLabel}>{L.paymentMethodLabel}:</Text>
               <Text style={styles.paymentValue}>{quote?.payment_method || quote?.paymentMethod || 'Online / Razorpay'}</Text>
             </View>
             <View style={styles.paymentRow}>
@@ -677,7 +779,7 @@ export const InvoicePDFDocument = ({ quote, settings, locale }: { quote: any; se
               <Text style={styles.paymentValue}>{paidDate}</Text>
             </View>
             <View style={styles.paymentRow}>
-              <Text style={styles.paymentLabel}>Receipt Type:</Text>
+              <Text style={styles.paymentLabel}>{L.receiptTypeLabel}:</Text>
               <Text style={styles.paymentValue}>{invoiceTypeDesc}</Text>
             </View>
           </View>
@@ -688,185 +790,201 @@ export const InvoicePDFDocument = ({ quote, settings, locale }: { quote: any; se
           <View style={styles.tableHeader}>
             <Text style={styles.colDesc}>{L.itemDescription}</Text>
             <Text style={styles.colHsn}>HSN/SAC</Text>
+            <Text style={styles.colGst}>GST</Text>
             <Text style={styles.colQty}>{L.qty}</Text>
             <Text style={styles.colUnit}>{L.unitPrice}</Text>
             <Text style={styles.colTotal}>{L.amount}</Text>
           </View>
 
           {pricing.items.map((item: any, i: number) => {
-            const qty = item.qty || item.quantity || 1;
-            const unitPrice = item.unit_price || item.unitPrice || item.price || 0;
-            const lineTotal = item.line_total || item.lineTotal || item.amount || (unitPrice * qty);
+            const qty = Number(item?.qty ?? item?.quantity ?? 1);
+            const unitPrice = Number(item?.unit_price ?? item?.unitPrice ?? item?.price ?? 0);
+            const lineTotal = Number(item?.line_total ?? item?.lineTotal ?? item?.amount ?? unitPrice * qty);
+            const itemTitle = cleanPdfItemName(item?.display_name || item?.name || 'Hardware Item');
+            const brandStr = item?.brand ? `${L.brandLabel}: ${item.brand}` : cleanPdfItemName(item?.description || '');
             return (
-              <View key={`item-${i}`} style={styles.tableRow} wrap={false}>
+              <View key={`item-${i}`} style={[styles.tableRow, { paddingVertical: rowPadV }]} wrap={false}>
                 <View style={styles.colDesc}>
-                  <Text style={styles.itemTitle}>{item.display_name || item.name || 'Hardware Item'}</Text>
-                  <Text style={styles.itemBrand}>{item.brand ? `Brand: ${item.brand}` : (item.description || 'TEAM CCTV Standard')}</Text>
+                  <Text style={styles.itemTitle}>{itemTitle}</Text>
+                  {brandStr ? <Text style={styles.itemBrand}>{brandStr}</Text> : null}
                 </View>
                 <Text style={[styles.colHsn, styles.itemText]}>{getHsnSacCode(item)}</Text>
+                <Text style={[styles.colGst, styles.itemText]}>{`${gstRate}%`}</Text>
                 <Text style={[styles.colQty, styles.itemText]}>{qty}</Text>
-                <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(unitPrice)}</Text>
-                <Text style={[styles.colTotal, styles.itemText]}>{formatCurrency(lineTotal)}</Text>
+                <Text style={[styles.colUnit, styles.itemText]}>{formatPdfINR(unitPrice)}</Text>
+                <Text style={[styles.colTotal, styles.itemText, { fontWeight: 'bold' }]}>{formatPdfINR(lineTotal)}</Text>
               </View>
             );
           })}
 
           {pricing.addons.map((addon: any, i: number) => {
-            const qty = addon.qty || addon.quantity || 1;
-            const price = addon.price || addon.unit_price || 0;
-            const lineTotal = addon.total || (price * qty);
+            const qty = Number(addon?.qty ?? addon?.quantity ?? 1);
+            const price = Number(addon?.price ?? addon?.unit_price ?? 0);
+            const lineTotal = Number(addon?.total ?? price * qty);
             return (
-              <View key={`addon-${i}`} style={styles.tableRow} wrap={false}>
+              <View key={`addon-${i}`} style={[styles.tableRow, { paddingVertical: rowPadV }]} wrap={false}>
                 <View style={styles.colDesc}>
-                  <Text style={styles.itemTitle}>{addon.display_name || addon.name || 'Addon Service'}</Text>
-                  <Text style={styles.itemBrand}>Brand: Add-on</Text>
+                  <Text style={styles.itemTitle}>{cleanPdfItemName(addon?.display_name || addon?.name || 'Addon Service')}</Text>
                 </View>
                 <Text style={[styles.colHsn, styles.itemText]}>{getHsnSacCode(addon)}</Text>
+                <Text style={[styles.colGst, styles.itemText]}>{`${gstRate}%`}</Text>
                 <Text style={[styles.colQty, styles.itemText]}>{qty}</Text>
-                <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(price)}</Text>
-                <Text style={[styles.colTotal, styles.itemText]}>{formatCurrency(lineTotal)}</Text>
+                <Text style={[styles.colUnit, styles.itemText]}>{formatPdfINR(price)}</Text>
+                <Text style={[styles.colTotal, styles.itemText, { fontWeight: 'bold' }]}>{formatPdfINR(lineTotal)}</Text>
               </View>
             );
           })}
 
-          {pricing.labor_cost > 0 && !pricing.items.some((it: any) => (it.display_name || it.name || '').toLowerCase().includes('installation') || (it.display_name || it.name || '').toLowerCase().includes('labor')) && (
-            <View style={styles.tableRow} wrap={false}>
+          {!hasExplicitLaborRow && laborCost > 0 ? (
+            <View style={[styles.tableRow, { paddingVertical: rowPadV }]} wrap={false}>
               <View style={styles.colDesc}>
-                <Text style={styles.itemTitle}>Labor & Professional Installation</Text>
-                <Text style={styles.itemBrand}>Service</Text>
+                <Text style={styles.itemTitle}>{L.proInstall}</Text>
+                <Text style={styles.itemBrand}>{L.serviceLabel}</Text>
               </View>
               <Text style={[styles.colHsn, styles.itemText]}>9987</Text>
+              <Text style={[styles.colGst, styles.itemText]}>{`${gstRate}%`}</Text>
               <Text style={[styles.colQty, styles.itemText]}>1</Text>
-              <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(pricing.labor_cost)}</Text>
-              <Text style={[styles.colTotal, styles.itemText]}>{formatCurrency(pricing.labor_cost)}</Text>
+              <Text style={[styles.colUnit, styles.itemText]}>{formatPdfINR(laborCost)}</Text>
+              <Text style={[styles.colTotal, styles.itemText, { fontWeight: 'bold' }]}>{formatPdfINR(laborCost)}</Text>
             </View>
-          )}
+          ) : null}
         </View>
 
-        {/* Bottom Section */}
+        {/* Bottom Section: Terms+Bank+History (Left) & Exact GST Totals (Right) */}
         <View style={styles.bottomSection} wrap={false}>
           <View style={styles.termsBox}>
             <Text style={styles.termsTitle}>{L.termsTitle}</Text>
-            <Text style={[styles.termsHighlight, isAdvancePaid ? { color: '#d97706' } : { color: '#16a34a' }]}>
-              {isAdvancePaid
-                ? `${L.bookingAdvance500}: ₹${pricing.amount_paid.toLocaleString('en-IN')} | ${L.deliveryPayment90}: ${formatCurrency(pricing.amount_due)}`
-                : (discountAmount > 0
-                    ? `${L.gstInclusiveBadge} (2% Smart Pay Discount applied)`
+            <Text style={[styles.termsHighlight, (isAdvancePaid || isDeliveryPaid) ? { color: invoiceStatusColor } : { color: '#16a34a' }]}>
+              {pricing.amount_due > 0
+                ? `${L.amountPaidLabel}: ${formatPdfINR(pricing.amount_paid)}  |  ${L.balanceDueLabel}: ${formatPdfINR(pricing.amount_due)}`
+                : (pricing.discount_amount > 0 && isSmartPayDiscount
+                    ? `${L.gstInclusiveBadge} (${L.smartPayDiscountLabel})`
                     : L.gstInclusiveBadge)}
             </Text>
             <Text style={styles.termsText}>1. {L.warranty1YrTitle}: {L.warranty1YrBody}</Text>
             <Text style={styles.termsText}>2. {L.supportTitle}: {L.supportBody}</Text>
-            <Text style={styles.termsText}>3. {L.deliveryPayment90} · {L.finalPayment10}</Text>
-            <Text style={styles.termsText}>4. Support: {sellerEmail}</Text>
-            {settings?.bank_account_no && (
-              <View style={{ marginTop: 4, paddingTop: 4, borderTopWidth: 1, borderTopColor: '#e5e7eb' }}>
+            <Text style={styles.termsText}>3. {L.bookingAdvance500}: ₹500 · {L.deliveryPayment90} · {L.finalPayment10}</Text>
+
+            {settings?.bank_account_no ? (
+              <View style={styles.bankWrap}>
                 <Text style={[styles.termsText, { fontWeight: 'bold', color: '#1f2937' }]}>
                   {L.bankDetailsTitle}: {settings.bank_name || 'Bank'} | A/c: {settings.bank_account_no} | IFSC: {settings.bank_ifsc || ''}
                 </Text>
                 <Text style={styles.termsText}>
-                  A/c Name: {settings.bank_account_name || companyName} {settings.bank_upi_id ? `| UPI: ${settings.bank_upi_id}` : ''}
+                  {settings.bank_account_name || companyName}{settings.bank_upi_id ? ` | UPI: ${settings.bank_upi_id}` : ''}
                 </Text>
               </View>
-            )}
+            ) : null}
+
+            {hasHistory ? (
+              <View style={styles.paymentHistoryBox}>
+                <Text style={styles.phTitle}>{L.paymentHistoryTitle}</Text>
+                {quote.payment_history.slice(0, 4).map((ph: any, idx: number) => {
+                  const stageLabel =
+                    ph.stage === 'booking'
+                      ? L.bookingAdvance500
+                      : ph.stage === 'delivery_90'
+                        ? L.deliveryPayment90
+                        : ph.stage === 'installation_final'
+                          ? L.finalPayment10
+                          : L.totalPayable;
+                  const dateStr = formatPdfDate(ph.captured_at, dateLocale, 'short');
+                  return (
+                    <View key={idx} style={styles.phRow}>
+                      <Text style={styles.phColStage}>{stageLabel}</Text>
+                      <Text style={styles.phColDate}>{dateStr}</Text>
+                      <Text style={styles.phColMethod}>{(ph.method || 'Online').toUpperCase()}</Text>
+                      <Text style={styles.phColAmount}>{formatPdfINR(ph.amount)}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            ) : null}
           </View>
 
           <View style={styles.totalsBox}>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>{L.subtotal}:</Text>
-              <Text style={styles.totalValue}>{formatCurrency(pricing.gross_subtotal)}</Text>
-            </View>
-            <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>{L.taxableValue}:</Text>
-              <Text style={styles.totalValue}>{formatCurrency(pricing.gross_subtotal)}</Text>
+              <Text style={styles.totalValue}>{formatPdfINR(pricing.net_taxable)}</Text>
             </View>
+
+            {pricing.discount_amount > 0 && !isSmartPayDiscount ? (
+              <View style={styles.totalRow}>
+                <Text style={[styles.totalLabel, { color: '#16a34a', fontWeight: 'bold' }]}>{L.discountApplied}:</Text>
+                <Text style={[styles.totalValue, { color: '#16a34a' }]}>-{formatPdfINR(pricing.discount_amount)}</Text>
+              </View>
+            ) : null}
+
             {isInterState ? (
               <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>IGST ({totalGstRate}%):</Text>
-                <Text style={styles.totalValue}>{formatCurrency(pricing.gst_amount)}</Text>
+                <Text style={styles.totalLabel}>{`IGST (${gstRate}%):`}</Text>
+                <Text style={styles.totalValue}>{formatPdfINR(pricing.gst_amount)}</Text>
               </View>
             ) : (
               <>
                 <View style={styles.totalRow}>
-                  <Text style={styles.totalLabel}>CGST ({cgstRate}%):</Text>
-                  <Text style={styles.totalValue}>{formatCurrency(cgstAmount)}</Text>
+                  <Text style={styles.totalLabel}>{`CGST (${gstRate / 2}%):`}</Text>
+                  <Text style={styles.totalValue}>{formatPdfINR(pricing.cgst_amount)}</Text>
                 </View>
                 <View style={styles.totalRow}>
-                  <Text style={styles.totalLabel}>SGST ({sgstRate}%):</Text>
-                  <Text style={styles.totalValue}>{formatCurrency(sgstAmount)}</Text>
+                  <Text style={styles.totalLabel}>{`SGST (${gstRate / 2}%):`}</Text>
+                  <Text style={styles.totalValue}>{formatPdfINR(pricing.sgst_amount)}</Text>
                 </View>
               </>
             )}
 
-            {pricing.discount_amount > 0 && (
+            {pricing.discount_amount > 0 && isSmartPayDiscount ? (
               <>
-                <View style={[styles.totalRow, { marginTop: 2, paddingTop: 2, borderTopWidth: 0.5, borderTopColor: '#e2e8f0' }]}>
-                  <Text style={styles.totalLabel}>{L.quotationTitle}:</Text>
-                  <Text style={styles.totalValue}>{formatCurrency(pricing.raw_total)}</Text>
+                <View style={[styles.totalRow, { borderTopWidth: 0.5, borderTopColor: '#e2e8f0', paddingTop: 2 }]}>
+                  <Text style={styles.totalLabel}>{L.preDiscountTotal}:</Text>
+                  <Text style={styles.totalValue}>{formatPdfINR(pricing.net_taxable + pricing.gst_amount)}</Text>
                 </View>
                 <View style={styles.totalRow}>
-                  <Text style={[styles.totalLabel, { color: '#16a34a', fontWeight: 'bold' }]}>Smart Pay Discount (2%):</Text>
-                  <Text style={[styles.totalValue, { color: '#16a34a', fontWeight: 'bold' }]}>-{formatCurrency(pricing.discount_amount)}</Text>
+                  <Text style={[styles.totalLabel, { color: '#16a34a', fontWeight: 'bold' }]}>{L.smartPayDiscountLabel}:</Text>
+                  <Text style={[styles.totalValue, { color: '#16a34a' }]}>-{formatPdfINR(pricing.discount_amount)}</Text>
                 </View>
               </>
-            )}
+            ) : null}
 
-            <View style={[styles.grandTotalRow, { paddingBottom: 4, borderBottomWidth: pricing.amount_due > 0 ? 1 : 0, borderBottomColor: '#e5e7eb' }]}>
+            <View style={[styles.grandTotalRow, { paddingBottom: pricing.amount_due > 0 || pricing.amount_paid > 0 ? 3 : 0 }]}>
               <Text style={styles.grandTotalLabel}>{L.totalPayable}:</Text>
-              <Text style={styles.grandTotalValue}>{formatCurrency(pricing.total_payable)}</Text>
+              <Text style={styles.grandTotalValue}>{formatPdfINR(pricing.total_payable)}</Text>
             </View>
-            <View style={[styles.grandTotalRow, { marginTop: 4, paddingTop: 4, borderTopWidth: 0 }]}>
-              <Text style={[styles.grandTotalLabel, { color: isAdvancePaid ? '#d97706' : '#16a34a', fontSize: 9 }]}>
-                {isAdvancePaid ? L.bookingAdvance500 : 'Amount Paid:'}
-              </Text>
-              <Text style={[styles.grandTotalValue, { color: isAdvancePaid ? '#d97706' : '#16a34a', fontSize: 10 }]}>
-                {formatCurrency(pricing.amount_paid)}
-              </Text>
-            </View>
-            {pricing.amount_due > 0 && (
-              <View style={[styles.grandTotalRow, { marginTop: 4, paddingTop: 4, borderTopWidth: 0 }]}>
-                <Text style={[styles.grandTotalLabel, { color: '#dc2626' }]}>{L.deliveryPayment90}:</Text>
-                <Text style={[styles.grandTotalValue, { color: '#dc2626' }]}>{formatCurrency(pricing.amount_due)}</Text>
+
+            {pricing.amount_paid > 0 ? (
+              <View style={[styles.totalRow, { marginTop: 3 }]}>
+                <Text style={[styles.totalLabel, { color: invoiceStatusColor, fontWeight: 'bold' }]}>{L.amountPaidLabel}:</Text>
+                <Text style={[styles.totalValue, { color: invoiceStatusColor }]}>{formatPdfINR(pricing.amount_paid)}</Text>
               </View>
-            )}
+            ) : null}
+
+            {milestones.dueOnDelivery90 > 0 ? (
+              <View style={styles.totalRow}>
+                <Text style={[styles.totalLabel, { color: '#dc2626', fontWeight: 'bold' }]}>{L.deliveryPayment90}:</Text>
+                <Text style={[styles.totalValue, { color: '#dc2626' }]}>{formatPdfINR(milestones.dueOnDelivery90)}</Text>
+              </View>
+            ) : null}
+
+            {milestones.dueOnInstall10 > 0 ? (
+              <View style={styles.totalRow}>
+                <Text style={[styles.totalLabel, { color: '#b45309', fontWeight: 'bold' }]}>{L.finalPayment10}:</Text>
+                <Text style={[styles.totalValue, { color: '#b45309' }]}>{formatPdfINR(milestones.dueOnInstall10)}</Text>
+              </View>
+            ) : null}
           </View>
         </View>
 
-        {quote?.payment_history && Array.isArray(quote.payment_history) && quote.payment_history.length > 0 && (
-          <View style={styles.paymentHistoryBox}>
-            <Text style={styles.phTitle}>{L.paymentMilestones}</Text>
-            <View style={[styles.phRow, { backgroundColor: '#f9fafb', padding: 4 }]}>
-              <Text style={[styles.phColStage, { fontWeight: 'bold' }]}>{L.paymentMilestones}</Text>
-              <Text style={[styles.phColDate, { fontWeight: 'bold' }]}>{L.dateIssued}</Text>
-              <Text style={[styles.phColMethod, { fontWeight: 'bold' }]}>Method</Text>
-              <Text style={[styles.phColAmount, { fontWeight: 'bold' }]}>{L.amount}</Text>
-            </View>
-            {quote.payment_history.map((ph: any, idx: number) => {
-               const stageLabel = ph.stage === 'booking' ? L.bookingAdvance500 :
-                                  ph.stage === 'delivery_90' ? L.deliveryPayment90 :
-                                  ph.stage === 'installation_final' ? L.finalPayment10 : 
-                                  L.totalPayable;
-               const dateStr = ph.captured_at ? new Date(ph.captured_at).toLocaleDateString(dateLocale, { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
-               
-               return (
-                 <View key={idx} style={styles.phRow}>
-                   <Text style={styles.phColStage}>{stageLabel}</Text>
-                   <Text style={styles.phColDate}>{dateStr}</Text>
-                   <Text style={styles.phColMethod}>{(ph.method || 'Online').toUpperCase()}</Text>
-                   <Text style={styles.phColAmount}>{formatCurrency(ph.amount)}</Text>
-                 </View>
-               );
-            })}
-          </View>
-        )}
-        {/* Micro Footer */}
-        <Text style={styles.footerMicroText}>
-          Computer-generated document. {settings?.authorized_signatory_label || "No signature required."} | {companyName} ({sellerWeb}) | Support: {sellerEmail}
-        </Text>
+        {/* Pinned Micro Footer */}
+        <View style={styles.footerBar} fixed>
+          <Text style={styles.footerMicroText}>
+            {L.computerGeneratedNote} | {companyName} ({sellerWeb}) | {sellerEmail}
+          </Text>
+          <Text
+            style={styles.pageNum}
+            render={({ pageNumber, totalPages }) => `${L.pageLabel} ${pageNumber} ${L.ofLabel} ${totalPages}`}
+          />
+        </View>
       </Page>
     </Document>
   );
 };
-
-
-
-

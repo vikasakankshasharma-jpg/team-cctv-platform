@@ -1,0 +1,83 @@
+{
+  "certification_version": "TEAM-CCTV-CERT-V1",
+  "status": "FROZEN",
+  "baseline": {
+    "frozen_at": "2026-11-12T03:53:02.856Z",
+    "seed": 20261111,
+    "corpus": {
+      "deterministic_25": 25,
+      "stress_50": 50
+    }
+  },
+  "repository": {
+    "production": {
+      "repository": "secure-easy",
+      "git_commit": "e340f8cd51d6194b1abf8829551ba83c93ee243f",
+      "git_dirty": true,
+      "dirty_files_count": 50
+    },
+    "certification": {
+      "workspace": "tests/certification",
+      "git_commit": "e340f8cd51d6194b1abf8829551ba83c93ee243f"
+    }
+  },
+  "artifacts": {
+    "certification_snapshot_bundle": {
+      "path": "tests/certification/fixtures/CERTIFICATION_SNAPSHOT_BUNDLE.json",
+      "sha256": "5e33d102841f959a9557321904e9bc5c22a25a78a89ae0f9cb50b0171cbd3094"
+    },
+    "canonical_schema": {
+      "path": "schema",
+      "sha256": "1483499ef325028bc989695fd6a490bd98ca9ab300cd30b0a2b8e6b6167c1c3f"
+    },
+    "business_rules": {
+      "path": "BUSINESS_RULES.md",
+      "sha256": "8f57765092d7b6f1e248ec980786d8a4d61ca0d566d1deafd62b4690b26d51b7"
+    },
+    "oracle": {
+      "path": "oracle",
+      "sha256": "d24c7f1c1e56193af0ecc5f3eaa7b64a3169da4bff2a9fe6e8b4d5b85ca63b63"
+    }
+  },
+  "verification": {
+    "differential_25": {
+      "cases": 25,
+      "passed": 25,
+      "failed": 0,
+      "errored": 0
+    },
+    "differential_50": {
+      "cases": 50,
+      "passed": 50,
+      "failed": 0,
+      "errored": 0
+    },
+    "triage": {
+      "pricing": 0,
+      "gst": 0,
+      "bom": 0,
+      "line_item": 0
+    },
+    "production_typecheck": {
+      "exit_code": 0
+    },
+    "certification_typecheck": {
+      "exit_code": 0
+    }
+  },
+  "storage_contract": {
+    "codec": "H.265",
+    "mode": "continuous",
+    "bitrate_model": {
+      "2mp_2_4mp_3mp_gb_per_camera_day": 14,
+      "4mp_5mp_6mp_gb_per_camera_day": 20,
+      "8mp_4k_gb_per_camera_day": 35
+    },
+    "motion_mode_multiplier": 0.85,
+    "microsd_wireless_motion_factor": 0.43
+  },
+  "integrity": {
+    "manifest_algorithm": "SHA-256",
+    "manifest_sha256": "f7675912e1f92eb3836a07181ef037311cf03d3894cfebb3f6e19037f1e429eb"
+  }
+}

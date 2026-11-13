@@ -1,0 +1,13 @@
+import * as fs from "./firebase-admin-firestore.mjs";
+import * as app from "./firebase-admin-app.mjs";
+export const firestore = fs.getFirestore;
+export const getFirestore = fs.getFirestore;
+export const FieldPath = fs.FieldPath;
+export const FieldValue = fs.FieldValue;
+export const Timestamp = fs.Timestamp;
+export const initializeApp = app.initializeApp;
+export const getApps = app.getApps;
+export const getApp = app.getApp;
+export const cert = app.cert;
+export const applicationDefault = app.applicationDefault;
+export default { initializeApp, getApps, getApp, cert, applicationDefault, firestore: getFirestore };
