@@ -2,7 +2,7 @@
   "certification_version": "TEAM-CCTV-CERT-V1",
   "status": "FROZEN",
   "baseline": {
-    "frozen_at": "2026-11-12T03:53:02.856Z",
+    "frozen_at": "2026-11-13T03:11:50.396Z",
     "seed": 20261111,
     "corpus": {
       "deterministic_25": 25,
@@ -12,13 +12,13 @@
   "repository": {
     "production": {
       "repository": "secure-easy",
-      "git_commit": "e340f8cd51d6194b1abf8829551ba83c93ee243f",
-      "git_dirty": true,
-      "dirty_files_count": 50
+      "git_commit": "a58f4c3a5007521a3c6fc808fba56a73ea1ea4bd",
+      "git_dirty": false,
+      "dirty_files_count": 0
     },
     "certification": {
       "workspace": "tests/certification",
-      "git_commit": "e340f8cd51d6194b1abf8829551ba83c93ee243f"
+      "git_commit": "a58f4c3a5007521a3c6fc808fba56a73ea1ea4bd"
     }
   },
   "artifacts": {
@@ -78,6 +78,6 @@
   },
   "integrity": {
     "manifest_algorithm": "SHA-256",
-    "manifest_sha256": "f7675912e1f92eb3836a07181ef037311cf03d3894cfebb3f6e19037f1e429eb"
+    "manifest_sha256": "c0cd0fed842614ddbc3a6db4453a1cbaac4d052135ea48e26fbf4a9985972a2e"
   }
 }
