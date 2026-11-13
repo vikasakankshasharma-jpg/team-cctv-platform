@@ -1,0 +1,54 @@
+name: TEAM CCTV Certification Regression
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+# Security: Set permissions to least privilege
+permissions:
+  contents: read
+
+jobs:
+  certification-regression:
+    name: TEAM CCTV Certification Regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # Invariant 5.2.3 & 5.2.4: Tamper check MUST run before regression.
+      # Baseline manifest regeneration (cert:manifest) is STRICTLY PROHIBITED in CI.
+      - name: Verify Certification Manifest (Tamper Guard)
+        run: npm run cert:manifest:verify
+
+      # Invariant 5.2.1: Enforce all 7 quality gates
+      - name: Run Certification Regression (7 Quality Gates)
+        run: npm run cert:regression
+
+      # Invariant 5.2.6: Retain machine-readable audit trail
+      - name: Retain Certification Audit Evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: certification-evidence-${{ github.sha }}
+          path: |
+            tests/certification/manifest/TEAM-CCTV-CERT-V1.json
+            tests/certification/regression/last-regression-result.json
+            tests/certification/regression/.tmp/
+          retention-days: 90
+          if-no-files-found: warn

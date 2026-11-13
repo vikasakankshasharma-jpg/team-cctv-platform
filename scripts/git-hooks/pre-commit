@@ -1,0 +1,28 @@
+#!/bin/sh
+# TEAM CCTV Platform - Pre-commit Certification Gate
+# Prevents committing code that introduces pricing regressions or violates TEAM-CCTV-CERT-V1
+
+echo "=================================================="
+echo "  TEAM CCTV Platform - Pre-commit Quality Gate    "
+echo "=================================================="
+
+echo "\n[Step 1/2] Verifying Certification Manifest (Tamper Guard)..."
+npm run cert:manifest:verify
+MANIFEST_EXIT=$?
+if [ $MANIFEST_EXIT -ne 0 ]; then
+  echo "\n❌ COMMIT REJECTED: Certification manifest verification failed."
+  echo "The frozen TEAM-CCTV-CERT-V1 baseline or snapshot has been modified."
+  exit 1
+fi
+
+echo "\n[Step 2/2] Running Certification Regression Suite (7 Gates)..."
+npm run cert:regression
+REGRESSION_EXIT=$?
+if [ $REGRESSION_EXIT -ne 0 ]; then
+  echo "\n❌ COMMIT REJECTED: Certification regression failed."
+  echo "Your changes introduced discrepancies against certified Oracle baseline."
+  exit 1
+fi
+
+echo "\n✅ All certification gates passed cleanly. Proceeding with commit.\n"
+exit 0
