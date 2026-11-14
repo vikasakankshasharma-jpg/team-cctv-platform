@@ -13,6 +13,7 @@ import { buildMixedCameraRequirements } from "../camera-requirements";
 import { MessageBuilder } from "./message-builder";
 import { Msg91WhatsAppProvider } from "./msg91-provider";
 import { getConversationalStrings, ConversationalStrings } from "./conversational-i18n";
+import { executeSafeQuotationCalculation } from "../quotation-boundary";
 
 export function resolveDispatchTech(rawSelection: any): {
   isPureWireless: boolean;
@@ -135,16 +136,30 @@ export async function generateAndSendPriceRanges(phone: string, session: WhatsAp
       }
     }
 
-    // Generate All Catalog Variations & Price Ranges
-    const catalogResult = generateAllCatalogVariations({
-      selection,
-      products,
-      addons,
-      settings,
-      cablingDone,
-      promoterDiscount,
-    });
+    // Generate All Catalog Variations & Price Ranges safely wrapped in canonical boundary
+    const requestId = `wa_${session.lead_id || session.id || phone}_${Date.now()}`;
+    const safeCalc = executeSafeQuotationCalculation(
+      () =>
+        generateAllCatalogVariations({
+          selection,
+          products,
+          addons,
+          settings,
+          cablingDone,
+          promoterDiscount,
+        }),
+      { requestId, source: "whatsapp" }
+    );
 
+    if (!safeCalc.success) {
+      console.error(
+        `[WhatsApp Quotation Safety Boundary Intercept] RequestId: ${safeCalc.requestId}, Code: ${safeCalc.code}, Message: ${safeCalc.internalMessage}`
+      );
+      await sendMsg(MessageBuilder.text(phone, safeCalc.customerMessage || conv.errGeneric));
+      return;
+    }
+
+    const catalogResult = safeCalc.data;
     const { brandSummaries, lowestOverallQuote, totalVariationsCount } = catalogResult;
 
     if (brandSummaries.length === 0 || !lowestOverallQuote) {
@@ -405,14 +420,29 @@ export async function sendBrandVariations(phone: string, session: WhatsAppSessio
       }
     }
 
-    const catalogResult = generateAllCatalogVariations({
-      selection,
-      products,
-      addons,
-      settings,
-      cablingDone,
-      promoterDiscount,
-    });
+    const requestId = `wa_brand_${session.lead_id || session.id || phone}_${brandKey}_${Date.now()}`;
+    const safeCalc = executeSafeQuotationCalculation(
+      () =>
+        generateAllCatalogVariations({
+          selection,
+          products,
+          addons,
+          settings,
+          cablingDone,
+          promoterDiscount,
+        }),
+      { requestId, source: "whatsapp" }
+    );
+
+    if (!safeCalc.success) {
+      console.error(
+        `[WhatsApp Brand Quotation Safety Boundary Intercept] RequestId: ${safeCalc.requestId}, Code: ${safeCalc.code}, Message: ${safeCalc.internalMessage}`
+      );
+      await sendMsg(MessageBuilder.text(phone, safeCalc.customerMessage || conv.errGeneric));
+      return;
+    }
+
+    const catalogResult = safeCalc.data;
 
     const targetBrandSummary = catalogResult.brandSummaries.find(b => b.brandKey === brandKey);
     if (!targetBrandSummary) {

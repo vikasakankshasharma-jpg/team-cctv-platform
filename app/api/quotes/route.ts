@@ -10,6 +10,12 @@ import { ApiResponse } from "@/lib/api-response";
 import { isMaintenanceMode } from "@/lib/kill-switch";
 import { mergeAppSettings } from "@/lib/cached-settings";
 import { executeSafeQuotationCalculation, toHttpErrorResponse } from "@/lib/quotation-boundary";
+import { emitCalculationTelemetry } from "@/lib/observability/calculation-telemetry";
+import {
+  computeCatalogSnapshotHash,
+  computeCalculationFingerprint,
+  extractCalculationRelevantRequirement,
+} from "@/lib/observability/calculation-fingerprint";
 
 /** 
  * ENTERPRISE-GRADE QUOTE PERSISTENCE
@@ -188,6 +194,7 @@ export async function POST(request: NextRequest) {
 
     const effectiveSurchargeFlags = (selection as any).site_surcharge_flags || (leadData as any).site_surcharge_flags || (selection as any).site_surcharges || {};
     const requestId = request.headers.get("x-request-id") || `req_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const calcStartTime = Date.now();
 
     const safeCalc = executeSafeQuotationCalculation(
       () =>
@@ -212,8 +219,27 @@ export async function POST(request: NextRequest) {
       { requestId, source: "api_quotes_post" }
     );
 
+    const catalogSnapshotHash = computeCatalogSnapshotHash(products);
+    const cleanReq = extractCalculationRelevantRequirement(selection);
+    const calculationFingerprint = computeCalculationFingerprint({
+      requirement: cleanReq,
+      catalogSnapshotHash,
+    });
+
     if (!safeCalc.success) {
       console.error(`[Quotation Safety Boundary Intercept] RequestId: ${safeCalc.requestId}, Code: ${safeCalc.code}, Internal: ${safeCalc.internalMessage}`);
+      // Observability: Emit failure event non-blockingly
+      try {
+        emitCalculationTelemetry({
+          execution: safeCalc,
+          requirement: cleanReq,
+          source: "api_quotes_post",
+          catalogSnapshotHash,
+          durationMs: Date.now() - calcStartTime,
+        });
+      } catch (telemetryErr) {
+        console.warn("[Telemetry Non-Blocking Warning] Failed to emit failure telemetry:", telemetryErr);
+      }
       const httpErr = toHttpErrorResponse(safeCalc);
       return ApiResponse.error(httpErr.body.error.message, httpErr.body.error.code, httpErr.status, undefined, requestId);
     }
@@ -261,6 +287,10 @@ export async function POST(request: NextRequest) {
       lead_id: lead_id, // Ensure lead_id is present for root collection queries
       promoter_id: leadData.promoter_id || null,
       referral_code_used: leadData.referral_code || null,
+      // Phase 7: Auditable Triangle Binding (quoteId + requestId + calculationFingerprint)
+      request_id: requestId,
+      calculation_fingerprint: calculationFingerprint,
+      catalog_snapshot_hash: catalogSnapshotHash,
     };
 
     const quotePromise1 = subQuoteRef.set(quoteData);
@@ -277,6 +307,20 @@ export async function POST(request: NextRequest) {
     const leadPromise = adminDb.collection("leads").doc(lead_id).update(updatePayload);
 
     await Promise.all([quotePromise1, quotePromise2, leadPromise]);
+
+    // Phase 6.2 / 7.1.3: Non-blocking Telemetry Emission (Observability only, never blocks or alters quote persistence)
+    try {
+      emitCalculationTelemetry({
+        execution: safeCalc,
+        requirement: cleanReq,
+        source: "api_quotes_post",
+        catalogSnapshotHash,
+        durationMs: Date.now() - calcStartTime,
+        quoteId,
+      });
+    } catch (telemetryErr) {
+      console.warn("[Telemetry Non-Blocking Warning] Failed to emit calculation telemetry:", telemetryErr);
+    }
 
     // 6. Enterprise Audit Logging
     const { ip, ua } = getRequestMetadata(request);
