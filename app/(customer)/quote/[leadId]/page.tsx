@@ -3,7 +3,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import { SETTINGS_DOC_ID } from "@/lib/firebase-client";
 import { ConfiguratorView } from "@/components/quotation/ConfiguratorView";
 import { Lead, Product, Addon, AddonRule, AppSettings, Promoter } from "@/types";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { WaitlistBanner } from "@/components/quotation/WaitlistBanner";
 import { TranslatedText } from "@/components/shared/TranslatedText";
@@ -25,10 +25,21 @@ export async function generateMetadata({
     return buildQuotePageMetadata(locale, "preview");
   }
 
-  const doc = await adminDb.collection("leads").doc(leadId).get();
-  const data = doc.data() as Lead;
+  if (!adminDb) return buildQuotePageMetadata(locale, "preview");
 
-  return buildQuotePageMetadata(locale, "named", data?.customer_name);
+  let customerName: string | undefined;
+  const doc = await adminDb.collection("leads").doc(leadId).get();
+  if (doc.exists) {
+    customerName = (doc.data() as Lead)?.customer_name;
+  } else {
+    const qDoc = await adminDb.collection("quotes").doc(leadId).get();
+    if (qDoc.exists) {
+      const qData = qDoc.data();
+      customerName = qData?.customer_name || qData?.billing_details?.customer_name;
+    }
+  }
+
+  return buildQuotePageMetadata(locale, "named", customerName);
 }
 
 export default async function QuoteResultPage({ 
@@ -41,6 +52,20 @@ export default async function QuoteResultPage({
   const { leadId } = await params;
   const { name, mobile } = await searchParams;
   const { t } = await getServerTranslations();
+
+  // Phase 7 Gap 3: Identity-based resolution for /quote/[quoteId]
+  // If the parameter resolves to a minted quote document, redirect to its immutable review snapshot
+  if (leadId !== "mock-lead" && leadId !== "mock-e2e-lead" && adminDb) {
+    let quoteSnap = await adminDb.collection("quotes").doc(leadId).get();
+    if (!quoteSnap.exists) {
+      quoteSnap = await adminDb.collection("quotes").doc(leadId.toUpperCase()).get();
+    }
+    if (quoteSnap.exists) {
+      const qData = quoteSnap.data();
+      const resolvedLeadId = qData?.lead_id || qData?.leadId || leadId;
+      redirect(`/quote/${resolvedLeadId}/review/${leadId}`);
+    }
+  }
 
   // 1. DATA ENRICHMENT & FETCHING ─────────────────────────────────────────────
   
