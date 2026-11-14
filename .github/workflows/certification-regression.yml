@@ -1,4 +1,4 @@
-name: TEAM CCTV Certification Regression
+name: TEAM CCTV Certification Regression & Release Safety Gates
 
 on:
   push:
@@ -11,8 +11,11 @@ permissions:
   contents: read
 
 jobs:
+  # =========================================================================
+  # GATE 1: Certification Regression & Integrity Verification
+  # =========================================================================
   certification-regression:
-    name: TEAM CCTV Certification Regression
+    name: Certification Regression & Integrity Guard
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -40,6 +43,10 @@ jobs:
       - name: Run Certification Regression (7 Quality Gates)
         run: npm run cert:regression
 
+      # Invariant 6.1, 6.2, 6.3: Enforce all certified test suites
+      - name: Run Certified Test Suites (Governance, Safety, Telemetry, Release)
+        run: npm run cert:suites
+
       # Invariant 5.2.6: Retain machine-readable audit trail
       - name: Retain Certification Audit Evidence
         if: always()
@@ -52,3 +59,66 @@ jobs:
             tests/certification/regression/.tmp/
           retention-days: 90
           if-no-files-found: warn
+
+  # =========================================================================
+  # GATE 2: Production Build Gate (Certification Pre-Requisite Enforced)
+  # Invariant 6.3.4: Build CANNOT execute if certification fails.
+  # =========================================================================
+  production-build:
+    name: Production Build & Typecheck Gate
+    needs: certification-regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Strict Certification Typecheck
+        run: npm run cert:typecheck
+
+      - name: Production TypeScript Check
+        run: npx tsc --noEmit
+
+  # =========================================================================
+  # GATE 3: Release Provenance & Decoupling Gate
+  # Invariant 6.3.2 & 6.3.3: Deployment Version != Certification Baseline
+  # Invariant 6.3.12: Strict Zero Secrets Validation
+  # =========================================================================
+  release-deployment-gate:
+    name: Release Provenance & Deployment Gate
+    needs: production-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Verify Release Identity & Provenance
+        run: npm run cert:release:verify
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          NODE_ENV: production
