@@ -303,6 +303,11 @@ export default async function QuoteResultPage({
       else if (leadPincode.startsWith("324")) unservedCityName = "Kota";
       else if (leadPincode.startsWith("305")) unservedCityName = "Ajmer";
       else unservedCityName = (lead.wizard_answers?.lead_city as string) || t("qrc_your_area", "Your Area");
+
+      if (!nearestHubName) {
+        const activeHub = hubs.find(h => h.is_active);
+        nearestHubName = activeHub?.city_name || activeHub?.name || hubs[0]?.city_name || hubs[0]?.name || "Jaipur";
+      }
     }
   }
 
@@ -324,13 +329,28 @@ export default async function QuoteResultPage({
                 unservedCityName={unservedCityName} 
                 nearestHubName={nearestHubName}
                 distanceKm={distanceKm}
+                initialConfirmed={!!(lead as any).waitlist_confirmed}
+                initialRequestType={(lead as any).waitlist_request_type}
               />
             )}
              
-             <div className="inline-flex items-center gap-1.5 mb-1.5 sm:mb-2 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800 text-[10px] sm:text-[11px] font-semibold shadow-xs">
-               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-               <span><TranslatedText tKey="qrev_lock_badge" defaultText="Official Quotation • 7 Days Price Lock Guarantee" /></span>
-             </div>
+             {unservedCityName ? (
+               <div className="inline-flex items-center gap-1.5 mb-1.5 sm:mb-2 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700 text-[10px] sm:text-[11px] font-bold shadow-xs">
+                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                 <span>
+                   <TranslatedText 
+                     tKey="waitlist_reference_badge" 
+                     defaultText="Reference Benchmark • Based on {hub} Hub Standard Rates"
+                     params={{ hub: nearestHubName || "Jaipur" }}
+                   />
+                 </span>
+               </div>
+             ) : (
+               <div className="inline-flex items-center gap-1.5 mb-1.5 sm:mb-2 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800 text-[10px] sm:text-[11px] font-semibold shadow-xs">
+                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                 <span><TranslatedText tKey="qrev_lock_badge" defaultText="Official Quotation • 7 Days Price Lock Guarantee" /></span>
+               </div>
+             )}
 
              <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">
                 <TranslatedText tKey="quote_h1" defaultText="Your Security, " />
