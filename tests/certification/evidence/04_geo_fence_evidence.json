@@ -1,0 +1,72 @@
+{
+  "testSuite": "Gate 7.4.3 — Jaipur Service-Area Eligibility Allowlist (Governed Policy V1)",
+  "policyVersion": "PILOT_GEO_POLICY_V1",
+  "targetCity": "Jaipur, Rajasthan",
+  "pinCountInAllowlist": 30,
+  "verificationResults": [
+    {
+      "testCase": "Central Jaipur (GPO)",
+      "inputPincode": "302001",
+      "expectedEligible": true,
+      "actualEligible": true,
+      "code": "AUTHORIZED",
+      "status": "PASS"
+    },
+    {
+      "testCase": "Mansarovar (Numeric input)",
+      "inputPincode": 302020,
+      "expectedEligible": true,
+      "actualEligible": true,
+      "code": "AUTHORIZED",
+      "status": "PASS"
+    },
+    {
+      "testCase": "VKI Industrial Area (Boundary Pincode)",
+      "inputPincode": "302039",
+      "expectedEligible": true,
+      "actualEligible": true,
+      "code": "AUTHORIZED",
+      "status": "PASS"
+    },
+    {
+      "testCase": "Out-of-Pilot (New Delhi)",
+      "inputPincode": "110001",
+      "expectedEligible": false,
+      "actualEligible": false,
+      "code": "UNAUTHORIZED",
+      "status": "PASS"
+    },
+    {
+      "testCase": "Out-of-Pilot (Mumbai)",
+      "inputPincode": "400001",
+      "expectedEligible": false,
+      "actualEligible": false,
+      "code": "UNAUTHORIZED",
+      "status": "PASS"
+    },
+    {
+      "testCase": "Invalid Format (5 digits)",
+      "inputPincode": "30200",
+      "expectedEligible": false,
+      "actualEligible": false,
+      "code": "INVALID_FORMAT",
+      "status": "PASS"
+    },
+    {
+      "testCase": "Invalid Format (Alpha characters)",
+      "inputPincode": "JAIPUR",
+      "expectedEligible": false,
+      "actualEligible": false,
+      "code": "INVALID_FORMAT",
+      "status": "PASS"
+    },
+    {
+      "testCase": "Invalid Format (Empty string)",
+      "inputPincode": "",
+      "expectedEligible": false,
+      "actualEligible": false,
+      "code": "INVALID_FORMAT",
+      "status": "PASS"
+    }
+  ]
+}

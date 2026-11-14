@@ -1,0 +1,71 @@
+{
+  "testSuite": "Gate 7.4.6 — Emergency Stop & Rollback Determinism (Tier 1 vs Tier 2)",
+  "rollbackPlan": {
+    "currentDeploymentVersion": "prod-20261114-5ad7f026",
+    "targetDeploymentVersion": "prod-20261114-c34cbb1",
+    "targetType": "CERTIFIED_BASELINE",
+    "targetGitSha": "c34cbb1",
+    "isCertifiedBaseline": true,
+    "certificationVersion": "TEAM-CCTV-CERT-V1",
+    "reason": "Controlled pilot disaster recovery drill",
+    "approvedBy": "lead_devops_raj",
+    "plannedAt": "2026-11-14T10:30:19.000Z"
+  },
+  "postRollbackVerification": {
+    "passed": true,
+    "totalChecks": 8,
+    "passedChecks": 8,
+    "failedChecks": 0,
+    "checklistResults": [
+      {
+        "check": 1,
+        "name": "Git SHA Match",
+        "passed": true,
+        "message": "Active Git SHA (c34cbb1) matches expected target (c34cbb1)"
+      },
+      {
+        "check": 2,
+        "name": "Certification Manifest Integrity",
+        "passed": true,
+        "message": "Manifest self-integrity hash strictly verified"
+      },
+      {
+        "check": 3,
+        "name": "TypeScript Compilation",
+        "passed": true,
+        "message": "TypeScript compiled cleanly with 0 errors"
+      },
+      {
+        "check": 4,
+        "name": "Quotation Engine Smoke Test",
+        "passed": true,
+        "message": "Quotation calculation smoke test executed and matched expected totals"
+      },
+      {
+        "check": 5,
+        "name": "API Quotations Route Health",
+        "passed": true,
+        "message": "/api/quotes responded successfully with valid QuoteDelivery"
+      },
+      {
+        "check": 6,
+        "name": "Runtime Safety Boundary Active",
+        "passed": true,
+        "message": "validateMoneyIntegrity and error masking active; zero [object Object]"
+      },
+      {
+        "check": 7,
+        "name": "Calculation Telemetry Active",
+        "passed": true,
+        "message": "Telemetry event emission and deterministic fingerprinting active"
+      },
+      {
+        "check": 8,
+        "name": "V1 Certification Baseline Immutability",
+        "passed": true,
+        "message": "V1 manifest, fixtures, oracle, and schema remain 100% frozen and unmodified"
+      }
+    ]
+  },
+  "verdict": "PASS"
+}

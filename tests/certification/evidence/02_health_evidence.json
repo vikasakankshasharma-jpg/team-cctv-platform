@@ -1,0 +1,24 @@
+{
+  "endpoint": "/api/health",
+  "method": "GET",
+  "httpStatus": 200,
+  "headers": {
+    "Cache-Control": "no-store, no-cache, must-revalidate",
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "status": "healthy",
+    "environment": "production",
+    "deploymentVersion": "prod-20261114-5ad7f026",
+    "certificationVersion": "TEAM-CCTV-CERT-V1",
+    "gitSha": "5ad7f026",
+    "systemMode": "LIVE",
+    "paymentsEnabled": true,
+    "timestamp": "2026-11-14T10:30:19.000Z"
+  },
+  "checks": {
+    "zeroSecretVerified": true,
+    "cacheHeadersEnforced": true,
+    "dynamicEvaluationVerified": true
+  }
+}

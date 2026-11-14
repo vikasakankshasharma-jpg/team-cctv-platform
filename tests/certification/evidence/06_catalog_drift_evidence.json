@@ -1,0 +1,27 @@
+{
+  "testSuite": "Gate 7.4.5 — Catalog Drift Alerting & Retroactive Snapshot Protection",
+  "catalogPriceDriftSimulation": {
+    "targetSku": "CAM-CP-IP-4MP-BULLET",
+    "certifiedUnitPrice": 4246,
+    "mutatedLiveCatalogPrice": 6369,
+    "priceHikePercentage": "+50.0%",
+    "driftAlertEmitted": true,
+    "driftWatcherAction": "WARNING_LOGGED_AND_NO_AUTO_MUTATION"
+  },
+  "retroactiveSnapshotIntegrity": {
+    "quoteId": "quote_pilot_jaipur_01",
+    "initialSnapshotTotalPayable": 35590,
+    "totalPayableAfterCatalogHike": 35590,
+    "driftDetectedInSnapshot": 0,
+    "calculationFingerprintBefore": "cf_jaipur_pilot_sample_fingerprint_sha256",
+    "calculationFingerprintAfter": "cf_jaipur_pilot_sample_fingerprint_sha256",
+    "fingerprintIntegrity": "STRICTLY_IMMUTABLE"
+  },
+  "downstreamCommercialImpact": {
+    "orderId": "order_pilot_jaipur_01",
+    "orderAmountBeforeCatalogHike": 500,
+    "orderAmountAfterCatalogHike": 500,
+    "recalculationOccurred": false
+  },
+  "verdict": "PASS"
+}

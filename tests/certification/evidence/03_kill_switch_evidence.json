@@ -1,0 +1,37 @@
+{
+  "testSuite": "Gate 7.4.2 — Two-Level Kill Switch & Webhook Retry/Idempotency",
+  "level1_system_mode": {
+    "mode": "MAINTENANCE",
+    "behavior": "Blocks new intake and quote requests with maintenance notice",
+    "verified": true
+  },
+  "level2_payments_disabled": {
+    "payments_enabled": false,
+    "webhookSimulation": {
+      "incomingEvent": "payment.captured",
+      "orderId": "order_pilot_killswitch_test",
+      "responseStatus": 503,
+      "responseBody": {
+        "error": "Payment processing temporarily disabled for maintenance",
+        "retryable": true
+      },
+      "gatewayAction": "Gateway queues webhook and retries with exponential backoff"
+    },
+    "verified": true
+  },
+  "recovery_and_retry": {
+    "payments_restored": true,
+    "firstRetrySimulation": {
+      "responseStatus": 200,
+      "isDuplicate": false,
+      "orderUpdated": true,
+      "stateTransition": "VERIFIED_BOOKING_CAPTURED"
+    },
+    "duplicateReplaySimulation": {
+      "responseStatus": 200,
+      "isDuplicate": true,
+      "message": "Payment already captured; idempotent 200 returned"
+    },
+    "verified": true
+  }
+}

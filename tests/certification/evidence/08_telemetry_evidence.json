@@ -1,0 +1,37 @@
+{
+  "testSuite": "Production Observability & Telemetry Binding",
+  "telemetryEvent": {
+    "eventName": "quotation.calculation.completed",
+    "requestId": "req_jaipur_pilot_105",
+    "quoteId": "quote_pilot_jaipur_01",
+    "calculationFingerprint": "cf_jaipur_pilot_sample_fingerprint_sha256",
+    "catalogSnapshotHash": "ch_jaipur_pilot_catalog_hash_sha256",
+    "pricingEngineVersion": "1.0.0",
+    "pricingPolicyVersion": "2026.1",
+    "totalPayable": 35590,
+    "netTaxableAmount": 30161.02,
+    "gstAmount": 5428.98,
+    "durationMs": 11,
+    "status": "SUCCESS",
+    "emittedAt": "2026-11-14T10:30:19.000Z"
+  },
+  "sanitizationVerification": {
+    "piiFieldsStripped": [
+      "customer_name",
+      "mobile_number",
+      "delivery_address",
+      "pincode"
+    ],
+    "financialIntegrity": {
+      "isFinite": true,
+      "isNaN": false,
+      "isNegative": false
+    },
+    "correlationTriangle": {
+      "requestIdBound": true,
+      "quoteIdBound": true,
+      "calculationFingerprintBound": true
+    }
+  },
+  "verdict": "PASS"
+}

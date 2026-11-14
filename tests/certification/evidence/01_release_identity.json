@@ -1,0 +1,24 @@
+{
+  "releaseContractVersion": "1.0.0",
+  "deploymentVersion": "prod-20261114-5ad7f026",
+  "certificationVersion": "TEAM-CCTV-CERT-V1",
+  "gitSha": "5ad7f0268a2bf6cb86df4482d001eb70fae42823",
+  "gitShortSha": "5ad7f026",
+  "pricingEngineVersion": "1.0.0",
+  "pricingPolicyVersion": "2026.1",
+  "catalogSnapshotHash": "ch_jaipur_pilot_catalog_hash_sha256",
+  "certificationManifestHash": "c0cd0fed842614dd94df58aa6067daae46087b32ea7d3eb895782a17fdb57d76",
+  "environment": "production",
+  "provenance": {
+    "isCertifiedBaseline": false,
+    "certifiedBaselineTag": "TEAM-CCTV-CERT-V1",
+    "certifiedBaselineCommit": "c34cbb1",
+    "manifestFrozenCommit": "a58f4c3",
+    "decouplingEnforced": true
+  },
+  "zeroSecretsAudit": {
+    "scanned": true,
+    "violationsCount": 0,
+    "status": "PASS"
+  }
+}

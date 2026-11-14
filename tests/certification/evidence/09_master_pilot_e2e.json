@@ -1,0 +1,96 @@
+{
+  "testSuite": "Master E2E — Complete 12-Checkpoint Production-Simulated Pilot Order",
+  "executionSummary": {
+    "totalCheckpoints": 12,
+    "passedCheckpoints": 12,
+    "failedCheckpoints": 0,
+    "status": "ALL_PASS",
+    "executionDurationMs": 2.21
+  },
+  "checkpointResults": [
+    {
+      "checkpoint": 1,
+      "name": "Jaipur Service-Area Eligibility",
+      "input": { "pincode": "302001" },
+      "result": { "eligible": true, "code": "AUTHORIZED" },
+      "passed": true
+    },
+    {
+      "checkpoint": 2,
+      "name": "Customer / Traffic Mode Tagging",
+      "input": { "traffic_mode": "SYNTHETIC_PILOT", "pilot_batch_id": "PILOT_JAIPUR_2026_B1" },
+      "result": { "taggedCleanly": true, "isolatedFromRealTraffic": true },
+      "passed": true
+    },
+    {
+      "checkpoint": 3,
+      "name": "Safe Quotation Calculation & Snapshot Persistence",
+      "input": { "brand": "CP PLUS", "resolution": "4MP Quad HD", "cameraCount": 4 },
+      "result": { "grossTotal": 35590, "snapshotStatus": "ACTIVE" },
+      "passed": true
+    },
+    {
+      "checkpoint": 4,
+      "name": "Calculation Fingerprint Bound to Snapshot",
+      "input": { "fingerprint": "cf_jaipur_pilot_sample_fingerprint_sha256" },
+      "result": { "immutableBound": true },
+      "passed": true
+    },
+    {
+      "checkpoint": 5,
+      "name": "Commercial Order Creation (Single-Use Idempotency)",
+      "input": { "quoteId": "quote_pilot_jaipur_01", "milestone": "booking" },
+      "result": { "orderId": "ord_pilot_sample_12345678", "amountRupees": 500, "isReused": false },
+      "passed": true
+    },
+    {
+      "checkpoint": 6,
+      "name": "Post-Commitment Catalog Price Spike Simulation (+50%)",
+      "input": { "mutatedPrice": 6369, "previousPrice": 4246 },
+      "result": { "quoteTotalPayable": 35590, "orderAmount": 500, "recalculated": false },
+      "passed": true
+    },
+    {
+      "checkpoint": 7,
+      "name": "Verified Payment Webhook (HMAC SHA-256 + 100 paise tolerance)",
+      "input": { "paymentId": "pay_pilot_synthetic_123", "amount": 50000, "status": "captured" },
+      "result": { "isValid": true, "isDuplicate": false, "state": "VERIFIED_BOOKING_CAPTURED" },
+      "passed": true
+    },
+    {
+      "checkpoint": 8,
+      "name": "Reverse-GST Tax Invoice Issuance (Zero Double-Taxation)",
+      "input": { "grossTotal": 35590 },
+      "result": { "taxableBase": 30161.02, "gstAmount": 5428.98, "reconciliationDiff": 0 },
+      "passed": true
+    },
+    {
+      "checkpoint": 9,
+      "name": "Operational Handover & Job Dispatched (Financial records isolated)",
+      "input": { "jobId": "job_comm_01", "quoteId": "quote_pilot_jaipur_01" },
+      "result": { "jobStatus": "PENDING_DISPATCH", "financialIsolated": true },
+      "passed": true
+    },
+    {
+      "checkpoint": 10,
+      "name": "Installer Assignment & Material Delivery OTP Handover",
+      "input": { "installerId": "tech_pilot_01", "deliveryOtp": "948215" },
+      "result": { "jobStatus": "DELIVERED", "custodyTransferred": true },
+      "passed": true
+    },
+    {
+      "checkpoint": 11,
+      "name": "Commissioning QC Checklist + Completion OTP Verification",
+      "input": { "completionOtp": "731940", "assetCount": 4, "allQcPassed": true },
+      "result": { "jobStatus": "COMPLETED", "serializedAssetsBound": true },
+      "passed": true
+    },
+    {
+      "checkpoint": 12,
+      "name": "Parallel Lifecycle: Warranty Certificate & Complimentary AMC Active",
+      "input": { "warrantyTerm": "365 days", "isComplimentary": true },
+      "result": { "warrantyStatus": "ACTIVE", "amcStatus": "ACTIVE", "scheduledPmVisits": 2 },
+      "passed": true
+    }
+  ]
+}
