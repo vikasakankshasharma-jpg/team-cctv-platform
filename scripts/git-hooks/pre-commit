@@ -24,7 +24,7 @@ if [ $REGRESSION_EXIT -ne 0 ]; then
   exit 1
 fi
 
-echo "\n[Step 3/3] Running Certified Test Suites (96 tests: Governance, Safety, Telemetry, Release, Journey, Commercial, Operations)..."
+echo "\n[Step 3/3] Running Certified Test Suites (105 tests: Governance, Safety, Telemetry, Release, Journey, Commercial, Operations, Pilot)..."
 npm run cert:suites
 SUITES_EXIT=$?
 if [ $SUITES_EXIT -ne 0 ]; then
