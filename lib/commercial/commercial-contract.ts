@@ -48,6 +48,13 @@ export interface CommercialOrder {
   status: "created" | "attempted" | "paid" | "expired";
   created_at: string;
   expires_at?: string;
+  legal_acceptance?: {
+    snapshotId: string;
+    termsVersion: string;
+    refundPolicyVersion: string;
+    warrantyPolicyVersion?: string;
+    acceptedAt: string;
+  };
 }
 
 export interface CommercialMilestones {

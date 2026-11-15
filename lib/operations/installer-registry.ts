@@ -17,6 +17,13 @@ export interface InstallerProfile {
   kycVerified: boolean;
   totalCompletedJobs: number;
   averageRating: number; // 1.0 to 5.0
+  legalStatus?: "ACTIVE" | "PENDING_ACCEPTANCE" | "SUSPENDED";
+  acceptedAgreements?: Array<{
+    agreementId: string;
+    version: string;
+    acceptedAt: string;
+    snapshotId: string;
+  }>;
 }
 
 export const INSTALL_RATE_CARD_V1 = Object.freeze({
