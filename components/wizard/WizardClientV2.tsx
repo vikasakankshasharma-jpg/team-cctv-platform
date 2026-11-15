@@ -22,6 +22,8 @@ import { buildMixedCameraRequirements } from "@/lib/camera-requirements";
 import { SmartAddressInput } from "@/components/shared/SmartAddressInput";
 import { WhatsAppOtpNotice } from "@/components/shared/WhatsAppOtpNotice";
 import { extractErrorMessage } from "@/lib/utils";
+import { InteractivePageTour } from "@/components/tour/InteractivePageTour";
+import { cctvWizardTour } from "@/components/tour/tours/cctv-wizard-tour";
 
 const GOOGLE_MAPS_LIBRARIES: any = ["places"];
 
@@ -793,6 +795,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
             {/* Primary Action: Big Guided Setup Card */}
             <button
               type="button"
+              data-tour="setup-choice"
               onClick={() => setStep(1)}
               className="w-full text-left p-6 sm:p-8 rounded-2xl border-2 border-blue-500 bg-blue-50/70 dark:bg-blue-950/30 hover:bg-blue-100/70 dark:hover:bg-blue-900/40 hover:border-blue-600 transition-all group shadow-sm hover:shadow-md cursor-pointer block"
             >
@@ -831,7 +834,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
               <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{t("wz_select_setup_type_calc_wire")}</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            <div data-tour="installation-type" className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <button onClick={() => { updateReq({ installation_type: "new", technology_preference: "HD", is_4g: false, property_type: req.property_type || "home" }); handleNext(); }}
                 className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left hover:border-blue-500 transition-all cursor-pointer group ${req.installation_type === "new" && req.technology_preference !== "Wireless" ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40 shadow-sm" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
                 <div className="flex items-center gap-1.5 mb-2 flex-wrap">
@@ -1436,7 +1439,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                 ) : (
                   /* 2. Wired / Hybrid Flow */
                   <>
-                    <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-between">
+                    <div data-tour="outdoor-cameras" className="p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-between">
                       <div>
                         <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">
                           {t("wz_outdoor_cameras")}
@@ -1476,7 +1479,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                       </div>
                     </div>
 
-                    <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-between">
+                    <div data-tour="indoor-cameras" className="p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-between">
                       <div>
                         <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">
                           {t("wz_indoor_cameras")}
@@ -1974,7 +1977,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
         }
       case 4:
           return (
-            <div className="space-y-3.5 sm:space-y-5 animate-in fade-in">
+            <div data-tour="site-conditions" className="space-y-3.5 sm:space-y-5 animate-in fade-in">
               <div>
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{t("wz_site_t", "Site & Mounting Conditions")}</h2>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{t("wz_site_d", "Help us prepare the right mounting hardware and cabling length for your site.")}</p>
@@ -3209,6 +3212,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                   {t("wz_back")}
                 </Button>
                 <Button 
+                  data-tour="generate-quote"
                   onClick={handleFinishWizard} 
                   disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10} 
                   size="lg" 
@@ -3242,7 +3246,25 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
             <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             {t("wz_exit")}
           </Link>
-          <span className="text-[11px] sm:text-xs text-gray-400 font-medium">{t("wz_cctvquotationcom")}</span>
+          <div className="flex items-center gap-2">
+            <InteractivePageTour
+              config={cctvWizardTour}
+              activeStep={step}
+              translate={(key) => t(key)}
+              renderTrigger={(openTour) => (
+                <button
+                  type="button"
+                  onClick={openTour}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50/90 dark:bg-zinc-800 text-[11px] font-bold text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-all cursor-pointer shadow-none active:scale-95"
+                  aria-label={t("tour_open_guide", "How this step works")}
+                >
+                  <span aria-hidden="true">💡</span>
+                  <span>{t("tour_guide", "Guide")}</span>
+                </button>
+              )}
+            />
+            <span className="text-[11px] sm:text-xs text-gray-400 font-medium">{t("wz_cctvquotationcom")}</span>
+          </div>
         </div>
         {step > 0 && (
           <div className="mb-3.5 sm:mb-6">

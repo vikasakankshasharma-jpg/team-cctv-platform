@@ -92,3 +92,12 @@ Never confuse or revert the quotation presentation strategy for this project. Th
   - Zero `[object Object]` across client/server boundaries via `extractErrorMessage()` (`lib/utils.ts`).
   - All integration keys and phone env vars must be trimmed/sanitized via `cleanEnvVar()` / `cleanPhoneEnvVar()` (`lib/env-utils.ts`) to prevent CRLF header/API failures (`MSG91_WHATSAPP_NUMBER`, `WHATSAPP_PROVIDER`, `RAZORPAY_WEBHOOK_SECRET`, `RESEND_API_KEY`, `GEMINI_API_KEY`, etc.).
   - WhatsApp OTP and quote links launch via native `<a href="whatsapp://send?phone=...">` (no bare `whatsapp://` or hidden `<iframe>`), with iPadOS detection and adaptive mobile (`wa.me`) vs desktop (`web.whatsapp.com`) fallback (`lib/whatsapp.ts`, `WhatsAppOtpNotice.tsx`).
+
+## 11. Interactive Page-by-Page Guided Tour Invariants (`components/tour/`)
+- **Journey-Wise Step Micro-Tours:** Guidance is delivered contextually per wizard step (`activeStep={step}`) rather than a blocking upfront tour.
+- **Hardware Impact Focus:** Explains the real-world impact of button choices (weatherproof bullets vs indoor domes, HD vs IP, storage duration) on hardware, cabling, and 100% GST-paid pricing.
+- **User Agency:** Features explicit `[ Next / Try It ]`, `[ Skip ]` (current step only), and `[ Don't show guides automatically again ]` (`localStorage.setItem('team_tour_skip_all', 'true')`).
+- **Header Persistent Trigger:** The `[ 💡 Guide ]` pill is mounted in top headers via `renderTrigger` to eliminate any visual clash with floating WhatsApp widgets or bottom CTA bars.
+- **Mobile Viewport Inversion:** Dynamically docks cards above or below the highlighted target based on screen position, with body scroll locking and iOS safe-area handling.
+- **Certified Isolation:** Read-only UI overlay; never mutates pricing, GST, or BOM data structures.
+

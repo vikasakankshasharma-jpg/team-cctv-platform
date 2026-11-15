@@ -32,6 +32,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
    - Paid/Promo AMC (`amc_1yr`..`amc_3yr`, `promo_free_amc`, linked `amc_subscriptions`/`amc_contracts`) and Referral/Salesperson Commissions (`resolvePromoterCommission()` in `lib/commission.ts`) are accounted directly inside the **Services** bucket (`services.profit`).
    - Operating overheads (`payment_gateway_fee` actual/est or ₹0 on cash, `warranty_reserve`, `logistics_consumables`, `installer_payout_bonus`) compute `overheads.net_profit` ("True Net Pocket Profit") via `lib/profit-context.ts` without modifying customer checkout totals.
 
+6. **Interactive Page-by-Page Guided Tour Invariants (`components/tour/`):**
+   - **Journey-Wise Step Micro-Tours:** Guidance is delivered contextually per wizard step (`activeStep={step}`) via `InteractivePageTour.tsx` rather than a blocking upfront walkthrough.
+   - **Hardware Impact Focus:** Explains the real-world impact of button choices (weatherproof bullets vs indoor domes, HD vs IP, storage duration) on hardware, cabling, and 100% GST-paid pricing.
+   - **User Agency:** Features explicit `[ Next / Try It ]`, `[ Skip ]` (current step only), and `[ Don't show guides automatically again ]` (`localStorage.setItem('team_tour_skip_all', 'true')`).
+   - **Header Persistent Trigger:** The `[ 💡 Guide ]` pill is mounted in top headers via `renderTrigger` to eliminate any visual clash with floating WhatsApp widgets or bottom CTA bars.
+   - **Mobile Viewport Inversion:** Dynamically docks cards above or below the highlighted target based on screen position (`center < viewportHeight / 2 ? 'bottom' : 'top'`), with body scroll locking and iOS safe-area handling (`env(safe-area-inset-bottom)`).
+   - **Certified Isolation:** Read-only UI overlay; never mutates pricing, GST, or BOM data structures.
+
 
 ---
 
