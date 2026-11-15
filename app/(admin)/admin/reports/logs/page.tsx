@@ -7,6 +7,17 @@ import { format } from "date-fns";
 
 export const dynamic = "force-dynamic";
 
+function parseLogTimestamp(timestamp: any): Date {
+  if (timestamp?.toDate && typeof timestamp.toDate === "function") {
+    return timestamp.toDate();
+  }
+  if (timestamp) {
+    const parsed = new Date(timestamp);
+    if (!isNaN(parsed.getTime())) return parsed;
+  }
+  return new Date(0);
+}
+
 export default async function AuditLogsPage() {
   await requireAdmin();
 
@@ -22,7 +33,7 @@ export default async function AuditLogsPage() {
       return {
         id: doc.id,
         ...data,
-        timestamp: (data.timestamp as any)?.toDate?.() ?? new Date(data.timestamp || Date.now())
+        timestamp: parseLogTimestamp(data.timestamp)
       };
     });
   } catch (err) {
