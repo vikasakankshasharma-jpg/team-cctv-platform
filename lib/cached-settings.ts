@@ -18,7 +18,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   company_gstin: "08CRVPS7390M1ZF",
   company_pan: "CRVPS7390M",
   company_phone: "+91 99825 49315",
-  company_email: "hello@cctvquotation.com",
+  company_email: "support@cctvquotation.com",
   company_website: "cctvquotation.com",
   
   bank_name: "HDFC Bank",

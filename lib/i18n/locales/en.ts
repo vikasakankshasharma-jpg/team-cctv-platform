@@ -2491,7 +2491,7 @@ export const en = {
   "lbl_pref_brand": "Preferred Brand",
   "legal_banner_badge": "Quick Summary in Your Language",
   "legal_full_notice": "Full legally binding text is shown in English below.",
-  "legal_privacy_body": "We only collect your name, mobile number, pincode, and site details to prepare your CCTV quote, book installation, and issue your 18% GST warranty invoice. We never sell your personal data. Email hello@cctvquotation.com anytime to update or delete your data.",
+  "legal_privacy_body": "We only collect your name, mobile number, pincode, and site details to prepare your CCTV quote, book installation, and issue your 18% GST warranty invoice. We never sell your personal data. Email support@cctvquotation.com anytime to update or delete your data.",
   "legal_privacy_title": "Privacy Policy — Key Points at a Glance",
   "legal_terms_body": "Quotations include 18% GST, genuine sealed hardware, and standard cabling (15m/camera). Payment stages are ₹500 booking token, 90% on material delivery, and 10% after live mobile testing. Hardware carries brand warranty plus 1-year workmanship support.",
   "legal_terms_title": "Terms of Service — Key Points at a Glance",

@@ -31,7 +31,7 @@ export function LegalLanguageSummaryBanner({ type }: LegalLanguageSummaryBannerP
         {isPrivacy
           ? t(
               "legal_privacy_body",
-              "We only collect your name, mobile number, pincode, and site details to prepare your CCTV quote, book installation, and issue your 18% GST warranty invoice. We never sell your personal data. Email hello@cctvquotation.com anytime to update or delete your data."
+              "We only collect your name, mobile number, pincode, and site details to prepare your CCTV quote, book installation, and issue your 18% GST warranty invoice. We never sell your personal data. Email support@cctvquotation.com anytime to update or delete your data."
             )
           : t(
               "legal_terms_body",

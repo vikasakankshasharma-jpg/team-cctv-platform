@@ -30,7 +30,7 @@ export default async function PrivacyPolicyPage() {
         companyName: "Team (Proprietor: Akanksha Sharma)",
         domain: "cctvquotation.com",
         phone: "+91 99825 49315",
-        email: "hello@cctvquotation.com",
+        email: "support@cctvquotation.com",
         address: "no. S1/51, Maheshpuri, Jhotwara, Jaipur, Rajasthan — 302012 (GSTIN: 08CRVPS7390M1ZF, PAN: CRVPS7390M)",
       }}
     />

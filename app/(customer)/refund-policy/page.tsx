@@ -152,7 +152,7 @@ export default async function RefundPolicyPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-                  <span>hello@cctvquotation.com (SLA: Acknowledged within 24h)</span>
+                  <span>support@cctvquotation.com (SLA: Acknowledged within 24h)</span>
                 </div>
               </div>
             </div>
