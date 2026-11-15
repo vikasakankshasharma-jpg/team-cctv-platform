@@ -24,6 +24,7 @@
     "cert:commercial": "node --import ./tests/certification/production/esm-loader/register.mjs --test tests/certification/commercial/*.test.ts",
     "cert:operations": "node --import ./tests/certification/production/esm-loader/register.mjs --test tests/certification/operations/*.test.ts",
     "cert:pilot": "node --import ./tests/certification/production/esm-loader/register.mjs --test tests/certification/pilot/*.test.ts",
+    "pilot:customer0": "node --import ./tests/certification/production/esm-loader/register.mjs --test tests/certification/pilot/customer-0-execution.test.ts",
     "cert:legal": "node --import ./tests/certification/production/esm-loader/register.mjs --test tests/certification/legal/*.test.ts",
     "cert:release:verify": "node --import ./tests/certification/production/esm-loader/register.mjs --test tests/certification/release-safety/*.test.ts",
     "prepare:hooks": "git config core.hooksPath scripts/git-hooks",
