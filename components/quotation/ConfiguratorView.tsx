@@ -25,6 +25,7 @@ import { CompetitorQuoteUploader, SelectedPackageInfo } from "@/components/share
 import { useRealtimeInventory } from "@/hooks/useRealtimeInventory";
 import { InteractivePageTour } from "@/components/tour/InteractivePageTour";
 import { quoteCatalogTour } from "@/components/tour/tours/quote-catalog-tour";
+import { trackTourEvent } from "@/lib/analytics/tour-analytics";
 import { extractErrorMessage } from "@/lib/utils";
 
 import type { Lead, Product, Addon, AddonRule, AppSettings, PricingResult, Address, RecommendationRule, CardLayoutRule } from "@/types";
@@ -703,6 +704,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                 <InteractivePageTour
                   config={quoteCatalogTour}
                   translate={(key) => t(key)}
+                  onTourEvent={trackTourEvent}
                   renderTrigger={(openTour) => (
                     <button
                       type="button"

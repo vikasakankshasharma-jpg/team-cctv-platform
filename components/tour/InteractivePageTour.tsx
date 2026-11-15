@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -12,6 +13,7 @@ import type {
   TourPosition,
   TourTriggerRenderer,
   TourTranslationResolver,
+  TourAnalyticsCallback,
 } from "./tour.types";
 
 import { usePageTour } from "./usePageTour";
@@ -23,6 +25,7 @@ type InteractivePageTourProps = {
   translate?: TourTranslationResolver;
   renderTrigger?: TourTriggerRenderer;
   showDefaultTrigger?: boolean;
+  onTourEvent?: TourAnalyticsCallback;
 };
 
 type Rect = {
@@ -39,6 +42,7 @@ export function InteractivePageTour({
   translate,
   renderTrigger,
   showDefaultTrigger = true,
+  onTourEvent,
 }: InteractivePageTourProps) {
   const tour = usePageTour({
     config,
@@ -50,6 +54,83 @@ export function InteractivePageTour({
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
   const [position, setPosition] = useState<TourPosition>("bottom");
   const targetRef = useRef<HTMLElement | null>(null);
+
+  const contextKey = stepKey ?? (activeStep !== undefined ? String(activeStep) : undefined);
+
+  const emitTourEvent = useCallback(
+    (event: Parameters<NonNullable<typeof onTourEvent>>[0]) => {
+      onTourEvent?.(event);
+    },
+    [onTourEvent],
+  );
+
+  const prevIsRunningRef = useRef(false);
+  const prevStepIdRef = useRef<string | null>(null);
+
+  // Emit tour_started
+  useEffect(() => {
+    if (tour.isRunning && !prevIsRunningRef.current) {
+      emitTourEvent({
+        type: "tour_started",
+        pageId: config.pageId,
+        contextKey,
+        stepId: tour.currentStep?.id,
+      });
+    }
+    prevIsRunningRef.current = tour.isRunning;
+  }, [tour.isRunning, tour.currentStep?.id, config.pageId, contextKey, emitTourEvent]);
+
+  // Emit tour_step_viewed on step transition
+  useEffect(() => {
+    if (tour.isRunning && tour.currentStep && tour.currentStep.id !== prevStepIdRef.current) {
+      prevStepIdRef.current = tour.currentStep.id;
+      emitTourEvent({
+        type: "tour_step_viewed",
+        pageId: config.pageId,
+        contextKey,
+        stepId: tour.currentStep.id,
+        stepIndex: tour.currentIndex,
+        totalSteps: tour.applicableSteps.length,
+      });
+    }
+    if (!tour.isRunning) {
+      prevStepIdRef.current = null;
+    }
+  }, [tour.isRunning, tour.currentStep, tour.currentIndex, tour.applicableSteps.length, config.pageId, contextKey, emitTourEvent]);
+
+  const handleNext = useCallback(() => {
+    if (tour.isLastStep) {
+      emitTourEvent({
+        type: "tour_completed",
+        pageId: config.pageId,
+        contextKey,
+        totalSteps: tour.applicableSteps.length,
+      });
+    }
+    tour.next();
+  }, [tour, config.pageId, contextKey, emitTourEvent]);
+
+  const handleSkipPage = useCallback(() => {
+    emitTourEvent({
+      type: "tour_skipped",
+      pageId: config.pageId,
+      contextKey,
+      stepId: tour.currentStep?.id,
+      stepIndex: tour.currentIndex,
+      totalSteps: tour.applicableSteps.length,
+    });
+    tour.skipPage();
+  }, [tour, config.pageId, contextKey, emitTourEvent]);
+
+  const handleSkipAll = useCallback(() => {
+    emitTourEvent({
+      type: "tour_skip_all",
+      pageId: config.pageId,
+      contextKey,
+      stepId: tour.currentStep?.id,
+    });
+    tour.skipAll();
+  }, [tour, config.pageId, contextKey, emitTourEvent]);
 
   // Body Scroll Lock during active tour
   useEffect(() => {
@@ -69,13 +150,13 @@ export function InteractivePageTour({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        tour.skipPage();
+        handleSkipPage();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [tour.isRunning, tour.skipPage]);
+  }, [tour.isRunning, handleSkipPage]);
 
   // Target Resolution & Measurement
   useLayoutEffect(() => {
@@ -181,14 +262,14 @@ export function InteractivePageTour({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[9997] bg-black/60 backdrop-blur-[1px] pointer-events-auto"
+        className="fixed inset-0 z-[9990] bg-black/50 supports-[backdrop-filter]:backdrop-blur-[1px] pointer-events-auto"
         aria-hidden="true"
-        onClick={tour.skipPage}
+        onClick={handleSkipPage}
       />
 
       {/* Spotlight cutout */}
       <div
-        className="fixed z-[9998] rounded-xl ring-4 ring-blue-500/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.60)] pointer-events-none transition-all duration-200"
+        className="fixed z-[9991] rounded-xl ring-4 ring-blue-500/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.60)] pointer-events-none transition-all duration-200"
         style={{
           top: targetRect.top,
           left: targetRect.left,
@@ -198,12 +279,24 @@ export function InteractivePageTour({
         aria-hidden="true"
       />
 
+      {/* Pulsing spotlight ring (compositor-friendly, ring-only scale) */}
+      <div
+        className="pointer-events-none fixed z-[9992] rounded-xl border-2 border-white/80 shadow-[0_0_0_3px_rgba(255,255,255,0.12)] animate-tour-pulse"
+        style={{
+          top: targetRect.top - 4,
+          left: targetRect.left - 4,
+          width: targetRect.width + 8,
+          height: targetRect.height + 8,
+        }}
+        aria-hidden="true"
+      />
+
       {/* Explanation Card */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`fixed left-4 right-4 z-[9999] rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-2xl transition-all duration-200 sm:left-auto sm:right-6 sm:w-[380px] ${
+        className={`fixed left-4 right-4 z-[9999] rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-2xl animate-tour-card-enter transition-all duration-200 sm:left-auto sm:right-6 sm:w-[380px] ${
           position === "bottom"
             ? "bottom-[calc(1rem+env(safe-area-inset-bottom))]"
             : "top-4"
@@ -217,7 +310,7 @@ export function InteractivePageTour({
 
           <button
             type="button"
-            onClick={tour.skipPage}
+            onClick={handleSkipPage}
             className="min-h-[44px] px-2 text-xs font-semibold text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white cursor-pointer"
           >
             Skip
@@ -263,7 +356,7 @@ export function InteractivePageTour({
 
           <button
             type="button"
-            onClick={tour.next}
+            onClick={handleNext}
             className="min-h-[44px] flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] px-4 text-xs sm:text-sm font-bold text-white shadow-sm transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             {nextLabel}
@@ -273,7 +366,7 @@ export function InteractivePageTour({
         {/* Skip All (Global) */}
         <button
           type="button"
-          onClick={tour.skipAll}
+          onClick={handleSkipAll}
           className="mt-2.5 min-h-[40px] w-full text-center text-[11px] font-medium text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 cursor-pointer"
         >
           Don't show guides automatically again

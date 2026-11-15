@@ -700,3 +700,55 @@ html, body {
   opacity: 1 !important;
 }
 
+/* =========================================================
+   Guided Tour — Lightweight Motion
+   GPU/compositor-friendly for low-end mobile devices
+   ========================================================= */
+
+@keyframes tour-pulse {
+  0%,
+  100% {
+    opacity: 0.82;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1.015);
+  }
+}
+
+@keyframes tour-card-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Spotlight ring only (never apply to target DOM element) */
+.animate-tour-pulse {
+  animation: tour-pulse 2.4s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* Explanation card entrance (translate3d keeps animation compositor-friendly) */
+.animate-tour-card-enter {
+  animation: tour-card-enter 180ms ease-out both;
+  will-change: transform, opacity;
+}
+
+/* Reduce motion for users/devices requesting reduced animation */
+@media (prefers-reduced-motion: reduce) {
+  .animate-tour-pulse,
+  .animate-tour-card-enter {
+    animation: none !important;
+    will-change: auto;
+  }
+}
+
+

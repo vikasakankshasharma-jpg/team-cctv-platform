@@ -63,6 +63,46 @@ export type TourTriggerRenderer = (
   openTour: () => void,
 ) => ReactNode;
 
+export type TourAnalyticsEvent =
+  | {
+      type: "tour_started";
+      pageId: string;
+      contextKey?: string;
+      stepId?: string;
+    }
+  | {
+      type: "tour_step_viewed";
+      pageId: string;
+      contextKey?: string;
+      stepId: string;
+      stepIndex: number;
+      totalSteps: number;
+    }
+  | {
+      type: "tour_completed";
+      pageId: string;
+      contextKey?: string;
+      totalSteps: number;
+    }
+  | {
+      type: "tour_skipped";
+      pageId: string;
+      contextKey?: string;
+      stepId?: string;
+      stepIndex?: number;
+      totalSteps?: number;
+    }
+  | {
+      type: "tour_skip_all";
+      pageId: string;
+      contextKey?: string;
+      stepId?: string;
+    };
+
+export type TourAnalyticsCallback = (
+  event: TourAnalyticsEvent,
+) => void;
+
 export type UsePageTourOptions = {
   config: PageTourConfig;
   activeStep?: number | string;

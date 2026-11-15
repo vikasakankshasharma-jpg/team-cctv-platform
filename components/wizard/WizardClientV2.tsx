@@ -24,6 +24,7 @@ import { WhatsAppOtpNotice } from "@/components/shared/WhatsAppOtpNotice";
 import { extractErrorMessage } from "@/lib/utils";
 import { InteractivePageTour } from "@/components/tour/InteractivePageTour";
 import { cctvWizardTour } from "@/components/tour/tours/cctv-wizard-tour";
+import { trackTourEvent } from "@/lib/analytics/tour-analytics";
 
 const GOOGLE_MAPS_LIBRARIES: any = ["places"];
 
@@ -3251,6 +3252,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
               config={cctvWizardTour}
               activeStep={step}
               translate={(key) => t(key)}
+              onTourEvent={trackTourEvent}
               renderTrigger={(openTour) => (
                 <button
                   type="button"

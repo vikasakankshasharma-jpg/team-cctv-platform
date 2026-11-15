@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { TrendingUp, Clock, CheckCircle2, IndianRupee, History, AlertTriangle, Calculator, FileText, Download } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { InteractivePageTour } from "@/components/tour/InteractivePageTour";
+import { partnerCommissionsTour } from "@/components/tour/tours/partner-commissions-tour";
+import { trackTourEvent } from "@/lib/analytics/tour-analytics";
 
 const downloadCSV = (data: any[], filename: string) => {
   const headers = ['Date', 'Lead/Customer', 'Amount (INR)', 'Status', 'Type'];
@@ -65,17 +68,35 @@ export function PartnerCommissionsClient({ records, summary }: PartnerCommission
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0">
-              <TrendingUp className="w-5 h-5 text-amber-500" />
-            </div>
-            {t("prt_comm_title", "Commission Ledger")}
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0">
+                <TrendingUp className="w-5 h-5 text-amber-500" />
+              </div>
+              {t("prt_comm_title", "Commission Ledger")}
+            </h1>
+            <InteractivePageTour
+              config={partnerCommissionsTour}
+              translate={(key) => t(key)}
+              onTourEvent={trackTourEvent}
+              renderTrigger={(openTour) => (
+                <button
+                  type="button"
+                  onClick={openTour}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-bold text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-all cursor-pointer shadow-xs active:scale-95"
+                  aria-label="How this ledger works"
+                >
+                  <span aria-hidden="true">💡</span>
+                  <span>{t("tour_guide", "Guide")}</span>
+                </button>
+              )}
+            />
+          </div>
           <p className="text-sm font-medium text-gray-500 mt-2 max-w-lg">
             {t("prt_comm_sub", "Detailed history of your earnings. Payouts automatically include Govt TDS deductions (Sec 194H) and are transferred to your bank account.")}
           </p>
         </div>
-        <button onClick={() => downloadCSV(records, `commissions_${new Date().toISOString().slice(0,7)}.csv`)} className="flex items-center justify-center gap-2 px-4 py-2.5 h-auto whitespace-normal bg-blue-600 text-white font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shrink-0">
+        <button onClick={() => downloadCSV(records, `commissions_${new Date().toISOString().slice(0,7)}.csv`)} className="flex items-center justify-center gap-2 px-4 py-2.5 h-auto whitespace-normal bg-blue-600 text-white font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shrink-0 cursor-pointer">
           <Download className="w-4 h-4 shrink-0" /> {t("prt_dl_stmt", "Download Statement")}
         </button>
       </div>
@@ -94,7 +115,7 @@ export function PartnerCommissionsClient({ records, summary }: PartnerCommission
       )}
 
       {/* The 194H Tax Breakdown Card */}
-      <div className="bg-white rounded-[32px] p-6 sm:p-8 border shadow-sm relative overflow-hidden group">
+      <div data-tour="partner-commission-summary" className="bg-white rounded-[32px] p-6 sm:p-8 border shadow-sm relative overflow-hidden group">
          <div className="absolute top-0 right-0 w-64 h-64 bg-gray-900/5 rounded-bl-[100px] -z-10" />
          
          <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -149,7 +170,7 @@ export function PartnerCommissionsClient({ records, summary }: PartnerCommission
       </div>
 
       {/* History Table */}
-      <div className="bg-white rounded-[24px] border shadow-sm overflow-hidden">
+      <div data-tour="partner-payout-ledger" className="bg-white rounded-[24px] border shadow-sm overflow-hidden">
         <div className="p-6 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h2 className="text-lg font-bold flex items-center gap-2">
             <History className="w-5 h-5 text-gray-400 shrink-0" />

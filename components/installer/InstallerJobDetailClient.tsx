@@ -16,6 +16,9 @@ import BarcodeScanner from "./BarcodeScanner";
 import { JobSignoffModal } from "./JobSignoffModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Lead } from "@/types";
+import { InteractivePageTour } from "@/components/tour/InteractivePageTour";
+import { installerJobTour } from "@/components/tour/tours/installer-job-tour";
+import { trackTourEvent } from "@/lib/analytics/tour-analytics";
 
 export default function InstallerJobDetailClient({ 
   leadId, 
@@ -194,11 +197,29 @@ export default function InstallerJobDetailClient({
   return (
     <div className="max-w-3xl space-y-8 pb-20 animate-in fade-in duration-500">
       
-      <Link href="/installer/jobs" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">
-        <ArrowLeft className="w-4 h-4 shrink-0" /> {t("inst_back_pipeline", "Back to Pipeline")}
-      </Link>
+      <div className="flex items-center justify-between gap-2">
+        <Link href="/installer/jobs" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">
+          <ArrowLeft className="w-4 h-4 shrink-0" /> {t("inst_back_pipeline", "Back to Pipeline")}
+        </Link>
+        <InteractivePageTour
+          config={installerJobTour}
+          translate={(key) => t(key)}
+          onTourEvent={trackTourEvent}
+          renderTrigger={(openTour) => (
+            <button
+              type="button"
+              onClick={openTour}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card text-xs font-bold text-foreground hover:bg-muted transition-all cursor-pointer shadow-xs active:scale-95"
+              aria-label="How this job works"
+            >
+              <span aria-hidden="true">💡</span>
+              <span>{t("tour_guide", "Guide")}</span>
+            </button>
+          )}
+        />
+      </div>
 
-      <div className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-6">
+      <div data-tour="job-status" className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
             <h1 className="text-2xl font-black text-foreground tracking-tight">{lead.customer_name}</h1>
@@ -280,7 +301,7 @@ export default function InstallerJobDetailClient({
       </div>
 
       {/* Hardware Requirements & Scanning */}
-      <div className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-4">
+      <div data-tour="job-device-scan" className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-4">
         <h3 className="font-bold text-foreground flex items-center gap-2">
           <Package className="w-5 h-5 text-primary shrink-0" /> {t("inst_hw_track_title", "Hardware Tracking ({count} items)", { count: String(flatHardware.length) })}
         </h3>
@@ -424,7 +445,7 @@ export default function InstallerJobDetailClient({
 
       {/* Proof of Installation */}
       {isAssigned && !isCompleted && (
-        <div className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-6">
+        <div data-tour="job-installation-photos" className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-6">
           <h3 className="font-bold text-foreground flex items-center gap-2">
             <Camera className="w-5 h-5 text-primary shrink-0" /> {t("inst_proof_title", "Proof of Installation (Per-Product Before/After Photos)")}
           </h3>
@@ -547,7 +568,14 @@ export default function InstallerJobDetailClient({
             >
               {t("inst_report_blockage", "Report Blockage / Reschedule")}
             </button>
-            <button onClick={() => setShowSignoffModal(true)} className="w-full py-4 px-4 bg-emerald-500 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 whitespace-normal h-auto text-center"><CheckCircle2 className="w-5 h-5 shrink-0" /> {t("inst_proceed_signoff", "Proceed to Customer Sign-Off")}</button>
+            <button 
+              type="button"
+              data-tour="job-completion-pin"
+              onClick={() => setShowSignoffModal(true)} 
+              className="w-full py-4 px-4 bg-emerald-500 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 whitespace-normal h-auto text-center cursor-pointer"
+            >
+              <CheckCircle2 className="w-5 h-5 shrink-0" /> {t("inst_proceed_signoff", "Proceed to Customer Sign-Off")}
+            </button>
           </div>
         </div>
       )}

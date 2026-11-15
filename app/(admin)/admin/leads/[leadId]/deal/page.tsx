@@ -9,6 +9,9 @@ import { calculateQuotationProfitBreakup } from "@/lib/quotation-profit";
 import { QuotationProfitBreakupCard } from "@/components/admin/leads/QuotationProfitBreakupCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { toast } from "sonner";
+import { InteractivePageTour } from "@/components/tour/InteractivePageTour";
+import { adminDealTour } from "@/components/tour/tours/admin-deal-tour";
+import { trackTourEvent } from "@/lib/analytics/tour-analytics";
 
 export default function DealConversionPage() {
   const { t } = useTranslation();
@@ -137,12 +140,30 @@ export default function DealConversionPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
-      <div className="mb-8 border-b pb-4">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 leading-snug">{t("adm_deal_title", "Prepare Quote for Customer")}</h1>
-        <p className="text-gray-500 mt-1 leading-relaxed">{t("adm_deal_sub", "Review quote financials, apply any necessary discount, and send it to {name} for approval.", { name: custName })}</p>
+      <div className="mb-8 border-b pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 leading-snug">{t("adm_deal_title", "Prepare Quote for Customer")}</h1>
+          <p className="text-gray-500 mt-1 leading-relaxed">{t("adm_deal_sub", "Review quote financials, apply any necessary discount, and send it to {name} for approval.", { name: custName })}</p>
+        </div>
+        <InteractivePageTour
+          config={adminDealTour}
+          translate={(key) => t(key)}
+          onTourEvent={trackTourEvent}
+          renderTrigger={(openTour) => (
+            <button
+              type="button"
+              onClick={openTour}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-bold text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-all cursor-pointer shadow-xs active:scale-95 self-start sm:self-auto"
+              aria-label="How this deal page works"
+            >
+              <span aria-hidden="true">💡</span>
+              <span>{t("tour_guide", "Guide")}</span>
+            </button>
+          )}
+        />
       </div>
 
-      <Card>
+      <Card data-tour="deal-price-breakup">
         <CardHeader>
           <CardTitle className="leading-snug">{t("adm_deal_fin_sum", "Financial Summary")}</CardTitle>
         </CardHeader>
@@ -175,7 +196,7 @@ export default function DealConversionPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="deal-commission-bucket">
         <CardHeader>
           <CardTitle className="leading-snug">{t("adm_deal_mgn_stat", "Margin Status")}</CardTitle>
         </CardHeader>
@@ -214,7 +235,7 @@ export default function DealConversionPage() {
             </div>
           )}
 
-          <div className="mt-6">
+          <div data-tour="deal-profit-waterfall" className="mt-6">
             <QuotationProfitBreakupCard
               quote={{ pricingSnapshot: dynamicPricing, profit_settings: lead.profit_settings, profit_context: lead.profit_context }}
               settings={lead.profit_settings}
@@ -232,9 +253,11 @@ export default function DealConversionPage() {
           {t("adm_qm_del_cancel", "Cancel")}
         </button>
         <button 
+          type="button"
+          data-tour="deal-send-customer"
           onClick={handleSendToCustomer}
           disabled={saving}
-          className="px-6 py-2.5 bg-blue-600 text-white rounded-md font-bold hover:bg-blue-700 disabled:opacity-50 whitespace-normal leading-snug"
+          className="px-6 py-2.5 bg-blue-600 text-white rounded-md font-bold hover:bg-blue-700 disabled:opacity-50 whitespace-normal leading-snug cursor-pointer"
         >
           {saving ? t("adm_deal_sending", "Sending...") : t("adm_deal_send_btn", "Send Revised Quote to Customer")}
         </button>

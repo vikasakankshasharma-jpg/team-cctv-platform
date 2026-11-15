@@ -35,10 +35,19 @@ The `team-cctv-platform` relies on a unified design system powered by **shadcn/u
 - **Universal Full Map View & High-Density Territory Workspaces**: For complex spatial tasks (coverage zone creation, postal boundary inspection, and sales beat distribution), maps provide a synchronized **Full Map View** toggle. This expands constrained dialogs or 380px embedded previews into a panoramic, edge-to-edge workspace (`fixed inset-0 z-[9999]`) with Google Maps road/satellite layer controls, micro-hub halo decluttering (`Halos: ON/OFF`), and 1-click `⚡ Auto-Trace Territory` convex hull generation. Escape key listeners and prominent exit buttons guarantee intuitive navigation back to standard dashboard layouts.
 
 ## 6. Mobile-First Interactive Guided Tour Architecture (`components/tour/`)
-- **Journey-Wise Step Micro-Tours:** Guidance is triggered contextually per wizard step (`activeStep={step}`) via `InteractivePageTour.tsx` rather than a blocking upfront walkthrough.
+- **Journey-Wise Step Micro-Tours:** Guidance is triggered contextually per wizard step (`activeStep={step}`) or per page route via `InteractivePageTour.tsx` rather than a blocking upfront walkthrough.
 - **Hardware Impact Focus:** Explains the real-world impact of button choices (weatherproof bullets vs indoor domes, HD vs IP, storage duration) on hardware, cabling, and 100% GST-paid pricing.
-- **User Agency:** Features explicit `[ Next / Try It ]`, `[ Skip ]` (current step only), and `[ Don't show guides automatically again ]` (`localStorage.setItem('team_tour_skip_all', 'true')`).
+- **User Agency:** Features explicit `[ Next / Try It ]`, `[ Skip ]` (current step only: `team_tour_page_skip:<pageId>`), and `[ Don't show guides automatically again ]` (`localStorage.setItem('team_tour_skip_all', 'true')`).
 - **Header Persistent Trigger:** The `[ 💡 Guide ]` pill is mounted in top headers via `renderTrigger` to eliminate any visual clash with floating WhatsApp widgets or bottom CTA bars.
 - **Mobile Viewport Inversion:** Dynamically docks cards above or below the highlighted target based on screen position (`center < viewportHeight / 2 ? 'bottom' : 'top'`), with body scroll locking and iOS safe-area handling (`env(safe-area-inset-bottom)`).
+- **Operational & Staff Coverage:** Extends guided tour coverage across all personas:
+  - Customer Builder (`cctv-wizard`, `quote-catalog`, `quote-review`)
+  - Customer Service & Operations (`track-booking`, `customer-dashboard`)
+  - Admin Deal Closer (`admin-deal-tour`: selling price vs taxable base & GST, margin status, profit waterfall, and approval links)
+  - Installer On-Site Mobile Card (`installer-job-tour`: job status, barcode device scanning, installation before/after proof photos, secret completion PIN verification)
+  - Partner / Promoter Portal (`partner-leads-tour`: pipeline tracking; `partner-commissions-tour`: 194H TDS deduction and net bank payouts)
+- **Decoupled Telemetry Layer (`lib/analytics/tour-analytics.ts`):** Emits allow-listed events (`tour_started`, `tour_step_viewed`, `tour_completed`, `tour_skipped`, `tour_skip_all`) via synchronous custom DOM events and lazy-loaded Firebase Analytics. Enforces zero PII leakage (no customer names, phones, emails, order/quote IDs, or secret PINs).
+- **Compositor-Friendly Mobile Motion:** Utilizes GPU-accelerated CSS keyframes (`animate-tour-pulse`, `animate-tour-card-enter` with `translate3d`), static `supports-[backdrop-filter]:backdrop-blur-[1px]`, ring-only scaling, and `@media (prefers-reduced-motion: reduce)` safety.
 - **Certified Isolation:** Read-only UI overlay; never mutates pricing, GST, or BOM data structures.
+
 

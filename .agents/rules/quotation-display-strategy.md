@@ -94,10 +94,13 @@ Never confuse or revert the quotation presentation strategy for this project. Th
   - WhatsApp OTP and quote links launch via native `<a href="whatsapp://send?phone=...">` (no bare `whatsapp://` or hidden `<iframe>`), with iPadOS detection and adaptive mobile (`wa.me`) vs desktop (`web.whatsapp.com`) fallback (`lib/whatsapp.ts`, `WhatsAppOtpNotice.tsx`).
 
 ## 11. Interactive Page-by-Page Guided Tour Invariants (`components/tour/`)
-- **Journey-Wise Step Micro-Tours:** Guidance is delivered contextually per wizard step (`activeStep={step}`) rather than a blocking upfront tour.
+- **Journey-Wise Step Micro-Tours:** Guidance is delivered contextually per wizard step (`activeStep={step}`) or per page route via `InteractivePageTour.tsx` rather than a blocking upfront tour.
 - **Hardware Impact Focus:** Explains the real-world impact of button choices (weatherproof bullets vs indoor domes, HD vs IP, storage duration) on hardware, cabling, and 100% GST-paid pricing.
-- **User Agency:** Features explicit `[ Next / Try It ]`, `[ Skip ]` (current step only), and `[ Don't show guides automatically again ]` (`localStorage.setItem('team_tour_skip_all', 'true')`).
+- **User Agency:** Features explicit `[ Next / Try It ]`, `[ Skip ]` (current step only: `team_tour_page_skip:<pageId>`), and `[ Don't show guides automatically again ]` (`localStorage.setItem('team_tour_skip_all', 'true')`).
 - **Header Persistent Trigger:** The `[ 💡 Guide ]` pill is mounted in top headers via `renderTrigger` to eliminate any visual clash with floating WhatsApp widgets or bottom CTA bars.
 - **Mobile Viewport Inversion:** Dynamically docks cards above or below the highlighted target based on screen position, with body scroll locking and iOS safe-area handling.
+- **Operational & Staff Persona Coverage:** Extends guided tour coverage across all personas: Customer Builder (`cctv-wizard`, `quote-catalog`, `quote-review`), Operations (`track-booking`, `customer-dashboard`), Admin Deal Closer (`admin-deal-tour`), Installer On-Site Mobile Card (`installer-job-tour`), and Partner Portal (`partner-leads-tour`, `partner-commissions-tour`).
+- **Decoupled Telemetry Layer (`lib/analytics/tour-analytics.ts`):** Emits allow-listed events (`tour_started`, `tour_step_viewed`, `tour_completed`, `tour_skipped`, `tour_skip_all`) via synchronous custom DOM events and lazy-loaded Firebase Analytics. Enforces zero PII leakage (no customer names, phones, emails, order/quote IDs, or secret PINs).
+- **Compositor-Friendly Mobile Motion:** Utilizes GPU-accelerated CSS keyframes (`animate-tour-pulse`, `animate-tour-card-enter` with `translate3d`), static `supports-[backdrop-filter]:backdrop-blur-[1px]`, ring-only scaling, and `@media (prefers-reduced-motion: reduce)` safety.
 - **Certified Isolation:** Read-only UI overlay; never mutates pricing, GST, or BOM data structures.
 

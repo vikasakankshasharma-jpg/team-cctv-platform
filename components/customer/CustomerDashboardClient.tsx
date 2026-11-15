@@ -30,6 +30,7 @@ import { LeadStatusBadge } from "@/components/shared/LeadStatusBadge";
 import { Headphones } from "lucide-react";
 import { InteractivePageTour } from "@/components/tour/InteractivePageTour";
 import { customerDashboardTour } from "@/components/tour/tours/customer-dashboard-tour";
+import { trackTourEvent } from "@/lib/analytics/tour-analytics";
 
 export interface CustomerQuoteItem {
   quoteId: string;
@@ -126,6 +127,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                 <InteractivePageTour
                   config={customerDashboardTour}
                   translate={(key) => t(key)}
+                  onTourEvent={trackTourEvent}
                   renderTrigger={(openTour) => (
                     <button
                       type="button"

@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { Search, Filter, Target, Users } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { InteractivePageTour } from "@/components/tour/InteractivePageTour";
+import { partnerLeadsTour } from "@/components/tour/tours/partner-leads-tour";
+import { trackTourEvent } from "@/lib/analytics/tour-analytics";
 
 interface PartnerLeadsClientProps {
   initialLeads: {
@@ -73,18 +76,36 @@ export function PartnerLeadsClient({ initialLeads }: PartnerLeadsClientProps) {
       {/* ── HEADER & FILTERS ────────────────────────────────────────────────── */}
       <div className="flex flex-col lg:flex-row gap-6 lg:items-end justify-between">
         <div>
-          <h1 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0">
-              <Target className="w-5 h-5 text-amber-500" />
-            </div>
-            {t("prt_leads_title", "My Pipeline")}
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0">
+                <Target className="w-5 h-5 text-amber-500" />
+              </div>
+              {t("prt_leads_title", "My Pipeline")}
+            </h1>
+            <InteractivePageTour
+              config={partnerLeadsTour}
+              translate={(key) => t(key)}
+              onTourEvent={trackTourEvent}
+              renderTrigger={(openTour) => (
+                <button
+                  type="button"
+                  onClick={openTour}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-all cursor-pointer shadow-xs active:scale-95"
+                  aria-label="How this page works"
+                >
+                  <span aria-hidden="true">💡</span>
+                  <span>{t("tour_guide", "Guide")}</span>
+                </button>
+              )}
+            />
+          </div>
           <p className="text-sm font-medium text-zinc-500 mt-2 max-w-lg">
             {t("prt_leads_sub", "Track all your referrals in real-time. Full transparency into won and lost deals.")}
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row flex-1 lg:flex-none gap-4 w-full lg:w-auto">
+        <div data-tour="partner-lead-submit" className="flex flex-col sm:flex-row flex-1 lg:flex-none gap-4 w-full lg:w-auto">
           <div className="relative flex-1 lg:w-64 group">
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-amber-500 transition-colors" />
             <input 
@@ -118,7 +139,7 @@ export function PartnerLeadsClient({ initialLeads }: PartnerLeadsClientProps) {
       </div>
 
       {/* ── LEADS TABLE ─────────────────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] overflow-hidden shadow-xl dark:shadow-2xl">
+      <div data-tour="partner-lead-list" className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] overflow-hidden shadow-xl dark:shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-100 dark:border-zinc-800/60 text-zinc-400 dark:text-zinc-600 font-black uppercase text-[10px] tracking-[0.25em]">

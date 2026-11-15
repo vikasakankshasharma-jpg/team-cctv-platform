@@ -17,6 +17,7 @@ import { FullCustomizerPanel } from "./FullCustomizerPanel";
 import { getCanonicalBrandName, getCanonicalBrandKey, getUniqueCanonicalBrands } from "@/lib/brand-utils";
 import { InteractivePageTour } from "@/components/tour/InteractivePageTour";
 import { quoteReviewTour } from "@/components/tour/tours/quote-review-tour";
+import { trackTourEvent } from "@/lib/analytics/tour-analytics";
 
 interface InstantQuotationReviewProps {
   lead: Lead;
@@ -341,6 +342,7 @@ export function InstantQuotationReview({
           <InteractivePageTour
             config={quoteReviewTour}
             translate={(key) => t(key)}
+            onTourEvent={trackTourEvent}
             renderTrigger={(openTour) => (
               <button
                 type="button"

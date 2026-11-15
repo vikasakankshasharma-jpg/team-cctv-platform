@@ -3,3 +3,7 @@ export { quoteCatalogTour } from "./quote-catalog-tour";
 export { quoteReviewTour } from "./quote-review-tour";
 export { trackBookingTour } from "./track-booking-tour";
 export { customerDashboardTour } from "./customer-dashboard-tour";
+export { adminDealTour } from "./admin-deal-tour";
+export { installerJobTour } from "./installer-job-tour";
+export { partnerLeadsTour } from "./partner-leads-tour";
+export { partnerCommissionsTour } from "./partner-commissions-tour";

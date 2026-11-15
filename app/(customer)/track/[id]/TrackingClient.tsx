@@ -24,6 +24,7 @@ import { motion } from "framer-motion";
 import { PaymentStagesWidget } from "@/components/shared/PaymentStagesWidget";
 import { InteractivePageTour } from "@/components/tour/InteractivePageTour";
 import { trackBookingTour } from "@/components/tour/tours/track-booking-tour";
+import { trackTourEvent } from "@/lib/analytics/tour-analytics";
 
 interface TrackingClientProps {
   lead: any;
@@ -77,6 +78,7 @@ export default function TrackingClient({ lead, job, quote, invoice }: TrackingCl
             <InteractivePageTour
               config={trackBookingTour}
               translate={(key) => t(key)}
+              onTourEvent={trackTourEvent}
               renderTrigger={(openTour) => (
                 <button
                   type="button"
