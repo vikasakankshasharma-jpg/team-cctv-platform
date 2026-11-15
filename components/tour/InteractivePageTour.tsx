@@ -17,6 +17,8 @@ import type {
 } from "./tour.types";
 
 import { usePageTour } from "./usePageTour";
+import { useI18nStore } from "@/lib/i18n/store";
+import { useTourDictionary } from "@/lib/i18n/tour-translations";
 
 type InteractivePageTourProps = {
   config: PageTourConfig;
@@ -44,11 +46,28 @@ export function InteractivePageTour({
   showDefaultTrigger = true,
   onTourEvent,
 }: InteractivePageTourProps) {
+  const { locale } = useI18nStore();
+  const tourDict = useTourDictionary(locale);
+
+  const activeTranslate = useCallback<TourTranslationResolver>(
+    (key, context) => {
+      if (translate) {
+        const custom = translate(key, context);
+        if (custom && custom !== key) return custom;
+      }
+      if (tourDict && tourDict[key]) {
+        return tourDict[key];
+      }
+      return key;
+    },
+    [translate, tourDict],
+  );
+
   const tour = usePageTour({
     config,
     activeStep,
     stepKey,
-    translate,
+    translate: activeTranslate,
   });
 
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
