@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { GoogleGenAI } from "@google/genai";
 import { requireAdmin } from "@/lib/auth-server";
 import { isStrictZeroCostModeActive } from "@/lib/billing/budget-tracker";
+import { executeAiGateway } from "@/lib/ai/ai-gateway";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -29,7 +29,7 @@ export interface EnrichmentRow {
 
 // ─── Gemini AI Extractor ─────────────────────────────────────────────────────
 
-async function extractCameraSpecs(products: any[], ai: GoogleGenAI): Promise<Record<string, any>> {
+async function extractCameraSpecs(products: any[], apiKey?: string): Promise<Record<string, any>> {
   const productList = products.map(p => ({
     id: p.id,
     display_name: p.display_name || "",
@@ -73,25 +73,27 @@ Rules:
 
 Return ONLY valid JSON. No explanation text.`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
-    config: { 
-      responseMimeType: "application/json",
-      maxOutputTokens: 1000,
-      temperature: 0.1
-    },
+  const gatewayRes = await executeAiGateway({
+    task: "catalog-spec-extraction",
+    prompt,
+    maxOutputTokens: 500,
+    temperature: 0.1,
+    responseMimeType: "application/json",
+    customApiKey: apiKey,
   });
 
+  if (!gatewayRes.success || !gatewayRes.text) {
+    return {};
+  }
+
   try {
-    const raw = response.text?.trim() || "{}";
-    return JSON.parse(raw);
+    return JSON.parse(gatewayRes.text.trim());
   } catch {
     return {};
   }
 }
 
-async function extractRecorderSpecs(products: any[], ai: GoogleGenAI): Promise<Record<string, any>> {
+async function extractRecorderSpecs(products: any[], apiKey?: string): Promise<Record<string, any>> {
   const productList = products.map(p => ({
     id: p.id,
     display_name: p.display_name || "",
@@ -130,19 +132,21 @@ Rules:
 
 Return ONLY valid JSON. No explanation text.`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
-    config: { 
-      responseMimeType: "application/json",
-      maxOutputTokens: 1000,
-      temperature: 0.1
-    },
+  const gatewayRes = await executeAiGateway({
+    task: "catalog-spec-extraction",
+    prompt,
+    maxOutputTokens: 500,
+    temperature: 0.1,
+    responseMimeType: "application/json",
+    customApiKey: apiKey,
   });
 
+  if (!gatewayRes.success || !gatewayRes.text) {
+    return {};
+  }
+
   try {
-    const raw = response.text?.trim() || "{}";
-    return JSON.parse(raw);
+    return JSON.parse(gatewayRes.text.trim());
   } catch {
     return {};
   }
@@ -346,8 +350,6 @@ export async function POST(req: NextRequest) {
     await requireAdmin();
     const body: EnrichRequest = await req.json();
     const { product_ids, category, api_key } = body;
-    
-    const ai = api_key ? new GoogleGenAI({ apiKey: api_key }) : new GoogleGenAI({});
 
     if (!product_ids?.length || !category) {
       return NextResponse.json({ error: "product_ids and category are required" }, { status: 400 });
@@ -395,8 +397,8 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < allProducts.length; i += BATCH_SIZE) {
       const batchProducts = allProducts.slice(i, i + BATCH_SIZE);
       const results = category === "cctv_camera"
-        ? await extractCameraSpecs(batchProducts, ai)
-        : await extractRecorderSpecs(batchProducts, ai);
+        ? await extractCameraSpecs(batchProducts, api_key)
+        : await extractRecorderSpecs(batchProducts, api_key);
       allAiResults = { ...allAiResults, ...results };
     }
 

@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { autoCorrectBrainEntry } from "@/lib/ai/vector-db";
-import { GoogleGenAI } from "@google/genai";
+import { executeAiGateway } from "@/lib/ai/ai-gateway";
 import { isStrictZeroCostModeActive } from "@/lib/billing/budget-tracker";
-
-const ai = new GoogleGenAI({});
 
 export async function POST(req: NextRequest) {
   try {
@@ -52,18 +50,14 @@ Your task:
 2. Provide the absolute perfect, most accurate, and helpful response.
 3. OUTPUT ONLY the perfect response. Do not include your analysis or apologies in the output, just the raw text of the perfect answer that the Student AI should have said.`;
 
-      const chatResponse = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: [
-          { role: "user", parts: [{ text: systemPrompt }] }
-        ],
-        config: {
-          maxOutputTokens: 500,
-          temperature: 0.2
-        }
+      const gatewayRes = await executeAiGateway({
+        task: "night-school",
+        prompt: systemPrompt,
+        maxOutputTokens: 500,
+        temperature: 0.2,
       });
 
-      const correctedAnswer = chatResponse.text?.trim();
+      const correctedAnswer = gatewayRes.success ? gatewayRes.text.trim() : "";
 
       if (correctedAnswer) {
         // 3. Update the Brain with the perfect answer

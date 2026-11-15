@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
-import { cleanEnvVar } from "@/lib/env-utils";
+import { executeAiGateway } from "@/lib/ai/ai-gateway";
 import { isStrictZeroCostModeActive } from "@/lib/billing/budget-tracker";
 
 export const dynamic = 'force-dynamic';
@@ -53,11 +53,12 @@ export async function GET(req: NextRequest) {
       promptData += `PIN ${pin}: ${areas.join(", ")}\n`;
     }
 
+    const fallbackTehsils: Record<string, string[]> = {
+      [`${district} Hub`]: Object.keys(pincodeMap)
+    };
+
     // Zero-Cost Mode Circuit Breaker: Group by District Central without billable API calls
     if (await isStrictZeroCostModeActive()) {
-      const fallbackTehsils: Record<string, string[]> = {
-        [`${district} Hub`]: Object.keys(pincodeMap)
-      };
       await cacheRef.set({
         state,
         district,
@@ -67,15 +68,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(fallbackTehsils);
     }
 
-    // Fetch Gemini
-    const apiKey = cleanEnvVar(process.env.GEMINI_API_KEY);
-    if (!apiKey) {
-      return NextResponse.json({ error: "Gemini API Key missing" }, { status: 500 });
-    }
-
-    const { GoogleGenAI } = await import("@google/genai");
-    const ai = new GoogleGenAI({ apiKey });
-    
     const prompt = `You are a geographic expert of India. I have a list of PINCODEs and their delivery sub-post offices (villages/localities) for the district of ${district.toUpperCase()}, ${state.toUpperCase()}.
 
 Based on the actual geographic grouping of these villages, classify these PINCODEs into their respective Tehsils (or Talukas).
@@ -92,17 +84,20 @@ Example output format:
   "Chaksu": ["303901", "303903"]
 }`;
 
-    const aiRes = await ai.models.generateContent({
+    const gatewayRes = await executeAiGateway({
+      task: "geo-clustering",
+      prompt,
       model: "gemini-2.5-flash",
-      contents: prompt,
-      config: { 
-        responseMimeType: "application/json",
-        maxOutputTokens: 1000,
-        temperature: 0.1
-      },
+      maxOutputTokens: 500,
+      temperature: 0.1,
+      responseMimeType: "application/json",
     });
 
-    const text = aiRes.text?.replace(/```json|```/g, '').trim() || "{}";
+    if (!gatewayRes.success || !gatewayRes.text) {
+      return NextResponse.json(fallbackTehsils);
+    }
+
+    const text = gatewayRes.text.replace(/```json|```/g, '').trim() || "{}";
     const parsedTehsils = JSON.parse(text);
 
     // Save to Firestore
