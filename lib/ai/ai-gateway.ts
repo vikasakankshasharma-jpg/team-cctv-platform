@@ -25,7 +25,8 @@ export type AiTaskType =
 
 export interface AiGatewayRequest {
   task: AiTaskType;
-  prompt: string;
+  prompt?: string;
+  contents?: any[];
   systemInstruction?: string;
   model?: string;
   maxOutputTokens?: number;
@@ -33,6 +34,7 @@ export interface AiGatewayRequest {
   responseMimeType?: string;
   responseSchema?: any;
   customApiKey?: string;
+  tools?: any[];
 }
 
 export interface AiGatewayResult {
@@ -41,6 +43,8 @@ export interface AiGatewayResult {
   blocked: boolean;
   blockReason?: string;
   model: string;
+  functionCalls?: any[];
+  candidates?: any[];
   tokensUsed?: {
     promptTokens: number;
     completionTokens: number;
@@ -84,6 +88,8 @@ function recordLedger(entry: AiLedgerEntry) {
   if (COST_LEDGER.length > MAX_LEDGER_ENTRIES) {
     COST_LEDGER.pop();
   }
+  // Persistent L2 Observability: emit structured log for Google Cloud Logging
+  console.info(`[AI_AUDIT_LEDGER] ${JSON.stringify(entry)}`);
 }
 
 /**
@@ -112,7 +118,7 @@ export async function executeAiGateway(request: AiGatewayRequest): Promise<AiGat
       model: requestedModel,
       status: "BLOCKED",
       blockReason: "STRICT_ZERO_COST_MODE_ACTIVE",
-      promptChars: request.prompt.length,
+      promptChars: (request.prompt || "").length,
       costInrEstimated: 0,
       durationMs,
     });
@@ -137,7 +143,7 @@ export async function executeAiGateway(request: AiGatewayRequest): Promise<AiGat
       model: requestedModel,
       status: "BLOCKED",
       blockReason: "AI_FEATURES_DISABLED_GLOBALLY",
-      promptChars: request.prompt.length,
+      promptChars: (request.prompt || "").length,
       costInrEstimated: 0,
       durationMs,
     });
@@ -163,7 +169,7 @@ export async function executeAiGateway(request: AiGatewayRequest): Promise<AiGat
       model: requestedModel,
       status: "BLOCKED",
       blockReason,
-      promptChars: request.prompt.length,
+      promptChars: (request.prompt || "").length,
       costInrEstimated: 0,
       durationMs,
     });
@@ -189,7 +195,7 @@ export async function executeAiGateway(request: AiGatewayRequest): Promise<AiGat
       model: requestedModel,
       status: "BLOCKED",
       blockReason,
-      promptChars: request.prompt.length,
+      promptChars: (request.prompt || "").length,
       costInrEstimated: 0,
       durationMs,
     });
@@ -205,7 +211,7 @@ export async function executeAiGateway(request: AiGatewayRequest): Promise<AiGat
   }
 
   // 5. ZERO-VISION PAYLOAD INSPECTION (Block Base64 images)
-  const fullPayloadString = `${request.prompt} ${request.systemInstruction || ""}`;
+  const fullPayloadString = `${request.prompt || ""} ${request.systemInstruction || ""} ${JSON.stringify(request.contents || [])}`;
   if (/data:image\//i.test(fullPayloadString) || /;base64,/i.test(fullPayloadString)) {
     const durationMs = Date.now() - startTime;
     const blockReason = "Multimodal/Base64 image payloads are forbidden at the AI Gateway level to prevent vision token burn.";
@@ -216,7 +222,7 @@ export async function executeAiGateway(request: AiGatewayRequest): Promise<AiGat
       model: requestedModel,
       status: "BLOCKED",
       blockReason,
-      promptChars: request.prompt.length,
+      promptChars: (request.prompt || "").length,
       costInrEstimated: 0,
       durationMs,
     });
@@ -232,8 +238,8 @@ export async function executeAiGateway(request: AiGatewayRequest): Promise<AiGat
   }
 
   // 6. INPUT TOKEN CLAMPING
-  let effectivePrompt = request.prompt;
-  if (effectivePrompt.length > MAX_PROMPT_CHARS) {
+  let effectivePrompt = request.prompt || "";
+  if (effectivePrompt && effectivePrompt.length > MAX_PROMPT_CHARS) {
     console.warn(`[AI Gateway] Prompt exceeded ${MAX_PROMPT_CHARS} chars, clamping input.`);
     effectivePrompt = effectivePrompt.slice(0, MAX_PROMPT_CHARS);
   }
@@ -274,7 +280,8 @@ export async function executeAiGateway(request: AiGatewayRequest): Promise<AiGat
   }
 
   // 9. ESTIMATED COST PRE-CALCULATION
-  const estimatedInputTokens = Math.ceil(effectivePrompt.length / 4);
+  const promptLen = effectivePrompt.length || JSON.stringify(request.contents || []).length;
+  const estimatedInputTokens = Math.ceil(promptLen / 4);
   const estimatedCostInr = Number(
     ((estimatedInputTokens / 1000) * COST_PER_1K_INPUT_INR +
     (effectiveMaxOutputTokens / 1000) * COST_PER_1K_OUTPUT_INR).toFixed(4)
@@ -299,10 +306,22 @@ export async function executeAiGateway(request: AiGatewayRequest): Promise<AiGat
     if (request.responseSchema) {
       config.responseSchema = request.responseSchema;
     }
+    if (request.tools) {
+      // Hard check: ensure NO tool has googleSearch
+      const toolStr = JSON.stringify(request.tools);
+      if (/googleSearch/i.test(toolStr)) {
+        throw new Error("Google Search grounding tool is permanently banned by the Cost Safety Constitution.");
+      }
+      config.tools = request.tools;
+    }
+
+    const payloadContents = request.contents || [
+      { role: "user", parts: [{ text: effectivePrompt }] }
+    ];
 
     const response = await ai.models.generateContent({
       model: requestedModel,
-      contents: [{ role: "user", parts: [{ text: effectivePrompt }] }],
+      contents: payloadContents,
       config,
     });
 
@@ -315,7 +334,7 @@ export async function executeAiGateway(request: AiGatewayRequest): Promise<AiGat
       task: request.task,
       model: requestedModel,
       status: "SUCCESS",
-      promptChars: effectivePrompt.length,
+      promptChars: promptLen,
       completionChars: responseText.length,
       costInrEstimated: estimatedCostInr,
       durationMs,
@@ -326,6 +345,8 @@ export async function executeAiGateway(request: AiGatewayRequest): Promise<AiGat
       text: responseText,
       blocked: false,
       model: requestedModel,
+      functionCalls: response.functionCalls,
+      candidates: response.candidates,
       costInrEstimated: estimatedCostInr,
       durationMs,
     };
@@ -357,3 +378,26 @@ export async function executeAiGateway(request: AiGatewayRequest): Promise<AiGat
     }
   }
 }
+
+/**
+ * Controlled embedding generation through Gateway.
+ * Returns empty array if Zero-Cost Mode is active.
+ */
+export async function executeAiEmbedding(text: string): Promise<number[]> {
+  if (await isStrictZeroCostModeActive()) return [];
+  if (!text || text.trim().length === 0) return [];
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    const ai = apiKey ? new GoogleGenAI({ apiKey }) : new GoogleGenAI({});
+    const response = await ai.models.embedContent({
+      model: "gemini-embedding-001",
+      contents: text.slice(0, 1000),
+    });
+    const values = response.embeddings?.[0]?.values || [];
+    return values.length > 2048 ? values.slice(0, 2048) : values;
+  } catch (err) {
+    console.warn("[AI Gateway] Embedding skipped:", err);
+    return [];
+  }
+}
+

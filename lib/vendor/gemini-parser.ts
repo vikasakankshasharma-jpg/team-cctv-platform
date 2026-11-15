@@ -1,9 +1,8 @@
-import { VertexAI, SchemaType } from "@google-cloud/vertexai";
 import { guessCategory, guessBrand, guessTechnologies, guessResolution, guessChannels, guessRackUHeight, guessCableLength, guessVoltage, guessAmperage, guessWattage } from "./ai-parser";
 import { isStrictZeroCostModeActive } from "@/lib/billing/budget-tracker";
+import { executeAiGateway } from "@/lib/ai/ai-gateway";
 
 export interface GeminiExtractionResult {
-
   category: string;
   brand?: string;
   technologies: string[];
@@ -20,56 +19,6 @@ export interface GeminiExtractionResult {
   network_speed?: string;
   confidence_score: number;
   ai_reasoning: string;
-}
-
-const ProductSchema = {
-  type: SchemaType.OBJECT,
-  properties: {
-    category: {
-      type: SchemaType.STRING,
-      description: "Must be one of: cctv_camera, recorder, storage, connector, cable, power_device, display, camera_mount, rack, network, hdmi_cable, accessories, others, unidentified",
-    },
-    brand: {
-      type: SchemaType.STRING,
-      description: "The brand of the product (e.g. Dahua, Hikvision, CP Plus). Return empty string if unknown.",
-    },
-    technologies: {
-      type: SchemaType.ARRAY,
-      items: { type: SchemaType.STRING },
-      description: "Array of specifications e.g. ['H.265', 'PoE', 'WDR', 'LED', 'IR']",
-    },
-    resolution_mp: { type: SchemaType.NUMBER, description: "Megapixel resolution (e.g. 2, 4, 8) if applicable." },
-    channels: { type: SchemaType.NUMBER, description: "Number of channels (e.g. 4, 8, 16) if recorder." },
-    rack_u_height: { type: SchemaType.NUMBER, description: "U-height (e.g. 4, 6, 9) if rack." },
-    cable_length_m: { type: SchemaType.NUMBER, description: "Length in meters (e.g. 90, 305) if cable." },
-    power_voltage_v: { type: SchemaType.NUMBER, description: "Output voltage (e.g. 12, 19, 24) if power device." },
-    power_amperage_a: { type: SchemaType.NUMBER, description: "Amperage (e.g. 1.7, 5, 10) if power device." },
-    power_wattage_w: { type: SchemaType.NUMBER, description: "Wattage (e.g. 60, 120) if power device." },
-    storage_type: { type: SchemaType.STRING, description: "Storage drive type (e.g. HDD, SSD, MicroSD) if storage." },
-    storage_capacity_tb: { type: SchemaType.NUMBER, description: "Storage capacity in TB (e.g. 1, 2, 4) if storage." },
-    network_ports: { type: SchemaType.NUMBER, description: "Number of network ports (e.g. 4, 8, 16, 24) if switch/router." },
-    network_speed: { type: SchemaType.STRING, description: "Speed of network ports (e.g. 10/100 Mbps, Gigabit) if network." },
-    confidence_score: { type: SchemaType.NUMBER, description: "AI confidence score from 0 to 100 based on certainty." },
-    ai_reasoning: { type: SchemaType.STRING, description: "Short explanation (max 2 sentences) of how AI reached this conclusion (e.g. 'Identified as dome camera from image, and 12V power supply inferred from model number using web search')." }
-  },
-  required: ["category", "technologies", "confidence_score", "ai_reasoning"]
-};
-
-// Simple fetch to convert image URL to base64 for Gemini
-async function fetchImageAsBase64(url: string): Promise<{ mimeType: string, data: string } | null> {
-  try {
-    const resp = await fetch(url);
-    if (!resp.ok) return null;
-    const arrayBuffer = await resp.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const mimeType = resp.headers.get('content-type') || 'image/jpeg';
-    return {
-      mimeType,
-      data: buffer.toString('base64')
-    };
-  } catch (e) {
-    return null;
-  }
 }
 
 export async function parseProductWithGemini(
@@ -113,41 +62,19 @@ Title: "${title}"
 ${trainingRules ? `Past Feedback / Training Rules (Strictly adhere to these if they apply):\n${trainingRules}\n\n` : ''}${referencesText}
 Extract the specifications accurately. Ensure the category matches one of the required values and formatting is consistent with any reference products provided.`;
 
-    const parts: any[] = [{ text: promptText }];
+    const gatewayRes = await executeAiGateway({
+      task: "catalog-spec-extraction",
+      prompt: promptText,
+      maxOutputTokens: 500,
+      temperature: 0.1,
+      responseMimeType: "application/json",
+    });
 
-    let responseText = "";
-
-    if (hasVertexAuth) {
-        const vertex_ai = new VertexAI({
-            project: process.env.FIREBASE_PROJECT_ID as string,
-            location: 'us-central1',
-            googleAuthOptions: {
-                credentials: {
-                    client_email: process.env.FIREBASE_CLIENT_EMAIL,
-                    private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-                }
-            }
-        });
-        const model = vertex_ai.preview.getGenerativeModel({
-            model: 'gemini-2.5-flash',
-            generationConfig: {
-                responseMimeType: "application/json",
-                responseSchema: ProductSchema,
-                maxOutputTokens: 600,
-                temperature: 0.1
-            }
-        });
-        const response = await model.generateContent({
-            contents: [{ role: 'user', parts: parts }]
-        });
-        responseText = response.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    } else {
-        return fallbackRegexParser(title, "Standard Gemini API Key fallback has been retired. Please configure Vertex AI credentials.");
+    if (!gatewayRes.success || !gatewayRes.text) {
+      return fallbackRegexParser(title, gatewayRes.blockReason || "AI Gateway blocked extraction");
     }
 
-    if (!responseText) throw new Error("Empty response from Gemini");
-    
-    const parsed = JSON.parse(responseText) as GeminiExtractionResult;
+    const parsed = JSON.parse(gatewayRes.text) as GeminiExtractionResult;
     return parsed;
 
     } catch (err: any) {

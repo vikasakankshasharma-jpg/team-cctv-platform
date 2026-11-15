@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI, Content } from "@google/genai";
 import { getAISecurityContext } from "@/lib/ai/security";
 import { searchBrain, saveToBrain } from "@/lib/ai/vector-db";
 import { queryLocalBrain } from "@/lib/ai/local-brain";
 import { getCostBudgetSettings, recordServiceUsage } from "@/lib/billing/budget-tracker";
 import { wizardToolDefinition, executeQuotationWizardStatus, updateQuotationWizardToolDefinition, executeUpdateQuotationWizard } from "@/lib/ai/tools/wizard";
 import { getChatApiStrings, localizeChatQuickActions } from "@/lib/ai/chat-i18n";
-
-// Initialize Gemini SDK
-// Requires GEMINI_API_KEY in .env
-const ai = new GoogleGenAI({});
+import { executeAiGateway, executeAiEmbedding } from "@/lib/ai/ai-gateway";
 
 export async function POST(req: NextRequest) {
   try {
@@ -77,18 +73,7 @@ export async function POST(req: NextRequest) {
     // 4. Fallback Semantic Search via Vector Embeddings (if enabled in non-strict mode)
     let embedding: number[] = [];
     if (latestMessage.trim().length > 0) {
-      try {
-        const embeddingResponse = await ai.models.embedContent({
-          model: "gemini-embedding-001",
-          contents: latestMessage,
-        });
-        embedding = embeddingResponse.embeddings?.[0]?.values || [];
-        if (embedding.length > 2048) {
-          embedding = embedding.slice(0, 2048);
-        }
-      } catch (embErr) {
-        console.warn("Embedding generation skipped or failed:", embErr);
-      }
+      embedding = await executeAiEmbedding(latestMessage);
     }
 
     if (embedding.length > 0) {
@@ -138,7 +123,7 @@ If they ask for an AMC or Warranty renewal, tell them to close this chat and vis
     const recentMessages = messages.slice(-6);
     const lastMsgIdx = recentMessages.length - 1;
 
-    const contents: Content[] = recentMessages.map((m: any, idx: number) => {
+    const contents: any[] = recentMessages.map((m: any, idx: number) => {
       const parts: any[] = [];
       if (m.content) {
         parts.push({ text: m.content });
@@ -168,26 +153,33 @@ If they ask for an AMC or Warranty renewal, tell them to close this chat and vis
       availableTools = [wizardToolDefinition as any, updateQuotationWizardToolDefinition as any];
     }
 
-    // Explicit systemInstruction enables automatic Google Cloud prompt caching.
-    // maxOutputTokens bounds single-turn costs strictly.
-    const generationConfig: any = {
+    let gatewayRes = await executeAiGateway({
+      task: "chat-fallback",
+      contents,
       systemInstruction: systemPrompt,
       maxOutputTokens: 400,
       temperature: 0.2,
       tools: availableTools.length > 0 ? [{ functionDeclarations: availableTools }] : []
-    };
-
-    let chatResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents,
-      config: generationConfig
     });
+
+    if (!gatewayRes.success && gatewayRes.blocked) {
+      return NextResponse.json({
+        role: "assistant",
+        content: isNonEnglish
+          ? "नमस्ते! कृपया कैमरा चुनने या कोटेशन देखने के लिए नीचे दिए गए बटनों का उपयोग करें। हमारी टीम आपकी सहायता के लिए तैयार है।"
+          : "Hello! Please use the buttons below to configure cameras or view your quotation. Our team is ready to assist you.",
+        quickActions: localizeChatQuickActions([
+          { label: "Chat on WhatsApp", action: "whatsapp_connect" },
+          { label: "Generate Instant Quote", action: "open_wizard" }
+        ], locale)
+      });
+    }
 
     // 4b. Handle Function Calling (Advanced RAG)
     let callCount = 0;
-    while (chatResponse.functionCalls && chatResponse.functionCalls.length > 0 && callCount < 3) {
+    while (gatewayRes.functionCalls && gatewayRes.functionCalls.length > 0 && callCount < 3) {
       callCount++;
-      const call = chatResponse.functionCalls[0];
+      const call = gatewayRes.functionCalls[0];
       let functionResponse: any = {};
 
       if (call.name === "getQuotationWizardStatus") {
@@ -200,8 +192,8 @@ If they ask for an AMC or Warranty renewal, tell them to close this chat and vis
       }
 
       // Append the function call and response to the conversation history
-      if (chatResponse.candidates && chatResponse.candidates.length > 0 && chatResponse.candidates[0].content) {
-        contents.push(chatResponse.candidates[0].content as Content);
+      if (gatewayRes.candidates && gatewayRes.candidates.length > 0 && gatewayRes.candidates[0].content) {
+        contents.push(gatewayRes.candidates[0].content);
       } else {
         contents.push({
           role: "model",
@@ -219,14 +211,17 @@ If they ask for an AMC or Warranty renewal, tell them to close this chat and vis
         }]
       });
 
-      chatResponse = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+      gatewayRes = await executeAiGateway({
+        task: "chat-fallback",
         contents,
-        config: generationConfig
+        systemInstruction: systemPrompt,
+        maxOutputTokens: 400,
+        temperature: 0.2,
+        tools: availableTools.length > 0 ? [{ functionDeclarations: availableTools }] : []
       });
     }
 
-    const answer = chatResponse.text || chatUi.fallbackError;
+    const answer = gatewayRes.text || chatUi.fallbackError;
 
     // 5. Save the new Master AI answer to the Brain for Admin Review
     let savedBrainId = null;
