@@ -53,11 +53,7 @@ export function LocalServiceHubs() {
         useI18nStore.getState().setLocaleFromPincode(getStateLanguage(data.state));
       }
 
-      if (data && data.citySlug) {
-        router.push(`/${data.citySlug}?pincode=${clean}&served=${data.served}`);
-      } else {
-        router.push(`/wizard?pincode=${clean}`);
-      }
+      router.push(`/wizard?pincode=${clean}`);
     } catch {
       router.push(`/wizard?pincode=${clean}`);
     } finally {
@@ -66,7 +62,7 @@ export function LocalServiceHubs() {
   };
 
   return (
-    <section className="py-16 md:py-24 px-4 sm:px-6 bg-white dark:bg-[#050B14] transition-colors border-t border-slate-100 dark:border-zinc-800/80">
+    <section id="service-hubs" className="py-16 md:py-24 px-4 sm:px-6 bg-white dark:bg-[#050B14] transition-colors border-t border-slate-100 dark:border-zinc-800/80">
       <div className="max-w-7xl mx-auto">
         
         {/* Section Header */}

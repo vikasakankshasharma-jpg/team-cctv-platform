@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { PhoneCall, User } from "lucide-react";
+import { PhoneCall, User, MapPin } from "lucide-react";
 import type { Metadata, Viewport } from "next";
 import { SiteFooter } from "@/components/shared/SiteFooter";
 import { WhatsAppFloat } from "@/components/shared/WhatsAppFloat";
@@ -36,7 +36,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 
 import { MobileStickyCtaBar } from "@/components/shared/MobileStickyCtaBar";
-import { ServiceAreaModal } from "@/components/shared/ServiceAreaModal";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 import { LanguageWelcomeModal } from "@/components/shared/LanguageWelcomeModal";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
@@ -76,7 +75,15 @@ export default async function CustomerLayout({
             </Link>
 
             <div className="hidden md:block">
-              <ServiceAreaModal />
+              <Link 
+                href="/#service-hubs"
+                className="flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100/50 dark:border-zinc-800/50 text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shadow-xs cursor-pointer shrink-0"
+              >
+                <MapPin className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
+                <span className="hidden min-[400px]:inline">
+                  <TranslatedText tKey="service_areas" defaultText="Service Areas" />
+                </span>
+              </Link>
             </div>
           </div>
 

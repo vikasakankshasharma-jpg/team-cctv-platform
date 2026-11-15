@@ -61,14 +61,28 @@ export function SiteFooter() {
              </span>
           </div>
           
-          <div className="flex flex-wrap gap-x-4 gap-y-2 sm:gap-8 text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          <div className="flex flex-wrap gap-x-4 gap-y-2 sm:gap-6 text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
              <Link href="/customer/login" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><TranslatedText tKey="footer_customer_portal" defaultText="Customer Portal" /></Link>
              <Link href="/privacy-policy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><TranslatedText tKey="footer_privacy" defaultText="Privacy Policy" /></Link>
              <Link href="/terms-of-service" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><TranslatedText tKey="footer_terms" defaultText="Terms of Service" /></Link>
+             <Link href="/refund-policy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Refund Policy</Link>
              <Link href="/partner/login" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><TranslatedText tKey="footer_partner" defaultText="Partner Login" /></Link>
           </div>
           
-          <p className="text-[11px] sm:text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] mt-2 sm:mt-4">
+          {/* Statutory Business & GST Compliance Footprint */}
+          <div className="w-full md:text-right pt-2 border-t border-zinc-100 dark:border-zinc-900 text-[11px] text-zinc-400 dark:text-zinc-500 space-y-1">
+            <p className="font-semibold text-zinc-600 dark:text-zinc-400">
+              Trade Name: <span className="font-bold text-zinc-800 dark:text-zinc-200">Team</span> (Proprietorship) · Proprietor: <span className="font-bold text-zinc-800 dark:text-zinc-200">Akanksha Sharma</span>
+            </p>
+            <p>
+              GSTIN: <span className="font-mono font-bold text-zinc-700 dark:text-zinc-300">08CRVPS7390M1ZF</span> · PAN: <span className="font-mono font-bold text-zinc-700 dark:text-zinc-300">CRVPS7390M</span> · State Code: 08 (Rajasthan)
+            </p>
+            <p>
+              Principal Place of Business: no. S1/51, Maheshpuri, Jhotwara, Jaipur, Rajasthan — 302012
+            </p>
+          </div>
+
+          <p className="text-[11px] sm:text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] mt-1 sm:mt-2">
             <TranslatedText tKey="footer_copyright" defaultText="© {year} CCTVQuotation — A TEAM Platform" params={{ year: String(new Date().getFullYear()) }} />
           </p>
         </div>

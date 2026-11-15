@@ -26,12 +26,12 @@ export default async function TermsOfServicePage() {
       type="terms"
       initialLocale={initialLocale}
       meta={{
-        lastUpdated: "20 May 2026",
-        companyName: "TEAM CCTV (Proprietor: Vikash Akansha Sharma)",
+        lastUpdated: "15 November 2026",
+        companyName: "Team (Proprietor: Akanksha Sharma)",
         domain: "cctvquotation.com",
-        phone: "+91 73576 12865",
+        phone: "+91 99825 49315",
         email: "hello@cctvquotation.com",
-        address: "Malviya Nagar, Jaipur, Rajasthan — 302017",
+        address: "no. S1/51, Maheshpuri, Jhotwara, Jaipur, Rajasthan — 302012 (GSTIN: 08CRVPS7390M1ZF, PAN: CRVPS7390M)",
       }}
     />
   );
