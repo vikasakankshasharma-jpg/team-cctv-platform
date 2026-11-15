@@ -942,7 +942,7 @@ export function DynamicVariantGenerator({
       <div className="sticky top-14 md:top-20 z-30 w-full max-w-2xl mx-auto bg-[#f5f5f7]/95 dark:bg-black/95 backdrop-blur-md pt-1.5 pb-2 px-2 sm:px-3 border-b border-zinc-200/80 dark:border-zinc-800/80 shadow-xs sm:rounded-2xl transition-all space-y-2">
         {/* Technology Selector - Segmented Switcher (hidden in Hybrid setups where dedicated Hybrid bar owns filtering) */}
         {(activeTech !== "hybrid" || showModeSwitcher) && (
-        <div className="w-full bg-zinc-100 dark:bg-zinc-800/70 p-1 rounded-2xl sm:rounded-full grid grid-cols-2 sm:grid-cols-4 gap-1 shadow-inner border border-zinc-200/50 dark:border-zinc-700/50">
+        <div data-tour="catalog-tech-selector" className="w-full bg-zinc-100 dark:bg-zinc-800/70 p-1 rounded-2xl sm:rounded-full grid grid-cols-2 sm:grid-cols-4 gap-1 shadow-inner border border-zinc-200/50 dark:border-zinc-700/50">
           <button
             type="button"
             onClick={() => { setActiveTech("hd"); setShowModeSwitcher(false); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: "wired" }))); }}
@@ -1099,7 +1099,7 @@ export function DynamicVariantGenerator({
         <div className="w-full pt-1.5 pb-0.5 border-t border-zinc-200/70 dark:border-zinc-800/70 space-y-1.5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs">
             {/* 1. Camera Brand Dropdown */}
-            <div className="flex flex-col gap-0.5">
+            <div data-tour="catalog-brand-selector" className="flex flex-col gap-0.5">
               <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
                 <span>📹</span> {t("wz_brand") || "Brand"}
               </label>
@@ -1118,7 +1118,7 @@ export function DynamicVariantGenerator({
             </div>
 
             {/* 2. Recording Retention Dropdown */}
-            <div className="flex flex-col gap-0.5">
+            <div data-tour="catalog-storage-retention" className="flex flex-col gap-0.5">
               <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
                 <span>💾</span> {t("dvg_ret_days_lbl")}
               </label>
@@ -1153,7 +1153,7 @@ export function DynamicVariantGenerator({
             </div>
 
             {/* 3. Storage Drive Brand Dropdown */}
-            <div className="flex flex-col gap-0.5">
+            <div data-tour="catalog-storage-brand" className="flex flex-col gap-0.5">
               <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
                 <span>💽</span> {t("dvg_storage_drive_lbl")}
               </label>
@@ -1629,6 +1629,7 @@ export function DynamicVariantGenerator({
           return (
             <Card 
               key={idx} 
+              data-tour={idx === 0 ? "catalog-package-card" : undefined}
               onClick={() => onSelectCheckout(variant)}
               className={`group relative overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-xl hover:border-blue-500 hover:-translate-y-1 ${isSelectedForCompare ? "ring-2 ring-blue-600 shadow-lg" : "hover:shadow-md border-[#d2d2d7] dark:border-[#424245]"}`}
             >
@@ -1842,6 +1843,7 @@ export function DynamicVariantGenerator({
                   <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80 w-full flex flex-col items-center gap-2">
                     <button
                       type="button"
+                      data-tour={idx === 0 ? "catalog-match-price" : undefined}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (onPriceMatch) {

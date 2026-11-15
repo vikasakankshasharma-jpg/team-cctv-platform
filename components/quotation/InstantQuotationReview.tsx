@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { FullCustomizerPanel } from "./FullCustomizerPanel";
 import { getCanonicalBrandName, getCanonicalBrandKey, getUniqueCanonicalBrands } from "@/lib/brand-utils";
+import { InteractivePageTour } from "@/components/tour/InteractivePageTour";
+import { quoteReviewTour } from "@/components/tour/tours/quote-review-tour";
 
 interface InstantQuotationReviewProps {
   lead: Lead;
@@ -336,6 +338,21 @@ export function InstantQuotationReview({
 
         {/* Quick Action Share / Download */}
         <div className="flex items-center gap-2">
+          <InteractivePageTour
+            config={quoteReviewTour}
+            translate={(key) => t(key)}
+            renderTrigger={(openTour) => (
+              <button
+                type="button"
+                onClick={openTour}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50/90 dark:bg-zinc-800 text-[11px] font-bold text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-all cursor-pointer shadow-2xs active:scale-95"
+                aria-label="How this page works"
+              >
+                <span aria-hidden="true">💡</span>
+                <span>{t("tour_guide", "Guide")}</span>
+              </button>
+            )}
+          />
           {onDownloadPdf && (
             <button
               type="button"
@@ -349,6 +366,7 @@ export function InstantQuotationReview({
           {onShareWhatsApp && (
             <button
               type="button"
+              data-tour="review-whatsapp-action"
               onClick={onShareWhatsApp}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 hover:border-emerald-400 text-xs font-semibold text-emerald-700 dark:text-emerald-300 transition-colors shadow-2xs cursor-pointer"
             >
@@ -360,7 +378,7 @@ export function InstantQuotationReview({
       </div>
 
       {/* 2. HERO QUOTATION CARD — Above The Fold Instant Price Clarity */}
-      <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
+      <div data-tour="review-gst-summary" className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
           <div>
             <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -403,6 +421,7 @@ export function InstantQuotationReview({
             {/* IN-HERO DIRECT BOOKING CTA */}
             <button
               type="button"
+              data-tour="review-book-survey"
               onClick={onProceedToActualQuotation}
               disabled={isSaving}
               className="w-full mt-1.5 bg-emerald-500 hover:bg-emerald-400 text-white font-black text-xs sm:text-sm min-h-[44px] py-2 px-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer border border-emerald-400/30 text-center"
@@ -819,7 +838,7 @@ export function InstantQuotationReview({
         </div>
       )}
 
-      <div className="space-y-4">
+      <div data-tour="review-bom-breakdown" className="space-y-4">
           {/* MOBILE ITEM CARDS (sm:hidden) */}
           <div className="sm:hidden space-y-2">
             {activePricing.items.map((item, idx) => (

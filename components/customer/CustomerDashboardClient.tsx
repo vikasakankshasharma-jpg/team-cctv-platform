@@ -28,6 +28,8 @@ import { PaymentStagesWidget } from "@/components/shared/PaymentStagesWidget";
 import { SystemStatusWidget } from "@/components/shared/SystemStatusWidget";
 import { LeadStatusBadge } from "@/components/shared/LeadStatusBadge";
 import { Headphones } from "lucide-react";
+import { InteractivePageTour } from "@/components/tour/InteractivePageTour";
+import { customerDashboardTour } from "@/components/tour/tours/customer-dashboard-tour";
 
 export interface CustomerQuoteItem {
   quoteId: string;
@@ -121,6 +123,21 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                 <span className="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900 text-[10px] sm:text-xs font-black uppercase px-2 py-0.5 rounded-full whitespace-nowrap">
                   {t("dash_role_customer", "Customer")}
                 </span>
+                <InteractivePageTour
+                  config={customerDashboardTour}
+                  translate={(key) => t(key)}
+                  renderTrigger={(openTour) => (
+                    <button
+                      type="button"
+                      onClick={openTour}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-[11px] font-bold text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-all cursor-pointer shadow-xs active:scale-95"
+                      aria-label="How this page works"
+                    >
+                      <span aria-hidden="true">💡</span>
+                      <span>{t("tour_guide", "Guide")}</span>
+                    </button>
+                  )}
+                />
               </div>
               <p className="text-xs sm:text-sm font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
                 {safeUser.mobile ? `+91 ${safeUser.mobile}` : t("dash_auth_customer", "Authenticated Customer")}
@@ -131,13 +148,14 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
           <div className="flex flex-row flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-start sm:justify-end">
             <Link
               href="/customer/support"
+              data-tour="cust-support-tickets"
               className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-normal leading-snug hover:bg-emerald-100 dark:hover:bg-emerald-900"
             >
               <Headphones className="w-4 h-4 shrink-0" />
               {t("dash_nav_support", "Support")}
             </Link>
             <Link href="/customer/profile" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-normal leading-snug hover:bg-zinc-200 dark:hover:bg-zinc-700"><User className="w-4 h-4 shrink-0" />{t("dash_nav_profile", "Profile")}</Link>
-            <Link href="/customer/documents" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-normal leading-snug hover:bg-indigo-100 dark:hover:bg-indigo-900"><FileText className="w-4 h-4 shrink-0" />{t("dash_nav_documents", "Documents")}</Link><Link href="/customer/amc" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-normal leading-snug hover:bg-emerald-100 dark:hover:bg-emerald-900"><ShieldCheck className="w-4 h-4 shrink-0" />{t("dash_nav_warranties", "Warranties & AMC")}</Link>
+            <Link href="/customer/documents" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-normal leading-snug hover:bg-indigo-100 dark:hover:bg-indigo-900"><FileText className="w-4 h-4 shrink-0" />{t("dash_nav_documents", "Documents")}</Link><Link href="/customer/amc" data-tour="cust-amc-contracts" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-normal leading-snug hover:bg-emerald-100 dark:hover:bg-emerald-900"><ShieldCheck className="w-4 h-4 shrink-0" />{t("dash_nav_warranties", "Warranties & AMC")}</Link>
             <Link
               href="/wizard"
               className="flex-1 sm:flex-none flex items-center justify-center text-center bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm whitespace-normal leading-snug"
@@ -216,7 +234,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
             </div>
 
                         {/* Filter Pills / Tabs */}
-            <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl w-full sm:w-auto overflow-x-auto scrollbar-hide shrink-0">
+            <div data-tour="cust-invoices" className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl w-full sm:w-auto overflow-x-auto scrollbar-hide shrink-0">
               <button
                 onClick={() => setActiveTab('active')}
                 className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${

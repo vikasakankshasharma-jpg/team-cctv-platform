@@ -23,6 +23,8 @@ import { SpecificationChecklistModal } from "./SpecificationChecklistModal";
 import { ShareDialog } from "./ShareDialog";
 import { CompetitorQuoteUploader, SelectedPackageInfo } from "@/components/shared/CompetitorQuoteUploader";
 import { useRealtimeInventory } from "@/hooks/useRealtimeInventory";
+import { InteractivePageTour } from "@/components/tour/InteractivePageTour";
+import { quoteCatalogTour } from "@/components/tour/tours/quote-catalog-tour";
 import { extractErrorMessage } from "@/lib/utils";
 
 import type { Lead, Product, Addon, AddonRule, AppSettings, PricingResult, Address, RecommendationRule, CardLayoutRule } from "@/types";
@@ -696,7 +698,24 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         {viewMode === 'catalog' && (
           <div className="mb-8 sm:mb-16">
             <div className="text-center mb-4 sm:mb-8">
-              <h2 className="text-xl sm:text-3xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">{t("wz_build_your_quotation")}</h2>
+              <div className="flex items-center justify-center gap-2.5">
+                <h2 className="text-xl sm:text-3xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">{t("wz_build_your_quotation")}</h2>
+                <InteractivePageTour
+                  config={quoteCatalogTour}
+                  translate={(key) => t(key)}
+                  renderTrigger={(openTour) => (
+                    <button
+                      type="button"
+                      onClick={openTour}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50/90 dark:bg-zinc-800 text-[11px] font-bold text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-all cursor-pointer shadow-none active:scale-95"
+                      aria-label="How this page works"
+                    >
+                      <span aria-hidden="true">💡</span>
+                      <span>{t("tour_guide", "Guide")}</span>
+                    </button>
+                  )}
+                />
+              </div>
               <p className="text-xs sm:text-[15px] text-[#86868b] mt-1 sm:mt-2">{t("wz_select_your_preferred_technolo")}</p>
             </div>
             <DynamicVariantGenerator

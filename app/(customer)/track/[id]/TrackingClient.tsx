@@ -22,6 +22,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { PaymentStagesWidget } from "@/components/shared/PaymentStagesWidget";
+import { InteractivePageTour } from "@/components/tour/InteractivePageTour";
+import { trackBookingTour } from "@/components/tour/tours/track-booking-tour";
 
 interface TrackingClientProps {
   lead: any;
@@ -68,9 +70,26 @@ export default function TrackingClient({ lead, job, quote, invoice }: TrackingCl
           <div className="inline-flex items-center justify-center p-3.5 bg-blue-600/10 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-2xl mb-1">
             <ShieldCheck className="w-8 h-8 sm:w-10 sm:h-10" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-white">
-            {t("track_installation", "Track Your Installation")}
-          </h1>
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-white">
+              {t("track_installation", "Track Your Installation")}
+            </h1>
+            <InteractivePageTour
+              config={trackBookingTour}
+              translate={(key) => t(key)}
+              renderTrigger={(openTour) => (
+                <button
+                  type="button"
+                  onClick={openTour}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-[11px] font-bold text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-all cursor-pointer shadow-xs active:scale-95"
+                  aria-label="How this page works"
+                >
+                  <span aria-hidden="true">💡</span>
+                  <span>{t("tour_guide", "Guide")}</span>
+                </button>
+              )}
+            />
+          </div>
           <p className="text-zinc-500 dark:text-zinc-400 font-mono text-xs sm:text-sm font-bold">
             {t("track_order_ref", "Order Reference: #{id}", { id: lead.id?.substring(0, 10).toUpperCase() || "" })}
           </p>
@@ -151,6 +170,7 @@ export default function TrackingClient({ lead, job, quote, invoice }: TrackingCl
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
             className="bg-white dark:bg-zinc-900 border-2 border-emerald-500/20 dark:border-emerald-500/10 rounded-[2rem] p-4 md:p-8 text-center shadow-2xl shadow-emerald-500/5 relative overflow-hidden"
+            data-tour="track-otp-signoff"
           >
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-400 to-emerald-600" />
             <h2 className="text-sm font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-3">{t("track_secret_pin", "Secret Completion PIN")}</h2>
@@ -173,7 +193,7 @@ export default function TrackingClient({ lead, job, quote, invoice }: TrackingCl
             {pinRevealed && <p className="text-xs text-zinc-400 mt-2">{t("track_pin_auto", "PIN will auto-hide in 10 seconds")}</p>}
             
             {lead.assigned_installer_name && (
-              <div className="mt-8 flex items-center justify-center gap-2 text-sm font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 py-3 px-6 rounded-full w-fit mx-auto border border-emerald-200 dark:border-emerald-500/20">
+              <div data-tour="track-technician-contact" className="mt-8 flex items-center justify-center gap-2 text-sm font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 py-3 px-6 rounded-full w-fit mx-auto border border-emerald-200 dark:border-emerald-500/20">
                 <CheckCircle2 className="w-5 h-5" /> {t("track_installer_assigned", "Installer Assigned:")} {lead.assigned_installer_name}
               </div>
             )}
@@ -184,7 +204,7 @@ export default function TrackingClient({ lead, job, quote, invoice }: TrackingCl
         <PaymentStagesWidget quoteId={targetQuoteId} lead={lead} quote={quote} />
 
         {/* Progress Stepper */}
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-6 sm:p-10 shadow-xl shadow-zinc-200/20 dark:shadow-none">
+        <div data-tour="track-stage-stepper" className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-6 sm:p-10 shadow-xl shadow-zinc-200/20 dark:shadow-none">
           <div className="relative">
             <div className="absolute left-[31px] top-[32px] bottom-[32px] w-0.5 bg-zinc-200 dark:bg-zinc-800" />
             <div className="space-y-10 relative">
