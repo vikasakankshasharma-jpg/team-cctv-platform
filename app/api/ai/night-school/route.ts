@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { autoCorrectBrainEntry } from "@/lib/ai/vector-db";
 import { GoogleGenAI } from "@google/genai";
+import { isStrictZeroCostModeActive } from "@/lib/billing/budget-tracker";
 
 const ai = new GoogleGenAI({});
 
@@ -12,6 +13,14 @@ export async function POST(req: NextRequest) {
     const authHeader = req.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET || 'dev-secret'}`) {
        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Hard circuit breaker: Pause night school if Zero-Cost Mode is active
+    if (await isStrictZeroCostModeActive()) {
+      return NextResponse.json({ 
+        message: "Strict Zero-Cost Mode is ACTIVE. AI Night School auto-correction is paused to guarantee ₹0 cloud bill.",
+        processed: 0
+      });
     }
 
     // 1. Find downvoted entries
@@ -44,10 +53,14 @@ Your task:
 3. OUTPUT ONLY the perfect response. Do not include your analysis or apologies in the output, just the raw text of the perfect answer that the Student AI should have said.`;
 
       const chatResponse = await ai.models.generateContent({
-        model: "gemini-2.5-pro",
+        model: "gemini-2.5-flash",
         contents: [
           { role: "user", parts: [{ text: systemPrompt }] }
         ],
+        config: {
+          maxOutputTokens: 500,
+          temperature: 0.2
+        }
       });
 
       const correctedAnswer = chatResponse.text?.trim();

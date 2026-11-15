@@ -388,7 +388,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     error = true;
     errorMessage = `One or more selected items are currently inactive in catalog: ${unavailableItems.map(i => i.display_name).join(', ')}`;
   } else if (!isIndustrial && selection.camera_count > 0) {
-    const hasCamera = lineItems.some(item => products.some(p => p.id === item.product_id && p.category === "cctv_camera"));
+    const hasCamera = lineItems.some(item => products.some(p => p.id === item.product_id && (p.category === "cctv_camera" || (p.category as any) === "camera")));
     if (!hasCamera) {
       error = true;
       errorMessage = "Missing required camera hardware in catalog.";
@@ -678,7 +678,7 @@ function calculateHardware(
   } else {
     const cameraItems = items.filter(i => {
       const p = products.find(prod => prod.id === i.product_id);
-      return p?.category === "cctv_camera" || i.display_name?.toLowerCase().includes("camera");
+      return p?.category === "cctv_camera" || (p?.category as any) === "camera" || i.display_name?.toLowerCase().includes("camera");
     });
     if (cameraItems.length > 0) {
       const mpList = cameraItems.map(c => parseResolutionMP(c.display_name));
@@ -742,7 +742,7 @@ function calculateHardware(
     ...selection,
     camera_count: isWirelessTech ? totalHardwareCameraCount : wiredCameraCount
   };
-  const primaryCamera = products.find(prod => items.some(i => i.product_id === prod.id && prod.category === "cctv_camera"));
+  const primaryCamera = products.find(prod => items.some(i => i.product_id === prod.id && (prod.category === "cctv_camera" || (prod.category as any) === "camera")));
   const hdd = resolveHDD(hddSelection, [...products, ...addons] as any[], tech, recorder, primaryCamera, settings);
   if (hdd) {
     const unitPrice = hdd.unit_price || hdd.price || 0;
@@ -1939,7 +1939,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
   }
 
   let pool = products.filter(p => {
-    if (p.category !== "cctv_camera" || !isAvailable(p)) return false;
+    if ((p.category !== "cctv_camera" && (p.category as any) !== "camera") || !isAvailable(p)) return false;
     return isTechMatch(p, tech);
   });
 
@@ -1991,7 +1991,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
       pool = outdoorPool;
     } else {
       // If brand has no outdoor cameras in this tech pool, search entire catalog of available cameras for that tech that are weatherproof
-      const fallbackOutdoor = products.filter(p => p.category === "cctv_camera" && isAvailable(p) && isTechMatch(p, tech) && isCameraWeatherproof(p));
+      const fallbackOutdoor = products.filter(p => (p.category === "cctv_camera" || (p.category as any) === "camera") && isAvailable(p) && isTechMatch(p, tech) && isCameraWeatherproof(p));
       if (fallbackOutdoor.length > 0) {
         pool = fallbackOutdoor;
       }
@@ -2637,12 +2637,27 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
     const item = p as any;
     const name = `${item.technical_name || ""} ${item.display_name || ""} ${(item.tags || []).join(" ")} ${item.sku || ""}`.toLowerCase();
     const isRouterOrAccessory = name.includes("router") || name.includes("4g") || name.includes("sim") || name.includes("injector") || name.includes("cable") || name.includes("splitter");
-    return (name.includes("psu") || name.includes("smps") || name.includes("power")) && !(name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !isRouterOrAccessory;
+    const isSingleAdapter = (name.includes("adapter") || name.includes("pin") || name.includes("0.5a") || name.includes("0.6a")) && !name.includes("smps") && !name.includes("4ch") && !name.includes("8ch");
+    return (name.includes("psu") || name.includes("smps") || name.includes("power")) && !(name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !isRouterOrAccessory && (!isSingleAdapter || selection.camera_count === 1);
   };
 
   const getCapacity = (a: any) => {
     const cap = getProductChannelCapacity(a);
-    return cap > 0 ? cap : (a.max_cameras && a.max_cameras > 0 ? a.max_cameras : 999);
+    if (cap > 0) return cap;
+    if (a.max_cameras && a.max_cameras > 0) return a.max_cameras;
+    const name = `${a.technical_name || ""} ${a.display_name || ""}`.toLowerCase();
+    if (name.includes("adapter") || name.includes("pin") || name.includes("0.5a") || name.includes("0.6a") || name.includes("1a")) {
+      return 1;
+    }
+    const ampMatch = name.match(/(\d+)\s*(?:a|amp|amperes?)\b/i);
+    if (ampMatch) {
+      const amps = parseInt(ampMatch[1], 10);
+      if (amps >= 20) return 16;
+      if (amps >= 10) return 8;
+      if (amps >= 5) return 4;
+      if (amps >= 2) return 2;
+    }
+    return 1;
   };
 
   const withMaxCameras = <T extends Record<string, any>>(item: T, cap: number): T => ({

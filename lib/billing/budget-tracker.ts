@@ -358,3 +358,27 @@ export async function checkAndNotifyThresholdBreaches(force: boolean = false): P
 
   return dispatchedServices;
 }
+
+/**
+ * Fast fail-safe check to determine if Strict Zero-Cost Mode is active.
+ * When true, billable external AI/GCP API calls are strictly blocked across the entire platform.
+ */
+export async function isStrictZeroCostModeActive(): Promise<boolean> {
+  try {
+    const budget = await getCostBudgetSettings();
+    return Boolean(budget.strict_zero_cost_mode);
+  } catch {
+    return true; // Fail-closed: default to zero-cost safety
+  }
+}
+
+/**
+ * Hard Circuit-Breaker: Throws an error if zero-cost mode is active.
+ */
+export async function assertZeroCostCompliance(serviceName: string): Promise<void> {
+  const isStrict = await isStrictZeroCostModeActive();
+  if (isStrict) {
+    throw new Error(`[BILLING_SAFEGUARD] Blocked billable external call to '${serviceName}' because Strict Zero-Cost Mode is ACTIVE.`);
+  }
+}
+

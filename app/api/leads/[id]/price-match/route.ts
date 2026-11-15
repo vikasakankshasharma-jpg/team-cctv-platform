@@ -5,7 +5,8 @@ import { PriceMatchSubmitSchema } from "@/lib/validators";
 import { ApiResponse } from "@/lib/api-response";
 import { calculatePricing } from "@/lib/pricing-engine";
 import { SETTINGS_DOC_ID } from "@/lib/firebase-client";
-import { mergeAppSettings } from "@/lib/cached-settings";
+import { mergeAppSettings, getCachedAdminSettings } from "@/lib/cached-settings";
+import { getCachedProducts, getCachedAddons, getCachedGeoRules } from "@/lib/cached-catalog";
 import { Product, Addon, Lead } from "@/types";
 
 /**
@@ -90,38 +91,12 @@ export async function POST(
         answers.plan_type ||
         "recommended";
 
-      const [productsSnap, addonsSnap, settingsSnap, geoRulesSnap] =
-        await Promise.all([
-          adminDb.collection("products").where("is_active", "==", true).get(),
-          adminDb.collection("addons").where("is_active", "==", true).get(),
-          adminDb.collection("settings").doc(SETTINGS_DOC_ID).get(),
-          adminDb
-            .collection("geo_pricing_rules")
-            .where("is_active", "==", true)
-            .get(),
-        ]);
-
-      const products = productsSnap.docs
-        .map((d) => {
-          const pData = d.data() as any;
-          if (!Array.isArray(pData.technologies)) {
-            pData.technologies = pData.technology
-              ? [pData.technology]
-              : ["Common"];
-          }
-          return { id: d.id, ...pData };
-        })
-        .filter((p) => (p as any).is_deleted !== true) as Product[];
-
-      const addons = addonsSnap.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      })) as Addon[];
-      const geoRules = geoRulesSnap.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      })) as any[];
-      const settings = mergeAppSettings(settingsSnap.data() as any);
+      const [products, addons, settings, geoRules] = await Promise.all([
+        getCachedProducts(),
+        getCachedAddons(),
+        getCachedAdminSettings(),
+        getCachedGeoRules()
+      ]);
 
       const selection: any = {
         plan_type: planType,

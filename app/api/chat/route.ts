@@ -132,44 +132,55 @@ Common issues you can solve:
 If they ask for an AMC or Warranty renewal, tell them to close this chat and visit the 'Warranties & AMC' tab in their dashboard. Keep your answers short, friendly, and practical.`;
     }
 
-    const contents: Content[] = [
-      { role: "user", parts: [{ text: systemPrompt }] },
-      ...messages.map((m: any) => {
-        const parts: any[] = [];
-        if (m.content) {
-          parts.push({ text: m.content });
-        }
-        
-        if (m.image) {
-          const match = m.image.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
-          if (match) {
-            parts.push({
-              inlineData: {
-                mimeType: match[1],
-                data: match[2]
-              }
-            });
-          }
-        }
+    // 4. Token-Optimized Conversation History:
+    // Slices to last 6 turns to prevent quadratic token growth.
+    // Only attaches base64 image data to the latest user message to avoid re-transmitting old image tokens.
+    const recentMessages = messages.slice(-6);
+    const lastMsgIdx = recentMessages.length - 1;
 
-        return {
-          role: m.role === "user" ? "user" : "model",
-          parts
-        };
-      })
-    ];
+    const contents: Content[] = recentMessages.map((m: any, idx: number) => {
+      const parts: any[] = [];
+      if (m.content) {
+        parts.push({ text: m.content });
+      }
+      
+      // Only attach image to the latest turn in active focus
+      if (m.image && idx === lastMsgIdx) {
+        const match = m.image.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+        if (match) {
+          parts.push({
+            inlineData: {
+              mimeType: match[1],
+              data: match[2]
+            }
+          });
+        }
+      }
+
+      return {
+        role: m.role === "user" ? "user" : "model",
+        parts
+      };
+    });
 
     let availableTools: any[] = [];
     if (securityContext.role === "ADMIN" || securityContext.role === "USER") {
       availableTools = [wizardToolDefinition as any, updateQuotationWizardToolDefinition as any];
     }
 
+    // Explicit systemInstruction enables automatic Google Cloud prompt caching.
+    // maxOutputTokens bounds single-turn costs strictly.
+    const generationConfig: any = {
+      systemInstruction: systemPrompt,
+      maxOutputTokens: 400,
+      temperature: 0.2,
+      tools: availableTools.length > 0 ? [{ functionDeclarations: availableTools }] : []
+    };
+
     let chatResponse = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents,
-      config: {
-        tools: availableTools.length > 0 ? [{ functionDeclarations: availableTools }] : []
-      }
+      config: generationConfig
     });
 
     // 4b. Handle Function Calling (Advanced RAG)
@@ -211,9 +222,7 @@ If they ask for an AMC or Warranty renewal, tell them to close this chat and vis
       chatResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents,
-        config: {
-          tools: availableTools.length > 0 ? [{ functionDeclarations: availableTools }] : []
-        }
+        config: generationConfig
       });
     }
 

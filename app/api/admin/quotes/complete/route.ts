@@ -6,7 +6,8 @@ import { Product, Addon, AppSettings, Lead } from "@/types";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
 import { ApiResponse } from "@/lib/api-response";
 import { requireRoleApi } from "@/lib/auth-server";
-import { mergeAppSettings } from "@/lib/cached-settings";
+import { mergeAppSettings, getCachedAdminSettings } from "@/lib/cached-settings";
+import { getCachedProducts, getCachedAddons, getCachedGeoRules } from "@/lib/cached-catalog";
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,25 +68,13 @@ export async function POST(request: NextRequest) {
       return ApiResponse.error("Completed and paid quotations are locked. Please use 'Create Revision' instead.", "VALIDATION_ERROR", 400);
     }
 
-    // 2. Fetch Catalog and Settings
-    const [productsSnap, addonsSnap, settingsSnap, geoRulesSnap] = await Promise.all([
-      adminDb.collection("products").where("is_active", "==", true).get(),
-      adminDb.collection("addons").where("is_active", "==", true).get(),
-      adminDb.collection("settings").doc(SETTINGS_DOC_ID).get(),
-      adminDb.collection("geo_pricing_rules").where("is_active", "==", true).get()
+    // 2. Fetch Catalog and Settings from High-Performance Cache
+    const [products, addons, settings, geoRules] = await Promise.all([
+      getCachedProducts(),
+      getCachedAddons(),
+      getCachedAdminSettings(),
+      getCachedGeoRules()
     ]);
-
-    const products = productsSnap.docs.map(d => {
-      const data = d.data() as any;
-      if (!Array.isArray(data.technologies)) {
-        data.technologies = data.technology ? [data.technology] : ["Common"];
-      }
-      return { id: d.id, ...data };
-    }).filter(p => (p as any).is_deleted !== true) as Product[];
-
-    const addons = addonsSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Addon[];
-    const geoRules = geoRulesSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
-    const settings = mergeAppSettings(settingsSnap.data() as AppSettings);
 
     // Resolution mapping
     let resolution = "2MP";

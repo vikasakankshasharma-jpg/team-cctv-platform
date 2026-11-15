@@ -16,7 +16,13 @@ export const getCachedProducts = unstable_cache(
         .get();
 
       const items = snap.docs
-        .map(doc => ({ id: doc.id, ...doc.data() } as Product))
+        .map(doc => {
+          const data = doc.data() as any;
+          if (!Array.isArray(data.technologies)) {
+            data.technologies = data.technology ? [data.technology] : ["Common"];
+          }
+          return { id: doc.id, ...data } as Product;
+        })
         .filter(p => p.is_deleted !== true && p.is_addon !== true && p.is_quotation_eligible !== false);
       
       return items;
@@ -83,4 +89,30 @@ export const getCachedAddons = unstable_cache(
     tags: ["catalog", "addons"],
   }
 );
+
+/**
+ * Fetches active geo pricing rules from Firestore.
+ * Cached for 1 hour using Next.js Data Cache.
+ */
+export const getCachedGeoRules = unstable_cache(
+  async (): Promise<any[]> => {
+    try {
+      const snap = await adminDb
+        .collection("geo_pricing_rules")
+        .where("is_active", "==", true)
+        .get();
+
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error("Error fetching cached geo pricing rules:", error);
+      return [];
+    }
+  },
+  ["active-geo-rules"],
+  {
+    revalidate: 3600,
+    tags: ["pricing", "geo-rules"],
+  }
+);
+
 

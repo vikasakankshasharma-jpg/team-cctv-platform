@@ -17,15 +17,13 @@ interface Suggestion {
 
 export default function SpecOptimizerClient() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasInitiated, setHasInitiated] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    fetchSuggestions();
-  }, []);
 
   const fetchSuggestions = async () => {
     setIsLoading(true);
+    setHasInitiated(true);
     try {
       const res = await fetch("/api/admin/vendor/optimize-specs");
       const data = await res.json();
@@ -95,6 +93,42 @@ export default function SpecOptimizerClient() {
       setIsLoading(false);
     }
   };
+
+  if (!hasInitiated && suggestions.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <Layers className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Retroactive Spec Optimizer</h1>
+            <p className="text-sm text-muted-foreground">Apply newly learned specifications to older products in your catalog.</p>
+          </div>
+        </div>
+
+        <div className="bg-card border rounded-2xl p-8 text-center max-w-xl mx-auto space-y-4 shadow-xs">
+          <div className="w-12 h-12 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
+            <Sparkles className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-lg font-bold text-foreground">On-Demand Catalog Analysis</h2>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Scan up to 5 un-optimized catalog products. Analysis uses fast deterministic regex matching (₹0 cost) and is guarded by Strict Zero-Cost Mode.
+            </p>
+          </div>
+          <button
+            onClick={fetchSuggestions}
+            disabled={isLoading}
+            className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-all flex items-center gap-2 mx-auto shadow-sm"
+          >
+            <Sparkles className="w-4 h-4" />
+            {isLoading ? "Scanning Products..." : "Scan Next 5 Products"}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading && suggestions.length === 0) {
     return (

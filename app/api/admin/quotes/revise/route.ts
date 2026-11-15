@@ -8,7 +8,8 @@ import { Product, Addon, AppSettings, Lead } from "@/types";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
 import { ApiResponse } from "@/lib/api-response";
 import { requireRoleApi } from "@/lib/auth-server";
-import { mergeAppSettings } from "@/lib/cached-settings";
+import { mergeAppSettings, getCachedAdminSettings } from "@/lib/cached-settings";
+import { getCachedProducts, getCachedAddons, getCachedGeoRules } from "@/lib/cached-catalog";
 
 /**
  * ADMIN QUOTE REVISION API
@@ -48,12 +49,12 @@ export async function POST(request: NextRequest) {
       parentQuoteDoc = await adminDb.collection("quotes").doc(parent_quote_id).get();
     }
 
-    const [leadDoc, productsSnap, addonsSnap, settingsSnap, geoRulesSnap] = await Promise.all([
+    const [leadDoc, products, addons, settings, geoRules] = await Promise.all([
       adminDb.collection("leads").doc(lead_id).get(),
-      adminDb.collection("products").where("is_active", "==", true).get(),
-      adminDb.collection("addons").where("is_active", "==", true).get(),
-      adminDb.collection("settings").doc(SETTINGS_DOC_ID).get(),
-      adminDb.collection("geo_pricing_rules").where("is_active", "==", true).get()
+      getCachedProducts(),
+      getCachedAddons(),
+      getCachedAdminSettings(),
+      getCachedGeoRules()
     ]);
 
     if (!leadDoc.exists || !parentQuoteDoc.exists) {
@@ -64,18 +65,6 @@ export async function POST(request: NextRequest) {
     const parentQuoteData = parentQuoteDoc.data() as any;
     const currentVersion = parentQuoteData.version || 1;
     const newVersion = currentVersion + 1;
-
-    const products = productsSnap.docs.map(d => {
-      const data = d.data() as any;
-      if (!Array.isArray(data.technologies)) {
-        data.technologies = data.technology ? [data.technology] : ["Common"];
-      }
-      return { id: d.id, ...data };
-    }).filter(p => (p as any).is_deleted !== true) as Product[];
-    
-    const addons = addonsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => (a as any).is_deleted !== true) as Addon[];
-    const geoRules = geoRulesSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
-    const settings = mergeAppSettings(settingsSnap.data() as AppSettings);
 
     if (!selection.resolution_preference && selection.picture_quality) {
       if (selection.picture_quality === "good") selection.resolution_preference = "2MP";

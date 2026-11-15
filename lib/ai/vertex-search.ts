@@ -1,4 +1,5 @@
 import { JWT } from "google-auth-library";
+import { isStrictZeroCostModeActive } from "@/lib/billing/budget-tracker";
 
 export interface VertexSearchResult {
   success: boolean;
@@ -34,6 +35,11 @@ function getAuthClient(): JWT | null {
  * Consumes the ₹91,785.01 promotional trial credit pool.
  */
 export async function queryVertexAiSearch(query: string): Promise<VertexSearchResult> {
+  // Hard circuit breaker: Zero-Cost Mode
+  if (await isStrictZeroCostModeActive()) {
+    return { success: false, error: "Zero-Cost Mode is active; external Discovery Engine call blocked." };
+  }
+
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const dataStoreId = process.env.VERTEX_SEARCH_DATASTORE_ID || "team-cctv-knowledge";
 

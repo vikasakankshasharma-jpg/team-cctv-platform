@@ -479,13 +479,14 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
     const priceNum = live ? live.price : (parseInt(base.startingRef.replace(/\D/g, ""), 10) || 17999);
     const emiNum = live ? live.emi : (parseInt(base.emiRef.replace(/\D/g, ""), 10) || 999);
     const rawFeatures = live?.features && live.features.length > 0 ? live.features : base.features;
+    const keySuffix = brandKey === "cpplus" ? "cp" : brandKey;
 
     return {
       ...base,
-      name: t(`est_title_${brandKey}`, undefined, { count: String(cameraCount) }),
+      name: t(`est_title_${keySuffix}`, undefined, { count: String(cameraCount) }),
       tag: t(`est_tag_${brandKey}`),
       resolution: brandKey === "cpplus" ? t("est_res_2mp") : brandKey === "hik" ? t("est_res_5mp") : t("est_res_color"),
-      desc: t(`est_desc_${propertyType}_${brandKey}`),
+      desc: t(`est_desc_${propertyType}_${keySuffix}`),
       startingRef: t("est_from_price", undefined, { price: `₹${priceNum.toLocaleString("en-IN")}` }),
       emiRef: t("est_emi_starting", undefined, { emi: emiNum.toLocaleString("en-IN") }),
       features: rawFeatures.map(localizeFeature),

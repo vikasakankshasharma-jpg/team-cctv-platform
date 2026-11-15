@@ -1,9 +1,19 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { parseProductWithGemini } from "@/lib/vendor/gemini-parser";
+import { isStrictZeroCostModeActive } from "@/lib/billing/budget-tracker";
 
 export async function GET(request: Request) {
   try {
+    // Hard circuit-breaker: Zero-Cost Mode
+    if (await isStrictZeroCostModeActive()) {
+      return NextResponse.json({ 
+        success: true, 
+        suggestions: [],
+        message: "Strict Zero-Cost Mode is ACTIVE. Cloud AI calls are locked (₹0 bill guarantee)."
+      });
+    }
+
     const db = adminDb;
     
     // 1. Fetch live products that haven't been AI optimized yet

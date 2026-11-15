@@ -1,6 +1,7 @@
 import { adminDb } from "@/lib/firebase-admin";
 import { SETTINGS_DOC_ID } from "@/lib/firebase-client";
-import { mergeAppSettings } from "@/lib/cached-settings";
+import { mergeAppSettings, getCachedAdminSettings } from "@/lib/cached-settings";
+import { getCachedProducts, getCachedAddons, getCachedGeoRules } from "@/lib/cached-catalog";
 import { calculatePricing } from "@/lib/pricing-engine";
 import { Product, Addon } from "@/types";
 
@@ -28,26 +29,12 @@ export async function getBaselineCatalogData() {
   }
 
   try {
-    const [productsSnap, addonsSnap, settingsSnap, geoRulesSnap] = await Promise.all([
-      adminDb.collection("products").where("is_active", "==", true).get(),
-      adminDb.collection("addons").where("is_active", "==", true).get(),
-      adminDb.collection("settings").doc(SETTINGS_DOC_ID).get(),
-      adminDb.collection("geo_pricing_rules").where("is_active", "==", true).get(),
+    const [products, addons, settings, geoRules] = await Promise.all([
+      getCachedProducts(),
+      getCachedAddons(),
+      getCachedAdminSettings(),
+      getCachedGeoRules(),
     ]);
-
-    const products = productsSnap.docs
-      .map((d) => {
-        const data = d.data() as any;
-        if (!Array.isArray(data.technologies)) {
-          data.technologies = data.technology ? [data.technology] : ["Common"];
-        }
-        return { id: d.id, ...data };
-      })
-      .filter((p) => (p as any).is_deleted !== true) as Product[];
-
-    const addons = addonsSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as Addon[];
-    const geoRules = geoRulesSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as any[];
-    const settings = mergeAppSettings(settingsSnap.data() as any);
 
     if (products.length > 0) {
       catalogCache = { products, addons, settings, geoRules, timestamp: now };

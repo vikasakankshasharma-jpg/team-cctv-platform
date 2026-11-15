@@ -53,15 +53,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2. Fetch Fresh Catalog & Settings (Server Authority)
-    const [settings, productsSnap, addonsSnap] = await Promise.all([
+    // 2. Fetch Fresh Catalog & Settings (Server Authority with High-Performance Cache)
+    const [settings, catalog, addons] = await Promise.all([
       getCachedAdminSettings(),
-      adminDb.collection("products").where("is_active", "==", true).get(),
-      adminDb.collection("addons").where("is_active", "==", true).get(),
+      getCachedProducts(),
+      getCachedAddons(),
     ]);
-
-    const catalog = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)).filter(p => p.is_quotation_eligible !== false);
-    const addons = addonsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Addon));
 
     // 3. Authoritatively Calculate Pricing Server-Side (Zero Client Trust)
     let authoritativePricing: any = null;

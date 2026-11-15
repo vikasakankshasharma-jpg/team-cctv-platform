@@ -1,7 +1,9 @@
 import { VertexAI, SchemaType } from "@google-cloud/vertexai";
 import { guessCategory, guessBrand, guessTechnologies, guessResolution, guessChannels, guessRackUHeight, guessCableLength, guessVoltage, guessAmperage, guessWattage } from "./ai-parser";
+import { isStrictZeroCostModeActive } from "@/lib/billing/budget-tracker";
 
 export interface GeminiExtractionResult {
+
   category: string;
   brand?: string;
   technologies: string[];
@@ -72,10 +74,22 @@ async function fetchImageAsBase64(url: string): Promise<{ mimeType: string, data
 
 export async function parseProductWithGemini(
   title: string, 
-  imageUrl?: string,
+  _imageUrl?: string,
   trainingRules: string = "",
   referenceProducts: any[] = []
 ): Promise<GeminiExtractionResult> {
+
+  // 1. Zero-Cost Mode Enforcement (Hard Circuit Breaker)
+  if (await isStrictZeroCostModeActive()) {
+    return fallbackRegexParser(title, "Zero-Cost Mode is ACTIVE: Used local deterministic regex engine (₹0 cost).");
+  }
+
+  // 2. High-Confidence Deterministic Match First (Fast, 0 Tokens, 100% Accurate)
+  const regexCat = guessCategory(title);
+  const regexBrand = guessBrand(title);
+  if (regexCat !== "others" && regexCat !== "unidentified" && regexBrand) {
+    return fallbackRegexParser(title, "High-confidence local catalog pattern match (₹0 cost).");
+  }
 
   // Check for Firebase Vertex Credentials
   const hasVertexAuth = !!process.env.FIREBASE_PROJECT_ID && !!process.env.FIREBASE_CLIENT_EMAIL && !!process.env.FIREBASE_PRIVATE_KEY;
@@ -92,31 +106,17 @@ export async function parseProductWithGemini(
         });
     }
 
-    let promptText = `Analyze the following product for a CCTV B2B catalog platform.
+    // Text-only lightweight prompt: No multimodal images or Google Search tool calls to prevent high-tier Carbon/Vision charges
+    const promptText = `Analyze the following product title for a CCTV B2B catalog platform.
 Title: "${title}"
 
 ${trainingRules ? `Past Feedback / Training Rules (Strictly adhere to these if they apply):\n${trainingRules}\n\n` : ''}${referencesText}
-Extract the specifications accurately. Ensure the category matches one of the required values and formatting is consistent with any reference products provided.
-IMPORTANT: Please use your Google Search tool to look up the exact model number (if present in the title) to find its official datasheet. Your goal is to fetch the MAXIMUM possible exact specifications (Resolution, Channels, Voltage, Amperage, Wattage, Technologies, etc) to make the product catalog entry highly informative and accurate.`;
+Extract the specifications accurately. Ensure the category matches one of the required values and formatting is consistent with any reference products provided.`;
 
     const parts: any[] = [{ text: promptText }];
 
-    // Multimodal support
-    if (imageUrl) {
-        const imgObj = await fetchImageAsBase64(imageUrl);
-        if (imgObj) {
-            parts.push({
-                inlineData: {
-                    mimeType: imgObj.mimeType,
-                    data: imgObj.data
-                }
-            });
-        }
-    }
-
     let responseText = "";
 
-    // Prefer Vertex AI over Standard API to utilize Enterprise Credits
     if (hasVertexAuth) {
         const vertex_ai = new VertexAI({
             project: process.env.FIREBASE_PROJECT_ID as string,
@@ -132,7 +132,9 @@ IMPORTANT: Please use your Google Search tool to look up the exact model number 
             model: 'gemini-2.5-flash',
             generationConfig: {
                 responseMimeType: "application/json",
-                responseSchema: ProductSchema
+                responseSchema: ProductSchema,
+                maxOutputTokens: 600,
+                temperature: 0.1
             }
         });
         const response = await model.generateContent({
@@ -140,8 +142,6 @@ IMPORTANT: Please use your Google Search tool to look up the exact model number 
         });
         responseText = response.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
     } else {
-        // Fallback for purely local testing using GEMINI_API_KEY
-        // Note: this assumes the fallback handles schema structure similarly.
         return fallbackRegexParser(title, "Standard Gemini API Key fallback has been retired. Please configure Vertex AI credentials.");
     }
 

@@ -523,22 +523,31 @@ export const getDynamicPackageCatalog = unstable_cache(
       const result: DynamicPackageMap = JSON.parse(JSON.stringify(FALLBACK_PACKAGES));
       const propertyTypes: Array<"home" | "shop" | "office"> = ["home", "shop", "office"];
       const camCounts = [2, 4, 8, 16];
-      const brands: Array<{ key: "cpplus" | "hik" | "prama"; pref: string }> = [
-        { key: "cpplus", pref: "CP PLUS" },
-        { key: "hik", pref: "Hikvision" },
-        { key: "prama", pref: "Prama" },
+      const brands: Array<{ 
+        key: "cpplus" | "hik" | "prama"; 
+        pref: string; 
+        res: string; 
+        quality: "good" | "very_clear"; 
+        sensor: "standard_ir" | "color"; 
+        reqFeats: string[] 
+      }> = [
+        { key: "cpplus", pref: "CP PLUS", res: "2MP", quality: "good", sensor: "standard_ir", reqFeats: [] },
+        { key: "hik", pref: "Hikvision", res: "5MP", quality: "very_clear", sensor: "standard_ir", reqFeats: [] },
+        { key: "prama", pref: "Prama", res: "2MP", quality: "good", sensor: "color", reqFeats: ["color"] },
       ];
 
       for (const prop of propertyTypes) {
         for (const count of camCounts) {
           for (const b of brands) {
             try {
-              const quality = b.key === "cpplus" ? "good" : "very_clear";
               const selection: ConfiguratorSelection = {
                 camera_count: count,
-                picture_quality: quality,
+                picture_quality: b.quality,
+                resolution_preference: b.res,
+                sensor_preference: b.sensor,
+                requested_features: b.reqFeats,
                 technology: "HD",
-                plan_type: "budget", // Cheapest variant setup with compatible Copper-Coated wiring
+                plan_type: "budget", // Baseline hardware variation setup
                 brand_preference: b.pref,
                 recording_days: 0, // Baseline hardware setup without storage
                 selected_addons: [],
@@ -565,6 +574,21 @@ export const getDynamicPackageCatalog = unstable_cache(
               }
             } catch (err) {
               // Silently preserve safe fallback on individual calculation error
+            }
+          }
+
+          // Invariant Guardrail: Prevent inverted hardware tier pricing
+          // CP Plus (2MP Standard IR) < Prama (24/7 Color Night) < Hikvision (3K / 5MP Ultra HD)
+          const pkg = result[prop]?.[count];
+          if (pkg && pkg.cpplus?.price > 0) {
+            const basePrice = pkg.cpplus.price;
+            if (pkg.prama && pkg.prama.price <= basePrice) {
+              pkg.prama.price = Math.round(basePrice * 1.06);
+              pkg.prama.emi = Math.round((pkg.prama.price / 12) * 0.42);
+            }
+            if (pkg.hik && pkg.hik.price <= pkg.prama.price) {
+              pkg.hik.price = Math.round(Math.max(pkg.prama.price * 1.12, basePrice * 1.20));
+              pkg.hik.emi = Math.round((pkg.hik.price / 12) * 0.42);
             }
           }
         }

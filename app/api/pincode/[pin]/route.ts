@@ -128,64 +128,48 @@ export async function GET(
       }
     }
 
-    // 3. If not cached, calculate using Geocoding APIs
+    // 3. If not cached, calculate using Geocoding APIs (Optimized: Single Pincode Geocode First)
     if (!lat || !lng || !radius) {
        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
        if (apiKey) {
-          const points: { lat: number, lng: number }[] = [];
-          
-          await Promise.all(formattedAreas.map(async (area: string) => {
-             try {
-                const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(area + ', India')}&components=postal_code:${pin}|country:IN&key=${apiKey}`);
-                const geoData = await geoRes.json();
-                if (geoData.status === "OK" && geoData.results[0]) {
-                   points.push({
-                      lat: geoData.results[0].geometry.location.lat,
-                      lng: geoData.results[0].geometry.location.lng
-                   });
-                }
-             } catch (e) {
-                // ignore
+          // Primary: 1 single Geocoding call for the whole postal code (Saves 90% Google Maps API quota)
+          try {
+             const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?components=postal_code:${pin}|country:IN&key=${apiKey}`);
+             const geoData = await geoRes.json();
+             if (geoData.status === "OK" && geoData.results[0]) {
+                lat = geoData.results[0].geometry.location.lat;
+                lng = geoData.results[0].geometry.location.lng;
+                radius = 4001;
              }
-          }));
+          } catch (e) {
+             // Fallback below
+          }
 
-          if (points.length === 0) {
-             // Fallback to just the pincode
-             try {
-                const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?components=postal_code:${pin}|country:IN&key=${apiKey}`);
-                const geoData = await geoRes.json();
-                if (geoData.status === "OK" && geoData.results[0]) {
-                   lat = geoData.results[0].geometry.location.lat;
-                   lng = geoData.results[0].geometry.location.lng;
-                   radius = 4001;
+          // Fallback only if single pincode geocode yielded no location: try top 2 areas max
+          if (!lat || !lng) {
+             const sampleAreas = formattedAreas.slice(0, 2);
+             const points: { lat: number, lng: number }[] = [];
+             
+             await Promise.all(sampleAreas.map(async (area: string) => {
+                try {
+                   const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(area + ', India')}&components=postal_code:${pin}|country:IN&key=${apiKey}`);
+                   const geoData = await geoRes.json();
+                   if (geoData.status === "OK" && geoData.results[0]) {
+                      points.push({
+                         lat: geoData.results[0].geometry.location.lat,
+                         lng: geoData.results[0].geometry.location.lng
+                      });
+                   }
+                } catch (e) {
+                   // ignore
                 }
-             } catch (e) {
-                // ignore
+             }));
+
+             if (points.length > 0) {
+                lat = points.reduce((sum, pt) => sum + pt.lat, 0) / points.length;
+                lng = points.reduce((sum, pt) => sum + pt.lng, 0) / points.length;
+                radius = 4001;
              }
-          } else {
-             // Calculate Centroid
-             const centroidLat = points.reduce((sum, pt) => sum + pt.lat, 0) / points.length;
-             const centroidLng = points.reduce((sum, pt) => sum + pt.lng, 0) / points.length;
-
-             // Calculate max radius
-             let maxRadius = 0;
-             points.forEach(pt => {
-                const R = 6371e3;
-                const lat1 = centroidLat * Math.PI/180;
-                const lat2 = pt.lat * Math.PI/180;
-                const dLat = (pt.lat - centroidLat) * Math.PI/180;
-                const dLng = (pt.lng - centroidLng) * Math.PI/180;
-                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                          Math.cos(lat1) * Math.cos(lat2) *
-                          Math.sin(dLng/2) * Math.sin(dLng/2);
-                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-                const distance = R * c;
-                if (distance > maxRadius) maxRadius = distance;
-             });
-
-             lat = centroidLat;
-             lng = centroidLng;
-             radius = Math.max(maxRadius + 1000, 2000);
           }
        }
        

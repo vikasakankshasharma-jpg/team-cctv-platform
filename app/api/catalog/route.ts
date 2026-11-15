@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
 import { MarginEngine, DEFAULT_MARGIN_POLICY } from "@/lib/margin-engine";
+import { getCachedProducts, getCachedAddons } from "@/lib/cached-catalog";
+import { getCachedAdminSettings } from "@/lib/cached-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -9,13 +10,11 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const applyRetailMargins = searchParams.get("retail") === "true";
 
-    const [prodSnap, addonSnap, settingsSnap] = await Promise.all([
-      adminDb.collection("products").where("is_active", "==", true).get(),
-      adminDb.collection("addons").where("is_active", "==", true).get(),
-      adminDb.collection("settings").doc("app_config").get()
+    const [products, addons, settings] = await Promise.all([
+      getCachedProducts(),
+      getCachedAddons(),
+      getCachedAdminSettings()
     ]);
-    
-    const settings = settingsSnap.exists ? settingsSnap.data() : {};
 
     const marginPolicy: any = applyRetailMargins ? {
       ...DEFAULT_MARGIN_POLICY,
@@ -55,24 +54,17 @@ export async function GET(req: NextRequest) {
 
     const items: any[] = [];
     
-    prodSnap.forEach(doc => {
-      const data = doc.data() as any;
-      if (data.is_deleted === true) return;
-      if (!Array.isArray(data.technologies)) {
-        data.technologies = data.technology ? [data.technology] : ["Common"];
-      }
-      items.push({ id: doc.id, ...data, unit_price: processItemPrice(data, "cctv_camera"), type: "product" });
+    products.forEach((data: any) => {
+      items.push({ id: data.id, ...data, unit_price: processItemPrice(data, "cctv_camera"), type: "product" });
     });
 
-    addonSnap.forEach(doc => {
-      const data = doc.data();
-      if (data.is_deleted === true) return;
+    addons.forEach((data: any) => {
       items.push({ 
-        id: doc.id, 
+        id: data.id, 
         ...data,
         unit_price: processItemPrice(data, data.category || "accessory"),
         category: data.category || "accessory",
-        technologies: data.technology ? [data.technology] : ["Common"],
+        technologies: data.technologies || (data.technology ? [data.technology] : ["Common"]),
         type: "addon"
       });
     });

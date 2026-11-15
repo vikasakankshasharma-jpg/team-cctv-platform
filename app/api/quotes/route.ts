@@ -8,7 +8,8 @@ import { Product, Addon, AppSettings, Lead } from "@/types";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
 import { ApiResponse } from "@/lib/api-response";
 import { isMaintenanceMode } from "@/lib/kill-switch";
-import { mergeAppSettings } from "@/lib/cached-settings";
+import { mergeAppSettings, getCachedAdminSettings } from "@/lib/cached-settings";
+import { getCachedProducts, getCachedAddons, getCachedGeoRules } from "@/lib/cached-catalog";
 import { executeSafeQuotationCalculation, toHttpErrorResponse } from "@/lib/quotation-boundary";
 import { emitCalculationTelemetry } from "@/lib/observability/calculation-telemetry";
 import {
@@ -65,13 +66,13 @@ export async function POST(request: NextRequest) {
        return ApiResponse.error("Database not initialized", "INTERNAL_ERROR", 500);
     }
     
-    // 2. Fetch Authoritative Data (Server-Side Source of Truth)
-    const [leadDoc, productsSnap, addonsSnap, settingsSnap, geoRulesSnap] = await Promise.all([
+    // 2. Fetch Authoritative Data (Server-Side Source of Truth with High-Performance Caching)
+    const [leadDoc, products, addons, settings, geoRules] = await Promise.all([
       adminDb.collection("leads").doc(lead_id).get(),
-      adminDb.collection("products").where("is_active", "==", true).get(),
-      adminDb.collection("addons").where("is_active", "==", true).get(),
-      adminDb.collection("settings").doc(SETTINGS_DOC_ID).get(),
-      adminDb.collection("geo_pricing_rules").where("is_active", "==", true).get()
+      getCachedProducts(),
+      getCachedAddons(),
+      getCachedAdminSettings(),
+      getCachedGeoRules()
     ]);
 
     if (!leadDoc.exists) {
@@ -84,21 +85,6 @@ export async function POST(request: NextRequest) {
     if (firebase_uid && leadData.firebase_uid !== firebase_uid) {
       return ApiResponse.forbidden("Forbidden: Lead ownership mismatch");
     }
-
-    const products = productsSnap.docs
-      .map(d => {
-        const data = d.data() as any;
-        if (!Array.isArray(data.technologies)) {
-          data.technologies = data.technology ? [data.technology] : ["Common"];
-        }
-        return { id: d.id, ...data };
-      })
-      .filter(p => p.is_deleted !== true && p.is_addon !== true && p.is_quotation_eligible !== false) as Product[];
-    const addons = addonsSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Addon[];
-    const geoRules = geoRulesSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
-
-
-    const settings = mergeAppSettings(settingsSnap.data() as AppSettings);
 
     const wizardAnswers = (leadData.wizard_answers || {}) as Record<string, unknown>;
     const siteSurvey = (leadData as any).site_survey || {};

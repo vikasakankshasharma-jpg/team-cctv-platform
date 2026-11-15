@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { GoogleGenAI } from "@google/genai";
 import { requireAdmin } from "@/lib/auth-server";
+import { isStrictZeroCostModeActive } from "@/lib/billing/budget-tracker";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -73,9 +74,13 @@ Rules:
 Return ONLY valid JSON. No explanation text.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     contents: [{ role: "user", parts: [{ text: prompt }] }],
-    config: { responseMimeType: "application/json" },
+    config: { 
+      responseMimeType: "application/json",
+      maxOutputTokens: 1000,
+      temperature: 0.1
+    },
   });
 
   try {
@@ -126,9 +131,13 @@ Rules:
 Return ONLY valid JSON. No explanation text.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     contents: [{ role: "user", parts: [{ text: prompt }] }],
-    config: { responseMimeType: "application/json" },
+    config: { 
+      responseMimeType: "application/json",
+      maxOutputTokens: 1000,
+      temperature: 0.1
+    },
   });
 
   try {
@@ -137,6 +146,74 @@ Return ONLY valid JSON. No explanation text.`;
   } catch {
     return {};
   }
+}
+
+// ─── Local Deterministic Fallback Extractors (0 Tokens, ₹0 Cost) ─────────────
+
+function extractCameraSpecsLocal(p: any): Record<string, any> {
+  const name = `${p.display_name || ''} ${p.technical_name || ''}`.toLowerCase();
+  
+  let resolution_mp: number | null = null;
+  let max_resolution_label: string | null = null;
+  if (/8mp|4k/i.test(name)) { resolution_mp = 8; max_resolution_label = "4K"; }
+  else if (/5mp/i.test(name)) { resolution_mp = 5; max_resolution_label = "5MP"; }
+  else if (/4mp|2k/i.test(name)) { resolution_mp = 4; max_resolution_label = "4MP"; }
+  else if (/3mp/i.test(name)) { resolution_mp = 3; max_resolution_label = "3MP"; }
+  else if (/2mp|1080p/i.test(name)) { resolution_mp = 2; max_resolution_label = "1080p"; }
+
+  let form_factor: string | null = null;
+  if (/bullet/i.test(name)) form_factor = "bullet";
+  else if (/dome/i.test(name)) form_factor = "dome";
+  else if (/ptz|pan tilt/i.test(name)) form_factor = "ptz";
+  else if (/turret/i.test(name)) form_factor = "turret";
+
+  let night_vision_type: string = "ir";
+  if (/dual light/i.test(name)) night_vision_type = "dual_light";
+  else if (/color|colorvu|night color/i.test(name)) night_vision_type = "color";
+  else if (/starlight/i.test(name)) night_vision_type = "starlight";
+
+  const has_audio = /audio|mic|built-in mic/i.test(name);
+  const ip_rating = /ip67/i.test(name) ? "IP67" : (/ip66/i.test(name) ? "IP66" : (form_factor === "bullet" ? "IP66" : null));
+
+  return {
+    resolution_mp,
+    max_resolution_label,
+    form_factor,
+    night_vision_type,
+    has_audio,
+    ip_rating,
+    confidence: (resolution_mp && form_factor) ? "high" : "medium",
+  };
+}
+
+function extractRecorderSpecsLocal(p: any): Record<string, any> {
+  const name = `${p.display_name || ''} ${p.technical_name || ''}`.toLowerCase();
+
+  let channels: number | null = null;
+  if (/32\s*ch|32ch|32 channel/i.test(name)) channels = 32;
+  else if (/16\s*ch|16ch|16 channel/i.test(name)) channels = 16;
+  else if (/8\s*ch|8ch|8 channel/i.test(name)) channels = 8;
+  else if (/4\s*ch|4ch|4 channel/i.test(name)) channels = 4;
+
+  let recorder_type: string = "DVR";
+  if (/nvr|network video recorder/i.test(name)) recorder_type = "NVR";
+  else if (/xvr/i.test(name)) recorder_type = "XVR";
+
+  let hdd_slots = 1;
+  if (/4\s*sata|4\s*hdd/i.test(name)) hdd_slots = 4;
+  else if (/2\s*sata|2\s*hdd/i.test(name)) hdd_slots = 2;
+
+  let max_resolution_rec: string = "5MP";
+  if (/4k|8mp/i.test(name)) max_resolution_rec = "4K";
+  else if (/2mp|1080p/i.test(name)) max_resolution_rec = "1080p";
+
+  return {
+    channels,
+    recorder_type,
+    hdd_slots,
+    max_resolution_rec,
+    confidence: channels ? "high" : "medium"
+  };
 }
 
 // ─── Build enrichment rows ────────────────────────────────────────────────────
@@ -289,6 +366,26 @@ export async function POST(req: NextRequest) {
 
     if (allProducts.length === 0) {
       return NextResponse.json({ rows: [] });
+    }
+
+    // Zero-Cost Mode Circuit Breaker: Evaluate entirely locally via deterministic regex (0 API tokens, ₹0 cost)
+    if (await isStrictZeroCostModeActive()) {
+      const localAiResults: Record<string, any> = {};
+      for (const p of allProducts) {
+        localAiResults[p.id] = category === "cctv_camera"
+          ? extractCameraSpecsLocal(p)
+          : extractRecorderSpecsLocal(p);
+      }
+      const rows = category === "cctv_camera"
+        ? buildCameraRows(allProducts, localAiResults)
+        : buildRecorderRows(allProducts, localAiResults);
+
+      return NextResponse.json({ 
+        rows, 
+        total_analyzed: allProducts.length,
+        source: "local_regex_safeguard",
+        cost: "₹0.00"
+      });
     }
 
     // Run AI in batches of 20 to stay within token limits
