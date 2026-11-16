@@ -151,3 +151,9 @@ This document tracks all API routes, their HTTP methods, the Firestore collectio
 | `/api/webhooks/payment` | POST | change_orders, audit_logs, invoices, jobs, payment_transactions | e2e-financial-contracts.spec.ts<br>e2e-production-readiness.spec.ts |
 | `/api/webhooks/razorpay` | POST | jobs, quotes, invoices, leads | e2e-commercial-hardening.spec.ts |
 | `/api/wizard` | GET | - | *Orphan Route?* |
+| `/api/delivery/dispatch` | POST | delivery_jobs, dispatch_tokens | DispatchPanel.tsx |
+| `/api/delivery/verify-otp` | POST | quotes, delivery_jobs, jobs | PublicDeliveryClient.tsx |
+| `/api/finance/exports` | GET | invoices, receipts, tds_ledger, credit_notes | FinanceExportsClient.tsx |
+| `/api/payment/refund` | POST | credit_notes, refunds, quotes, audit_logs | RefundDialog.tsx |
+| `/api/admin/salespersons/me` | GET | salespeople | SalespersonHeader.tsx |
+| `/d/[token]` | GET | dispatch_tokens, quotes | PublicDeliveryClient.tsx |

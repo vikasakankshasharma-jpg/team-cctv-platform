@@ -174,3 +174,25 @@ flowchart TD
   - Customer OTP delivery (`/api/auth/otp/whatsapp`, `/api/auth/otp/sms`, `/api/refer-and-earn/otp/send`) routes through `Msg91WhatsAppProvider.sendOtpTemplate()` (`lib/whatsapp/msg91-provider.ts`) with CRLF-stripped credentials (`lib/env-utils.ts`).
   - Client UI components extract structured API/exception errors via `extractErrorMessage()` (`lib/utils.ts`) to prevent `[object Object]` toasts on every journey screen.
   - `WhatsAppOtpNotice` (`components/shared/WhatsAppOtpNotice.tsx`) and `lib/whatsapp.ts` invoke the native WhatsApp app synchronously via `<a href="whatsapp://send?phone=...">` with adaptive `wa.me` (mobile) / `web.whatsapp.com` (desktop) fallback after `1600ms`.
+
+### 10. Multi-Stage Customer Refund & Section 34 Credit Note Pipeline
+- **Stage 1 (Advance Booking):** Customer cancellation before dispatch trigger executes 100% refund of ₹500 token.
+- **Stage 2 (Part-Payment Dispatch Cancellation):**
+  - Stage 2A: Full order return after 90% payment refunds booking fee + milestone payment.
+  - Stage 2B: Partial hardware adjustment retains the active job while refunding price delta.
+- **Stage 3 (Post-Installation Settlement):**
+  - Stage 3A: Final 10% payment adjustment for site variances.
+  - Stage 3B: Complete contract return upon verified equipment recovery.
+- **Statutory Reverse-GST:** Section 34 Credit Note generated automatically with reverse 18% GST math to exact ₹0.00 drift. Programmatic Razorpay API refund with idempotency keying.
+
+### 11. Third-Party Delivery & Subcontractor Handshake Pipeline (`/d/[token]`)
+- **Magic Link Dispatch:** Tokenized URL sent to external couriers (Porter, Dunzo, freelance riders).
+- **Payment Lockout:** Displays `PAYMENT_REQUIRED` if 90% milestone is unpaid; zero-cash collection authority enforced.
+- **4-Digit OTP Handover:** Verified at doorstep unlocks physical hardware release and updates `/track/[id]` in real-time.
+- **Field Exceptions:** Couriers report delivery failure reasons (`CUSTOMER_UNAVAILABLE`, `PREMISES_CLOSED`, etc.) via `reportPublicDeliveryFailure`.
+- **TDS Withholding:** Section 194C (1% individual, 2% firm, 20% penal rate) and Section 194H (5% promoter, 20% penal rate) calculated via `TaxationEngine`.
+
+### 12. Statutory Tax Compliance & CA Auditor Portal (`/admin/finance/exports`)
+- **Auditor Role (`external_ca`):** Dedicated read-only access to statutory ledgers with zero mutation privileges.
+- **GSTR-1 & GSTR-3B Exports:** Automated generation of Monthly/Quarterly Sales Registers with 18% reverse-calculated taxable subtotal and GST components.
+- **Form 26Q TDS Register:** Comprehensive deduction schedule for Section 194C and Section 194H with PAN verification status.
