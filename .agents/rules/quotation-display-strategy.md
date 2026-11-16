@@ -43,8 +43,6 @@ Never confuse or revert the quotation presentation strategy for this project. Th
      - `4-Camera Hikvision 5MP IP Package (2TB Storage)`
      - `4-Camera TP-Link WiFi HD Wireless Package (128GB MicroSD)`
 
-
-
 6. **Per-Bucket Specification Customization & Zero Feature Leakage**
    - **Real-Life Daily Situation Support:** Practical installations require mixed camera specifications across the same property (e.g., 2 outdoor cameras requiring Color Night Vision and Audio Mic, 1 entrance camera needing 2-way talk and speaker, and 1 wireless camera requiring 4G SIM where no Wi-Fi exists).
    - **Independent Bucket Feature Toggling:** Customers must have the freedom to configure features per bucket without global feature leakage. The pricing engine (`pricing-engine.ts`) strictly prioritizes per-bucket `features` over global selections.
@@ -68,9 +66,8 @@ Never confuse or revert the quotation presentation strategy for this project. Th
 
 ## 9. Sticky Filter Bar Navigation for Catalog Variations
 - **Sticky Technology & Brand Bar:** The Technology Selector (HD Analog, IP Network, Wireless, Hybrid) and Brand Selector pills must remain pinned (sticky top-14 md:top-20 z-30) as customers scroll down to browse and compare Available Packages.
-- **Immediate Context & Zero Friction Switching:** Floating below the site header with ackdrop-blur-md bg-[#f5f5f7]/95 dark:bg-black/95, customers can seamlessly switch technologies or filter by brand anywhere in the catalog without having to scroll all the way back up to the top.
+- **Immediate Context & Zero Friction Switching:** Floating below the site header with backdrop-blur-md bg-[#f5f5f7]/95 dark:bg-black/95, customers can seamlessly switch technologies or filter by brand anywhere in the catalog without having to scroll all the way back up to the top.
 - **Viewport Height Efficiency:** Designed with compact padding (~75px total height on mobile) to preserve maximum vertical screen space for quotation cards while keeping touch targets comfortably accessible.
-
 
 ## 10. WhatsApp Omnichannel Conversational Engine & Resilience Standards
 - **11-Language First-Touch Selection & Layman Phrasing:**
@@ -105,4 +102,3 @@ Never confuse or revert the quotation presentation strategy for this project. Th
 - **Certified Isolation:** Read-only UI overlay; never mutates pricing, GST, or BOM data structures.
 - **Funnel Drop-off Telemetry (`lib/analytics/tour-funnel-calculator.ts`, `TourPerformanceWidget.tsx`):** Pure functional aggregation turning raw tour events into `TourFunnelDataset` with `completionRate`, `skipRate`, and step `dropOffRate` rendered live on `/admin/analytics/funnel`.
 - **11-Language Modular Lazy-Loading (`locales/tours/[locale].json`, `lib/i18n/tour-translations.ts`):** Complete colloquial layman translations for all 11 languages (`en`, `hi`, `mr`, `gu`, `ta`, `te`, `kn`, `bn`, `ml`, `pa`, `or`) loaded on demand without inflating bundle sizes.
-
