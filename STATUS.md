@@ -1,6 +1,6 @@
 # TEAM CCTV Platform - Master Project Status & Verification Log
 
-> **Last Updated:** November 11, 2026  
+> **Last Updated:** November 16, 2026  
 > **Production URL:** `https://cctvquotation.com`  
 > **Repository:** `team-cctv-platform` (`master` branch)  
 > **Canonical Plan & Architecture:** [`docs/HARDENING_SPRINT_PLAN.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/HARDENING_SPRINT_PLAN.md) | [`BUSINESS_RULES.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/BUSINESS_RULES.md)
@@ -12,6 +12,13 @@
 | Domain | Status | Latest Evidence / Milestone |
 |---|---|---|
 | **Commercial Core & Pricing Engine** | `VERIFIED` | 100% parity between Guided Setup & Pro Builder; 100% test pass rate across 238 permutation tests; Full Quotation Engine QA & Price Reconciliation Workbook; **Statutory GST-Paid Master Invariant (18% inclusive wholesale costs & retail prices with reverse-calculated taxable subtotal and GST breakdown; HSN/SAC code mapping across all line items)**; Multi-Variation Catalog generation (lowest entry price standard IR vs 24/7 ColorVu full-color); Recorder (DVR/NVR) resolution compatibility ($\text{recMaxMP} \ge \text{targetMaxMP}$) & best-price tie-break; SMPS best-price rule; Gigabit switch multi-PoE uplink; bundle/per-meter cable logic; ₹0 markup labor rules; 5 site prep flags; Multi-tier storage architecture & physical law inverse scaling ($Days \propto \frac{Capacity}{Cameras \times DailyGB}$) across HD, IP & Wireless; Storage Transparency & Clean Advisory Architecture (global retention banner, sleek amber card badge, and interactive `StorageAdvisoryModal.tsx`). |
+| **Commercial Lifecycle & Persona Certification** | `VERIFIED` | Phase 7.1–7.13 Commercial Lifecycle Certification Suite: **109/109 tests PASSING (100% pass rate)**. Validated across 8 distinct personas: Customer, Promoter, Salesperson, Dispatcher, Field Delivery/Rider, Installer/Technician, Internal Accountant, and External CA/Tax Auditor. Reverse-tax 18% GST invariants verified to exact ₹0.00 mathematical reconciliation across all milestones, adjustments, and refunds. |
+| **Global AI Gateway & Observability** | `VERIFIED` | Consolidated single chokepoint (`lib/ai/ai-gateway.ts`) with positive authorization, zero direct AI imports, in-memory SHA-256 fingerprint caching, bounded token ceilings (1024 tokens/turn), and non-blocking L2 persistent Firestore ledger (`ai_usage_ledger`). |
+| **Multi-Stage Customer Refund Protocol** | `VERIFIED` | 3-stage refund architecture (`app/api/payment/refund/route.ts`, `components/admin/RefundDialog.tsx`): Stage 1 (Advance ₹500 token), Stage 2 (90% Part-payment dispatch full cancellation or partial adjustment), Stage 3 (Post-install settlement / contract return). Fully integrated with Razorpay API, idempotency keys, and Section 34 Reverse-GST Credit Notes. |
+| **Third-Party Logistics & Subcontractor Hub** | `VERIFIED` | Tokenized, zero-auth public magic link `/d/[token]` with cryptographic UUIDs, field projection security, anti-replay guards, and standardized exception reporting. Enforces strict zero-cash collection authority with automatic payment lockout when 90% milestone is unpaid. Subcontractor Section 194C TDS (1% individual, 2% firm, 20% penal) and Section 194H TDS integrated into `TaxationEngine`. |
+| **Salesperson CRM & Lead Assignment** | `VERIFIED` | Atomic dual-pointer synchronization (`assigned_to_salesperson_id` & `assigned_salesperson_id`), margin ceiling enforcement, and competitor price match counter-offer escalation with Sales Manager approval requirement. |
+| **Statutory Tax & CA Auditor Center** | `VERIFIED` | External CA read-only auditor role (`external_ca`), GSTR-1 Monthly/Quarterly Sales Register export, GSTR-3B Tax Summary, Form 26Q TDS Register (Section 194C / 194H), and Field Cash Reconciliation at `/admin/finance/exports`. |
+| **Guided Tours & 11-Language Localization** | `VERIFIED` | Journey-wise micro-tours across 5 personas with mobile compositor motion, GPU translate3d animations, dynamic viewport inversion, body scroll locking, decoupled telemetry, drop-off funnel analytics widget (`/admin/analytics/funnel`), and lazy-loaded 11-language localization. |
 | **Mapping & Geographical Coverage** | `VERIFIED` | 100% Google Maps parity via Mappls GeoAnalytics API + 34-vertex fallback `JAIPUR_METRO_BOUNDARY`; CartoDB Voyager CDN tile engine with sub-50ms latency; automated Leaflet modal resize engine (`ResizeObserver` + staggered `invalidateSize`); 1-click delivery halo toggle (`Halos: ON/OFF`); 1-click `⚡ Auto-Trace Territory` convex hull enclosure; 0 legacy compass labels in Firestore. |
 | **Referral & Partner Ecosystem** | `VERIFIED` | B2B Partner Portal with QR codes (2% comm / 3% disc); B2C Refer & Earn (₹500 / ₹500) with festive WhatsApp status EDMs; Financial Dashboard payout tracking. |
 | **Customer Journey & Pro Builder** | `VERIFIED` | Compact Dropdown Filter Toolbar (Camera Brand, Retention Days, Storage Drive Brand, Sensor Type) with live match counter & quick reset; Key Difference badging (`key_difference`) explaining price variance per card; WhatsApp OTP lead capture before custom build; Mobile slide-over cart drawer; single-filter auto-collapse; Dynamic inventory-driven feature tags; Resolution vs feature boundary enforcement; Centered non-intrusive modal dialogs; Per-bucket feature independence with zero feature leakage; Intrinsic bullet camera weatherproofing standard; Purpose-driven smart wireless variants with edge storage advisory. |
@@ -725,6 +732,70 @@
 - **Services Bucket Commission & AMC Accounting (`lib/commission.ts`, `lib/quotation-profit.ts`, `lib/profit-context.ts`):** Added `resolvePromoterCommission()` (with positive-value guard on promoter incentive overrides before `commission_slabs` / tier / global fallback) and wired B2B promoter commissions, B2C ₹500 referrals, salesperson commissions, Paid AMC plans + deduplicated `amc_subscriptions`/`amc_contracts`, and complimentary Promo Free AMC PM visit reserves (`2 * cost_labor_visit_charge`) directly into the **Services** bucket—without manufacturing phantom commissions on manual admin discounts lacking a referral code.
 - **Operating Overheads & True Net Pocket Profit (`lib/cached-settings.ts`, `lib/pricing-engine.ts`, `QuotationProfitBreakupCard.tsx`, `ProfitabilityAnalyticsClient.tsx`):** Added configurable reserves (`amc_fulfillment_cost_percent`, `payment_gateway_fee_percent`, `warranty_reserve_percent`, `logistics_consumables_per_job`, `travel_fee_payout_percent`), actual Razorpay MDR fees (`payment_history.razorpay_fee`, ₹0 on cash/bank transfer/direct UPI), fixed zeroed `labor_cost_margin_percent` fallback, and surfaced the **True Net Pocket Profit** waterfall across CRM Lead Deals and `/admin/analytics/profitability` without changing customer-facing GST-inclusive totals.
 - **Verified Checks:** `npm run build` (exit 0; 226 routes), `npx tsx scripts/verify-profit-waterfall.ts` (6/6 assertions PASS), and Playwright `tests/unit-commission-engine.spec.ts` + `tests/unit-profitability-engine.spec.ts` (11/11 PASS, 0 skipped/failed).
+
+---
+
+### Milestone 54: Interactive Page-by-Page Guided Micro-Tours, Mobile Compositor Motion & 11-Language Localization
+- **Date:** November 15, 2026 | **Status:** `VERIFIED & DEPLOYED`
+- **Journey-Wise Step Micro-Tours (`components/tour/`):** Contextually spotlighted elements per page route and wizard step (`InteractivePageTour.tsx`) focusing strictly on layman hardware impacts (e.g. weatherproof bullets vs indoor domes, HD vs IP, storage retention days) on cabling, hardware, and 100% GST-paid pricing.
+- **User Agency Controls:** Explicit `[ Next / Try It ]`, `[ Skip ]` (current step only: `team_tour_page_skip:<pageId>`), `[ Don't show guides automatically again ]` (`localStorage.setItem('team_tour_skip_all', 'true')`), and compact header persistent `[ 💡 Guide ]` pill via `renderTrigger` eliminating layout overlap with WhatsApp floating widgets and sticky CTA bars.
+- **Mobile Compositor Motion & Viewport Inversion:** GPU-accelerated CSS keyframes (`translate3d`, `animate-tour-pulse`, `animate-tour-card-enter`), static `supports-[backdrop-filter]:backdrop-blur-[1px]`, dynamic viewport docking above/below targets, body scroll lock (`overflow: hidden`), and `@media (prefers-reduced-motion: reduce)` safety.
+- **Persona Coverage:** Customer Builder (`cctv-wizard`, `quote-catalog`, `quote-review`), Operations (`track-booking`, `customer-dashboard`), Admin Deal Closer (`admin-deal-tour`), Installer Job Card (`installer-job-tour`), and Partner Portal (`partner-leads-tour`, `partner-commissions-tour`).
+- **Decoupled Telemetry & Funnel Widget:** Privacy-safe custom events (`tour_started`, `tour_step_viewed`, `tour_completed`, `tour_skipped`, `tour_skip_all`) with zero PII. Funnel analytics widget (`TourPerformanceWidget.tsx`) live at `/admin/analytics/funnel` tracking per-screen starts, completions, and step-by-step drop-offs.
+- **11-Language Lazy-Loaded Dictionary:** Colloquial layman phrasing across all 11 Indian languages (`en`, `hi`, `mr`, `gu`, `ta`, `te`, `kn`, `bn`, `ml`, `pa`, `or`) dynamically loaded without mobile bundle penalties.
+
+---
+
+### Milestone 55: Global AI Gateway Consolidation, Zero-Cost Circuit Breakers & L2 Persistent Observability Ledger
+- **Date:** November 15, 2026 | **Status:** `VERIFIED & TESTED`
+- **Single-Chokepoint Consolidation (`lib/ai/ai-gateway.ts`):** Unified all AI/LLM operations under a central gateway; eliminated direct imports of `@google/genai` or `@google-cloud/vertexai` across application routes.
+- **Positive Authorization & Bounded Token Allocations:** Enforces purpose-based access control with hard bounded token ceilings (maximum 1,024 output tokens per turn).
+- **In-Memory Catalog Cache & SHA-256 Fingerprinting:** SHA-256 catalog hashing and in-memory response caching prevent redundant model calls for identical catalog state queries.
+- **L2 Persistent Observability Ledger (`ai_usage_ledger`):** Asynchronously records all token usage, prompt latency, caller roles, and completion statuses to Firestore without adding customer latency.
+- **Zero-Cost Circuit Breakers:** Graceful degradation to deterministic rule-based fallback responses upon quota or rate limit thresholds.
+
+---
+
+### Milestone 56: Multi-Stage Customer Refund Protocol & Statutory Section 34 Credit Notes
+- **Date:** November 15-16, 2026 | **Status:** `VERIFIED & CERTIFIED`
+- **3-Stage Refund Architecture (`app/api/payment/refund/route.ts`, `components/admin/RefundDialog.tsx`):**
+  - *Stage 1 (Advance Booking Refund):* Cancellation before dispatch; 100% refund of ₹500 booking token.
+  - *Stage 2 (Part-Payment Dispatch Cancellation):* Stage 2A full return (refunds booking fee + 90% payment) or Stage 2B partial adjustment (hardware downgrade with job remaining active).
+  - *Stage 3 (Post-Installation Settlement / Goodwill Refund):* Stage 3A final payment adjustment or Stage 3B full contract return upon equipment recovery.
+- **Reverse-GST 18% Mathematical Reconciliation:**
+  $$\text{Credit Taxable Base} = \frac{\text{Refund Amount}}{1.18}$$
+  $$\text{Credit 18% GST} = \text{Refund Amount} - \text{Credit Taxable Base}$$
+  Guaranteed ₹0.00 mathematical drift with automated Section 34 Credit Note issuance.
+- **Razorpay API Integration:** Programmatic refund dispatch with deterministic idempotency keys and audit logging.
+
+---
+
+### Milestone 57: Third-Party Delivery & Subcontractor Handshake Portal (`/d/[token]`) & Statutory TDS Withholding
+- **Date:** November 16, 2026 | **Status:** `VERIFIED & CERTIFIED`
+- **Zero-Auth Public Magic Link (`/d/[token]`):** Tokenized access for third-party couriers (Porter, Dunzo, freelance riders) with cryptographic UUID tokens, expiry guards, and strict field projection security.
+- **Strict Zero-Cash Authority Invariant:** Automatic payment lockout (`PAYMENT_REQUIRED`) when the 90% milestone payment is unpaid; delivery handover OTP cannot be verified until payment is completed online.
+- **Standardized Field Exception Reporting:** Couriers can submit delivery failure reasons (`CUSTOMER_UNAVAILABLE`, `PREMISES_CLOSED`, `REFUSED_DELIVERY`, `WRONG_ADDRESS`) via `reportPublicDeliveryFailure`, instantly notifying the central dispatch desk and synchronizing `/track/[id]`.
+- **Subcontractor Section 194C TDS Calculation (`TaxationEngine` in `lib/taxation-engine.ts`):** 1% TDS for individual contractors with valid PAN; 2% TDS for registered subcontractor firms; 20% penal rate without PAN.
+- **Promoter Section 194H TDS Calculation:** 5% TDS for partner/broker referral payouts with valid PAN; 20% penal rate without PAN.
+
+---
+
+### Milestone 58: Phase 7 Commercial Lifecycle Certification Suite (109 Tests Passing)
+- **Date:** November 16, 2026 | **Status:** `VERIFIED & PASSING (109/109)`
+- **Comprehensive Lifecycle Test Suites (`tests/certification/commercial/`):**
+  - `Phase 7.2`: Commercial Transaction, Payment & GST Invoicing (12 tests)
+  - `Phase 7.3`: Multi-Stage Customer Refund Security & Lifecycle (6 tests)
+  - `Phase 7.4`: Salesperson Full Cycle & Admin Sync (7 tests)
+  - `Phase 7.5`: Promoter Full Cycle & Admin Sync (8 tests)
+  - `Phase 7.6`: Customer Full Cycle & Admin Sync (8 tests)
+  - `Phase 7.7`: Installer Full Cycle & Admin Sync (6 tests)
+  - `Phase 7.8`: Third-Party Installer Full Cycle & Admin Sync (8 tests)
+  - `Phase 7.9`: Delivery Person Full Cycle & Admin Sync (8 tests)
+  - `Phase 7.10`: Third-Party Delivery Person Full Cycle & Admin Sync (8 tests)
+  - `Phase 7.11`: Admin Staff Roles Full Cycle & Permission Matrix (8 tests)
+  - `Phase 7.12`: Chartered Accountant (CA) Full Cycle & Admin Sync (8 tests)
+  - `Phase 7.13`: All Users Cross-Synchronization & Omnichannel Orchestration (8 tests)
+- **Production Verification:** Full TypeScript typecheck verification (`tsc --noEmit`: 0 errors) and Next.js Turbopack production build verification (`npm run build`: 229 routes compiled cleanly in 106s).
 
 ---
 

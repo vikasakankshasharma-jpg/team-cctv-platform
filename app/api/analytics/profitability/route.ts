@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
         adminDb.collection("commission_records").get().catch(catchQuota({ docs: [] })),
         adminDb.collection("commissions").get().catch(catchQuota({ docs: [] })),
         adminDb.collection("promoters").get().catch(catchQuota({ docs: [] })),
-        adminDb.collection("salespersons").get().catch(catchQuota({ docs: [] })),
+        adminDb.collection("salespeople").get().catch(() => adminDb.collection("salespersons").get()).catch(catchQuota({ docs: [] })),
         adminDb.collection("amc_subscriptions").get().catch(catchQuota({ docs: [] })),
         adminDb.collection("amc_contracts").get().catch(catchQuota({ docs: [] })),
       ]);

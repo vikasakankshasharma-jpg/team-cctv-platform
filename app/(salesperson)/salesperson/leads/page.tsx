@@ -24,23 +24,32 @@ export default async function SalespersonLeadsPage() {
   let leads: any[] = [];
   
   if (session.user) {
-    // 1. Find the salesperson ID
-    const spSnap = await adminDb.collection("salespeople")
-      .where("firebase_uid", "==", session.user.uid)
-      .limit(1)
-      .get();
+    // 1. Find the salesperson ID (resilient across salespeople / salespersons)
+    const { findSalespersonByUid } = await import("@/lib/salesperson-utils");
+    const spDoc = await findSalespersonByUid(session.user.uid);
       
-    if (!spSnap.empty) {
-      const spId = spSnap.docs[0].id;
+    if (spDoc) {
+      const spId = spDoc.id;
       
-      // 2. Fetch leads assigned to this salesperson
-      const leadsSnap = await adminDb.collection("leads")
+      // 2. Fetch leads assigned to this salesperson (resilient across both assigned_to_salesperson_id and assigned_salesperson_id)
+      const assignedToPromise = adminDb.collection("leads")
         .where("assigned_to_salesperson_id", "==", spId)
         .orderBy("created_at", "desc")
-        .limit(20)
+        .limit(25)
         .get();
+
+      const assignedPromise = adminDb.collection("leads")
+        .where("assigned_salesperson_id", "==", spId)
+        .orderBy("created_at", "desc")
+        .limit(25)
+        .get();
+
+      const [assignedToSnap, assignedSnap] = await Promise.all([assignedToPromise, assignedPromise]);
+      const mergedMap = new Map();
+      assignedToSnap.docs.forEach(d => mergedMap.set(d.id, d));
+      assignedSnap.docs.forEach(d => mergedMap.set(d.id, d));
         
-      leads = leadsSnap.docs.map(doc => {
+      leads = Array.from(mergedMap.values()).map(doc => {
         const data = doc.data() as Lead;
         return {
           ...data,

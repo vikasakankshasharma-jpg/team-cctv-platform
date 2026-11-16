@@ -15,17 +15,30 @@ export class TaxationEngine {
   // We can fetch this from the database or pass it in.
   // We'll build a helper to fetch current global settings.
   static async getTaxSettings() {
-    const snap = await adminDb.collection("settings").doc("global").get();
-    const data = snap.data() || {};
-    return {
-      tds_194c_individual_rate: data.tds_194c_individual_rate ?? 1,
-      tds_194c_firm_rate: data.tds_194c_firm_rate ?? 2,
-      tds_194c_single_threshold: data.tds_194c_single_threshold ?? 30000,
-      tds_194c_annual_threshold: data.tds_194c_annual_threshold ?? 100000,
-      tds_194h_rate: data.tds_194h_rate ?? 5,
-      tds_194h_annual_threshold: data.tds_194h_annual_threshold ?? 15000,
-      tds_penal_rate: data.tds_penal_rate ?? 20,
-    };
+    try {
+      const snap = await adminDb.collection("settings").doc("global").get();
+      const data = snap.data() || {};
+      return {
+        tds_194c_individual_rate: data.tds_194c_individual_rate ?? 1,
+        tds_194c_firm_rate: data.tds_194c_firm_rate ?? 2,
+        tds_194c_single_threshold: data.tds_194c_single_threshold ?? 30000,
+        tds_194c_annual_threshold: data.tds_194c_annual_threshold ?? 100000,
+        tds_194h_rate: data.tds_194h_rate ?? 5,
+        tds_194h_annual_threshold: data.tds_194h_annual_threshold ?? 15000,
+        tds_penal_rate: data.tds_penal_rate ?? 20,
+      };
+    } catch {
+      // Fallback to statutory standard rates when Firestore is unreachable or in mock/test environment
+      return {
+        tds_194c_individual_rate: 1,
+        tds_194c_firm_rate: 2,
+        tds_194c_single_threshold: 30000,
+        tds_194c_annual_threshold: 100000,
+        tds_194h_rate: 5,
+        tds_194h_annual_threshold: 15000,
+        tds_penal_rate: 20,
+      };
+    }
   }
 
   /**

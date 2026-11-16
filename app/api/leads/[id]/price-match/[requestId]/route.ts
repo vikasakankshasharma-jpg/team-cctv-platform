@@ -76,14 +76,10 @@ export async function PATCH(
       reviewerRoleLabel = "salesperson";
 
       // Look up salesperson record by firebase_uid
-      const salespersonSnap = await adminDb
-        .collection("salespersons")
-        .where("firebase_uid", "==", reviewerUid)
-        .limit(1)
-        .get();
+      const { findSalespersonByUid } = await import("@/lib/salesperson-utils");
+      const salesperson = await findSalespersonByUid(reviewerUid);
 
-      if (!salespersonSnap.empty) {
-        const salesperson = salespersonSnap.docs[0].data() as Salesperson;
+      if (salesperson) {
         reviewerName = salesperson.name;
 
         // Check discount approval limit

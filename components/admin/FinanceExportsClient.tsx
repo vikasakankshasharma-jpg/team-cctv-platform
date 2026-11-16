@@ -16,11 +16,25 @@ export function FinanceExportsClient() {
   const handleExportGstr = async () => {
     setIsExportingGstr(true);
     try {
-      // In production, this hits an API that streams a massive CSV/Excel via exceljs
-      await new Promise(r => setTimeout(r, 2000)); 
+      const res = await fetch(`/api/finance/exports?type=gstr1&month=${dateRange.month}&year=${dateRange.year}`);
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to generate GSTR-1");
+      }
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `GSTR-1_${dateRange.year}_${String(dateRange.month).padStart(2, "0")}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
       toast.success(`GSTR-1 Data for ${dateRange.month}/${dateRange.year} downloaded successfully!`);
-    } catch (e) {
-      toast.error("Failed to export GSTR-1");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to export GSTR-1");
     } finally {
       setIsExportingGstr(false);
     }
@@ -29,11 +43,25 @@ export function FinanceExportsClient() {
   const handleExportTds = async () => {
     setIsExportingTds(true);
     try {
-      // In production, this hits an API that streams the 26Q FVU map
-      await new Promise(r => setTimeout(r, 2000)); 
+      const res = await fetch(`/api/finance/exports?type=form26q&month=${dateRange.month}&year=${dateRange.year}`);
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to generate Form 26Q");
+      }
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Form_26Q_TDS_${dateRange.year}_${String(dateRange.month).padStart(2, "0")}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
       toast.success(`Form 26Q TDS Data for ${dateRange.month}/${dateRange.year} downloaded successfully!`);
-    } catch (e) {
-      toast.error("Failed to export TDS Data");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to export TDS Data");
     } finally {
       setIsExportingTds(false);
     }

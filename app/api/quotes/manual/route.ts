@@ -95,6 +95,8 @@ export async function POST(req: NextRequest) {
 
     const snapshot: any = {
       id: quoteId,
+      lead_id: lead_id || null,
+      leadId: lead_id || null,
       customerId,
       customer_mobile,
       customer_name,

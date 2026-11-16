@@ -1,18 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { PackageCheck, KeyRound, CheckCircle2, AlertCircle, Clock, Shield } from "lucide-react";
+import { PackageCheck, KeyRound, CheckCircle2, AlertCircle, Clock, Shield, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
+import { reportPublicDeliveryFailure } from "@/app/actions/dispatch";
 
 export default function PublicDeliveryClient({ quoteId, quote }: { quoteId: string; quote: any }) {
   const { t } = useTranslation();
   const [otp, setOtp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(quote.delivery_status === "DELIVERED");
+  const [isFailed, setIsFailed] = useState(quote.delivery_status === "FAILED");
+  const [failureReason, setFailureReason] = useState(quote.delivery_failure_reason || "");
   const [cashCollected, setCashCollected] = useState(false);
+  const [isFailureModalOpen, setIsFailureModalOpen] = useState(false);
+  const [selectedReason, setSelectedReason] = useState("");
+  const [isReportingFailure, setIsReportingFailure] = useState(false);
 
   const isThirdParty = quote.delivery_method === "third_party";
   const needsPaymentConfirmation = isThirdParty && quote.payment_status !== "delivery_paid" && quote.payment_status !== "completed";
@@ -60,6 +66,54 @@ export default function PublicDeliveryClient({ quoteId, quote }: { quoteId: stri
     }
   };
 
+  const handleReportFailure = async () => {
+    if (!selectedReason) {
+      toast.error("Please select a failure reason");
+      return;
+    }
+    setIsReportingFailure(true);
+    try {
+      const token = quote.delivery_token;
+      const res = await reportPublicDeliveryFailure(token, selectedReason);
+      if (res.success) {
+        toast.success("Delivery issue reported successfully");
+        setIsFailed(true);
+        setFailureReason(selectedReason);
+        setIsFailureModalOpen(false);
+      } else {
+        toast.error(res.error || "Failed to record issue");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to submit");
+    } finally {
+      setIsReportingFailure(false);
+    }
+  };
+
+  const FAILURE_REASONS = [
+    { value: "Customer Not Available / Phone Switched Off", label: "Customer Not Available / Phone Switched Off" },
+    { value: "Address Incomplete or Incorrect", label: "Address Incomplete or Incorrect" },
+    { value: "Customer Refused Delivery", label: "Customer Refused Delivery" },
+    { value: "Package Damaged in Transit", label: "Package Damaged in Transit" },
+  ];
+
+  if (isFailed) {
+    return (
+      <div className="w-full max-w-md bg-white rounded-3xl p-8 shadow-xl border border-zinc-100 text-center animate-in fade-in zoom-in duration-500">
+        <div className="mx-auto w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6">
+          <AlertCircle className="w-12 h-12 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-bold text-zinc-900 mb-2">{t("pdel_fail_title", "Delivery Exception")}</h2>
+        <p className="text-zinc-600 font-medium mb-4">
+          Reason: <strong className="text-red-700">{failureReason || "Package Not Delivered"}</strong>
+        </p>
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-900 font-medium leading-relaxed">
+          Please return the package to the TEAM CCTV Hub. The customer support desk has been alerted.
+        </div>
+      </div>
+    );
+  }
+
   if (isSuccess) {
     return (
       <div className="w-full max-w-md bg-white rounded-3xl p-8 shadow-xl border border-zinc-100 text-center animate-in fade-in zoom-in duration-500">
@@ -92,11 +146,20 @@ export default function PublicDeliveryClient({ quoteId, quote }: { quoteId: stri
       </div>
 
       {needsPaymentConfirmation ? (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-8 flex gap-3 text-amber-800">
-          <Clock className="w-5 h-5 shrink-0 mt-0.5 text-amber-600" />
-          <p className="text-sm font-medium">
-            {t("pdel_wait_pay", "⏳ Waiting for Customer Payment. The customer needs to complete their 90% payment before you can verify delivery. Please wait or contact support.")}
-          </p>
+        <div className="space-y-4 mb-6">
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex gap-3 text-amber-800">
+            <Clock className="w-5 h-5 shrink-0 mt-0.5 text-amber-600" />
+            <p className="text-sm font-medium">
+              {t("pdel_wait_pay", "⏳ Waiting for Customer Payment. The customer needs to complete their 90% payment before you can verify delivery. Please wait or contact support.")}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsFailureModalOpen(true)}
+            className="w-full py-3 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 font-bold rounded-2xl text-sm transition-all whitespace-normal text-center"
+          >
+            {t("del_report_failure", "Report Delivery Issue")}
+          </button>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -152,7 +215,76 @@ export default function PublicDeliveryClient({ quoteId, quote }: { quoteId: stri
           >
             {isSubmitting ? t("pdel_verifying", "Verifying...") : t("pdel_verify_btn", "Verify Delivery")}
           </Button>
+
+          <button
+            type="button"
+            onClick={() => setIsFailureModalOpen(true)}
+            className="w-full py-3 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 font-bold rounded-2xl text-sm transition-all whitespace-normal text-center"
+          >
+            {t("del_report_failure", "Report Delivery Issue")}
+          </button>
         </form>
+      )}
+
+      {/* Failure Reporting Modal */}
+      {isFailureModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="bg-red-50 p-6 flex items-start justify-between border-b border-red-100">
+              <div className="flex items-center gap-3 text-red-600">
+                <AlertCircle className="w-6 h-6 shrink-0" />
+                <h3 className="font-black text-lg">Report Delivery Issue</h3>
+              </div>
+              <button onClick={() => setIsFailureModalOpen(false)} className="p-1 rounded-full hover:bg-red-100 text-red-600 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-zinc-600 font-medium">
+                Select the reason why the package could not be delivered to {quote.customer_name}:
+              </p>
+
+              <div className="space-y-2">
+                {FAILURE_REASONS.map(r => (
+                  <label 
+                    key={r.value} 
+                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                      selectedReason === r.value ? 'border-red-500 bg-red-50' : 'border-zinc-200 hover:bg-zinc-50'
+                    }`}
+                  >
+                    <input 
+                      type="radio" 
+                      name="failure_reason" 
+                      value={r.value}
+                      checked={selectedReason === r.value}
+                      onChange={(e) => setSelectedReason(e.target.value)}
+                      className="accent-red-600 shrink-0"
+                    />
+                    <span className={`text-sm font-semibold ${selectedReason === r.value ? 'text-red-700' : 'text-zinc-700'}`}>
+                      {r.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  onClick={handleReportFailure}
+                  disabled={isReportingFailure || !selectedReason}
+                  className="w-full min-h-[48px] bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl"
+                >
+                  {isReportingFailure ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" /> Submitting...
+                    </span>
+                  ) : "Submit Issue Report"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

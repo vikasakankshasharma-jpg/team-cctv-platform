@@ -449,27 +449,27 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
   const dynamicGroup = initialPackages?.[propertyType]?.[cameraCount];
 
   const localizeFeature = (feat: string): string => {
-    if (/Cabling|15m Free/i.test(feat)) return t("est_feat_cabling");
-    if (/Mobile & Desktop/i.test(feat)) return t("est_feat_multi_app");
-    if (/Store Phone/i.test(feat)) return t("est_feat_store_app");
-    if (/Complete Fitting|Mobile Live App/i.test(feat)) return t("est_feat_fitting_app");
+    if (/Cabling|15m Free/i.test(feat)) return t("est_feat_cabling", feat);
+    if (/Mobile & Desktop/i.test(feat)) return t("est_feat_multi_app", feat);
+    if (/Store Phone/i.test(feat)) return t("est_feat_store_app", feat);
+    if (/Complete Fitting|Mobile Live App/i.test(feat)) return t("est_feat_fitting_app", feat);
     const chMatch = feat.match(/(\d+)-Channel/i);
     if (chMatch) {
       return /Turbo/i.test(feat)
-        ? t("est_feat_dvr_turbo", undefined, { ch: chMatch[1] })
-        : t("est_feat_dvr_smart", undefined, { ch: chMatch[1] });
+        ? t("est_feat_dvr_turbo", feat, { ch: chMatch[1] })
+        : t("est_feat_dvr_smart", feat, { ch: chMatch[1] });
     }
     const cntMatch = feat.match(/^(\d+)x\s/i);
     const cnt = cntMatch ? cntMatch[1] : String(cameraCount);
-    if (/Indoor Dome.*Outdoor Bullet/i.test(feat)) return t("est_feat_mixed_hd", undefined, { count: cnt });
+    if (/Indoor Dome.*Outdoor Bullet/i.test(feat)) return t("est_feat_mixed_hd", feat, { count: cnt });
     if (/Dome|Ceiling/i.test(feat)) {
-      if (/Color|Full-Color|True-Color/i.test(feat)) return t("est_feat_dome_prama", undefined, { count: cnt });
-      if (/3K|Audio|High-Clarity/i.test(feat)) return t("est_feat_dome_hik", undefined, { count: cnt });
-      return t("est_feat_dome_cp", undefined, { count: cnt });
+      if (/Color|Full-Color|True-Color/i.test(feat)) return t("est_feat_dome_prama", feat, { count: cnt });
+      if (/3K|Audio|High-Clarity/i.test(feat)) return t("est_feat_dome_hik", feat, { count: cnt });
+      return t("est_feat_dome_cp", feat, { count: cnt });
     }
-    if (/Color|Full-Color|True-Color/i.test(feat)) return t("est_feat_cam_prama", undefined, { count: cnt });
-    if (/3K|Smart IR|Ultra-Clarity|Ultra Clarity|High-Clarity|High Clarity/i.test(feat)) return t("est_feat_cam_hik", undefined, { count: cnt });
-    if (cntMatch || /Camera|Cam/i.test(feat)) return t("est_feat_cam_cp", undefined, { count: cnt });
+    if (/Color|Full-Color|True-Color/i.test(feat)) return t("est_feat_cam_prama", feat, { count: cnt });
+    if (/3K|Smart IR|Ultra-Clarity|Ultra Clarity|High-Clarity|High Clarity/i.test(feat)) return t("est_feat_cam_hik", feat, { count: cnt });
+    if (cntMatch || /Camera|Cam/i.test(feat)) return t("est_feat_cam_cp", feat, { count: cnt });
     return feat;
   };
 
@@ -483,12 +483,12 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
 
     return {
       ...base,
-      name: t(`est_title_${keySuffix}`, undefined, { count: String(cameraCount) }),
-      tag: t(`est_tag_${brandKey}`),
-      resolution: brandKey === "cpplus" ? t("est_res_2mp") : brandKey === "hik" ? t("est_res_5mp") : t("est_res_color"),
-      desc: t(`est_desc_${propertyType}_${keySuffix}`),
-      startingRef: t("est_from_price", undefined, { price: `₹${priceNum.toLocaleString("en-IN")}` }),
-      emiRef: t("est_emi_starting", undefined, { emi: emiNum.toLocaleString("en-IN") }),
+      name: t(`est_title_${keySuffix}`, t(`est_title_${brandKey}`, base.name, { count: String(cameraCount) }), { count: String(cameraCount) }),
+      tag: t(`est_tag_${brandKey}`, base.tag),
+      resolution: brandKey === "cpplus" ? t("est_res_2mp", base.resolution) : brandKey === "hik" ? t("est_res_5mp", base.resolution) : t("est_res_color", base.resolution),
+      desc: t(`est_desc_${propertyType}_${keySuffix}`, t(`est_desc_${propertyType}_${brandKey}`, base.desc)),
+      startingRef: t("est_from_price", base.startingRef, { price: `₹${priceNum.toLocaleString("en-IN")}` }),
+      emiRef: t("est_emi_starting", base.emiRef, { emi: emiNum.toLocaleString("en-IN") }),
       features: rawFeatures.map(localizeFeature),
     };
   };

@@ -30,6 +30,8 @@ export const COLLECTIONS = {
   MARKETING_CAMPAIGNS: "marketing_campaigns",
   PREPRINTED_BATCHES: "preprinted_batches",
   PREPRINTED_TOKENS: "preprinted_tokens",
+  SALESPEOPLE: "salespeople",
+  SALESPERSONS: "salespeople",
 } as const;
 
 

@@ -57,6 +57,7 @@ export async function assignJob(
 
           await leadRef.update({
             assigned_to_installer_id: payload.installer_id,
+            assigned_installer_id: payload.installer_id,
             assigned_installer_name: installerName,
             completion_pin: pin,
             updated_at: new Date()
@@ -171,4 +172,62 @@ export async function reportDeliveryFailure(quoteId: string, leadId: string, rea
     return { success: false, error: error.message };
   }
 }
+
+export async function reportPublicDeliveryFailure(token: string, reason: string) {
+  try {
+    if (!token || !reason) {
+      return { success: false, error: "Missing delivery token or failure reason" };
+    }
+
+    const quotesSnap = await adminDb.collection("quotes")
+      .where("delivery_token", "==", token)
+      .limit(1)
+      .get();
+
+    if (quotesSnap.empty) {
+      return { success: false, error: "Invalid delivery token" };
+    }
+
+    const quoteDoc = quotesSnap.docs[0];
+    const quoteData = quoteDoc.data();
+
+    if (quoteData.delivery_status === "DELIVERED") {
+      return { success: false, error: "Cannot fail a package that has already been delivered." };
+    }
+
+    const batch = adminDb.batch();
+
+    batch.update(quoteDoc.ref, {
+      delivery_status: "FAILED",
+      delivery_failure_reason: reason,
+      updated_at: new Date()
+    });
+
+    const leadId = quoteData.lead_id || quoteDoc.id;
+    const leadRef = adminDb.collection("leads").doc(leadId);
+    const leadSnap = await leadRef.get();
+    if (leadSnap.exists) {
+      batch.update(leadRef, {
+        delivery_status: "FAILED",
+        updated_at: new Date()
+      });
+
+      batch.set(leadRef.collection("notes").doc(), {
+        content: `THIRD-PARTY COURIER DELIVERY FAILED: ${reason} (Courier: ${quoteData.assigned_delivery_staff?.name || 'Third-Party'})`,
+        created_at: new Date(),
+        created_by: "system_third_party_courier",
+        created_by_name: quoteData.assigned_delivery_staff?.name || "Third-Party Courier",
+        created_by_role: "third_party"
+      });
+    }
+
+    await batch.commit();
+    revalidatePath(`/d/${token}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to report third-party delivery failure:", error);
+    return { success: false, error: error.message || "Failed to record delivery failure" };
+  }
+}
+
 

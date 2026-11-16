@@ -45,19 +45,41 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
       }
 
       if (existingComms.empty && (leadData?.promoter_id || leadData?.assigned_to_salesperson_id || leadData?.assigned_salesperson_id)) {
-        const quotesSnap = await transaction.get(
-          leadRef.collection(SUBCOLLECTIONS.QUOTES).orderBy("created_at", "desc").limit(1)
-        );
+        let quoteData: any = null;
+        let quoteId: string = "";
+
+        // 1. Check root quotes collection (standard platform storage)
+        const candidateQuoteId = leadData?.won_quote_id || leadData?.latest_quote_id || leadData?.last_quote_id || leadId;
+        if (candidateQuoteId) {
+          const rootQDoc = await transaction.get(adminDb.collection("quotes").doc(candidateQuoteId));
+          if (rootQDoc.exists) {
+            quoteData = rootQDoc.data();
+            quoteId = rootQDoc.id;
+          }
+        }
+
+        // 2. Check subcollection quotes if not found in root
+        if (!quoteData) {
+          const quotesSnap = await transaction.get(
+            leadRef.collection(SUBCOLLECTIONS.QUOTES).orderBy("created_at", "desc").limit(1)
+          );
+          if (!quotesSnap.empty) {
+            quoteData = quotesSnap.docs[0].data();
+            quoteId = quotesSnap.docs[0].id;
+          }
+        }
           
-        if (!quotesSnap.empty) {
-          const quoteData = quotesSnap.docs[0].data();
-          const netTaxable = quoteData.net_taxable_amount || quoteData.total_payable || 0;
-          const quoteId = quotesSnap.docs[0].id;
+        if (quoteData) {
+          const netTaxable = quoteData.net_taxable_amount || quoteData.pricingSnapshot?.net_taxable_amount || quoteData.total_payable || 0;
           
           // Helper to calculate and generate commission
           const generateCommission = async (userId: string, userType: "promoter" | "salesperson", collectionName: string) => {
-            const userRef = adminDb.collection(collectionName).doc(userId);
-            const userDoc = await transaction.get(userRef);
+            let userRef = adminDb.collection(collectionName).doc(userId);
+            let userDoc = await transaction.get(userRef);
+            if (!userDoc.exists && userType === "salesperson") {
+              userRef = adminDb.collection("salespeople").doc(userId);
+              userDoc = await transaction.get(userRef);
+            }
             
             if (userDoc.exists) {
               const user = userDoc.data() as import("@/types").Promoter | import("@/types").Salesperson;
@@ -123,7 +145,7 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
           // Generate for Salesperson if exists
           const salespersonId = leadData?.assigned_to_salesperson_id || leadData?.assigned_salesperson_id;
           if (salespersonId) {
-            await generateCommission(salespersonId, "salesperson", "salespersons");
+            await generateCommission(salespersonId, "salesperson", "salespeople");
           }
         }
       }
@@ -373,7 +395,9 @@ export async function assignLeadToSalesperson(leadId: string, salespersonId: str
 
   const updatePayload: any = {
     assigned_to_salesperson_id: salespersonId,
+    assigned_salesperson_id: salespersonId,
     assigned_to_salesperson_name: salespersonName,
+    assigned_salesperson_name: salespersonName,
     updated_at: new Date()
   };
 
@@ -563,7 +587,9 @@ export async function claimBroadcastedLead(leadId: string, partnerId: string, pa
         
         transaction.update(leadRef, {
           assigned_installer_id: partnerId,
+          assigned_to_installer_id: partnerId,
           assigned_installer_name: partnerName,
+          assigned_to_installer_name: partnerName,
           broadcasted_to_installer_ids: [], // Clear broadcast
           follow_up_notes: arrayUnion(`Claimed by Installer/Dealer: ${partnerName}`),
           updated_at: serverTimestamp()

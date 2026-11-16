@@ -79,11 +79,11 @@ export async function POST(request: NextRequest) {
     // --- TERRITORY MAPPING & AUTO ASSIGNMENT ---
     const { findEligiblePartners } = await import("@/lib/territory");
     const { sendCustomerWhatsApp, sendAdminNotification } = await import("@/lib/notification-service");
+    const { getAllActiveSalespersons } = await import("@/lib/salesperson-utils");
     const leadAddress = { pincode, city, state, full_address: `${city} ${state} ${pincode}`, coordinates: undefined, landmark1: "", landmark2: "" };
     
-    // Fetch active Salespersons
-    const salespersonsSnap = await adminDb.collection("salespersons").where("is_active", "==", true).get();
-    const allSalespersons = salespersonsSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+    // Fetch active Salespersons (resilient lookup across salespeople / salespersons)
+    const allSalespersons = await getAllActiveSalespersons();
     const eligibleSalespersons = await findEligiblePartners(leadAddress, allSalespersons);
     
     // Fetch active Installers
@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
     const eligibleInstallers = await findEligiblePartners(leadAddress, allInstallers);
 
     let assigned_salesperson_id: string | null = null;
+    let assigned_salesperson_name: string | null = null;
     let broadcasted_to_salesperson_ids: string[] = [];
     
     if (eligibleSalespersons.length === 1) {
@@ -99,6 +100,7 @@ export async function POST(request: NextRequest) {
       
       // Notify the Auto-Assigned Salesperson
       const spDoc = allSalespersons.find(s => s.id === assigned_salesperson_id);
+      assigned_salesperson_name = spDoc?.name || null;
       if (spDoc && spDoc.mobile_number) {
         await sendCustomerWhatsApp(
           spDoc.mobile_number,
@@ -186,7 +188,11 @@ export async function POST(request: NextRequest) {
       
       // Auto-Assignment & Broadcast Fields
       assigned_salesperson_id,
+      assigned_to_salesperson_id: assigned_salesperson_id,
+      assigned_salesperson_name,
+      assigned_to_salesperson_name: assigned_salesperson_name,
       assigned_installer_id,
+      assigned_to_installer_id: assigned_installer_id,
       broadcasted_to_salesperson_ids,
       broadcasted_to_installer_ids,
       

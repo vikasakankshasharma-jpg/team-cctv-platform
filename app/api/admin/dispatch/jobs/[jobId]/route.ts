@@ -68,7 +68,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ jobId:
 
     if (leadId) {
       const lUpdates: any = {};
-      if (installer_id) lUpdates.assigned_to_installer_id = installer_id;
+      if (installer_id) {
+        lUpdates.assigned_to_installer_id = installer_id;
+        lUpdates.assigned_installer_id = installer_id;
+      }
       if (status) lUpdates.job_status = status;
       await adminDb.collection("leads").doc(leadId).update(lUpdates).catch(() => {});
     }

@@ -128,7 +128,11 @@ export async function fetchSingleQuoteProfitContext(params: {
     !promoterId && referralCode
       ? safeGet(() => adminDb.collection("promoters").where("referral_code", "==", String(referralCode)).limit(1).get())
       : null,
-    salespersonId ? safeGet(() => adminDb.collection("salespersons").doc(String(salespersonId)).get()) : null,
+    salespersonId ? safeGet(async () => {
+      const snap = await adminDb.collection("salespeople").doc(String(salespersonId)).get();
+      if (snap.exists) return snap;
+      return adminDb.collection("salespersons").doc(String(salespersonId)).get();
+    }) : null,
     quoteId ? safeGet(() => adminDb.collection("amc_subscriptions").where("quoteId", "==", quoteId).get()) : null,
     leadId ? safeGet(() => adminDb.collection("amc_subscriptions").where("leadId", "==", leadId).get()) : null,
     quoteId ? safeGet(() => adminDb.collection("amc_contracts").where("quoteId", "==", quoteId).get()) : null,

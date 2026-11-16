@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { RecaptchaVerifier, signInWithCustomToken, ConfirmationResult } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { createLeadAction } from "@/app/actions/lead";
-import { ShieldCheck, Loader2, Sparkles, Wrench, MapPin, CheckCircle2, HelpCircle, ChevronDown, ChevronUp, Plus, Minus } from "lucide-react";
+import { ShieldCheck, Loader2, Sparkles, Wrench, MapPin, CheckCircle2, HelpCircle, ChevronDown, ChevronUp, Plus, Minus, SlidersHorizontal, Info, Check } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { LocaleCode, getStateLanguage } from "@/lib/i18n/mapping";
 import { useI18nStore } from "@/lib/i18n/store";
@@ -77,6 +77,8 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
     return { lat: 26.9124, lng: 75.7873 }; // Default Jaipur
   });
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [showAdvancedRecording, setShowAdvancedRecording] = useState(false);
+  const [isPreparingCatalog, setIsPreparingCatalog] = useState(false);
   
   const [localities, setLocalities] = useState<string[]>([]);
   const [selectedLocality, setSelectedLocality] = useState<string>("");
@@ -381,6 +383,10 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
   };
   const handlePrev = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (step === 6 && isPreparingCatalog) {
+      setIsPreparingCatalog(false);
+      return;
+    }
     if (step === 6 && otpSent) {
       setOtpSent(false);
       setOtp(["", "", "", ""]);
@@ -515,6 +521,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
         if (isCallbackScenario) {
           setCallbackSubmitted(true);
           setLoading(false);
+          setIsPreparingCatalog(false);
           return;
         }
 
@@ -523,10 +530,12 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
       } else {
         console.error("Failed to save lead: ", (newLeadId as any)?.error, (newLeadId as any)?.details);
         toast.error(extractErrorMessage(newLeadId, t("wz_toast_save_lead_err", "Failed to save lead. Please try again.")));
+        setIsPreparingCatalog(false);
       }
     } catch (error: any) {
       console.error("Lead submission error:", error);
       toast.error(extractErrorMessage(error, t("wz_toast_gen_err", "Failed to generate quotation. Please try again.")));
+      setIsPreparingCatalog(false);
     } finally {
       setLoading(false);
     }
@@ -544,6 +553,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
 
       // Fast-track: If mobile was verified via WhatsApp omnichannel referral, bypass OTP!
       if (isPhonePreVerified && cleanMobile === preVerifiedPhone) {
+        setIsPreparingCatalog(true);
         await submitLeadAndNavigate(cleanMobile, true);
         return;
       }
@@ -614,11 +624,13 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
       }
       
       toast.success(t("wz_toast_verify_ok", "Verification successful!"));
+      setIsPreparingCatalog(true);
       setOtpSent(false);
       await submitLeadAndNavigate(cleanMobile, false);
     } catch (error: any) {
       console.error("OTP verification error:", error);
       toast.error(extractErrorMessage(error, t("wz_toast_check_code", "Please check the code and try again.")));
+      setIsPreparingCatalog(false);
     } finally {
       setLoading(false);
     }
@@ -1885,39 +1897,191 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
            );
         } else {
             return (
-            <div className="space-y-3 sm:space-y-5 animate-in fade-in">
+            <div className="space-y-3.5 sm:space-y-5 animate-in fade-in">
               <div>
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{t("wz_recording__storage_backup")}</h2>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{t("wz_how_long_do_you_want_to_keep_t")}</p>
               </div>
               
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
-                {[0, 7, 15, 30, 45, 60].map(days => (
-                  <button key={days} onClick={() => setReq(prev => ({ ...prev, recording_days: days }))}
-                    className={`py-2 sm:py-3 px-1 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.recording_days === days ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-blue-300 hover:bg-gray-50 text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-900'}`}>
-                    {days === 0 ? t("wz_no_recording") : `${days} ${t("wz_days")}`}
-                  </button>
-                ))}
+              {/* Symmetrical 3-col mobile / 6-col desktop Days Grid */}
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-2.5">
+                {[0, 7, 15, 30, 45, 60].map(days => {
+                  const isSelected = req.recording_days === days;
+                  const isPopular = days === 15;
+                  const isIdeal = days === 30;
+                  return (
+                    <button 
+                      key={days} 
+                      type="button"
+                      onClick={() => setReq(prev => ({ ...prev, recording_days: days }))}
+                      className={`relative py-2.5 sm:py-3 px-1 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center min-h-[50px] sm:min-h-[56px] ${
+                        isSelected 
+                          ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm ring-1 ring-blue-400' 
+                          : 'border-gray-200 dark:border-zinc-800 hover:border-blue-300 hover:bg-gray-50 text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-900'
+                      }`}
+                    >
+                      {isPopular && (
+                        <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] sm:text-[9px] bg-blue-600 text-white font-black px-1.5 py-0.2 rounded-full uppercase tracking-tighter whitespace-nowrap shadow-xs">
+                          {t("wz_popular_badge")}
+                        </span>
+                      )}
+                      {isIdeal && (
+                        <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] sm:text-[9px] bg-emerald-600 text-white font-black px-1.5 py-0.2 rounded-full uppercase tracking-tighter whitespace-nowrap shadow-xs">
+                          {t("wz_ideal_badge")}
+                        </span>
+                      )}
+                      <span className="text-xs sm:text-sm font-black">
+                        {days === 0 ? t("wz_no_recording") : `${days} ${t("wz_days")}`}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
-              <div>
-                <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-2">{t("wz_recording_mode")}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                  <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "continuous" }))}
-                    className={`p-2.5 sm:p-3.5 rounded-xl border-2 text-left transition-all cursor-pointer ${req.recording_mode === 'continuous' ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900'}`}>
-                    <span className="block font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_24x7_continuous")}</span>
-                    <span className="block text-[10px] sm:text-xs text-gray-500 dark:text-zinc-400 mt-0.5 leading-tight">{t("wz_records_nonstop")}</span>
-                  </button>
-                  <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "motion" }))}
-                    className={`p-2.5 sm:p-3.5 rounded-xl border-2 text-left transition-all cursor-pointer ${req.recording_mode === 'motion' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900'}`}>
-                    <span className="block font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center justify-between">
-                      <span>{t("wz_smart_motion")}</span>
-                      <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-1 py-0.5 rounded font-black">{t("wz_50_save")}</span>
+              {/* Frictionless Smart AI Reassurance & Storage Configuration */}
+              {req.recording_days === 0 ? (
+                <div className="rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/70 dark:bg-amber-950/30 p-3 sm:p-4 flex items-start gap-3 transition-all">
+                  <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-200 block mb-0.5">
+                      {t("wz_no_recording")} (Live View Only)
                     </span>
-                    <span className="block text-[10px] sm:text-xs text-gray-500 dark:text-zinc-400 mt-0.5 leading-tight">{t("wz_records_movement_only")}</span>
-                  </button>
+                    <p className="text-xs text-amber-800/90 dark:text-amber-300/80 leading-relaxed font-medium">
+                      {t("wz_live_only_reassurance")}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {/* Default Smart AI High-Trust Reassurance Hero Card */}
+                  {(!showAdvancedRecording && req.recording_mode !== 'continuous') ? (
+                    <div className="rounded-2xl border-2 border-emerald-500/80 bg-gradient-to-br from-emerald-50/90 via-emerald-50/40 to-white dark:from-emerald-950/50 dark:via-zinc-900 dark:to-zinc-900 p-3.5 sm:p-4.5 shadow-xs transition-all">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-emerald-800 dark:text-emerald-300">
+                          <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span>{t("wz_smart_reassurance_title")}</span>
+                        </div>
+                        <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/80 text-emerald-800 dark:text-emerald-200 border border-emerald-300/50 dark:border-emerald-700/50 shrink-0">
+                          {t("wz_smart_reassurance_badge")}
+                        </span>
+                      </div>
+                      
+                      <p className="text-xs sm:text-[13px] text-emerald-900/90 dark:text-emerald-200/90 leading-relaxed font-medium mb-3">
+                        {t("wz_smart_reassurance_desc")}
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 sm:gap-2 pt-2.5 border-t border-emerald-200/60 dark:border-emerald-800/50 text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                        <div className="flex items-center gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>{t("wz_smart_pill_1")}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>{t("wz_smart_pill_2")}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>{t("wz_smart_pill_3")}</span>
+                        </div>
+                      </div>
+
+                      {/* Discrete Toggle for Advanced Continuous Choice */}
+                      <div className="pt-2.5 mt-2.5 border-t border-emerald-100 dark:border-zinc-800 flex justify-end sm:justify-start">
+                        <button
+                          type="button"
+                          onClick={() => setShowAdvancedRecording(true)}
+                          className="text-[11px] sm:text-xs font-semibold text-slate-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 flex items-center gap-1.5 py-0.5 transition-colors cursor-pointer"
+                        >
+                          <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{t("wz_need_continuous_toggle")}</span>
+                          <ChevronDown className="w-3 h-3 text-slate-400" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Symmetrical Side-by-Side Advanced Mode Selection */
+                    <div className="space-y-2.5 animate-in fade-in duration-300">
+                      <div className="flex items-center justify-between px-1">
+                        <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+                          <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600" />
+                          <span>{t("wz_recording_mode")}</span>
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReq(prev => ({ ...prev, recording_mode: "motion" }));
+                            setShowAdvancedRecording(false);
+                          }}
+                          className="text-[11px] sm:text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer flex items-center gap-1"
+                        >
+                          <span>{t("wz_reset_to_smart_motion")}</span>
+                          <ChevronUp className="w-3 h-3" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                        {/* Smart AI Motion Option */}
+                        <button
+                          type="button"
+                          onClick={() => setReq(prev => ({ ...prev, recording_mode: "motion" }))}
+                          className={`p-3 sm:p-4 rounded-xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between ${
+                            req.recording_mode === 'motion'
+                              ? 'border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/40 shadow-sm ring-1 ring-emerald-400'
+                              : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex flex-wrap items-center justify-between gap-1 mb-1.5">
+                              <span className="font-black text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
+                                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                                <span>{t("wz_smart_motion")}</span>
+                              </span>
+                              <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+                                {t("wz_smart_motion_badge")}
+                              </span>
+                            </div>
+                            <p className="text-[11px] sm:text-xs text-gray-600 dark:text-zinc-300 leading-snug font-medium mb-2">
+                              {t("wz_records_movement_only_updated")}
+                            </p>
+                          </div>
+                          <div className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1 pt-2 border-t border-emerald-200/50 dark:border-emerald-800/50">
+                            <Check className="w-3 h-3 shrink-0" />
+                            <span>{t("wz_smart_reassurance_badge")}</span>
+                          </div>
+                        </button>
+
+                        {/* 24x7 Continuous Option */}
+                        <button
+                          type="button"
+                          onClick={() => setReq(prev => ({ ...prev, recording_mode: "continuous" }))}
+                          className={`p-3 sm:p-4 rounded-xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between ${
+                            req.recording_mode === 'continuous'
+                              ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/40 shadow-sm ring-1 ring-blue-400'
+                              : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex flex-wrap items-center justify-between gap-1 mb-1.5">
+                              <span className="font-black text-gray-900 dark:text-white text-xs sm:text-sm">
+                                {t("wz_24x7_continuous")}
+                              </span>
+                              <span className="text-[9px] bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full font-bold">
+                                {t("wz_higher_storage_badge")}
+                              </span>
+                            </div>
+                            <p className="text-[11px] sm:text-xs text-gray-600 dark:text-zinc-300 leading-snug font-medium mb-1.5">
+                              {t("wz_records_nonstop_updated")}
+                            </p>
+                          </div>
+                          <p className="text-[10px] text-amber-700 dark:text-amber-400 font-medium leading-tight pt-2 border-t border-amber-200/50 dark:border-amber-900/50">
+                            {t("wz_continuous_context_note")}
+                          </p>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               
               <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
                 <Button variant="outline" onClick={handlePrev} className="min-h-[44px] h-auto py-2.5 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2 shrink-0">
@@ -1937,39 +2101,92 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
       case 7:
         if (req.installation_type === "addon") {
            return (
-             <div className="space-y-6 animate-in fade-in">
-               <h2 className="text-3xl font-semibold mb-2">{t("wz_storage_update")}</h2>
-               <p className="text-gray-600 mb-6">{t("wz_adding_new_cameras_will_reduce")}</p>
+             <div className="space-y-3.5 sm:space-y-5 animate-in fade-in">
+               <div>
+                 <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{t("wz_storage_update")}</h2>
+                 <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{t("wz_adding_new_cameras_will_reduce")}</p>
+               </div>
                
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                 <button onClick={() => setReq(prev => ({ ...prev, retain_existing_storage: true, recording_days: 7 }))} className={`p-5 rounded-xl border-2 text-left ${req.retain_existing_storage ? 'border-blue-600 bg-blue-50' : 'bg-white hover:border-blue-300'}`}>
-                   <span className="block font-bold text-lg text-gray-900">{t("wz_keep_existing_hard_disk")}</span>
-                   <span className="block text-sm text-gray-500 mt-1">{t("wz_dont_buy_a_new_one_saves_money")}</span>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-4 mb-4">
+                 <button 
+                   type="button"
+                   onClick={() => setReq(prev => ({ ...prev, retain_existing_storage: true, recording_days: 7 }))} 
+                   className={`p-4 sm:p-5 rounded-xl border-2 text-left cursor-pointer transition-all ${req.retain_existing_storage ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-blue-300'}`}
+                 >
+                   <span className="block font-bold text-sm sm:text-base text-gray-900 dark:text-white">{t("wz_keep_existing_hard_disk")}</span>
+                   <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">{t("wz_dont_buy_a_new_one_saves_money")}</span>
                  </button>
-                 <button onClick={() => setReq(prev => ({ ...prev, retain_existing_storage: false }))} className={`p-5 rounded-xl border-2 text-left ${!req.retain_existing_storage ? 'border-blue-600 bg-blue-50' : 'bg-white hover:border-blue-300'}`}>
-                   <span className="block font-bold text-lg text-gray-900">{t("wz_buy_new_hard_disk")}</span>
-                   <span className="block text-sm text-gray-500 mt-1">{t("wz_upgrade_storage_capacity")}</span>
+                 <button 
+                   type="button"
+                   onClick={() => setReq(prev => ({ ...prev, retain_existing_storage: false }))} 
+                   className={`p-4 sm:p-5 rounded-xl border-2 text-left cursor-pointer transition-all ${!req.retain_existing_storage ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-blue-300'}`}
+                 >
+                   <span className="block font-bold text-sm sm:text-base text-gray-900 dark:text-white">{t("wz_buy_new_hard_disk")}</span>
+                   <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">{t("wz_upgrade_storage_capacity")}</span>
                  </button>
                </div>
                
                {!req.retain_existing_storage && (
-                 <div className="animate-in fade-in bg-gray-50 p-6 rounded-xl border">
-                   <h3 className="font-semibold mb-4 text-gray-900">{t("wz_target_recording_days")}</h3>
-                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                     {[7, 15, 30].map(days => (
-                       <button key={days} onClick={() => setReq(prev => ({ ...prev, recording_days: days }))} className={`p-3 rounded-xl border-2 text-center font-bold ${req.recording_days === days ? 'border-blue-600 bg-blue-50 text-blue-700' : 'bg-white hover:border-blue-300'}`}>{days}  {t("wz_days")}</button>
-                     ))}
+                 <div className="animate-in fade-in bg-gray-50/80 dark:bg-zinc-900/60 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-zinc-800 space-y-4">
+                   <div>
+                     <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-2">{t("wz_target_recording_days")}</h3>
+                     <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-2.5">
+                       {[7, 15, 30, 45, 60].map(days => (
+                         <button 
+                           key={days} 
+                           type="button"
+                           onClick={() => setReq(prev => ({ ...prev, recording_days: days }))} 
+                           className={`py-2 sm:py-2.5 px-1 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.recording_days === days ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:border-blue-300'}`}
+                         >
+                           {days} {t("wz_days")}
+                         </button>
+                       ))}
+                     </div>
                    </div>
-                   <h3 className="font-semibold mb-3 text-gray-900 mt-4">{t("wz_recording_mode")}</h3>
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "continuous" }))} className={`p-3 rounded-xl border-2 ${req.recording_mode === 'continuous' ? 'border-blue-600 bg-blue-50' : 'bg-white'}`}>{t("wz_24x7_continuous")}</button>
-                     <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "motion" }))} className={`p-3 rounded-xl border-2 ${req.recording_mode === 'motion' ? 'border-green-500 bg-green-50' : 'bg-white'}`}>{t("wz_smart_motion")}</button>
+
+                   {/* Smart AI Reassurance Card */}
+                   <div className="pt-2">
+                     <div className="p-3 sm:p-4 rounded-xl border-2 border-emerald-500/70 bg-gradient-to-br from-emerald-50/90 via-white to-emerald-50/40 dark:from-emerald-950/40 dark:via-zinc-900 dark:to-emerald-950/20 shadow-xs space-y-2">
+                       <div className="flex flex-wrap items-center justify-between gap-1.5">
+                         <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-black text-emerald-950 dark:text-emerald-200">
+                           <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                           <span>{t("wz_smart_motion")}</span>
+                         </span>
+                         <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/80 text-emerald-800 dark:text-emerald-200 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+                           {t("wz_smart_reassurance_badge")}
+                         </span>
+                       </div>
+
+                       <p className="text-[11px] sm:text-xs text-slate-700 dark:text-zinc-300 leading-relaxed font-medium">
+                         {t("wz_smart_reassurance_desc")}
+                       </p>
+
+                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 pt-2 border-t border-emerald-200/60 dark:border-emerald-800/50 text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                         <div className="flex items-center gap-1.5">
+                           <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                           <span>{t("wz_smart_pill_1")}</span>
+                         </div>
+                         <div className="flex items-center gap-1.5">
+                           <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                           <span>{t("wz_smart_pill_2")}</span>
+                         </div>
+                         <div className="flex items-center gap-1.5">
+                           <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                           <span>{t("wz_smart_pill_3")}</span>
+                         </div>
+                       </div>
+                     </div>
                    </div>
                  </div>
                )}
                
-               <div className="pt-6">
-                 <Button onClick={handleNext} className="w-full h-12">{t("wz_confirm__proceed")}</Button>
+               <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
+                 <Button variant="outline" onClick={handlePrev} className="min-h-[44px] h-auto py-2.5 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2 shrink-0">
+                   {t("wz_back")}
+                 </Button>
+                 <Button onClick={handleNext} className="flex-1 min-h-[44px] h-auto py-2.5 sm:py-3 text-[13px] sm:text-base font-bold text-white rounded-xl bg-blue-600 hover:bg-blue-700 shadow-sm">
+                   {t("wz_confirm__proceed")}
+                 </Button>
                </div>
              </div>
            );
@@ -2938,6 +3155,48 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
           );
 
         case 6:
+          if (isPreparingCatalog) {
+            return (
+              <div className="py-8 sm:py-12 px-4 max-w-lg mx-auto text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
+                <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/40 animate-ping opacity-75" />
+                  <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30">
+                    <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 animate-spin" />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                    {t("wz_prep_cat_title")}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium max-w-md mx-auto leading-relaxed">
+                    {t("wz_prep_cat_desc")}
+                  </p>
+                </div>
+
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-blue-50/80 via-white to-indigo-50/40 dark:from-zinc-900 dark:via-zinc-900 dark:to-blue-950/30 border border-blue-200/70 dark:border-zinc-800 text-left space-y-2.5 shadow-xs">
+                  <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-slate-800 dark:text-zinc-200">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>{t("wz_prep_pill_1")}</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-slate-800 dark:text-zinc-200">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>{t("wz_prep_pill_2")}</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-slate-800 dark:text-zinc-200">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>{t("wz_prep_pill_3")}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 pt-2">
+                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                  <span>{t("wz_prep_cat_loading")}</span>
+                </div>
+              </div>
+            );
+          }
+
           if (otpSent) {
             return (
               <div className="space-y-4 sm:space-y-6 animate-in fade-in">

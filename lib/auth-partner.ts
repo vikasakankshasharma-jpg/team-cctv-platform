@@ -29,6 +29,14 @@ export async function verifyPartnerSession(): Promise<PartnerSession> {
   }
 
   try {
+    if (sessionCookie.startsWith("mock_session_") && process.env.NODE_ENV !== "production") {
+      const parts = sessionCookie.replace("mock_session_", "").split("_UID_");
+      const role = parts[0];
+      const uid = parts.length > 1 ? parts[1] : `mock-${role}-id`;
+      const promoterId = parts.length > 2 ? parts[2] : (parts.length > 1 ? parts[1] : "mock-promoter-id");
+      return { isAuthenticated: true, promoterId, promoterName: "Test Partner", uid, role: "partner" };
+    }
+
     const decoded = await adminAuth.verifySessionCookie(sessionCookie, false);
 
     // Enforce role claim

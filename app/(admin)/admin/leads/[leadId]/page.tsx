@@ -10,6 +10,7 @@ import { CompleteQuoteModal } from "@/components/admin/leads/CompleteQuoteModal"
 import { QuotationRevisionModal } from "@/components/admin/leads/QuotationRevisionModal";
 import { DeleteQuoteModal } from "@/components/admin/leads/DeleteQuoteModal";
 import { PriceMatchReviewModal } from "@/components/admin/PriceMatchReviewModal";
+import { RefundDialog } from "@/components/admin/RefundDialog";
 import LeadIntelligencePanel from "@/components/admin/leads/LeadIntelligencePanel";
 import DispatchPanel from "@/components/admin/leads/DispatchPanel";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ import {
   Zap,
   Trash2,
   Layers,
+  RotateCcw,
   Lock,
   Banknote,
   Tag
@@ -53,6 +55,7 @@ export default function LeadDetailPage() {
   const [showRevisionModal, setShowRevisionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPriceMatchModal, setShowPriceMatchModal] = useState(false);
+  const [showRefundModal, setShowRefundModal] = useState(false);
 
   useEffect(() => {
     fetchLead();
@@ -275,6 +278,19 @@ export default function LeadDetailPage() {
             >
               <Layers className="w-3.5 h-3.5 shrink-0" />
               <span>{t("adm_qvh_create_btn", "Create Revision (v{ver})", { ver: String((lead.currentVersion || 1) + 1) })}</span>
+            </Button>
+          )}
+
+          {/* Process Multi-Stage Refund */}
+          {isPaid && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowRefundModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[2.25rem] h-auto rounded-xl border border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-700 dark:text-rose-400 text-xs font-bold shadow-xs transition-all whitespace-normal leading-snug"
+            >
+              <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+              <span>{t("adm_ld_refund_btn", "Process Refund")}</span>
             </Button>
           )}
 
@@ -910,6 +926,20 @@ export default function LeadDetailPage() {
         isCompleted={isPaid}
         onSuccess={() => {}}
       />
+
+      {showRefundModal && (
+        <RefundDialog
+          quoteId={lead.quoteId || quoteId}
+          amount={Math.max(0, (lead.amount_paid ?? lead.total_payable ?? 0) - (lead.refund_amount ?? 0))}
+          paymentId={lead.installation_payment_id || lead.delivery_payment_id || lead.razorpay_payment_id}
+          quoteData={lead}
+          onClose={() => setShowRefundModal(false)}
+          onSuccess={() => {
+            setShowRefundModal(false);
+            fetchLead();
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -456,10 +456,28 @@ export async function POST(req: Request) {
       }
 
       const refundPaymentId = refundEntity.payment_id;
-      const refundQuoteId = refundEntity.notes?.quote_id;
+      let refundQuoteId = refundEntity.notes?.quote_id;
+
+      // Resilient fallback lookup if quote_id was not explicitly in notes
+      if (!refundQuoteId && refundPaymentId) {
+        const pQuery = await adminDb.collection("quotes").where("razorpay_payment_id", "==", refundPaymentId).limit(1).get();
+        if (!pQuery.empty) {
+          refundQuoteId = pQuery.docs[0].id;
+        } else {
+          const dQuery = await adminDb.collection("quotes").where("delivery_payment_id", "==", refundPaymentId).limit(1).get();
+          if (!dQuery.empty) {
+            refundQuoteId = dQuery.docs[0].id;
+          } else {
+            const iQuery = await adminDb.collection("quotes").where("installation_payment_id", "==", refundPaymentId).limit(1).get();
+            if (!iQuery.empty) {
+              refundQuoteId = iQuery.docs[0].id;
+            }
+          }
+        }
+      }
 
       if (!refundQuoteId) {
-        console.error("[Razorpay Webhook Error]: No quote_id found in refund notes.");
+        console.error("[Razorpay Webhook Error]: No quote_id found in refund notes or payment mapping.");
         return NextResponse.json({ error: "Unbound refund: missing quote_id" }, { status: 400 });
       }
 
@@ -473,31 +491,82 @@ export async function POST(req: Request) {
 
         const quoteData = quoteDoc.data() as any;
 
-        if (quoteData.payment_status === "refunded") {
-          console.log(`[Razorpay Webhook]: Quote ${refundQuoteId} is already REFUNDED. Skipping.`);
+        // Strict Idempotency Check on exact Razorpay Refund ID
+        const existingRefundIds = Array.isArray(quoteData.refund_ids) ? quoteData.refund_ids : [];
+        if (existingRefundIds.includes(refundEntity.id)) {
+          console.log(`[Razorpay Webhook]: Refund ${refundEntity.id} already processed for Quote ${refundQuoteId}. Skipping.`);
           return { status: "already_refunded" };
         }
 
-        transaction.update(quoteRef, {
-          status: "CANCELLED",
-          payment_status: "refunded",
+        // Mathematical calculations
+        const thisRefundAmount = Number(refundEntity.amount) / 100;
+        const prevRefundTotal = Number(quoteData.refund_amount || 0);
+        const newRefundTotal = prevRefundTotal + thisRefundAmount;
+        const prevPaidTotal = Number(quoteData.amount_paid || 0);
+        const newPaidTotal = Math.max(0, prevPaidTotal - thisRefundAmount);
+        const totalPayable = Number(quoteData.total_payable || quoteData.pricingSnapshot?.total_payable || prevPaidTotal);
+        
+        // Full cancellation if zero balance left or entire amount refunded
+        const isFullCancellation = newPaidTotal === 0 || newRefundTotal >= totalPayable;
+
+        // Detect stage of this refund
+        const refundStage = refundEntity.notes?.refund_stage || (
+          refundPaymentId === quoteData.installation_payment_id ? "installation_final" :
+          refundPaymentId === quoteData.delivery_payment_id ? "delivery_90" :
+          refundPaymentId === quoteData.razorpay_payment_id ? "advance_booking" :
+          quoteData.status === "COMPLETED" ? "installation_final" :
+          quoteData.status === "DELIVERY_PAID" ? "delivery_90" : "advance_booking"
+        );
+
+        const quoteUpdates: Record<string, any> = {
           refund_id: refundEntity.id,
-          refund_amount: refundEntity.amount / 100,
+          refund_ids: arrayUnion(refundEntity.id),
+          refund_amount: newRefundTotal,
+          amount_paid: newPaidTotal,
+          refund_history: arrayUnion({
+            refund_id: refundEntity.id,
+            payment_id: refundPaymentId,
+            amount: thisRefundAmount,
+            stage: refundStage,
+            reason: refundEntity.notes?.reason || "Customer Refund",
+            processed_at: new Date().toISOString()
+          }),
           updated_at: serverTimestamp(),
-        });
+        };
+
+        if (isFullCancellation) {
+          quoteUpdates.status = "CANCELLED";
+          quoteUpdates.payment_status = "refunded";
+        } else {
+          quoteUpdates.payment_status = "partially_refunded";
+        }
+
+        transaction.update(quoteRef, quoteUpdates);
 
         const invoiceRef = adminDb.collection("invoices").doc(refundQuoteId);
         const invoiceDoc = await transaction.get(invoiceRef);
         if (invoiceDoc.exists) {
-          transaction.update(invoiceRef, {
-            status: "REFUNDED",
-            refund_id: refundEntity.id,
-            updated_at: serverTimestamp(),
-          });
+          if (isFullCancellation) {
+            transaction.update(invoiceRef, {
+              status: "REFUNDED",
+              payment_status: "refunded",
+              refund_id: refundEntity.id,
+              refund_amount: newRefundTotal,
+              amount_paid: newPaidTotal,
+              updated_at: serverTimestamp(),
+            });
+          } else {
+            transaction.update(invoiceRef, {
+              payment_status: "partially_refunded",
+              refund_amount: newRefundTotal,
+              amount_paid: newPaidTotal,
+              updated_at: serverTimestamp(),
+            });
+          }
         }
 
         const jobId = quoteData.job_id;
-        if (jobId) {
+        if (jobId && isFullCancellation) {
           const jobRef = adminDb.collection("jobs").doc(jobId);
           const jobDoc = await transaction.get(jobRef);
           if (jobDoc.exists) {
@@ -514,11 +583,19 @@ export async function POST(req: Request) {
 
         const leadId = quoteData.lead_id || quoteData.leadId;
         if (leadId) {
-          transaction.update(adminDb.collection("leads").doc(leadId), {
-            status: "lost",
-            lost_reason: "Refunded",
-            updated_at: serverTimestamp(),
-          });
+          if (isFullCancellation) {
+            transaction.update(adminDb.collection("leads").doc(leadId), {
+              status: "lost",
+              lost_reason: "Refunded",
+              amount_paid: 0,
+              updated_at: serverTimestamp(),
+            });
+          } else {
+            transaction.update(adminDb.collection("leads").doc(leadId), {
+              amount_paid: newPaidTotal,
+              updated_at: serverTimestamp(),
+            });
+          }
         }
 
         const items = quoteData.pricingSnapshot?.items || quoteData.configurationSnapshot?.items || [];
@@ -526,7 +603,7 @@ export async function POST(req: Request) {
           .filter((i: any) => i.product_id || i.id)
           .map((i: any) => ({ product_id: i.product_id || i.id, qty: i.qty || 1 }));
 
-        if (inventoryItems.length > 0) {
+        if (inventoryItems.length > 0 && isFullCancellation) {
           await InventoryEngine.reverseDeduction(transaction, inventoryItems, refundEntity.id, "manual");
         }
 
@@ -534,7 +611,10 @@ export async function POST(req: Request) {
           status: "processed",
           quoteId: refundQuoteId,
           customerMobile: quoteData.customer_mobile,
-          amount: refundEntity.amount / 100,
+          amount: thisRefundAmount,
+          newPaidTotal,
+          isFullCancellation,
+          refundStage,
           leadId: quoteData.lead_id || quoteData.leadId || null,
           preferredLanguage: quoteData.preferred_language || null,
         };
@@ -544,7 +624,8 @@ export async function POST(req: Request) {
 
       if (refundTxResult.status === "processed") {
         try {
-          await sendAdminNotification(`💸 Refund Processed!\nQuote ID: ${refundTxResult.quoteId}\nAmount: ₹${refundTxResult.amount}`);
+          const stageLabel = refundTxResult.refundStage ? ` (${refundTxResult.refundStage.toUpperCase()})` : "";
+          await sendAdminNotification(`💸 Refund Processed${stageLabel}!\nQuote ID: ${refundTxResult.quoteId}\nAmount: ₹${refundTxResult.amount}\nRemaining Paid: ₹${refundTxResult.newPaidTotal}`);
           if (refundTxResult.customerMobile) {
             const { resolveCustomerLocale, getCustomerNotifications } = await import("@/lib/whatsapp/customer-notifications-i18n");
             const custLocale = await resolveCustomerLocale({

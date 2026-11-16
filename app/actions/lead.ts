@@ -77,8 +77,8 @@ export async function createLeadAction(payload: {
       landmark2: quadrant || ""
     };
 
-    const salespersonsSnap = await adminDb.collection("salespersons").where("is_active", "==", true).get();
-    const allSalespersons = salespersonsSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+    const { getAllActiveSalespersons } = await import("@/lib/salesperson-utils");
+    const allSalespersons = await getAllActiveSalespersons();
     const eligibleSalespersons = await findEligiblePartners(mockAddress, allSalespersons);
 
     const installersSnap = await adminDb.collection("installers").where("is_active", "==", true).get();
@@ -86,6 +86,7 @@ export async function createLeadAction(payload: {
     const eligibleInstallers = await findEligiblePartners(mockAddress, allInstallers);
 
     let assigned_salesperson_id: string | null = null;
+    let assigned_salesperson_name: string | null = null;
     let broadcasted_to_salesperson_ids: string[] = [];
 
     const phone = leadData.mobile_number || "";
@@ -104,6 +105,7 @@ export async function createLeadAction(payload: {
     if (eligibleSalespersons.length === 1) {
       assigned_salesperson_id = eligibleSalespersons[0];
       const spDoc = allSalespersons.find((s: any) => s.id === assigned_salesperson_id);
+      assigned_salesperson_name = spDoc?.name || null;
       if (spDoc?.mobile_number && !isTestLead) {
         try {
           const { msg91 } = await import("@/lib/whatsapp/msg91-provider");
@@ -201,7 +203,11 @@ export async function createLeadAction(payload: {
       gst_number:           payload.gst_number || null,
       hub_id:               null,
       assigned_salesperson_id,
+      assigned_to_salesperson_id: assigned_salesperson_id,
+      assigned_salesperson_name,
+      assigned_to_salesperson_name: assigned_salesperson_name,
       assigned_installer_id,
+      assigned_to_installer_id: assigned_installer_id,
       broadcasted_to_salesperson_ids,
       broadcasted_to_installer_ids,
       address: mockAddress,

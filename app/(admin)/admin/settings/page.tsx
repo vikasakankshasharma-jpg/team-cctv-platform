@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth-server";
+import { redirect } from "next/navigation";
 import { adminDb } from "@/lib/firebase-admin";
 import { SETTINGS_DOC_ID } from "@/lib/constants";
 import { Settings2, Loader2 } from "lucide-react";
@@ -16,7 +17,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function SettingsAdminPage() {
-  await requireAdmin();
+  const session = await requireAdmin();
+  if (session.role !== "super_admin" && !session.permissions?.system?.manage_settings) {
+    redirect("/admin");
+  }
 
   // Default values if the document hasn't been created yet
   const defaultSettings: AppSettings = {

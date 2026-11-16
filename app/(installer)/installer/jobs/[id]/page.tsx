@@ -30,7 +30,7 @@ export default async function InstallerJobDetailPage({ params }: { params: { id:
 
   const lead = leadDoc.data();
   // Ensure the installer is authorized to view this job
-  const isAssigned = lead?.assigned_to_installer_id === installerId;
+  const isAssigned = lead?.assigned_to_installer_id === installerId || lead?.assigned_installer_id === installerId;
   const isBroadcasted = lead?.broadcasted_to_installer_ids?.includes(installerId);
 
   if (!isAssigned && !isBroadcasted) {
@@ -39,10 +39,14 @@ export default async function InstallerJobDetailPage({ params }: { params: { id:
 
   // Get the latest quote to show hardware requirements
   let hardware: any[] = [];
-  if (lead?.last_quote_id) {
-     const quoteDoc = await adminDb.collection("leads").doc(params.id).collection("quotes").doc(lead.last_quote_id).get();
+  const candidateQuoteId = lead?.won_quote_id || lead?.latest_quote_id || lead?.last_quote_id;
+  if (candidateQuoteId) {
+     let quoteDoc = await adminDb.collection("quotes").doc(candidateQuoteId).get();
+     if (!quoteDoc.exists) {
+        quoteDoc = await adminDb.collection("leads").doc(params.id).collection("quotes").doc(candidateQuoteId).get();
+     }
      if (quoteDoc.exists) {
-        const snapshot = quoteDoc.data()?.configuration_snapshot || [];
+        const snapshot = quoteDoc.data()?.configuration_snapshot || quoteDoc.data()?.items || [];
         
         // Enrich snapshot with live product metadata for scanner ops
         const enrichedHardware = await Promise.all(snapshot.map(async (item: any) => {

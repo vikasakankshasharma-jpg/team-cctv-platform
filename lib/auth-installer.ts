@@ -23,6 +23,19 @@ export async function verifyInstallerSession(): Promise<InstallerSession> {
     return { isAuthenticated: false, installerId: null, installerName: null, uid: null, role: null };
   }
 
+  if (process.env.NODE_ENV !== "production" && sessionCookie.startsWith("mock_session_installer")) {
+    const parts = sessionCookie.split(":");
+    const installerId = parts[1] || "mock_installer_id";
+    const installerName = parts[2] || "Mock Installer";
+    return {
+      isAuthenticated: true,
+      installerId,
+      installerName,
+      uid: "mock_installer_uid",
+      role: "installer",
+    };
+  }
+
   try {
     const decoded = await adminAuth.verifySessionCookie(sessionCookie, false);
 

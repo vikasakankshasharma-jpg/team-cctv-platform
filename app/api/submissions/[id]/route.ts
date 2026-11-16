@@ -81,11 +81,13 @@ export async function PATCH(
         }
 
         // 2. Alert Admin/Sales that a partial lead just finished the wizard!
-        if (leadData?.assigned_salesperson_id) {
-          const spDoc = await adminDb.collection("salespersons").doc(leadData.assigned_salesperson_id).get();
-          if (spDoc.exists && spDoc.data()?.mobile_number) {
+        const targetSpId = leadData?.assigned_salesperson_id || leadData?.assigned_to_salesperson_id;
+        if (targetSpId) {
+          const { findSalespersonById } = await import("@/lib/salesperson-utils");
+          const spDoc = await findSalespersonById(targetSpId);
+          if (spDoc && spDoc.mobile_number) {
             await sendCustomerWhatsApp(
-              spDoc.data()!.mobile_number,
+              spDoc.mobile_number,
               `🔥 *Hot Lead Completed Wizard!*\n${customerName} just finished their setup and generated quotes.\nLead ID: ${id}`
             );
           }

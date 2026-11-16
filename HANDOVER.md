@@ -121,6 +121,34 @@ This document serves as the master engineering and operational handover for the 
 - **Services Bucket Allocation:** Paid AMC add-ons (`amc_1yr`, `amc_2yr`, `amc_3yr`), deduplicated `amc_subscriptions`/`amc_contracts`, complimentary `promo_free_amc` PM visit fulfillment reserves (`2 * cost_labor_visit_charge`), and referral/partner/salesperson commissions (`resolvePromoterCommission()` in `lib/commission.ts`) all account inside the **Services** bucket without fabricating commissions on manual admin discounts without a referral code.
 - **Operating Overheads & True Net Pocket Profit:** Configurable global reserves (`amc_fulfillment_cost_percent`, `payment_gateway_fee_percent`, `warranty_reserve_percent`, `logistics_consumables_per_job`, `travel_fee_payout_percent` in `lib/cached-settings.ts` & `SettingsForm.tsx`) plus actual Razorpay MDR fees (`payment_history.razorpay_fee`, ₹0 on cash/bank transfer/direct UPI) compute `overheads` (`total_overheads`, `net_profit`, `net_margin_percent`) across CRM deals (`QuotationProfitBreakupCard.tsx`) and `/admin/analytics/profitability` (`ProfitabilityAnalyticsClient.tsx`) without altering customer-facing GST-inclusive `total_payable`.
 
+### 2.13 Global AI Gateway Single-Chokepoint Consolidation
+- **Single Chokepoint (`lib/ai/ai-gateway.ts`):** Direct imports of `@google/genai` or `@google-cloud/vertexai` are strictly banned outside the Gateway. All natural language and catalog features execute through `AIGateway.generateResponse()`.
+- **Bounded Budgets & Cost Circuit Breakers:** Positive authorization with maximum 1,024 output tokens per turn, SHA-256 catalog hashing, and in-memory cache to prevent redundant API calls.
+- **L2 Persistent Observability Ledger:** Token metrics, model execution latency, caller role, and resolution status are asynchronously written to Firestore `ai_usage_ledger` with zero customer latency.
+
+### 2.14 Multi-Stage Customer Refund Protocol & Statutory Reverse-GST Section 34 Credit Notes
+- **3-Stage Architecture (`app/api/payment/refund/route.ts`, `components/admin/RefundDialog.tsx`):** Stage 1 (100% advance booking ₹500 refund pre-dispatch), Stage 2 (90% Part-Payment dispatch full cancellation or partial adjustment delta), and Stage 3 (Post-installation settlement or complete contract cancellation upon physical equipment recovery).
+- **Statutory Reverse-GST Reconciliation (18% Inclusive Standard):**
+  $$\text{Credit Taxable Base} = \frac{\text{Refund Amount}}{1.18}$$
+  $$\text{Credit 18% GST} = \text{Refund Amount} - \text{Credit Taxable Base}$$
+  Exact ₹0.00 mathematical reconciliation with automated Section 34 Credit Note issuance. Programmatic Razorpay API integration with idempotency keys and admin audit logging.
+
+### 2.15 Third-Party Delivery & Subcontractor Handshake Portal (`/d/[token]`)
+- **Tokenized Public Magic Link:** Zero-auth public access for external couriers (Porter, Dunzo, freelance riders) with cryptographic UUID tokens, expiry guards, and strict field projection security.
+- **Strict Zero-Cash Authority Invariant:** Automatic payment lockout (`PAYMENT_REQUIRED`) when the 90% milestone payment is unpaid; delivery handover OTP cannot be validated until payment is confirmed online via Razorpay/UPI.
+- **Standardized Exception Reporting:** Couriers submit structured delivery failure reports (`CUSTOMER_UNAVAILABLE`, `PREMISES_CLOSED`, `REFUSED_DELIVERY`, `WRONG_ADDRESS`) via `reportPublicDeliveryFailure`, instantly notifying dispatch desks and synchronizing `/track/[id]`.
+- **Subcontractor & Promoter TDS Withholding (`TaxationEngine` in `lib/taxation-engine.ts`):** Section 194C (1% individual with PAN, 2% firm with PAN, 20% penal rate without PAN) and Section 194H (5% with PAN, 20% penal rate).
+
+### 2.16 Salesperson CRM & Lead Assignment Dual-Pointer Sync
+- **Atomic Dual-Pointer Synchronization:** Both `assigned_to_salesperson_id` and `assigned_salesperson_id` are updated atomically to eliminate stale state in `/salesperson/leads` and `/admin/leads`.
+- **Margin-Protected Price Match Approvals:** Salesperson discount authority is bounded by individual commercial margin ceilings; competitor quotes exceeding limits escalate to Sales Manager / Super Admin.
+
+### 2.17 Interactive Guided Micro-Tours & 11-Language Localization
+- **Journey-Wise Step Micro-Tours (`components/tour/`):** Contextual step-by-step guidance across 5 personas highlighting layman hardware impacts on cabling, equipment, and 100% GST-paid pricing.
+- **Mobile Compositor Motion:** Viewport-inverted card docking, body scroll locking, GPU `translate3d` CSS keyframes, and safe-area margins.
+- **Decoupled Telemetry & Funnel Widget:** Privacy-safe custom events (`tour_started`, `tour_step_viewed`, `tour_completed`, `tour_skipped`, `tour_skip_all`) with live drop-off funnel analytics widget (`TourPerformanceWidget.tsx`) at `/admin/analytics/funnel`.
+- **11-Language Localization:** Colloquial layman terms across all 11 Indian languages (`en`, `hi`, `mr`, `gu`, `ta`, `te`, `kn`, `bn`, `ml`, `pa`, `or`) dynamically loaded on demand.
+
 ---
 
 ## 3. Operational & Deployment Guide
@@ -142,6 +170,9 @@ The following keys must be set in Vercel Project Settings:
 
 ### Standard Verification Commands
 ```bash
+# Phase 7 Commercial Lifecycle Certification Suite (109 tests across 8 personas)
+npx tsx --test tests/certification/commercial/*.test.ts
+
 # Type Safety Verification (must exit 0)
 npx tsc --noEmit
 

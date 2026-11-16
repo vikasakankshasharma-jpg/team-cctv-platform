@@ -160,6 +160,10 @@ export interface Lead {
   created_at: unknown;
   updated_at?: unknown;
   latest_quote_id?: string;
+  won_quote_id?: string;
+  last_quote_id?: string;
+  total_payable?: number;
+  paid_amount?: number;
   site_visit_date?: unknown;
   sla_breached?: boolean;
   sla_deadline?: string | null;

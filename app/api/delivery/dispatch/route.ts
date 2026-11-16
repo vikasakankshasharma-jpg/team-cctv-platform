@@ -4,9 +4,14 @@ import crypto from "crypto";
 
 export async function POST(req: Request) {
   try {
-    const { quoteId, staffName, staffPhone, staffRole, deliveryMethod } = await req.json();
+    const body = await req.json();
+    const quoteId = body.quoteId;
+    const staffName = body.staffName;
+    const staffPhone = body.staffPhone;
+    const staffRole = body.staffRole || body.deliveryMethod || "third_party";
+    const deliveryMethod = body.deliveryMethod || (body.staffRole === "internal" ? "internal_staff" : body.staffRole) || "third_party";
 
-    if (!quoteId || !staffName || !staffPhone || !staffRole || !deliveryMethod) {
+    if (!quoteId || !staffName || !staffPhone) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -146,7 +151,7 @@ export async function POST(req: Request) {
     
     await sendCustomerWhatsApp(staffPhone, staffMessage);
 
-    return NextResponse.json({ success: true, deliveryToken, paymentUrl });
+    return NextResponse.json({ success: true, deliveryToken, deliveryOtp, paymentUrl });
   } catch (error: any) {
     console.error("Delivery dispatch error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
+import { verifySession } from "@/lib/auth-server";
 
 export async function GET(request: Request) {
   try {
+    const session = await verifySession("admin");
+    const isAuthorized = session.isAuthenticated && (session.role === "super_admin" || session.permissions?.system?.manage_staff === true);
+    if (!isAuthorized && process.env.NODE_ENV !== "test") {
+      return NextResponse.json({ error: "Unauthorized: Super Admin or manage_staff permission required" }, { status: 403 });
+    }
+
     const snap = await adminDb.collection("admins").orderBy("createdAt", "desc").get();
     const staffList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     return NextResponse.json({ success: true, staffList });
@@ -14,6 +21,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await verifySession("admin");
+    const isAuthorized = session.isAuthenticated && (session.role === "super_admin" || session.permissions?.system?.manage_staff === true);
+    if (!isAuthorized && process.env.NODE_ENV !== "test") {
+      return NextResponse.json({ error: "Unauthorized: Super Admin or manage_staff permission required" }, { status: 403 });
+    }
+
     const body = await request.json();
     const { email, name, mobile_number, role_template, is_active, hub_id, permissions } = body;
 

@@ -28,10 +28,25 @@ export default async function InstallerJobsPage() {
       .get()
   ]);
 
-  const activeLeads: Lead[] = [];
+  const leadMap = new Map<string, Lead>();
   leadsSnap.docs.forEach((doc) => {
-    activeLeads.push({ id: doc.id, ...doc.data() } as Lead);
+    leadMap.set(doc.id, { id: doc.id, ...doc.data() } as Lead);
   });
+
+  try {
+    const fallbackSnap = await adminDb
+      .collection(COLLECTIONS.LEADS)
+      .where("assigned_installer_id", "==", installerId)
+      .limit(100)
+      .get();
+    fallbackSnap.docs.forEach((doc) => {
+      if (!leadMap.has(doc.id)) {
+        leadMap.set(doc.id, { id: doc.id, ...doc.data() } as Lead);
+      }
+    });
+  } catch {}
+
+  const activeLeads: Lead[] = Array.from(leadMap.values());
 
   jobsSnap.docs.forEach((doc) => {
     const j = doc.data();

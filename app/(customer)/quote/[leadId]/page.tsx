@@ -53,20 +53,6 @@ export default async function QuoteResultPage({
   const { name, mobile } = await searchParams;
   const { t } = await getServerTranslations();
 
-  // Phase 7 Gap 3: Identity-based resolution for /quote/[quoteId]
-  // If the parameter resolves to a minted quote document, redirect to its immutable review snapshot
-  if (leadId !== "mock-lead" && leadId !== "mock-e2e-lead" && adminDb) {
-    let quoteSnap = await adminDb.collection("quotes").doc(leadId).get();
-    if (!quoteSnap.exists) {
-      quoteSnap = await adminDb.collection("quotes").doc(leadId.toUpperCase()).get();
-    }
-    if (quoteSnap.exists) {
-      const qData = quoteSnap.data();
-      const resolvedLeadId = qData?.lead_id || qData?.leadId || leadId;
-      redirect(`/quote/${resolvedLeadId}/review/${leadId}`);
-    }
-  }
-
   // 1. DATA ENRICHMENT & FETCHING ─────────────────────────────────────────────
   
   let lead: Lead | null = null;
@@ -79,6 +65,26 @@ export default async function QuoteResultPage({
   let card_layouts: any[] = [];
   let hubs: HubWithCoordinates[] = [];
   let geo_pricing_rules: any[] = [];
+
+  // Identity-based resolution: Only redirect to quote review if leadId is NOT a Lead in the leads collection
+  // (e.g. legacy direct links where a quoteId was passed as the first segment: /quote/[quoteId])
+  if (leadId !== "mock-lead" && leadId !== "mock-e2e-lead" && adminDb) {
+    const leadSnap = await adminDb.collection("leads").doc(leadId).get();
+    if (!leadSnap.exists) {
+      let quoteSnap = await adminDb.collection("quotes").doc(leadId).get();
+      if (!quoteSnap.exists) {
+        quoteSnap = await adminDb.collection("quotes").doc(leadId.toUpperCase()).get();
+      }
+      if (quoteSnap.exists) {
+        const qData = quoteSnap.data();
+        const resolvedLeadId = qData?.lead_id || qData?.leadId || leadId;
+        redirect(`/quote/${resolvedLeadId}/review/${leadId}`);
+      }
+    } else {
+      // Re-use fetched lead snapshot to avoid re-fetching
+      lead = { id: leadSnap.id, ...leadSnap.data() } as Lead;
+    }
+  }
 
   if (leadId === "mock-lead" || leadId === "mock-e2e-lead") {
     lead = {

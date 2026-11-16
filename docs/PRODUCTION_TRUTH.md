@@ -1,6 +1,6 @@
 # Production Truth & Credential Tracking
 
-> **Last Updated:** November 11, 2026  
+> **Last Updated:** November 16, 2026  
 > **Production Domain:** `https://cctvquotation.com`  
 > **Vercel Project:** `secure-easy` / `team-cctv-platform`  
 > **Rule:** Never mark a credential as `ROTATED` or `VERIFIED` based solely on local files. Evidence from the actual deployment/environment is mandatory.
@@ -275,3 +275,32 @@
 - **Unified Referral Commission Settlement & Deduction (`lib/commission.ts`, `app/actions/leads.ts`, `app/api/quotes/route.ts`):** `resolvePromoterCommission()` resolves `promoter_incentive_type` (when value > 0), `commission_slabs` (B2C ₹500 / B2B 2%), legacy partner rates, and global fallback %. Quotes persist `promoter_id` and `referral_code_used`, and all referral/sales commissions deduct inside the **Services** bucket.
 - **Paid AMC & Promo Free AMC in Services (`lib/pricing-engine.ts`, `lib/profit-context.ts`, `lib/quotation-profit.ts`):** Counts quote add-ons (`amc_1yr`/`amc_2yr`/`amc_3yr`, `promo_free_amc` PM visit liability) and deduplicated standalone `amc_subscriptions`/`amc_contracts` directly inside Services.
 - **True Net Pocket Profit Overheads (`lib/cached-settings.ts`, `SettingsForm.tsx`, `QuotationProfitBreakupCard.tsx`, `ProfitabilityAnalyticsClient.tsx`):** Exposes editable admin settings (`amc_fulfillment_cost_percent`, `payment_gateway_fee_percent`, `warranty_reserve_percent`, `logistics_consumables_per_job`, `travel_fee_payout_percent`), surfaces the 4-card operating overhead waterfall & CSV/table breakdown, and leaves customer `total_payable` untouched.
+
+### 25. Interactive Guided Micro-Tours, Mobile Compositor Motion & 11-Language Dictionary (Nov 15, 2026)
+- **Journey-Wise Step Micro-Tours (`components/tour/`):** Contextually spotlighted elements per page route and wizard step (`InteractivePageTour.tsx`) focusing strictly on layman hardware impacts on cabling, equipment, and 100% GST-paid pricing.
+- **Mobile Compositor Motion & Viewport Inversion:** GPU-accelerated CSS keyframes (`translate3d`, `animate-tour-pulse`, `animate-tour-card-enter`), dynamic viewport docking above/below targets, body scroll lock (`overflow: hidden`), and `@media (prefers-reduced-motion: reduce)` safety.
+- **Funnel Drop-Off Analytics Widget:** Privacy-safe custom events (`tour_started`, `tour_step_viewed`, `tour_completed`, `tour_skipped`, `tour_skip_all`) with live drop-off funnel analytics widget (`TourPerformanceWidget.tsx`) at `/admin/analytics/funnel`.
+- **11-Language Dictionary:** Colloquial layman phrasing across all 11 Indian languages (`en`, `hi`, `mr`, `gu`, `ta`, `te`, `kn`, `bn`, `ml`, `pa`, `or`) dynamically loaded on demand.
+
+### 26. Global AI Gateway Single-Chokepoint Consolidation (Nov 15, 2026)
+- **Single Chokepoint (`lib/ai/ai-gateway.ts`):** All AI/LLM operations unified under a central gateway; direct imports of `@google/genai` or `@google-cloud/vertexai` are strictly banned outside the Gateway.
+- **Positive Authorization & Bounded Token Allocations:** Enforces purpose-based access control with hard bounded token ceilings (maximum 1,024 output tokens per turn).
+- **In-Memory Catalog Cache & SHA-256 Fingerprinting:** SHA-256 catalog hashing and in-memory response caching prevent redundant model calls for identical catalog state queries.
+- **L2 Persistent Observability Ledger (`ai_usage_ledger`):** Asynchronously records all token usage, prompt latency, caller roles, and completion statuses to Firestore without adding customer latency.
+
+### 27. Multi-Stage Customer Refund Protocol & Statutory Reverse-GST Section 34 Credit Notes (Nov 15-16, 2026)
+- **3-Stage Refund Architecture (`app/api/payment/refund/route.ts`, `components/admin/RefundDialog.tsx`):**
+  - *Stage 1 (Advance Booking Refund):* Cancellation before dispatch; 100% refund of ₹500 booking token.
+  - *Stage 2 (Part-Payment Dispatch Cancellation):* Stage 2A full return (refunds booking fee + 90% payment) or Stage 2B partial adjustment (hardware downgrade with job remaining active).
+  - *Stage 3 (Post-Installation Settlement / Goodwill Refund):* Stage 3A final payment adjustment or Stage 3B full contract return upon equipment recovery.
+- **Reverse-GST 18% Mathematical Reconciliation:**
+  $$\text{Credit Taxable Base} = \frac{\text{Refund Amount}}{1.18}$$
+  $$\text{Credit 18% GST} = \text{Refund Amount} - \text{Credit Taxable Base}$$
+  Guaranteed ₹0.00 mathematical drift with automated Section 34 Credit Note issuance.
+
+### 28. Third-Party Delivery Portal (`/d/[token]`), Subcontractor TDS & Phase 7 Certification (Nov 16, 2026)
+- **Zero-Auth Public Magic Link (`/d/[token]`):** Tokenized access for third-party couriers (Porter, Dunzo, freelance riders) with cryptographic UUID tokens, expiry guards, and strict field projection security.
+- **Strict Zero-Cash Authority Invariant:** Automatic payment lockout (`PAYMENT_REQUIRED`) when the 90% milestone payment is unpaid; delivery handover OTP cannot be verified until payment is completed online.
+- **Standardized Field Exception Reporting:** Couriers submit delivery failure reasons (`CUSTOMER_UNAVAILABLE`, `PREMISES_CLOSED`, `REFUSED_DELIVERY`, `WRONG_ADDRESS`) via `reportPublicDeliveryFailure`.
+- **Statutory Section 194C / 194H TDS Calculation (`TaxationEngine` in `lib/taxation-engine.ts`):** 1% TDS for individual contractors with valid PAN; 2% TDS for registered subcontractor firms; 5% TDS for promoters/brokers; 20% penal rate without PAN.
+- **Phase 7 Commercial Lifecycle Certification Suite:** 109/109 tests PASSING in `tests/certification/commercial/` validating end-to-end multi-persona handoffs and reverse-GST mathematical invariants across all 8 personas.

@@ -18,7 +18,8 @@ export default async function PartnerCommissionsPage() {
   
   const promoterDoc = await adminDb.collection(COLLECTIONS.PROMOTERS).doc(promoterId).get();
   const promoterData = promoterDoc.data();
-  const hasValidPan = !!(promoterData?.pan_number && promoterData.pan_number.length === 10);
+  const panNumber = promoterData?.bank_details?.pan_number || promoterData?.pan_number;
+  const hasValidPan = !!(panNumber && panNumber.trim().length === 10);
 
   const commsSnap = await adminDb
     .collection(COLLECTIONS.COMMISSION_RECORDS)

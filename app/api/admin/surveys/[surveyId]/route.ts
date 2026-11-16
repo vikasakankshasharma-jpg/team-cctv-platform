@@ -27,6 +27,12 @@ export async function PATCH(req: Request, { params }: { params: any }) {
       updateData.assigned_installer_id = assigned_installer_id;
     }
 
+    if (is_third_party !== undefined) {
+      updateData.is_third_party = is_third_party;
+      if (third_party_name) updateData.third_party_name = third_party_name;
+      if (third_party_phone) updateData.third_party_phone = third_party_phone;
+    }
+
     await surveyRef.update(updateData);
 
     // Log the assignment to the CRM

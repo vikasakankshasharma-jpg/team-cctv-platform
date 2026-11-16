@@ -22,7 +22,7 @@ export function QuoteHistoryModal({ isOpen, onClose, leadId, customerName }: Quo
   const { t, locale } = useTranslation();
   const [quotes, setQuotes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [refundingQuote, setRefundingQuote] = useState<{ id: string; amount: number; paymentId?: string } | null>(null);
+  const [refundingQuote, setRefundingQuote] = useState<{ id: string; amount: number; paymentId?: string; quoteData?: any } | null>(null);
 
   const fetchQuotes = async () => {
     setIsLoading(true);
@@ -97,13 +97,23 @@ export function QuoteHistoryModal({ isOpen, onClose, leadId, customerName }: Quo
                 </div>
                 
                 <div className="flex items-center gap-2 shrink-0">
-                  {quote.status === "PAID" && (
+                  {(["PAID", "BOOKED", "DELIVERY_PAID", "COMPLETED"].includes(quote.status) ||
+                    ["advance_paid", "delivery_paid", "paid", "partially_refunded", "captured"].includes(quote.payment_status)) && (
                      <button
-                       onClick={() => setRefundingQuote({
-                         id: quote.id,
-                         amount: quote.quoteData?.total_payable || 0,
-                         paymentId: quote.razorpay_payment_id || undefined
-                       })}
+                       onClick={() => {
+                         const paidAmt = Number(quote.amount_paid ?? quote.quoteData?.total_payable ?? 0);
+                         const refAmt = Number(quote.refund_amount ?? 0);
+                         const remainingRefundable = Math.max(0, paidAmt - refAmt);
+                         setRefundingQuote({
+                           id: quote.id,
+                           amount: remainingRefundable,
+                           paymentId: quote.installation_payment_id || quote.delivery_payment_id || quote.razorpay_payment_id || undefined,
+                           quoteData: {
+                             ...quote,
+                             ...(quote.quoteData || {})
+                           }
+                         });
+                       }}
                        className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-colors border border-rose-500/20 flex items-center gap-1.5 whitespace-nowrap"
                      >
                        <RefreshCcw className="w-3 h-3 shrink-0" /> {t("adm_qh_refund", "Refund")}
@@ -128,6 +138,7 @@ export function QuoteHistoryModal({ isOpen, onClose, leadId, customerName }: Quo
           quoteId={refundingQuote.id}
           amount={refundingQuote.amount}
           paymentId={refundingQuote.paymentId}
+          quoteData={refundingQuote.quoteData}
           onClose={() => setRefundingQuote(null)}
           onSuccess={() => {
             setRefundingQuote(null);

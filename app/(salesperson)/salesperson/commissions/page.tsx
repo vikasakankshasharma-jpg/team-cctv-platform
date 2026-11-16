@@ -17,9 +17,10 @@ export default async function SalespersonCommissionsPage() {
 
   const salespersonUid = session.user!.uid;
 
-  // Find the salesperson document linked to this UID
-  const spSnap = await adminDb.collection("salespersons").where("firebase_uid", "==", salespersonUid).limit(1).get();
-  if (spSnap.empty) {
+  // Find the salesperson document linked to this UID (resilient across salespeople / salespersons)
+  const { findSalespersonByUid } = await import("@/lib/salesperson-utils");
+  const spDoc = await findSalespersonByUid(salespersonUid);
+  if (!spDoc) {
     return (
       <div className="p-4 md:p-8 text-red-400">
         <TranslatedText tKey="sls_comm_not_linked" defaultText="Salesperson profile not linked correctly. Please contact admin." />
@@ -27,7 +28,7 @@ export default async function SalespersonCommissionsPage() {
     );
   }
   
-  const salespersonId = spSnap.docs[0].id;
+  const salespersonId = spDoc.id;
 
   // Fetch commission records for this salesperson
   const commsSnap = await adminDb

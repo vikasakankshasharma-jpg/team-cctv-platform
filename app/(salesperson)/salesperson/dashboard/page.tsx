@@ -34,17 +34,20 @@ export default async function SalespersonDashboard() {
   let spName = "";
 
   if (session.user) {
-    const spSnap = await adminDb.collection("salespeople")
-      .where("firebase_uid", "==", session.user.uid)
-      .limit(1)
-      .get();
+    const { findSalespersonByUid } = await import("@/lib/salesperson-utils");
+    const spDoc = await findSalespersonByUid(session.user.uid);
 
-    if (!spSnap.empty) {
-      spId = spSnap.docs[0].id;
-      spName = spSnap.docs[0].data().name;
+    if (spDoc) {
+      spId = spDoc.id;
+      spName = spDoc.name;
 
       const assignedLeadsPromise = adminDb.collection("leads")
         .where("assigned_to_salesperson_id", "==", spId)
+        .orderBy("created_at", "desc")
+        .get();
+
+      const assignedLeadsPromise2 = adminDb.collection("leads")
+        .where("assigned_salesperson_id", "==", spId)
         .orderBy("created_at", "desc")
         .get();
 
@@ -53,13 +56,14 @@ export default async function SalespersonDashboard() {
         .orderBy("created_at", "desc")
         .get();
 
-      const [assignedSnap, broadcastSnap] = await Promise.all([assignedLeadsPromise, broadcastLeadsPromise]);
+      const [assignedSnap, assignedSnap2, broadcastSnap] = await Promise.all([assignedLeadsPromise, assignedLeadsPromise2, broadcastLeadsPromise]);
 
       const mergedDocs = new Map();
       assignedSnap.docs.forEach(d => mergedDocs.set(d.id, d));
+      assignedSnap2.docs.forEach(d => mergedDocs.set(d.id, d));
       broadcastSnap.docs.forEach(d => mergedDocs.set(d.id, d));
 
-      totalAssigned = assignedSnap.size; // Only count assigned ones for the KPI, or both? Let's count assigned.
+      totalAssigned = mergedDocs.size;
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);

@@ -170,6 +170,9 @@ npx tsx scratch/gen_markdown_catalog.ts
 
 ### Testing & QA
 ```bash
+# Phase 7 Commercial Lifecycle Certification Suite (109 tests across 8 personas)
+npx tsx --test tests/certification/commercial/*.test.ts
+
 # Run Playwright end-to-end tests
 npx playwright test
 

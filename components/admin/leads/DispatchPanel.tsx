@@ -37,7 +37,8 @@ export default function DispatchPanel({ lead, onUpdate }: { lead: any, onUpdate:
           quoteId: lead.id,
           staffName,
           staffPhone,
-          staffRole
+          staffRole: staffRole === "internal" ? "internal_staff" : "third_party",
+          deliveryMethod: staffRole === "internal" ? "internal_staff" : "third_party"
         })
       });
       const data = await res.json();

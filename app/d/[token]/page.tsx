@@ -37,6 +37,8 @@ export default async function PublicDeliveryPage({ params }: { params: { token: 
     total_payable: quoteData.pricingSnapshot?.total_payable || quoteData.total_payable || 0,
     advance_payment_amount: quoteData.advance_payment_amount || 500,
     assigned_delivery_staff: quoteData.assigned_delivery_staff || null,
+    delivery_token: params.token,
+    delivery_failure_reason: quoteData.delivery_failure_reason || null,
   };
 
   return (

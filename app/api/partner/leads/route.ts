@@ -28,19 +28,28 @@ export async function GET() {
     });
 
     const leadsPromises = leadsSnap.docs.map(async (doc) => {
-      const leadData = doc.data() as Lead;
+      const leadData = doc.data() as any;
       
-      // Fetch latest quote to get total_payable
-      let totalPayable = 0;
-      if (["quoted", "won", "lost"].includes(leadData.status)) {
-        const quotesSnap = await doc.ref
-          .collection(SUBCOLLECTIONS.QUOTES)
-          .orderBy("created_at", "desc")
-          .limit(1)
-          .get();
-          
-        if (!quotesSnap.empty) {
-          totalPayable = quotesSnap.docs[0].data().total_payable || 0;
+      // Fetch latest quote to get total_payable (resilient across root quotes & subcollections)
+      let totalPayable = Number(leadData.total_payable || leadData.paid_amount || 0);
+      if (!totalPayable && ["quoted", "won", "lost"].includes(leadData.status)) {
+        const candidateQuoteId = leadData.won_quote_id || leadData.latest_quote_id || leadData.last_quote_id;
+        if (candidateQuoteId) {
+          const rootQDoc = await adminDb.collection("quotes").doc(candidateQuoteId).get().catch(() => null);
+          if (rootQDoc && rootQDoc.exists) {
+            totalPayable = rootQDoc.data()?.total_payable || rootQDoc.data()?.pricingSnapshot?.total_payable || 0;
+          }
+        }
+        if (!totalPayable) {
+          const quotesSnap = await doc.ref
+            .collection(SUBCOLLECTIONS.QUOTES)
+            .orderBy("created_at", "desc")
+            .limit(1)
+            .get()
+            .catch(() => null);
+          if (quotesSnap && !quotesSnap.empty) {
+            totalPayable = quotesSnap.docs[0].data().total_payable || 0;
+          }
         }
       }
 
