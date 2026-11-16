@@ -1772,7 +1772,7 @@ export const bn: Record<TranslationKey, string> = {
   "err_refresh": "পেজ রিফ্রেশ করুন",
   "err_updating": "নতুন ভার্সনে আপডেট হচ্ছে…",
   "err_wrong": "কিছু একটা ভুল হয়েছে",
-  "est_4cam_badge": "৪-ক্যাম কিট",
+  "est_4cam_badge": "জনপ্রিয়",
   "est_badge": "লাইভ ব্র্যান্ড ও কোয়ালিটি তুলনা",
   "est_calc_exact": "আমার প্রপার্টির সঠিক Quote হিসাব করুন →",
   "est_cta_btn": "আমার জায়গার সঠিক Quote নিন",

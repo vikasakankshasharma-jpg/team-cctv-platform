@@ -1772,7 +1772,7 @@ export const gu: Record<TranslationKey, string> = {
   "err_refresh": "પેજ રિફ્રેશ કરો",
   "err_updating": "નવું વર્ઝન અપડેટ થઈ રહ્યું છે…",
   "err_wrong": "કંઈક ગડબડ થઈ ગઈ",
-  "est_4cam_badge": "4-કેમ કિટ",
+  "est_4cam_badge": "પોપ્યુલર",
   "est_badge": "લાઇવ બ્રાન્ડ અને ક્વોલિટી સરખામણી",
   "est_calc_exact": "મારી પ્રોપર્ટીનો સચોટ Quote કાઢો →",
   "est_cta_btn": "મારી જગ્યાનો સચોટ Quote મેળવો",

@@ -1772,7 +1772,7 @@ export const ml: Record<TranslationKey, string> = {
   "err_refresh": "പേജ് റീഫ്രഷ് ചെയ്യുക",
   "err_updating": "പുതിയ പതിപ്പിലേക്ക് അപ്ഡേറ്റ് ചെയ്യുന്നു…",
   "err_wrong": "എന്തോ പിശക് സംഭവിച്ചു",
-  "est_4cam_badge": "4-ക്യാം കിറ്റ്",
+  "est_4cam_badge": "ജനപ്രിയം",
   "est_badge": "ലൈവ് ബ്രാൻഡ് & ക്വാളിറ്റി താരതമ്യം",
   "est_calc_exact": "എന്റെ പ്രോപ്പർട്ടിക്കുള്ള കൃത്യമായ Quote കണക്കാക്കൂ →",
   "est_cta_btn": "എന്റെ സ്ഥലത്തിന് കൃത്യമായ Quote നേടൂ",

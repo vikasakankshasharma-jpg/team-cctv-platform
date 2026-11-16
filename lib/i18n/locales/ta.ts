@@ -1772,7 +1772,7 @@ export const ta: Record<TranslationKey, string> = {
   "err_refresh": "பக்கத்தை ரீஃப்ரெஷ் செய்",
   "err_updating": "புதிய பதிப்பு புதுப்பிக்கப்படுகிறது…",
   "err_wrong": "ஏதோ தவறு நடந்துவிட்டது",
-  "est_4cam_badge": "4-கேம் கிட்",
+  "est_4cam_badge": "பிரபலம்",
   "est_badge": "நேரடி பிராண்ட் & தர ஒப்பீடு",
   "est_calc_exact": "என் இடத்திற்கான சரியான Quote கணக்கிடுக →",
   "est_cta_btn": "என் இடத்திற்கான சரியான Quote பெறுக",

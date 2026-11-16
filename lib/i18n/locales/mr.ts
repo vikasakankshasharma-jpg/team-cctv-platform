@@ -1772,7 +1772,7 @@ export const mr: Record<TranslationKey, string> = {
   "err_refresh": "पेज रिफ्रेश करा",
   "err_updating": "नवीन आवृत्ती अपडेट होत आहे…",
   "err_wrong": "काहीतरी चूक झाली",
-  "est_4cam_badge": "4-कॅम संच",
+  "est_4cam_badge": "पॉप्युलर",
   "est_badge": "लाइव्ह ब्रँड आणि क्वालिटी तुलना",
   "est_calc_exact": "माझ्या प्रॉपर्टीचा अचूक Quote काढा →",
   "est_cta_btn": "माझ्या जागेचा अचूक Quote घ्या",

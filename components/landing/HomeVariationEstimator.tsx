@@ -589,8 +589,12 @@ export function HomeVariationEstimator({ initialPackages }: HomeVariationEstimat
               >
                 <span>{t("est_n_cameras", undefined, { count: String(count) })}</span>
                 {count === 4 && (
-                  <span className="px-1.5 py-0.5 rounded bg-blue-600 text-white text-[9px] font-black uppercase">
-                    {t("est_4cam_badge")}
+                  <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                    isSelected
+                      ? "bg-blue-600 text-white"
+                      : "bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300"
+                  }`}>
+                    {t("est_4cam_badge", "Popular")}
                   </span>
                 )}
               </button>

@@ -1772,7 +1772,7 @@ export const te: Record<TranslationKey, string> = {
   "err_refresh": "పేజీ రీఫ్రెష్ చేయండి",
   "err_updating": "కొత్త వెర్షన్ అప్‌డేట్ అవుతోంది…",
   "err_wrong": "ఏదో పొరపాటు జరిగింది",
-  "est_4cam_badge": "4-క్యామ్ కిట్",
+  "est_4cam_badge": "పాపులర్",
   "est_badge": "లైవ్ బ్రాండ్ & క్వాలిటీ పోలిక",
   "est_calc_exact": "నా ప్రాపర్టీకి కచ్చితమైన Quote లెక్కించండి →",
   "est_cta_btn": "నా ప్రదేశానికి కచ్చితమైన Quote పొందండి",

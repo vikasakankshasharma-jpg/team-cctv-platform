@@ -1770,7 +1770,7 @@ export const en = {
   "err_refresh": "Refresh Page",
   "err_updating": "Updating to latest version…",
   "err_wrong": "Something Went Wrong",
-  "est_4cam_badge": "Standard Kit",
+  "est_4cam_badge": "Popular",
   "est_badge": "Interactive Brand & Resolution Explorer",
   "est_calc_exact": "Calculate Exact Quote for My Property →",
   "est_cta_btn": "Get Exact Quote for My Site",

@@ -1772,7 +1772,7 @@ export const pa: Record<TranslationKey, string> = {
   "err_refresh": "ਪੰਨਾ ਰੀਫ੍ਰੈਸ਼ ਕਰੋ",
   "err_updating": "ਨਵਾਂ ਵਰਜ਼ਨ ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ…",
   "err_wrong": "ਕੁਝ ਗੜਬੜ ਹੋ ਗਈ",
-  "est_4cam_badge": "4-ਕੈਮ ਕਿੱਟ",
+  "est_4cam_badge": "ਪਾਪੂਲਰ",
   "est_badge": "ਲਾਈਵ ਬ੍ਰਾਂਡ ਅਤੇ ਕੁਆਲਿਟੀ ਤੁਲਨਾ",
   "est_calc_exact": "ਮੇਰੀ ਪ੍ਰਾਪਰਟੀ ਦਾ ਸਹੀ Quote ਕੱਢੋ →",
   "est_cta_btn": "ਮੇਰੀ ਥਾਂ ਦਾ ਸਹੀ Quote ਲਓ",

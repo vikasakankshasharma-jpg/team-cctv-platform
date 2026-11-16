@@ -1772,7 +1772,7 @@ export const kn: Record<TranslationKey, string> = {
   "err_refresh": "ಪುಟ ರಿಫ್ರೆಶ್ ಮಾಡಿ",
   "err_updating": "ಹೊಸ ಆವೃತ್ತಿಗೆ ಅಪ್‌ಡೇಟ್ ಆಗುತ್ತಿದೆ…",
   "err_wrong": "ಏನೋ ತೊಂದರೆಯಾಗಿದೆ",
-  "est_4cam_badge": "4-ಕ್ಯಾಮ್ ಕಿಟ್",
+  "est_4cam_badge": "ಜನಪ್ರಿಯ",
   "est_badge": "ಲೈವ್ ಬ್ರ್ಯಾಂಡ್ ಮತ್ತು ಗುಣಮಟ್ಟ ಹೋಲಿಕೆ",
   "est_calc_exact": "ನನ್ನ ಆಸ್ತಿಗೆ ನಿಖರವಾದ Quote ಲೆಕ್ಕಹಾಕಿ →",
   "est_cta_btn": "ನನ್ನ ಸ್ಥಳಕ್ಕೆ ನಿಖರವಾದ Quote ಪಡೆಯಿರಿ",
