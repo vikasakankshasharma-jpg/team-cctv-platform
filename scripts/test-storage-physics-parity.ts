@@ -74,7 +74,7 @@ assert(hd8Days < hd4Days, `Storage days must strictly decrease as camera count i
 // --- TEST 2: HD Analog Standard Quote picks Genuine Surveillance HDD ---
 console.log("\n--- 2. HD Analog Standard Branded Quote Quality Tier ---");
 const hd8Std = calculatePricing({
-  selection: { camera_count: 8, technology: "HD", plan_type: "recommended", brand_preference: "hikvision", recording_days: 7, selected_addons: [] } as any,
+  selection: { camera_count: 8, technology: "HD", plan_type: "recommended", brand_preference: "hikvision", recording_days: 15, selected_addons: [] } as any,
   products: [...mockCams, ...mockRecorders] as any,
   addons: mockHdds as any,
   settings,
@@ -87,7 +87,7 @@ assert((hd8StdStorage as any)?.approx_days === 8, `8 cameras on 1TB must yield 8
 // --- TEST 3: IP Network Parity ---
 console.log("\n--- 3. IP Network Native H.265 Parity ---");
 const ip4Std = calculatePricing({
-  selection: { camera_count: 4, technology: "IP", plan_type: "recommended", recording_days: 7, selected_addons: [] } as any,
+  selection: { camera_count: 4, technology: "IP", plan_type: "recommended", recording_days: 15, selected_addons: [] } as any,
   products: [...mockCams, ...mockRecorders] as any,
   addons: mockHdds as any,
   settings,
@@ -97,7 +97,7 @@ const ip4Storage = ip4Std.items.find(i => i.product_id === "HDD-SEA-1TB");
 assert((ip4Storage as any)?.approx_days === 17, `4 IP cameras on 1TB must yield 17 days (Got: ${(ip4Storage as any)?.approx_days})`);
 
 const ip8Std = calculatePricing({
-  selection: { camera_count: 8, technology: "IP", plan_type: "recommended", recording_days: 7, selected_addons: [] } as any,
+  selection: { camera_count: 8, technology: "IP", plan_type: "recommended", recording_days: 15, selected_addons: [] } as any,
   products: [...mockCams, ...mockRecorders] as any,
   addons: mockHdds as any,
   settings,

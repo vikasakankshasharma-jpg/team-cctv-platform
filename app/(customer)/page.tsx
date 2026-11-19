@@ -19,7 +19,7 @@ import { FaqAccordion } from "@/components/landing/FaqAccordion";
 import { HomeVariationEstimator } from "@/components/landing/HomeVariationEstimator";
 import { DealerComparisonTable } from "@/components/landing/DealerComparisonTable";
 import { TrustAssuranceGrid } from "@/components/landing/TrustAssuranceGrid";
-import { LocalServiceHubs } from "@/components/landing/LocalServiceHubs";
+import { PanIndiaCoverage } from "@/components/landing/PanIndiaCoverage";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 import { getDynamicPackageCatalog } from "@/lib/dynamic-package-pricing";
 import type { Metadata } from "next";
@@ -185,8 +185,8 @@ export default async function LandingPage() {
       {/* 2. Four Core Customer Assurances (Trust Strip) */}
       <TrustAssuranceGrid />
 
-      {/* 3. Doorstep CCTV Installation in Your City (Local Service Hubs) */}
-      <LocalServiceHubs />
+      {/* 3. Pan-India Installation Network & Coverage */}
+      <PanIndiaCoverage />
 
       {/* 4. "CCTVQuotation vs Local CCTV Dealer" Table */}
       <DealerComparisonTable />

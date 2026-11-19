@@ -57,7 +57,7 @@ export function SiteFooter() {
           
           <div className="flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 items-center md:justify-end">
              <span className="text-xs sm:text-sm font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-               🇮🇳 <TranslatedText tKey="footer_serving" defaultText="Serving Jaipur & All Across India" />
+               🇮🇳 <TranslatedText tKey="footer_serving" defaultText="Serving Pan-India • Doorstep Service Across India" />
              </span>
           </div>
           

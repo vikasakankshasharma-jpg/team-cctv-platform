@@ -74,16 +74,11 @@ export default async function CustomerLayout({
               />
             </Link>
 
-            <div className="hidden md:block">
-              <Link 
-                href="/#service-hubs"
-                className="flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100/50 dark:border-zinc-800/50 text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shadow-xs cursor-pointer shrink-0"
-              >
-                <MapPin className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
-                <span className="hidden min-[400px]:inline">
-                  <TranslatedText tKey="service_areas" defaultText="Service Areas" />
-                </span>
-              </Link>
+            <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-[11px] font-bold text-zinc-700 dark:text-zinc-300 shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>
+                <TranslatedText tKey="nav_pan_india" defaultText="Pan-India Service" />
+              </span>
             </div>
           </div>
 
