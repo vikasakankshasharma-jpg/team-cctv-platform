@@ -187,43 +187,45 @@ export function InteractivePageTour({
 
     let cancelled = false;
 
-    const resolveTarget = () => {
+    let attempts = 0;
+    const tryResolve = () => {
+      if (cancelled) return;
       const element = document.querySelector(
         tour.currentStep!.target,
       ) as HTMLElement | null;
 
-      if (!element) {
-        if (tour.currentStep!.optional) {
-          tour.next();
-        }
+      if (element) {
+        targetRef.current = element;
+        element.scrollIntoView({
+          behavior: "auto",
+          block: "center",
+          inline: "nearest",
+        });
+        updateTargetRect(element, setTargetRect, setPosition);
+
+        requestAnimationFrame(() => {
+          if (cancelled) return;
+          updateTargetRect(element, setTargetRect, setPosition);
+        });
         return;
       }
 
-      targetRef.current = element;
-
-      if (cancelled) return;
-
-      element.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-        inline: "nearest",
-      });
-
-      requestAnimationFrame(() => {
-        if (cancelled) return;
-        updateTargetRect(element, setTargetRect, setPosition);
-      });
+      attempts++;
+      if (attempts < 10) {
+        requestAnimationFrame(tryResolve);
+      } else if (tour.currentStep!.optional) {
+        tour.next();
+      }
     };
 
-    const timer = window.setTimeout(resolveTarget, 100);
+    tryResolve();
 
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
     };
   }, [tour.isRunning, tour.currentStep, tour.next]);
 
-  // Window Resize & Orientation Change tracking
+  // Window Resize, Scroll & Orientation Change tracking
   useEffect(() => {
     if (!tour.isRunning) return;
 
@@ -235,10 +237,12 @@ export function InteractivePageTour({
 
     window.addEventListener("resize", update);
     window.addEventListener("orientationchange", update);
+    window.addEventListener("scroll", update, true);
 
     return () => {
       window.removeEventListener("resize", update);
       window.removeEventListener("orientationchange", update);
+      window.removeEventListener("scroll", update, true);
     };
   }, [tour.isRunning]);
 
@@ -288,7 +292,7 @@ export function InteractivePageTour({
 
       {/* Spotlight cutout */}
       <div
-        className="fixed z-[9991] rounded-xl ring-4 ring-blue-500/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.60)] pointer-events-none transition-all duration-200"
+        className="fixed z-[9991] rounded-xl ring-4 ring-blue-500/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.60)] pointer-events-none transition-[top,left,width,height] duration-200 ease-out"
         style={{
           top: targetRect.top,
           left: targetRect.left,
@@ -315,7 +319,7 @@ export function InteractivePageTour({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`fixed left-4 right-4 z-[9999] rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-2xl animate-tour-card-enter transition-all duration-200 sm:left-auto sm:right-6 sm:w-[380px] ${
+        className={`fixed left-3 right-3 sm:left-auto sm:right-6 sm:w-[380px] max-h-[85vh] overflow-y-auto z-[9999] rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-2xl animate-tour-card-enter transition-all duration-200 ${
           position === "bottom"
             ? "bottom-[calc(1rem+env(safe-area-inset-bottom))]"
             : "top-4"
@@ -401,12 +405,16 @@ function updateTargetRect(
   setPosition: (position: TourPosition) => void,
 ) {
   const rect = element.getBoundingClientRect();
+  if (rect.width === 0 && rect.height === 0) return;
+
   const viewportHeight = window.innerHeight;
   const center = rect.top + rect.height / 2;
 
-  // If target center is in top half of screen, show card at bottom.
-  // If target center is in bottom half, show card at top.
-  setPosition(center < viewportHeight / 2 ? "bottom" : "top");
+  // Smart Mobile Inversion:
+  // Tour cards are ~320-380px tall. If target is in the lower 55% of the screen,
+  // dock the card at top to prevent covering the spotlighted element on mobile.
+  const threshold = viewportHeight * 0.45;
+  setPosition(center > threshold ? "top" : "bottom");
 
   const padding = 6;
   setTargetRect({

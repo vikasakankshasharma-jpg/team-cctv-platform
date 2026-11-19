@@ -164,3 +164,24 @@
 2. **Margin-Protected Price Match Governance:**
    - Salesperson manual discount authority is strictly bounded by individual commercial margin ceilings.
    - Competitor counter-offers exceeding the salesperson's discount ceiling automatically trigger an approval escalation flag (`requires_manager_approval: true`), requiring Sales Manager or Super Admin sign-off before quote synchronization.
+
+## 11. Internal Catalog Price Sovereignty & Zero External Speculation Invariant
+
+1. **Internal Catalog Ground Truth:**
+   - The platform's internal product database (`data/mega-products.generated.json`, active inventory, Firestore `products`) is the **sole, immutable ground truth** for all wholesale costs, component rates, and GST-inclusive customer retail selling prices.
+   - **Permanent Ban on External Speculative Price Auditing:** Never second-guess, dispute, override, or evaluate internal catalog prices against external memories, assumptions, or outdated third-party estimates.
+   - Real-world surveillance-grade components (such as Toshiba S300, WD Purple, Seagate SkyHawk, high-end PoE switches) reflect real distributor and e-commerce listings (e.g. Amazon India listing Toshiba S300 2TB at ₹14,999+). The internal catalog rates (e.g. ₹12,065) represent verified vendor-backed pricing and must be respected 100% without modification unless explicitly updated by an authorized admin.
+2. **Pricing Engine Determinism:**
+   - The quotation and pricing engine (`pricing-engine.ts`) must strictly compute line items, margins, and taxes directly from the database and active vendor catalog snapshots.
+   - No agent, AI gateway prompt, or automated test is permitted to flag or alter catalog item prices based on external web benchmarks.
+
+## 12. Universal CAT6 Dual-Compatibility Invariant (HD Analog & IP Systems)
+
+1. **Dual-Use CAT6 Standard:**
+   - Installers and field technicians natively utilize CAT6 Pure Copper UTP cable for **both HD Analog and IP installations**.
+   - Modern surveillance practice splits the 4 twisted pairs (8 cores) of CAT6 for HD Analog systems: dedicated twisted pairs are utilized directly for high-definition video transmission and 12V DC power delivery using standard BNC connectors and DC power pins.
+   - For typical residential and commercial cable distances (< 60–90 meters), solid pure copper CAT6 carries 2MP, 3MP, and 5MP Turbo HD/AHD/CVI signals crisply without requiring external video baluns.
+2. **Future-Proof Infrastructure Certification:**
+   - Quoting CAT6 Pure Copper cable with BNC connectors and DC power pins is an authorized, standard, and superior installation topology.
+   - It guarantees future-proofing: the customer gets high-grade network cabling today that is ready for an instant, seamless upgrade to digital IP cameras in the future without breaking walls or replacing wiring.
+   - Agents, audit tools, and BOM verifiers must **never** flag CAT6 paired with BNC connectors or DC pins as a cabling mismatch.

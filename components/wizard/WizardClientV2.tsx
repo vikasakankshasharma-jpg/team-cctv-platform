@@ -825,10 +825,11 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
             <div className="text-center pt-2 sm:pt-4">
               <button
                 type="button"
+                data-tour="setup-custom-choice"
                 onClick={() => { setIsProBuilderFlow(true); setStep(6); }}
-                className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors cursor-pointer inline-block leading-relaxed max-w-xl mx-auto"
+                className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors cursor-pointer inline-flex flex-wrap items-center justify-center gap-1 leading-relaxed max-w-xl mx-auto px-3 py-2 rounded-xl bg-slate-50/50 dark:bg-zinc-900/50 hover:bg-slate-100 dark:hover:bg-zinc-800 border border-slate-200/60 dark:border-zinc-800"
               >
-                <span className="font-semibold text-slate-700 dark:text-zinc-300 inline-flex items-center gap-1 mr-1">
+                <span className="font-semibold text-slate-700 dark:text-zinc-300 inline-flex items-center gap-1">
                   <Wrench className="w-3.5 h-3.5 inline-block shrink-0" />
                   {t("wz_custom_build_advanced")}:
                 </span>
@@ -1904,7 +1905,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
               </div>
               
               {/* Symmetrical 3-col mobile / 6-col desktop Days Grid */}
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-2.5">
+              <div data-tour="wizard-storage-days" className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-2.5">
                 {[0, 7, 15, 30, 45, 60].map(days => {
                   const isSelected = req.recording_days === days;
                   const isPopular = days === 15;
@@ -2966,7 +2967,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
 
         case 5:
           return (
-            <div className="space-y-4 sm:space-y-6 animate-in fade-in">
+            <div data-tour="wizard-remote-viewing" className="space-y-4 sm:space-y-6 animate-in fade-in">
               <div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-[11px] font-black uppercase tracking-wider mb-2">
                   <span>{t("wz_remote_phone_pill")}</span>

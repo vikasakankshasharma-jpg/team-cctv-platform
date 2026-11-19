@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { LocaleCode } from './mapping';
+import type { LocaleCode } from './mapping';
 import { loadLocaleDict } from './locales';
 
 export function writeLocaleCookie(locale: LocaleCode): void {

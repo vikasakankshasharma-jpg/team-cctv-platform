@@ -168,6 +168,14 @@ npx tsx scratch/verify_db.ts
 npx tsx scratch/gen_markdown_catalog.ts
 ```
 
+### 11. Internal Catalog Price Sovereignty & Zero External Speculation
+- **Ground Truth Invariant:** The platform's internal product database (`data/mega-products.generated.json`, active inventory, Firestore `products`) is the **sole, immutable ground truth** for all item pricing, base costs, margins, and customer selling prices.
+- **Strict Ban on External Price Overrides:** Never dispute, alter, or second-guess internal catalog prices against external memories or third-party estimates. Real-world surveillance-grade components (e.g. Toshiba S300, WD Purple, Seagate SkyHawk) reflect verified distributor and live retail pricing (e.g. Amazon India retail @ ₹14,999+). Internal catalog rates (e.g. ₹12,065) are fully authentic and authoritative.
+
+### 12. Universal CAT6 Dual-Compatibility Standard (HD Analog & IP Systems)
+- **Multi-Core Versatility:** Field technicians natively utilize CAT6 Pure Copper UTP cable for both HD Analog and IP installations by allocating multi-core twisted pairs for direct video and 12V DC power with standard BNC and DC pins.
+- **Future-Proofing by Design:** Delivers enterprise-grade network cabling on HD Analog setups, enabling customers to upgrade to IP in the future without re-cabling. Standardized and certified across the platform.
+
 ### Testing & QA
 ```bash
 # Phase 7 Commercial Lifecycle Certification Suite (109 tests across 8 personas)
