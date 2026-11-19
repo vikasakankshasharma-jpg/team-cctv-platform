@@ -4647,4 +4647,12 @@ export const pa: Record<TranslationKey, string> = {
   "pan_pincode_btn": "Get Quote",
   "pan_checking": "Verifying...",
   "pan_pincode_invalid": "Please enter a valid 6-digit Indian PIN code.",
+  "footer_refer_earn": "ਰੈਫ਼ਰ ਕਰੋ ਅਤੇ ₹500 ਕਮਾਓ",
+  "nav_refer_earn": "ਰੈਫ਼ਰ ਕਰਕੇ ₹500 ਕਮਾਓ",
+  "ul_partner_desc": "ਰੈਫ਼ਰ ਕਰਕੇ ਕਮਾਓ, ਲੀਡਾਂ, ਕਮਿਸ਼ਨ ਅਤੇ ਪੋਸਟਰ ਟਰੈਕ ਕਰੋ",
+  "partner_portal_title": "ਪਾਰਟਨਰ ਅਤੇ ਐਸੋਸੀਏਟ ਪੋਰਟਲ",
+  "ul_not_registered_partner": "ਨਵੇਂ ਐਸੋਸੀਏਟ ਜਾਂ ਪਾਰਟਨਰ ਹੋ?",
+  "ul_join_refer_earn": "ਰੈਫ਼ਰ ਅਤੇ ਅਰਨ ਲਈ ਰਜਿਸਟਰ ਕਰੋ (ਮੁਫ਼ਤ) →",
+  "prt_log_new_partner": "ਅਜੇ ਤੱਕ ਰਜਿਸਟਰਡ ਪਾਰਟਨਰ ਨਹੀਂ ਹੋ?",
+  "prt_log_register_cta": "ਰੈਫ਼ਰ ਅਤੇ ਅਰਨ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ (ਹਰ ਡੀਲ 'ਤੇ ₹500) →",
 };

@@ -4647,4 +4647,12 @@ export const gu: Record<TranslationKey, string> = {
   "pan_pincode_btn": "Get Quote",
   "pan_checking": "Verifying...",
   "pan_pincode_invalid": "Please enter a valid 6-digit Indian PIN code.",
+  "footer_refer_earn": "રેફર કરો અને ₹૫૦૦ મેળવો",
+  "nav_refer_earn": "રેફર કરી ₹૫૦૦ મેળવો",
+  "ul_partner_desc": "રેફર અને કમાઓ, લીડ્સ, કમિશન અને પોસ્ટર્સ ટ્રેક કરો",
+  "partner_portal_title": "પાર્ટનર અને એસોસિએટ પોર્ટલ",
+  "ul_not_registered_partner": "નવા એસોસિએટ કે પાર્ટનર છો?",
+  "ul_join_refer_earn": "રેફર એન્ડ અર્ન માટે રજીસ્ટર કરો (મફત) →",
+  "prt_log_new_partner": "હજી રજિસ્ટર્ડ પાર્ટનર નથી?",
+  "prt_log_register_cta": "રેફર એન્ડ અર્નમાં જોડાઓ (દરેક ડીલ પર ₹૫૦૦) →",
 };

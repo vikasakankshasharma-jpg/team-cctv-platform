@@ -350,5 +350,13 @@
   "pan_pin_placeholder": "e.g. 110001",
   "pan_pincode_btn": "Get Quote",
   "pan_checking": "Verifying...",
-  "pan_pincode_invalid": "Please enter a valid 6-digit Indian PIN code."
+  "pan_pincode_invalid": "Please enter a valid 6-digit Indian PIN code.",
+  "footer_refer_earn": "Refer & Earn (₹500)",
+  "nav_refer_earn": "Refer & Earn ₹500",
+  "ul_partner_desc": "Refer & earn, track leads, commissions & EDM posters",
+  "partner_portal_title": "Partner & Associate Portal",
+  "ul_not_registered_partner": "New associate or partner?",
+  "ul_join_refer_earn": "Register for Refer & Earn (Free) →",
+  "prt_log_new_partner": "Not a registered partner yet?",
+  "prt_log_register_cta": "Register for Refer & Earn (Get ₹500/Deal) →"
 }

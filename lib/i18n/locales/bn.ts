@@ -4647,4 +4647,12 @@ export const bn: Record<TranslationKey, string> = {
   "pan_pincode_btn": "Get Quote",
   "pan_checking": "Verifying...",
   "pan_pincode_invalid": "Please enter a valid 6-digit Indian PIN code.",
+  "footer_refer_earn": "রেফার করুন এবং ₹৫০০ পান",
+  "nav_refer_earn": "রেফার করুন ₹৫০০ পান",
+  "ul_partner_desc": "রেফার ও উপার্জন, লিড, কমিশন এবং পোস্টার ট্র্যাক করুন",
+  "partner_portal_title": "পার্টনার ও অ্যাসোসিয়েট পোর্টাল",
+  "ul_not_registered_partner": "নতুন অ্যাসোসিয়েট বা পার্টনার?",
+  "ul_join_refer_earn": "রেফার অ্যান্ড আর্ন-এর জন্য নিবন্ধন করুন (ফ্রি) →",
+  "prt_log_new_partner": "এখনও নিবন্ধিত পার্টনার নন?",
+  "prt_log_register_cta": "রেফার অ্যান্ড আর্ন-এ যোগ দিন (প্রতি ডিলে ₹৫০০) →",
 };

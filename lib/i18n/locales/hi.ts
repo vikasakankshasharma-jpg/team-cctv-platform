@@ -4647,4 +4647,12 @@ export const hi: Record<TranslationKey, string> = {
   "pan_pincode_btn": "कोटेशन देखें",
   "pan_checking": "जाँच रहे हैं...",
   "pan_pincode_invalid": "कृपया सही 6-अंकों का भारतीय पिनकोड डालें।",
+  "footer_refer_earn": "रेफर करें और ₹500 पाएं",
+  "nav_refer_earn": "रेफर करें और ₹500 पाएं",
+  "ul_partner_desc": "रेफर करके कमाएं, लीड्स, कमीशन और पोस्टर्स देखें",
+  "partner_portal_title": "पार्टनर और एसोसिएट पोर्टल",
+  "ul_not_registered_partner": "नए एसोसिएट या पार्टनर हैं?",
+  "ul_join_refer_earn": "रेफर एंड अर्न के लिए रजिस्टर करें (फ्री) →",
+  "prt_log_new_partner": "अभी तक रजिस्टर्ड पार्टनर नहीं हैं?",
+  "prt_log_register_cta": "रेफर एंड अर्न के लिए रजिस्टर करें (हर डील पर ₹500) →",
 };

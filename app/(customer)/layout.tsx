@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { PhoneCall, User, MapPin } from "lucide-react";
+import { PhoneCall, User, MapPin, Gift } from "lucide-react";
 import type { Metadata, Viewport } from "next";
 import { SiteFooter } from "@/components/shared/SiteFooter";
 import { WhatsAppFloat } from "@/components/shared/WhatsAppFloat";
@@ -91,6 +91,16 @@ export default async function CustomerLayout({
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Nav Links */}
             <TrackBookingButton />
+
+            <Link
+              href="/refer-and-earn"
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/50 hover:bg-amber-100/80 transition-all whitespace-nowrap shadow-2xs"
+            >
+              <Gift className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>
+                <TranslatedText tKey="nav_refer_earn" defaultText="Refer & Earn ₹500" />
+              </span>
+            </Link>
 
             <Link
               href="/login"

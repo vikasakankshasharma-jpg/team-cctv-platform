@@ -4647,4 +4647,12 @@ export const kn: Record<TranslationKey, string> = {
   "pan_pincode_btn": "Get Quote",
   "pan_checking": "Verifying...",
   "pan_pincode_invalid": "Please enter a valid 6-digit Indian PIN code.",
+  "footer_refer_earn": "ರೆಫರ್ ಮಾಡಿ ಮತ್ತು ₹500 ಗಳಿಸಿ",
+  "nav_refer_earn": "ರೆಫರ್ ಮಾಡಿ ₹500 ಗಳಿಸಿ",
+  "ul_partner_desc": "ರೆಫರ್ ಮಾಡಿ ಗಳಿಸಿ, ಲೀಡ್‌ಗಳು, ಕಮಿಷನ್ ಮತ್ತು ಪೋಸ್ಟರ್‌ಗಳನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಿ",
+  "partner_portal_title": "ಪಾರ್ಟ್‌ನರ್ ಮತ್ತು ಅಸೋಸಿಯೇಟ್ ಪೋರ್ಟಲ್",
+  "ul_not_registered_partner": "ಹೊಸ ಅಸೋಸಿಯೇಟ್ ಅಥವಾ ಪಾರ್ಟ್‌ನರ್?",
+  "ul_join_refer_earn": "ರೆಫರ್ ಮತ್ತು ಅರ್ನ್‌ಗಾಗಿ ನೋಂದಾಯಿಸಿ (ಉಚಿತ) →",
+  "prt_log_new_partner": "ಇನ್ನೂ ನೋಂದಾಯಿತ ಪಾರ್ಟ್‌ನರ್ ಆಗಿಲ್ಲವೇ?",
+  "prt_log_register_cta": "ರೆಫರ್ ಮತ್ತು ಅರ್ನ್‌ಗೆ ಸೇರಿ (ಪ್ರತಿ ಡೀಲ್‌ಗೆ ₹500) →",
 };

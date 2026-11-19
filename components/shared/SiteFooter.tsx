@@ -63,10 +63,11 @@ export function SiteFooter() {
           
           <div className="flex flex-wrap gap-x-4 gap-y-2 sm:gap-6 text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
              <Link href="/customer/login" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><TranslatedText tKey="footer_customer_portal" defaultText="Customer Portal" /></Link>
+             <Link href="/refer-and-earn" className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors flex items-center gap-1 font-black">🎁 <TranslatedText tKey="footer_refer_earn" defaultText="Refer & Earn (₹500)" /></Link>
+             <Link href="/partner/login" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><TranslatedText tKey="footer_partner" defaultText="Partner Login" /></Link>
              <Link href="/privacy-policy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><TranslatedText tKey="footer_privacy" defaultText="Privacy Policy" /></Link>
              <Link href="/terms-of-service" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><TranslatedText tKey="footer_terms" defaultText="Terms of Service" /></Link>
              <Link href="/refund-policy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Refund Policy</Link>
-             <Link href="/partner/login" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><TranslatedText tKey="footer_partner" defaultText="Partner Login" /></Link>
           </div>
           
           {/* Statutory Business & GST Compliance Footprint */}

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ShieldCheck, Mail, Smartphone, ArrowRight, ArrowLeft, ShieldAlert, BadgeDollarSign, Target, Activity } from "lucide-react";
+import { ShieldCheck, Mail, Smartphone, ArrowRight, ArrowLeft, ShieldAlert, BadgeDollarSign, Target, Activity, Sparkles } from "lucide-react";
 import { auth } from "@/lib/firebase-client";
 import { signInWithCustomToken, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { extractErrorMessage } from "@/lib/utils";
@@ -249,9 +249,18 @@ export function PartnerLoginClient() {
           </div>
 
           {error && (
-            <div className="bg-red-500/5 border border-red-500/20 text-red-500 dark:text-red-400 px-5 py-4 rounded-2xl flex items-start gap-3 mb-8 animate-in fade-in slide-in-from-top-4">
-              <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
-              <span className="text-sm font-bold">{error}</span>
+            <div className="bg-red-500/5 border border-red-500/20 text-red-500 dark:text-red-400 p-5 rounded-2xl flex flex-col gap-3 mb-8 animate-in fade-in slide-in-from-top-4">
+              <div className="flex items-start gap-3">
+                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+                <span className="text-sm font-bold">{error}</span>
+              </div>
+              <Link
+                href="/refer-and-earn"
+                className="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-amber-500/20"
+              >
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                <span>{t("prt_log_register_cta", "Register for Refer & Earn (Get ₹500/Deal) →")}</span>
+              </Link>
             </div>
           )}
 
@@ -308,6 +317,19 @@ export function PartnerLoginClient() {
                   )}
                 </span>
               </button>
+
+              <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 text-center space-y-2">
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                  {t("prt_log_new_partner", "Not a registered partner yet?")}
+                </p>
+                <Link
+                  href="/refer-and-earn"
+                  className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/25 text-xs font-black uppercase tracking-wider transition-all"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span>{t("prt_log_register_cta", "Register for Refer & Earn (Get ₹500/Deal) →")}</span>
+                </Link>
+              </div>
             </form>
           ) : (
             <form onSubmit={handleVerifyCode} className="space-y-6 animate-in fade-in slide-in-from-right-8">

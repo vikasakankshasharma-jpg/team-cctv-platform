@@ -4647,4 +4647,12 @@ export const ta: Record<TranslationKey, string> = {
   "pan_pincode_btn": "Get Quote",
   "pan_checking": "Verifying...",
   "pan_pincode_invalid": "Please enter a valid 6-digit Indian PIN code.",
+  "footer_refer_earn": "பரிந்துரைத்து ₹500 பெறுங்கள்",
+  "nav_refer_earn": "பரிந்துரைத்து ₹500 பெறுங்கள்",
+  "ul_partner_desc": "பரிந்துரைத்து சம்பாதிக்கவும், லீட்கள், கமிஷன் மற்றும் போஸ்டர்களை கண்காணிக்கவும்",
+  "partner_portal_title": "பார்ட்னர் மற்றும் அசோசியேட் போர்டல்",
+  "ul_not_registered_partner": "புதிய அசோசியேட் அல்லது பார்ட்னரா?",
+  "ul_join_refer_earn": "ரெஃபர் & எர்ன்-க்கு பதிவு செய்க (இலவசம்) →",
+  "prt_log_new_partner": "இன்னும் பதிவு செய்த பார்ட்னர் இல்லையா?",
+  "prt_log_register_cta": "ரெஃபர் & எர்ன்-ல் இணையுங்கள் (ஒவ்வொரு டீலுக்கும் ₹500) →",
 };
