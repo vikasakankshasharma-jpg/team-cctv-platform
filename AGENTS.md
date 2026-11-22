@@ -185,3 +185,60 @@
    - Quoting CAT6 Pure Copper cable with BNC connectors and DC power pins is an authorized, standard, and superior installation topology.
    - It guarantees future-proofing: the customer gets high-grade network cabling today that is ready for an instant, seamless upgrade to digital IP cameras in the future without breaking walls or replacing wiring.
    - Agents, audit tools, and BOM verifiers must **never** flag CAT6 paired with BNC connectors or DC pins as a cabling mismatch.
+
+## 13. Strict Hardware Topology Alignment, Cabling Optimization & Brownfield Decision Matrix
+
+1. **Strict Hardware Topology Alignment (Permanent Ban on Frankenstein Mixing):**
+   - The pricing and quotation engine enforces strict architectural separation between transmission and recording subsystems:
+     - **HD Analog Systems:** Must ALWAYS and EXCLUSIVELY pair with an **HD DVR** (Digital Video Recorder), **12V Central SMPS Power Supply**, **BNC Video Connectors**, and **12V DC Power Pins**. NEVER quote an NVR or PoE Switch for HD analog cameras.
+     - **Digital IP Systems:** Must ALWAYS and EXCLUSIVELY pair with an **NVR** (Network Video Recorder), **PoE Switch** (or PoE NVR), and **RJ45 Modular Connectors**. NEVER quote a DVR, SMPS, or BNC/DC pins for IP cameras.
+     - **Hybrid Systems (Mixed Wired + Wi-Fi):** The wired portion strictly abides by its respective technology (HD DVR + SMPS + BNC/DC or NVR + PoE + RJ45), while the wireless cameras utilize dedicated MicroSD cards and mounting/pairing labor.
+     - Package titles must dynamically reflect the true topology (e.g., `4-Camera CP Plus 2MP HD Package`, `4-Camera Hikvision 5MP IP Package`, `7-Camera Hikvision Hybrid HD + Wi-Fi Package`).
+
+2. **Cable Cost Optimization for New HD Installations (3+1 vs. CAT6 Cheaper Price Check):**
+   - HD Analog setups natively support two authorized cabling options: **3+1 Coaxial CCTV Cable** and **CAT6 Pure Copper LAN Cable**.
+   - When a new HD quote is generated without explicit user cable pinning, the pricing engine runs a knapsack bundle/meter evaluation across BOTH cable types and automatically selects the **cheaper total retail cost to the customer**.
+   - If costs are equal, CAT6 is prioritized because it offers the customer future-proof upgradability to digital IP cameras without rewiring.
+
+3. **Brownfield / Existing Cabling Compatibility Matrix:**
+   - **Existing 3+1 Coaxial Cabling:** 3+1 cable physically cannot transmit digital Ethernet/PoE signals. The pricing engine and quotation catalog strictly offer **HD Analog CCTV camera** packages only. Digital IP options are marked as incompatible ("Requires CAT6 cabling").
+   - **Existing CAT6 Cabling:** CAT6 supports both digital IP (PoE) and HD Analog (via twisted pair cores). The quotation engine actively empowers the customer with **both HD Analog AND Digital IP** quotation options.
+   - **Faulty Camera Replacement on Existing Setup:** Strictly quote **HD Analog CCTV cameras** on existing 3+1 cabling with 0 meters new cable, fitting-only mounting labor, and fresh BNC/DC connectors.
+   - **Camera Expansion / Add-ons on Existing Setup:**
+     - For existing HD Analog systems: New cameras must be HD Analog (to connect to existing DVR). For the *new cabling* portion, the engine compares 3+1 vs. CAT6 and selects the cheaper cable price.
+     - For existing IP systems: New cameras must be IP, and new cabling strictly uses CAT6.
+
+4. **Reverse-GST Accounting & Reconciliation in Quotation Documents:**
+   - In accordance with Section 2, all catalog and quote prices are 18% GST-inclusive standard.
+   - Every quotation PDF, receipt, and tax invoice must compute the reverse GST breakup:
+     $$\text{Taxable Base} = \frac{\text{Gross Total}}{1.18}$$
+     $$\text{18% GST} = \text{Gross Total} - \text{Taxable Base}$$
+     $$\text{CGST 9%} = \frac{\text{18% GST}}{2}, \quad \text{SGST 9%} = \text{18% GST} - \text{CGST 9%}$$
+   - Zero ₹0 CGST/SGST amounts are permitted on standard GST-paid customer quotes.
+
+## 14. Automated CCTV Vendor Sync, Catalog Sovereignty & Price Drift Governance (`lib/vendor/cctv-domain-filter.ts`, `app/api/cron/vendor-cctv-sync/`)
+
+1. **Internal Catalog Sovereignty & Whitelist Invariant:**
+   - The platform's active system inventory/product list (`products` collection in Firestore / `mega-products.generated.json`) is the supreme, immutable ground truth.
+   - Any hardware item already listed or previously approved by admin (e.g. `HDMI-10M`, `HDMI-15M`, `HDMI-20M`, `ACC-WIFI-EXTENDER`, specialized mounts) is **permanently whitelisted** and 100% immune to automated heuristic rejection.
+   - The rejection gate applies exclusively to **new, unlisted incoming vendor items**.
+
+2. **Strict CCTV Domain Validation & Non-CCTV Clutter Rejection:**
+   - Evaluates vendor products using deterministic domain classification:
+     - **Allowed CCTV Hardware:** Bullet/Dome cameras, PTZ cameras, 4G SIM cameras, Solar cameras, DVRs, NVRs, surveillance-grade HDDs (WD Purple, Seagate SkyHawk, Toshiba S300), MicroSD cards, CCTV SMPS power supplies, PoE Switches, BNC/DC/RJ45 connectors, CCTV 3+1 & CAT6 copper cables, short HDMI cables (1.5m–5m for DVR racks), CCTV junction boxes, camera wall/pole mounts, surveillance equipment racks (4U, 6U, 9U), and wireless P2P bridges/4G routers.
+     - **Permanently Rejected Non-CCTV Electronics:** Consumer televisions (Sony Bravia, Samsung/LG OLED/Smart TVs unless dedicated CCTV monitors), unmanaged plastic desktop non-PoE switches, consumer PC SSDs (Kingston A400, NVMe drives unsuitable for 24×7 write streams), home Wi-Fi repeaters, general PC peripherals (keyboards, mousepads, multimedia speakers, PC motherboards), and long-run AV fiber cables (>10m).
+
+3. **Statutory 18% GST-Paid Standard & Wholesale Margin Calibration:**
+   - In accordance with Section 2, all vendor prices displayed on vendor feeds/portals are treated as **GST-inclusive retail customer prices**.
+   - The reverse GST taxable base is calculated as:
+     $$\text{Taxable Base} = \frac{\text{Vendor Price}}{1.18}$$
+     $$\text{18% GST} = \text{Vendor Price} - \text{Taxable Base}$$
+     $$\text{CGST 9%} = \frac{\text{18% GST}}{2}, \quad \text{SGST 9%} = \text{18% GST} - \text{CGST 9%}$$
+   - Wholesale `base_cost` is calibrated from vendor retail via category margin percentage, ensuring mathematically verified ₹0.00 tax reconciliation.
+
+4. **Automated Scheduling, Admin Sovereignty & Dismissal Blacklist (`settings/vendor_sync`):**
+   - **Admin Schedule Customization:** Admin has complete authority to toggle the background sync `Active` or `Paused (OFF)`, select `Daily` or `Weekly` frequency, choose execution time (e.g. `03:00` AM IST), and set the drift threshold (default `±5%`).
+   - **Safe Drift Auto-Approval:** Fluctuations within tolerance ($\le 5\%$) are applied automatically. Fluctuations exceeding threshold ($> 5\%$) are diverted to Staging for 1-click review.
+   - **Recommendation Blacklist ("Dismiss & Never Show Again"):** Clicking Dismiss on any new recommendation permanently registers the vendor PID in `dismissed_vendor_pids`. The engine permanently blacklists the SKU from future runs, while maintaining an unblock/restore option in the dashboard.
+   - **Zero-Cost Architecture:** Pure functional regex evaluation (0 LLM tokens) and minimal Firestore footprint (<0.4% daily quota) guarantee **₹0.00/month** operational cost.
+   - **Anti-Staleness & Cloudflare Hybrid Fallback:** Cache-busting headers (`no-cache, no-store`), dynamic query nonces, and React hydration checks guarantee fresh extraction. If Cloudflare blocks serverless cloud IPs, the engine logs a clear notice and activates the 1-click residential desktop sync (`[Run Live Sync Now]`).

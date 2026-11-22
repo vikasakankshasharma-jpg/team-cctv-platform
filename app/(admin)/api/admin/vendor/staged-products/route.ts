@@ -74,6 +74,18 @@ export async function POST(request: Request) {
                }
            }
 
+       // Commercial Accounting Invariant: All prices are GST-PAID (18% inclusive standard)
+       const unit_price = Number(updatedProduct.unit_price || updatedProduct.base_cost || 0);
+       const margin_percentage = Number(updatedProduct.margin_percentage || 20);
+       const base_cost = updatedProduct.base_cost && updatedProduct.base_cost < unit_price
+           ? Number(updatedProduct.base_cost)
+           : Math.round(unit_price / (1 + margin_percentage / 100));
+
+       const taxable_base = Math.round((unit_price / 1.18) * 100) / 100;
+       const total_gst = Math.round((unit_price - taxable_base) * 100) / 100;
+       const cgst_9 = Math.round((total_gst / 2) * 100) / 100;
+       const sgst_9 = Math.round((total_gst - cgst_9) * 100) / 100;
+
        const liveProductData = {
            display_name,
            technical_name,
@@ -81,11 +93,20 @@ export async function POST(request: Request) {
            brand: updatedProduct.brand || null,
            technologies: updatedProduct.technologies || [],
            features: updatedProduct.features || [],
-           base_cost: updatedProduct.base_cost,
-           unit_price: Math.ceil(updatedProduct.base_cost * 1.3), // 30% default margin
+           base_cost,
+           unit_price,
+           margin_percentage,
+           taxable_base,
+           cgst_9,
+           sgst_9,
+           total_gst,
+           is_gst_reconciled: Math.abs(taxable_base + total_gst - unit_price) < 0.01,
            image_url: updatedProduct.image_url || "",
            resolution_mp: updatedProduct.resolution_mp || null,
            channels: updatedProduct.channels || null,
+           storage_capacity: updatedProduct.storage_capacity || null,
+           is_surveillance_grade: updatedProduct.is_surveillance_grade || false,
+           is_cctv_eligible: true,
            rack_u_height: updatedProduct.rack_u_height || null,
            cable_length_m: updatedProduct.cable_length_m || null,
            power_voltage_v: updatedProduct.power_voltage_v || null,

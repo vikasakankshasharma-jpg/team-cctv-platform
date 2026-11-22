@@ -282,19 +282,21 @@ export function calculateGstBreakup(params: {
   }
 
   // Standard pre-tax calculation (or discount-free quote)
-  const netTaxable =
-    params.storedNetTaxable && params.storedNetTaxable > 0 && disc === 0
-      ? Math.round(params.storedNetTaxable)
-      : Math.max(0, itemsSub - disc);
-
-  const computedTotal = Math.round(netTaxable * (1 + gstPct / 100));
   const finalPayable =
     params.storedTotalPayable && params.storedTotalPayable > 0 && disc === 0
       ? Math.round(params.storedTotalPayable)
-      : computedTotal;
+      : Math.max(0, itemsSub - disc);
+
+  let netTaxable: number;
+  if (params.storedNetTaxable && params.storedNetTaxable > 0 && params.storedNetTaxable < finalPayable && disc === 0) {
+    netTaxable = Math.round(params.storedNetTaxable);
+  } else {
+    // Reverse Tax Calculation (Rule 2: All prices are GST-PAID 18% inclusive standard)
+    netTaxable = Math.round((finalPayable / (1 + gstPct / 100)) * 100) / 100;
+  }
 
   // Derive gstAmount so `netTaxable + gstAmount === finalPayable` to ₹0.00!
-  const gstAmt = Math.max(0, finalPayable - netTaxable);
+  const gstAmt = Math.max(0, Math.round((finalPayable - netTaxable) * 100) / 100);
   const cgst = Math.round((gstAmt / 2) * 100) / 100;
   const sgst = Math.round((gstAmt - cgst) * 100) / 100;
 

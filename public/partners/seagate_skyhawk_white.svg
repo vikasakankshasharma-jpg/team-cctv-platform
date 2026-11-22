@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 162 40" fill="none">
+  <!-- Ultra-Clear High Visibility Seagate SkyHawk Logo -->
+  <g transform="translate(0, 2)">
+    <path d="M18 2 C 5 10, 5 26, 18 34 C 31 26, 31 10, 18 2 Z" fill="#00A78E"/>
+    <path d="M13 7 C 8 13, 8 23, 13 29" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <text x="46" y="16" font-family="'Plus Jakarta Sans', Arial Black, Impact, sans-serif" font-size="16" font-weight="900" fill="#0F172A" letter-spacing="0.5">SEAGATE</text>
+  <rect x="46" y="20" width="94" height="19" rx="4" fill="#00A78E"/>
+  <text x="93" y="34" font-family="'Plus Jakarta Sans', Arial Black, Impact, sans-serif" font-size="12.5" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.8">SKYHAWK™</text>
+</svg>

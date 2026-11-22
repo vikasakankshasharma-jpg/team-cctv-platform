@@ -102,3 +102,39 @@ Never confuse or revert the quotation presentation strategy for this project. Th
 - **Certified Isolation:** Read-only UI overlay; never mutates pricing, GST, or BOM data structures.
 - **Funnel Drop-off Telemetry (`lib/analytics/tour-funnel-calculator.ts`, `TourPerformanceWidget.tsx`):** Pure functional aggregation turning raw tour events into `TourFunnelDataset` with `completionRate`, `skipRate`, and step `dropOffRate` rendered live on `/admin/analytics/funnel`.
 - **11-Language Modular Lazy-Loading (`locales/tours/[locale].json`, `lib/i18n/tour-translations.ts`):** Complete colloquial layman translations for all 11 languages (`en`, `hi`, `mr`, `gu`, `ta`, `te`, `kn`, `bn`, `ml`, `pa`, `or`) loaded on demand without inflating bundle sizes.
+
+## 12. Internal Catalog Price Sovereignty & Zero External Speculation Invariant
+- **Sole Source of Ground Truth:** The internal product catalog (`data/mega-products.generated.json`, active inventory, Firestore `products`) is the immutable ground truth for all item pricing, base costs, and margins.
+- **Strict Ban on Outside Price References:** Never evaluate, dispute, or alter internal catalog prices against external memories, speculative assumptions, or unverified market chatter. If a price is set in the system catalog (e.g. Toshiba S300 2TB @ ₹12,065), it must be taken as authentic and verified (e.g. compared to Amazon India retail @ ₹14,999+).
+- **Audit & Review Guard:** Code audits and quotation reviews must verify that calculations align mathematically with the internal catalog rather than second-guessing catalog price points.
+
+## 13. Universal CAT6 Dual-Compatibility Standard (HD Analog & IP Systems)
+- **Universal Field Practice:** Modern installers natively install HD Analog cameras over CAT6 Pure Copper UTP cable by utilizing the multi-core twisted pairs (8 cores / 4 pairs) for direct video and 12V DC power transmission with standard BNC connectors and DC power pins.
+- **Future-Proof Cabling Guarantee:** Quoting CAT6 with BNC and DC pins provides customers with future-proof network infrastructure, allowing effortless upgrade to IP systems without re-wiring. It is an authorized and certified standard configuration across the platform.
+
+## 14. Strict Hardware Topology Alignment, Cabling Optimization & Brownfield Decision Matrix
+- **Strict Hardware Topology Alignment (Permanent Ban on Frankenstein Mixing):**
+  - **HD Analog Systems:** Must ALWAYS and EXCLUSIVELY pair with an **HD DVR**, **12V Central SMPS Power Supply**, **BNC Video Connectors**, and **12V DC Power Pins**. NEVER quote an NVR or PoE Switch for HD analog cameras.
+  - **Digital IP Systems:** Must ALWAYS and EXCLUSIVELY pair with an **NVR**, **PoE Switch** (or PoE NVR), and **RJ45 Modular Connectors**. NEVER quote a DVR, SMPS, or BNC/DC pins for IP cameras.
+  - **Hybrid Systems (Mixed Wired + Wi-Fi):** The wired portion strictly abides by its respective technology, while wireless cameras utilize dedicated MicroSD cards and mounting/pairing labor.
+  - Package titles must dynamically reflect the true topology (e.g., `4-Camera CP Plus 2MP HD Package`, `4-Camera Hikvision 5MP IP Package`, `7-Camera Hikvision Hybrid HD + Wi-Fi Package`).
+- **Cable Cost Optimization for New HD Installations (3+1 vs. CAT6 Cheaper Price Check):**
+  - HD Analog setups natively support both **3+1 Coaxial CCTV Cable** and **CAT6 Pure Copper LAN Cable**.
+  - When generating new HD quotes without explicit cable pinning, the engine evaluates both cable options and automatically selects the **cheaper total retail cost to the customer**.
+  - If costs are equal, CAT6 is prioritized for future-proof IP upgradability.
+- **Brownfield / Existing Cabling Compatibility Matrix:**
+  - **Existing 3+1 Coaxial Cabling:** Strictly offer **HD Analog CCTV camera** packages only (3+1 cannot carry digital Ethernet/PoE). Digital IP options are marked as incompatible.
+  - **Existing CAT6 Cabling:** Actively offer **both HD Analog AND Digital IP** quotation options.
+  - **Faulty Camera Replacement on Existing Setup:** Strictly quote **HD Analog CCTV cameras** on existing 3+1 cabling with 0m new cable, fitting-only mounting labor, and fresh BNC/DC connectors.
+  - **Camera Expansion / Add-ons on Existing Setup:**
+    - Existing HD Analog systems: New cameras must be HD Analog. For new cabling runs, compare 3+1 vs. CAT6 and select the cheaper cable price.
+    - Existing IP systems: New cameras must be IP, and new cabling strictly uses CAT6.
+- **Reverse-GST Accounting & Reconciliation in Quotation Documents:**
+  - All prices are 18% GST-inclusive standard. Reverse GST breakup ($\text{Base} = \text{Gross} / 1.18$, $\text{GST} = \text{Gross} - \text{Base}$) must calculate exact 9% CGST and 9% SGST. Zero ₹0 GST amounts are permitted on standard GST-paid customer quotes.
+
+## 15. Automated CCTV Vendor Sync, Catalog Sovereignty & Price Drift Governance (`lib/vendor/cctv-domain-filter.ts`)
+- **Internal Catalog Sovereignty Whitelist:** The platform's active inventory (`products` / `mega-products.generated.json`) is the supreme ground truth. All admin-listed or approved products (including `HDMI-10M`, `HDMI-15M`, `HDMI-20M`, `ACC-WIFI-EXTENDER`) are permanently whitelisted and immune to heuristic rejection. The rejection gate applies strictly to new, unlisted incoming vendor items.
+- **Strict Non-CCTV Clutter Rejection:** Consumer TVs, unmanaged non-PoE desktop switches, PC SSDs, home Wi-Fi repeaters, general computer peripherals, and long-run AV fiber cables are permanently rejected from vendor imports unless already approved in the catalog.
+- **Statutory 18% GST-Paid Standard:** All vendor retail prices are GST-inclusive retail customer prices. Reverse GST ($\text{Taxable Base} = \text{Gross} / 1.18$, $\text{GST} = \text{Gross} - \text{Base}$) guarantees ₹0.00 accounting reconciliation.
+- **Admin Schedule Customization & Blacklist Sovereignty:** Background sync is fully configurable via `settings/vendor_sync` (`enabled: boolean`, `frequency: "daily" | "weekly"`, `schedule_time: "03:00"`, `drift_threshold_percent: 5`, `auto_apply_safe_updates: boolean`). Safe drift ($\le 5\%$) is applied automatically. Admin can permanently blacklist unwanted recommendation PIDs via "Dismiss & Never Show Again" (`dismissed_vendor_pids`) with 1-click restore capability.
+- **₹0.00/Month Operational Cost & Cloudflare Hybrid Fallback:** Regex-based classification (0 LLM tokens) and minimal Firestore footprint ensure zero recurring costs. When vendor anti-bot security challenges serverless cloud cron IPs, the admin can execute a 1-click desktop browser sync directly from the dashboard.

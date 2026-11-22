@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" fill="none">
+  <!-- WD Purple Surveillance Logo -->
+  <rect x="4" y="10" width="60" height="60" rx="12" fill="#581C87" />
+  <rect x="6" y="12" width="56" height="56" rx="10" stroke="#9333EA" stroke-width="2" />
+  <text x="34" y="48" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="28" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="-1">WD</text>
+  <text x="76" y="38" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="20" font-weight="900" fill="#FFFFFF" letter-spacing="0.5">Western Digital</text>
+  <rect x="76" y="46" width="96" height="18" rx="4" fill="#7E22CE" />
+  <text x="124" y="59" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="11" font-weight="800" fill="#F3E8FF" text-anchor="middle" letter-spacing="1">PURPLE 24×7</text>
+</svg>

@@ -12,6 +12,7 @@ import { DeleteQuoteModal } from "@/components/admin/leads/DeleteQuoteModal";
 import { PriceMatchReviewModal } from "@/components/admin/PriceMatchReviewModal";
 import { RefundDialog } from "@/components/admin/RefundDialog";
 import LeadIntelligencePanel from "@/components/admin/leads/LeadIntelligencePanel";
+import { CustomerJourneyBlueprint } from "@/components/admin/leads/CustomerJourneyBlueprint";
 import DispatchPanel from "@/components/admin/leads/DispatchPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -211,6 +212,15 @@ export default function LeadDetailPage() {
             <span>{t("adm_ld_src", "Source:")} <strong className="capitalize">{lead.source}</strong></span>
             <span>•</span>
             <span className="font-mono">ID: {quoteId}</span>
+            {lead.address?.pincode && (
+              <>
+                <span>•</span>
+                <span className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 shrink-0" />
+                  {lead.address?.area ? `${lead.address.area}, ` : ""}{lead.address?.city || "Jaipur"} ({lead.address.pincode})
+                </span>
+              </>
+            )}
           </p>
         </div>
 
@@ -610,52 +620,12 @@ export default function LeadDetailPage() {
           {/* Lead Intelligence */}
           <LeadIntelligencePanel lead={lead} onUpdate={fetchLead} />
 
-          {/* Requirement Context */}
-          <Card>
-            <CardHeader className="pb-3 border-b">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle className="text-base font-bold">{t("adm_ld_req_ctx", "CCTV Requirement Context")}</CardTitle>
-                {!isPaid && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setShowCompleteModal(true)}
-                    className="min-h-[1.75rem] h-auto py-1 text-xs font-bold text-emerald-700 dark:text-emerald-400 border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 whitespace-normal leading-snug"
-                  >
-                    <Zap className="w-3 h-3 mr-1 shrink-0" /> {t("adm_ld_edit_req", "Edit Requirements")}
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
-                  <p className="text-muted-foreground font-semibold">{t("adm_qvh_cameras", "Cameras")}</p>
-                  <p className="text-base font-black text-foreground mt-0.5">
-                    {t("adm_qvh_units", "{count} Units", { count: String(lead.requirementSnapshot?.camera_count || "4") })}
-                  </p>
-                </div>
-                <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
-                  <p className="text-muted-foreground font-semibold">{t("adm_qvh_rec_days", "Recording Days")}</p>
-                  <p className="text-base font-black text-foreground mt-0.5">
-                    {t("adm_qm_days_suffix", "{days} Days", { days: String(lead.requirementSnapshot?.recording_days || "15") })}
-                  </p>
-                </div>
-                <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
-                  <p className="text-muted-foreground font-semibold">{t("adm_drw_tech", "Technology")}</p>
-                  <p className="text-base font-black text-foreground mt-0.5">
-                    {lead.requirementSnapshot?.technology_preference || lead.requirementSnapshot?.existing_technology || "HD"}
-                  </p>
-                </div>
-                <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
-                  <p className="text-muted-foreground font-semibold">{t("adm_ld_tot_qamt", "Total Quote Amount")}</p>
-                  <p className="text-base font-black text-emerald-600 mt-0.5">
-                    ₹{(lead.pricingSnapshot?.finalPrice || lead.pricingSnapshot?.total_payable || 0).toLocaleString("en-IN")}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Customer Selection Journey & Requirement Blueprint */}
+          <CustomerJourneyBlueprint
+            lead={lead}
+            onEditRequirements={() => setShowCompleteModal(true)}
+            isPaid={isPaid}
+          />
 
           {/* Quotation Profitability & Margin Breakup Intelligence */}
           <QuotationProfitBreakupCard quote={lead} />

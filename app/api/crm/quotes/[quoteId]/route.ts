@@ -173,6 +173,96 @@ export async function GET(
       };
     })();
 
+    // Comprehensive location resolution across all possible lead and quote fields
+    const resolvedPincode =
+      leadData?.address?.pincode ||
+      quoteData?.address?.pincode ||
+      leadData?.pincode ||
+      quoteData?.pincode ||
+      quoteData?.requirementSnapshot?.customer_pincode ||
+      quoteData?.requirementSnapshot?.lead_pincode ||
+      quoteData?.requirementSnapshot?.pincode ||
+      leadData?.wizard_answers?.customer_pincode ||
+      leadData?.wizard_answers?.lead_pincode ||
+      leadData?.wizard_answers?.pincode ||
+      leadData?.detected_pincode ||
+      quoteData?.detected_pincode ||
+      "";
+
+    const resolvedCity =
+      leadData?.address?.city ||
+      quoteData?.address?.city ||
+      leadData?.city ||
+      quoteData?.city ||
+      quoteData?.requirementSnapshot?.city ||
+      leadData?.wizard_answers?.city ||
+      leadData?.detected_city ||
+      "Jaipur";
+
+    const resolvedState =
+      leadData?.address?.state ||
+      quoteData?.address?.state ||
+      leadData?.state ||
+      quoteData?.state ||
+      quoteData?.requirementSnapshot?.state ||
+      leadData?.wizard_answers?.state ||
+      leadData?.detected_state ||
+      "Rajasthan";
+
+    const resolvedArea =
+      leadData?.address?.area ||
+      quoteData?.address?.area ||
+      leadData?.address?.landmark1 ||
+      quoteData?.requirementSnapshot?.locality ||
+      quoteData?.requirementSnapshot?.quadrant ||
+      quoteData?.requirementSnapshot?.anchor ||
+      quoteData?.requirementSnapshot?.area ||
+      leadData?.wizard_answers?.locality ||
+      leadData?.wizard_answers?.quadrant ||
+      leadData?.wizard_answers?.anchor ||
+      leadData?.locality ||
+      leadData?.area ||
+      "";
+
+    const resolvedLine1 =
+      leadData?.address?.address_line1 ||
+      quoteData?.address?.address_line1 ||
+      leadData?.address?.full_address ||
+      quoteData?.address?.full_address ||
+      leadData?.full_address ||
+      quoteData?.full_address ||
+      quoteData?.requirementSnapshot?.full_address ||
+      leadData?.wizard_answers?.address_line1 ||
+      leadData?.wizard_answers?.full_address ||
+      "";
+
+    const resolvedCoords =
+      leadData?.address?.coordinates ||
+      quoteData?.address?.coordinates ||
+      (leadData?.lat && leadData?.lng ? { lat: leadData.lat, lng: leadData.lng } : null) ||
+      (quoteData?.lat && quoteData?.lng ? { lat: quoteData.lat, lng: quoteData.lng } : null) ||
+      (quoteData?.requirementSnapshot?.lat && quoteData?.requirementSnapshot?.lng ? { lat: quoteData.requirementSnapshot.lat, lng: quoteData.requirementSnapshot.lng } : null) ||
+      (leadData?.wizard_answers?.lat && leadData?.wizard_answers?.lng ? { lat: leadData.wizard_answers.lat, lng: leadData.wizard_answers.lng } : null) ||
+      null;
+
+    const mergedAddress = {
+      pincode: resolvedPincode,
+      city: resolvedCity,
+      state: resolvedState,
+      area: resolvedArea,
+      landmark1: resolvedArea,
+      address_line1: resolvedLine1,
+      full_address: resolvedLine1 || [resolvedArea, resolvedCity, resolvedState, resolvedPincode].filter(Boolean).join(", "),
+      coordinates: resolvedCoords,
+      map_url: leadData?.address?.map_url || (resolvedCoords ? `https://www.google.com/maps?q=${resolvedCoords.lat},${resolvedCoords.lng}` : (resolvedPincode ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(resolvedPincode + " " + resolvedCity)}` : "")),
+    };
+
+    const totalCableMeters =
+      quoteData?.requirementSnapshot?.total_cable_length_meters ??
+      leadData?.wizard_answers?.total_cable_length_meters ??
+      quoteData?.selection?.cablingMeters ??
+      null;
+
     const liveMarginBreakup = calculateQuotationProfitBreakup(activePricingSource, profitSettings, profitContext);
 
     const mergedData = {
@@ -200,7 +290,36 @@ export async function GET(
       profit_context: profitContext,
       promoter_id: quoteData?.promoter_id || leadData?.promoter_id || null,
       referral_code: quoteData?.referral_code_used || leadData?.referral_code || null,
-      requirementSnapshot: quoteData?.requirementSnapshot || leadData?.wizard_answers || {},
+      requirementSnapshot: {
+        ...(typeof leadData?.wizard_answers === "object" ? (leadData.wizard_answers.latest || leadData.wizard_answers) : {}),
+        ...(typeof leadData?.requirementSnapshot === "object" ? leadData.requirementSnapshot : {}),
+        ...(typeof quoteData?.requirementSnapshot === "object" ? quoteData.requirementSnapshot : {}),
+        total_cable_length_meters: totalCableMeters,
+        customer_pincode: resolvedPincode,
+        lead_pincode: resolvedPincode,
+        city: resolvedCity,
+        state: resolvedState,
+        locality: resolvedArea,
+        quadrant: resolvedArea,
+        full_address: mergedAddress.full_address,
+        coordinates: resolvedCoords,
+        ...(quoteData?.selection ? {
+          brand_preference: quoteData.selection.brand_preference,
+          resolution_preference: quoteData.selection.resolution_preference,
+          technology_preference: quoteData.selection.technology || quoteData.selection.technology_preference,
+          recording_days: quoteData.selection.storage_days || quoteData.selection.recording_days,
+          camera_count: quoteData.selection.camera_count,
+        } : {}),
+      },
+      wizard_answers: (typeof leadData?.wizard_answers === "object" ? (leadData.wizard_answers.latest || leadData.wizard_answers) : {}) || {},
+      selection: quoteData?.selection || null,
+      configuration_snapshot: activePricingSource.items || quoteData?.configuration_snapshot || quoteData?.configurationSnapshot?.items || quoteData?.items || [],
+      selected_package_title: quoteData?.selectedPlan || quoteData?.package_title || quoteData?.pricingSnapshot?.title || activePricingSource?.title || null,
+      property_type: leadData?.property_type || quoteData?.requirementSnapshot?.property_type || leadData?.wizard_answers?.property_type || "home",
+      technology_choice: leadData?.technology_choice || quoteData?.requirementSnapshot?.technology_preference || "HD",
+      cabling_done: leadData?.cabling_done ?? quoteData?.requirementSnapshot?.cabling_done ?? false,
+      timeline: leadData?.timeline || quoteData?.requirementSnapshot?.installation_timeline || leadData?.wizard_answers?.timeline || "",
+      total_cable_meters: totalCableMeters,
       
       // Billing Details (merged)
       billing_details: quoteData?.billing_details || leadData?.billing_details || null,
@@ -209,7 +328,7 @@ export async function GET(
       site_visit_date: toIsoStringSafe(quoteData?.site_visit_date || leadData?.site_visit_date),
       site_visit_slot: quoteData?.site_visit_slot || leadData?.site_visit_slot || null,
       special_notes: quoteData?.special_notes || leadData?.special_notes || "",
-      address: quoteData?.address || leadData?.address || null,
+      address: mergedAddress,
       
       // Intelligence & CRM
       intentScore: quoteData?.intentScore || (isPaid ? "Hot" : isSiteVisit ? "Warm" : "Cold"),

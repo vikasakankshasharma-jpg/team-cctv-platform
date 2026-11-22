@@ -113,17 +113,21 @@ export function DynamicVariantGenerator({
     );
   })();
 
+  const isExisting3Plus1 = (cablingDone || selection.cabling_done || (selection as any).cabling_mode === "mixed") && 
+    (selection.existing_cabling === "3+1" || (selection as any).existing_cabling_type === "3+1" || (selection as any).existing_cabling === "coaxial");
+  const [existingCablingError, setExistingCablingError] = useState<string | null>(null);
+
   // Auto-select based on selection.technology, session storage, or default
   const [activeTech, setActiveTech] = useState<"hd" | "ip" | "wireless" | "hybrid">(() => {
     if (isHybridInitial) return "hybrid";
     const selTech = String(selection.technology || "").toLowerCase();
     if (selTech === "wireless" || selTech === "wifi" || selTech === "4g_solar") return "wireless";
     if (selTech === "hybrid") return "hybrid";
-    if (selTech === "ip") return "ip";
+    if (selTech === "ip") return isExisting3Plus1 ? "hd" : "ip";
     if (selTech === "hd") return "hd";
     if (typeof window !== 'undefined') {
       const saved = sessionStorage.getItem('quote_active_tech');
-      if (saved === 'hd' || saved === 'ip' || saved === 'wireless' || saved === 'hybrid') return saved as any;
+      if (saved === 'hd' || saved === 'ip' || saved === 'wireless' || saved === 'hybrid') return (saved === 'ip' && isExisting3Plus1) ? "hd" : saved as any;
     }
     return "hd";
   });
@@ -959,15 +963,36 @@ export function DynamicVariantGenerator({
 
           <button
             type="button"
-            onClick={() => { setActiveTech("ip"); setShowModeSwitcher(false); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: "wired" }))); }}
-            className={`relative z-10 px-1 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${activeTech === "ip" ? "bg-blue-600 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}
+            onClick={() => {
+              if (isExisting3Plus1) {
+                setExistingCablingError(t("dvg_31_ip_incompatible", "Pre-laid 3+1 coaxial cable only carries analog video and cannot run Digital IP cameras. Please select HD Analog for your existing cabling, or choose New Cabling to install CAT6."));
+                return;
+              }
+              setExistingCablingError(null);
+              setActiveTech("ip");
+              setShowModeSwitcher(false);
+              setCameraBuckets(prev => prev.map(b => ({ ...b, connection: "wired" })));
+            }}
+            className={`relative z-10 px-1 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${
+              isExisting3Plus1
+                ? "opacity-60 cursor-not-allowed bg-zinc-200 dark:bg-zinc-800 text-zinc-400"
+                : activeTech === "ip"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+            }`}
           >
             <span className="leading-tight text-center">
               <span className="sm:hidden">{t("dvg_ip_short")}</span>
               <span className="hidden sm:inline">{t("wz_premium_ip_network")}</span>
             </span>
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-tight sm:tracking-wider whitespace-normal text-center leading-tight ${activeTech === 'ip' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'}`}>
-              {t("dvg_ip_tag")}
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-tight sm:tracking-wider whitespace-normal text-center leading-tight ${
+              isExisting3Plus1
+                ? "bg-amber-200 text-amber-900 dark:bg-amber-950 dark:text-amber-300"
+                : activeTech === 'ip'
+                ? 'bg-white/20 text-white'
+                : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
+            }`}>
+              {isExisting3Plus1 ? "⚠️ 3+1 Coax Only" : t("dvg_ip_tag")}
             </span>
           </button>
 
@@ -1019,6 +1044,23 @@ export function DynamicVariantGenerator({
             </span>
           </button>
         </div>
+        )}
+
+        {/* Existing Cabling Safety Notice */}
+        {existingCablingError && (
+          <div className="p-2 sm:p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 flex items-start justify-between gap-2 animate-in fade-in">
+            <div className="flex items-start gap-2">
+              <span className="text-base shrink-0">⚠️</span>
+              <p className="leading-snug">{existingCablingError}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setExistingCablingError(null)}
+              className="text-amber-700 dark:text-amber-400 hover:underline text-xs font-bold shrink-0 ml-1"
+            >
+              ✕
+            </button>
+          </div>
         )}
 
         {/* Hybrid Backbone Sub-Bar */}

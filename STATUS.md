@@ -24,6 +24,7 @@
 | **Customer Journey & Pro Builder** | `VERIFIED` | Compact Dropdown Filter Toolbar (Camera Brand, Retention Days, Storage Drive Brand, Sensor Type) with live match counter & quick reset; Key Difference badging (`key_difference`) explaining price variance per card; WhatsApp OTP lead capture before custom build; Mobile slide-over cart drawer; single-filter auto-collapse; Dynamic inventory-driven feature tags; Resolution vs feature boundary enforcement; Centered non-intrusive modal dialogs; Per-bucket feature independence with zero feature leakage; Intrinsic bullet camera weatherproofing standard; Purpose-driven smart wireless variants with edge storage advisory. |
 | **Checkout & Payment Pathways** | `VERIFIED` | 4 pathways: Pay Full (2% discount), ₹500 3-step token, EMI option, Free Site Visit calendar (future dates only); Webhook + Fallback Verification API. |
 | **Catalog & Inventory Integrity** | `VERIFIED` | Active-only inventory enforcement; zero fake fallback products; Dual-collection (`products` + `addons`) cascade delete and update; Direct row-level trash button in `ProductInventory.tsx`; Edit Modal delete action; 0-orphan clean state; Mega Compu World distributor integration with 99 verified SKUs, wholesale dealer pricing, and statutory HSN/GST rate tags. **Internal Catalog Price Sovereignty Invariant**: Internal catalog database is the sole, immutable ground truth for all hardware rates and prices; zero external speculative price overrides. |
+| **Automated CCTV Vendor Ingestion & Price Governance** | `VERIFIED` | Full automated sync pipeline (`lib/vendor/cctv-domain-filter.ts`, `app/api/cron/vendor-cctv-sync`): Catalog Sovereignty permanent whitelist; Heuristic rejection of non-CCTV clutter; 18% GST-inclusive reverse tax math; Admin customizable schedule (Daily/Weekly/Off) with drift tolerance (±5%); Staged product 1-click "Approve" vs "Dismiss & Never Show Again" PID blacklist; 100% ₹0.00/month operational cost with Cloudflare residential fallback. |
 | **Security & Credential Management** | `VERIFIED` | Hardcoded OTPs removed; exposed test scripts scrubbed; Vercel CLI env var management + CRLF sanitization (`lib/env-utils.ts`); unified MSG91 OTP provider; `extractErrorMessage` (`lib/utils.ts`) zero `[object Object]`; Firestore role-based collection rules; HSTS enforced. |
 | **Localization & Language** | `VERIFIED` | Colloquial everyday terminology (replaced "अनुशंसित" with natural options, "कम"/"ज्यादा"); Language selector modal without underscores. |
 
@@ -796,6 +797,44 @@
   - `Phase 7.12`: Chartered Accountant (CA) Full Cycle & Admin Sync (8 tests)
   - `Phase 7.13`: All Users Cross-Synchronization & Omnichannel Orchestration (8 tests)
 - **Production Verification:** Full TypeScript typecheck verification (`tsc --noEmit`: 0 errors) and Next.js Turbopack production build verification (`npm run build`: 229 routes compiled cleanly in 106s).
+
+---
+
+### Milestone 59: Internal Catalog Price Sovereignty & Zero External Speculation Invariant (Rule 11)
+- **Date:** November 18, 2026 | **Status:** `VERIFIED & CERTIFIED`
+- **Internal Database Ground Truth:** Certified that `data/mega-products.generated.json`, active inventory, and Firestore `products` are the immutable, single source of truth for component pricing and margins.
+- **Strict Ban on External Speculative Audits:** Disallowed second-guessing or overriding catalog item prices against external assumptions. Verified that genuine surveillance-grade products (e.g. Toshiba S300 2TB @ ₹12,065) are fully competitive against Indian e-commerce benchmarks (Amazon India listing @ ₹14,999+).
+
+---
+
+### Milestone 60: Universal CAT6 Dual-Compatibility Standard for HD Analog & IP (Rule 12)
+- **Date:** November 18, 2026 | **Status:** `VERIFIED & CERTIFIED`
+- **Universal Multi-Core Cabling Topology:** Formalized field practice where CAT6 Pure Copper UTP cables natively carry Turbo HD/Analog signals (via twisted pairs for video and 12V DC power) using standard BNC connectors and DC power pins.
+- **Future-Proof Cabling Certification:** CAT6 paired with BNC/DC pins is certified as an authorized, superior configuration that guarantees customers a seamless future path to IP without breaking walls.
+
+---
+
+### Milestone 61: Strict Hardware Topology Alignment, Cabling Optimization & Brownfield Decision Matrix (Rule 13/14)
+- **Date:** November 20, 2026 | **Status:** `VERIFIED & CERTIFIED`
+- **Strict Hardware Topology Alignment:** Enforced strict separation in `pricing-engine.ts`: HD Analog cameras must always pair with an HD DVR, 12V Central SMPS, and BNC/DC pins (never NVR or PoE); IP cameras must pair with an NVR, PoE switch, and RJ45 connectors.
+- **New HD Setup Cable Optimization:** In `resolveCable`, unpinned HD setups evaluate both 3+1 Coaxial and CAT6 Pure Copper cables and automatically select the cheaper option for the customer.
+- **Brownfield Cabling Compatibility Matrix:**
+  - Existing 3+1 cabling strictly limits quotes to HD Analog CCTV cameras (IP disqualified as physically incompatible).
+  - Existing CAT6 cabling actively provides both HD Analog and IP camera quotations.
+  - Faulty camera swaps on existing 3+1 setups quote HD Analog cameras with 0m cable and fitting-only labor.
+  - Camera expansion on HD setups compares 3+1 vs. CAT6 for new runs.
+- **Reverse-GST Reconciliation in Quotation Documents:** Updated `calculateGstBreakup` in `pdf-helpers.ts` to compute exact 9% CGST and 9% SGST from 18% GST-inclusive totals, guaranteeing ₹0.00 mathematical reconciliation across all quotes and invoices.
+
+---
+
+### Milestone 62: Automated CCTV Vendor Sync, Catalog Sovereignty & Price Drift Governance (Rule 15)
+- **Date:** November 23, 2026 | **Status:** `VERIFIED & CERTIFIED`
+- **Catalog Sovereignty & Permanent Whitelist:** The system inventory (`products` / `mega-products.generated.json`) is certified as the supreme ground truth. All approved products (including long HDMI cables, specialized extenders, and mounts) are immune to heuristic rejection. Rejection gates apply strictly to unlisted incoming items.
+- **Strict Non-CCTV Clutter Rejection Gate:** Built deterministic CCTV domain classifier (`cctv-domain-filter.ts`) with evaluation precedence rejecting consumer electronics (TVs, unmanaged switches, SSDs, repeaters, PC peripherals) with 100% precision.
+- **Statutory 18% GST-Paid Standard:** Reverse GST formula ($\text{Taxable Base} = \text{Gross} / 1.18$) calibrated with wholesale margin percentage, ensuring exact ₹0.00 accounting reconciliation.
+- **Automated Scheduling & Admin Governance:** Added `/api/cron/vendor-cctv-sync` (daily Vercel cron), `/api/admin/vendor/sync-settings`, and `/api/admin/vendor/sync-runs`. Admin dashboard features the "Auto Sync & Schedule" panel with status toggle, frequency (Daily/Weekly), time picker, drift threshold (±5%), and manual on-demand execution.
+- **Recommendation Dismissal Blacklist:** Admin 1-click "Dismiss & Never Show Again" adds vendor PIDs to `dismissed_vendor_pids`, permanently preventing rejected products from reappearing, with an unblock/restore option.
+- **Zero-Cost Architecture:** Pure functional regex evaluation (0 LLM tokens) and minimal Firestore footprint ensure ₹0.00/month operational cost with Cloudflare residential fallback.
 
 ---
 

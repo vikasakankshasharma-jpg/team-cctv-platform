@@ -199,6 +199,15 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     }
   }
 
+  // Brownfield 3+1 Cabling Guardrail (Rule 14)
+  // Pre-existing 3+1 coaxial cable physically cannot carry IP digital network signals.
+  // If customer has existing 3+1 cabling, fallback IP requests to HD Analog.
+  const isExisting3Plus1 = Boolean(selection.cabling_done || (selection as any).cabling_mode === "mixed") && 
+    (selection.existing_cabling === "3+1" || (selection as any).existing_cabling === "coaxial");
+  if (isExisting3Plus1 && effectiveTech === "IP") {
+    effectiveTech = "HD";
+  }
+
   if (!isIndustrial) {
     // 2. Core Hardware Calculation
     const hardware = calculateHardware(selection, products, addons, settings, effectiveTech);
@@ -208,8 +217,30 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     storageOverflowFlag = hardware.storageOverflow || false;
     storageOverflowData = hardware.storageOverflowInfo;
 
+    // ── Hardware Topology Guardrail (Rule 14) ──
+    const resolvedWiredCams = hardware.items
+      .filter(i => i.category === "camera" && !i.display_name.toLowerCase().includes("wi-fi") && !i.display_name.toLowerCase().includes("wifi") && !i.display_name.toLowerCase().includes("4g"))
+      .map(i => products.find(prod => prod.id === i.product_id))
+      .filter(Boolean) as Product[];
+
+    let alignedTech = effectiveTech;
+    if (resolvedWiredCams.length > 0) {
+      const allHd = resolvedWiredCams.every(p => {
+        const pTech = (p.technology || "").toUpperCase();
+        const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
+        return pTech === "HD" || pTechs.includes("HD");
+      });
+      const allIp = resolvedWiredCams.every(p => {
+        const pTech = (p.technology || "").toUpperCase();
+        const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
+        return pTech === "IP" || pTechs.includes("IP");
+      });
+      if (allHd && !allIp) alignedTech = "HD";
+      else if (allIp && !allHd) alignedTech = "IP";
+    }
+
     // 3. Labor & Equipment Calculation
-    const labor = calculateLabor(selection, settings, effectiveTech, effectiveLaborMultiplier);
+    const labor = calculateLabor(selection, settings, alignedTech, effectiveLaborMultiplier);
     lineItems.push(...labor.items);
     baseHardwareCost += labor.totalRetail;
     actualLaborCost = labor.totalRetail;
@@ -221,7 +252,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
       const techStr = String(r.technology || "").toUpperCase();
       return t.includes("wifi") || t.includes("wireless") || techStr === "WIRELESS" || techStr === "WIFI";
     }));
-    const isWirelessTech = effectiveTech === "WIRELESS" || effectiveTech === "WIFI" || String(selection.technology || "").toUpperCase() === "WIRELESS" || String((selection as any).technology_preference || "").toUpperCase() === "WIRELESS";
+    const isWirelessTech = alignedTech === "WIRELESS" || alignedTech === "WIFI" || String(selection.technology || "").toUpperCase() === "WIRELESS" || String((selection as any).technology_preference || "").toUpperCase() === "WIRELESS";
     const needsElectricalWire = (isWirelessTech || hasHybridWifi) && (
       (selection as any).power_wiring_option === "wire_needed" || 
       (typeof (selection as any).total_power_cable_meters === "number" && (selection as any).total_power_cable_meters > 0)
@@ -229,7 +260,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
 
     if (!cablingDone || needsElectricalWire) {
       const camBrand = hardware.items.find(i => i.display_name?.includes("Dome") || i.display_name?.includes("Bullet"))?.brand || "budget";
-      const cabling = calculateCabling(selection, settings, effectiveTech, cablingMeters, effectiveLaborMultiplier, products, camBrand);
+      const cabling = calculateCabling(selection, settings, alignedTech, cablingMeters, effectiveLaborMultiplier, products, camBrand);
       
       let itemsToAdd = cabling.items;
       let retailToAdd = cabling.totalRetail;
@@ -253,7 +284,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     }
 
     // 3c. Connectors Cost
-    const connectors = calculateConnectors(selection, settings, effectiveTech, products, addons);
+    const connectors = calculateConnectors(selection, settings, alignedTech, products, addons);
     lineItems.push(...connectors.items);
     baseHardwareCost += connectors.totalRetail;
     totalPurchaseCost += connectors.totalCost;
@@ -712,7 +743,34 @@ function calculateHardware(
     wifiCameraCount = Math.max(0, totalHardwareCameraCount - wiredCameraCount);
   }
 
-  // 2. Recorder Selection (sized for wired cameras)
+  // ── Hardware Topology Guardrail (Rule 14) ──────────────────────
+  // Derive effective wired technology strictly from resolved wired camera hardware
+  const resolvedWiredCamProds = items
+    .filter(i => i.category === "camera" && !i.display_name.toLowerCase().includes("wi-fi") && !i.display_name.toLowerCase().includes("wifi") && !i.display_name.toLowerCase().includes("4g"))
+    .map(i => products.find(prod => prod.id === i.product_id))
+    .filter(Boolean) as Product[];
+
+  let effectiveWiredTech = tech;
+  if (resolvedWiredCamProds.length > 0) {
+    const allAreHd = resolvedWiredCamProds.every(p => {
+      const pTech = (p.technology || "").toUpperCase();
+      const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
+      return pTech === "HD" || pTechs.includes("HD");
+    });
+    const allAreIp = resolvedWiredCamProds.every(p => {
+      const pTech = (p.technology || "").toUpperCase();
+      const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
+      return pTech === "IP" || pTechs.includes("IP");
+    });
+
+    if (allAreHd && !allAreIp) {
+      effectiveWiredTech = "HD";
+    } else if (allAreIp && !allAreHd) {
+      effectiveWiredTech = "IP";
+    }
+  }
+
+  // 2. Recorder Selection (sized for wired cameras - DVR for HD, NVR for IP)
   let recorder: Product | undefined = undefined;
   if (wiredCameraCount > 0) {
     const recorderSelection = {
@@ -720,7 +778,7 @@ function calculateHardware(
       camera_count: wiredCameraCount,
       resolution_preference: `${requiredMaxMP}MP`
     };
-    recorder = resolveRecorder(recorderSelection, products, tech, requiredMaxMP);
+    recorder = resolveRecorder(recorderSelection, products, effectiveWiredTech, requiredMaxMP);
     if (recorder) {
       items.push({
         product_id: recorder.id!,
@@ -800,7 +858,7 @@ function calculateHardware(
     ...selection,
     camera_count: wiredCameraCount
   };
-  const transmission = resolveTransmission(transmissionSelection, [...products, ...addons] as any[], tech);
+  const transmission = resolveTransmission(transmissionSelection, [...products, ...addons] as any[], effectiveWiredTech);
   if (transmission) {
 
     if (wiredCameraCount > 0) {
@@ -1237,139 +1295,173 @@ function calculateCabling(
      totalMeters = defaultMeters * activeCams;
   }
 
-  let effectiveCableTech = tech;
-  if (tech === "HD" && selection.cable_type === "cat6") {
-    effectiveCableTech = "IP";
-  }
+  const solveCableKnapsack = (targetCableTech: "HD" | "IP") => {
+    // 1. Gather all cables for this technology (exclude power-only electrical wire)
+    const allCables = products.filter(p => 
+      p.category === "cable" && 
+      p.subcategory !== "electrical_wire" &&
+      !p.display_name?.toLowerCase().includes("electrical") &&
+      !p.display_name?.toLowerCase().includes("2-core") &&
+      (p.technologies || []).includes(targetCableTech as any) &&
+      p.is_active !== false && p.stock_status !== "out_of_stock"
+    );
 
-  // 1. Gather all cables for this technology (exclude power-only electrical wire)
-  const allCables = products.filter(p => 
-    p.category === "cable" && 
-    p.subcategory !== "electrical_wire" &&
-    !p.display_name?.toLowerCase().includes("electrical") &&
-    !p.display_name?.toLowerCase().includes("2-core") &&
-    (p.technologies || []).includes(effectiveCableTech as any) &&
-    p.is_active !== false && p.stock_status !== "out_of_stock"
-  );
-
-  // 2. Filter by requested brand, fallback if empty
-  let brandCables = allCables.filter(c => (c.brand || "").toLowerCase() === cameraBrand.toLowerCase());
-  if (brandCables.length === 0) {
-    brandCables = allCables; // Fallback to all brands if specific brand is missing
-  }
-
-  // 3. Separate into Bundles and Per-Meter
-  const bundles: Product[] = [];
-  let perMeterCable: Product | null = null;
-
-  for (const c of brandCables) {
-    const nameLower = (c.display_name || "").toLowerCase();
-    
-    // Determine length
-    let len = c.cable_length_m;
-    if (!len) {
-      const match = nameLower.match(/(\d+)\s*(?:m|mtr|mtrs|meter|meters|roll|rolls)\b/);
-      if (match) len = parseInt(match[1]);
+    // 2. Filter by requested brand, fallback if empty
+    let brandCables = allCables.filter(c => (c.brand || "").toLowerCase() === cameraBrand.toLowerCase());
+    if (brandCables.length === 0) {
+      brandCables = allCables; // Fallback to all brands if specific brand is missing
     }
-    
-    const isExplicitPerMeter = nameLower.includes("per mtr") || nameLower.includes("per meter") || nameLower.includes("per unit") || c.sku?.toLowerCase().includes("-pu");
-    const isCheap = (c.unit_price !== undefined && c.unit_price < 200) || (c.base_cost !== undefined && c.base_cost < 100);
 
-    if (isExplicitPerMeter || len === 1 || (!len && isCheap)) {
-      if (!perMeterCable || (c.unit_price || 0) < (perMeterCable.unit_price || Infinity)) {
-        if ((c.base_cost || 0) < 150) { perMeterCable = c; }
+    // 3. Separate into Bundles and Per-Meter
+    const bundles: Product[] = [];
+    let perMeterCable: Product | null = null;
+
+    for (const c of brandCables) {
+      const nameLower = (c.display_name || "").toLowerCase();
+      
+      // Determine length
+      let len = c.cable_length_m;
+      if (!len) {
+        const match = nameLower.match(/(\d+)\s*(?:m|mtr|mtrs|meter|meters|roll|rolls)\b/);
+        if (match) len = parseInt(match[1]);
       }
-    } else if (len && len > 1) {
-      bundles.push({ ...c, parsed_length: len });
-    }
-  }
+      
+      const isExplicitPerMeter = nameLower.includes("per mtr") || nameLower.includes("per meter") || nameLower.includes("per unit") || c.sku?.toLowerCase().includes("-pu");
+      const isCheap = (c.unit_price !== undefined && c.unit_price < 200) || (c.base_cost !== undefined && c.base_cost < 100);
 
-  // 4. Determine Per-Meter Cost & Retail
-  let baseCostPerMeter = 12;
-  let cableTypeLabel = effectiveCableTech === "IP" ? "CAT6 Cable" : "3+1 Coaxial Cable";
-  let perMeterProductId = "cabling_material";
-
-  if (perMeterCable) {
-    baseCostPerMeter = perMeterCable.base_cost || 12;
-    cableTypeLabel = perMeterCable.display_name?.replace(/\(Per Mtr\)/i, "").trim() || cableTypeLabel;
-    perMeterProductId = perMeterCable.id!;
-  } else if (bundles.length > 0) {
-    // Auto-derive per meter cost from the cheapest bundle (or use explicitly provided per_meter_cost)
-    const b = bundles.sort((x, y) => (x.base_cost || 0) - (y.base_cost || 0))[0];
-    const bLen = (b as any).parsed_length || 1;
-    baseCostPerMeter = b.per_meter_cost !== undefined ? b.per_meter_cost : ((b.base_cost || 0) / bLen);
-    // Extract base name without length suffix for the per-meter label
-    cableTypeLabel = (b.display_name?.replace(/\s*[\(\[]?\s*\d+\s*(?:m|mtr|mtrs|meter|meters|roll|rolls|coil|coils)[\s\S]*$/i, "") || "").replace(/[\(\[]\s*$/, "").trim() || cableTypeLabel;
-    perMeterProductId = b.id!;
-  } else {
-    baseCostPerMeter = effectiveCableTech === "IP" ? (settings.cable_copper_coated_ip || 12) : (settings.cable_copper_coated_hd || 8);
-  }
-  
-  // Calculate Dynamic Margin Slabs for the Per-Meter rate
-  let cableMarginPct = (settings as any).margin_cable ?? 50;
-  if (perMeterCable?.enable_margin_slabs && Array.isArray(perMeterCable.margin_slabs)) {
-    const avgMeters = totalMeters / (wiredCameraCount || 1);
-    const slabs = [...perMeterCable.margin_slabs].sort((a, b) => a.max_meters - b.max_meters);
-    for (const slab of slabs) {
-      if (avgMeters <= slab.max_meters) {
-        cableMarginPct += (slab.margin_modifier || 0);
-        break;
+      if (isExplicitPerMeter || len === 1 || (!len && isCheap)) {
+        if (!perMeterCable || (c.unit_price || 0) < (perMeterCable.unit_price || Infinity)) {
+          if ((c.base_cost || 0) < 150) { perMeterCable = c; }
+        }
+      } else if (len && len > 1) {
+        bundles.push({ ...c, parsed_length: len });
       }
     }
-  }
 
-  const cableRetailPerMeter = Math.round(baseCostPerMeter * (1 + cableMarginPct / 100));
+    // 4. Determine Per-Meter Cost & Retail
+    let baseCostPerMeter = 12;
+    let cableTypeLabel = targetCableTech === "IP" ? "CAT6 Cable" : "3+1 Coaxial Cable";
+    let perMeterProductId = "cabling_material";
 
-  // Conduit addition
-  const isConduit = selection.wiring_type === "conduit";
-  const conduitRate = isConduit ? (settings.conduit_cost_per_meter || 20) : 0;
-  const conduitCost = isConduit ? (conduitRate * 0.7) : 0;
-  
-  const finalRatePerMeter = Math.round((cableRetailPerMeter + conduitRate) * locationMultiplier);
-  const costPerMeterFinal = baseCostPerMeter + conduitCost;
-
-  // 5. Optimization Engine (Knapsack for Bundles vs Per-Meter)
-  let bestCombination: any = {
-    bundle: null,
-    bundleCount: 0,
-    remainderMeters: totalMeters,
-    totalRetail: finalRatePerMeter * totalMeters,
-    totalCost: costPerMeterFinal * totalMeters
-  };
-
-  if (bundles.length > 0) {
-    for (const b of bundles) {
-      const bLen = (b as any).parsed_length;
-      if (bLen && bLen > 0) {
-        const bundleCount = Math.floor(totalMeters / bLen);
-        const remainderMeters = totalMeters % bLen;
-        
-        // Base bundle math (ignoring location/conduit for a moment to get pure cable retail)
-        const pureBundleRetail = b.unit_price || Math.round((b.base_cost || 0) * (1 + cableMarginPct/100));
-        const pureBundleCost = b.base_cost || Math.round(pureBundleRetail / 1.5);
-        
-        // Add conduit/location back into the final bundle price
-        const bundleConduitRetail = bLen * conduitRate;
-        const finalBundleRetail = Math.round((pureBundleRetail + bundleConduitRetail) * locationMultiplier);
-        const finalBundleCost = pureBundleCost + (bLen * conduitCost);
-        
-        const comboRetail = (bundleCount * finalBundleRetail) + (remainderMeters * finalRatePerMeter);
-        const comboCost = (bundleCount * finalBundleCost) + (remainderMeters * costPerMeterFinal);
-        
-        if (comboRetail < bestCombination.totalRetail) {
-          bestCombination = {
-            bundle: b,
-            bundleCount,
-            remainderMeters,
-            totalRetail: comboRetail,
-            totalCost: comboCost,
-            finalBundleRetail,
-            finalBundleCost
-          };
+    if (perMeterCable) {
+      baseCostPerMeter = perMeterCable.base_cost || 12;
+      cableTypeLabel = perMeterCable.display_name?.replace(/\(Per Mtr\)/i, "").trim() || cableTypeLabel;
+      perMeterProductId = perMeterCable.id!;
+    } else if (bundles.length > 0) {
+      // Auto-derive per meter cost from the cheapest bundle (or use explicitly provided per_meter_cost)
+      const b = bundles.sort((x, y) => (x.base_cost || 0) - (y.base_cost || 0))[0];
+      const bLen = (b as any).parsed_length || 1;
+      baseCostPerMeter = b.per_meter_cost !== undefined ? b.per_meter_cost : ((b.base_cost || 0) / bLen);
+      // Extract base name without length suffix for the per-meter label
+      cableTypeLabel = (b.display_name?.replace(/\s*[\(\[]?\s*\d+\s*(?:m|mtr|mtrs|meter|meters|roll|rolls|coil|coils)[\s\S]*$/i, "") || "").replace(/[\(\[]\s*$/, "").trim() || cableTypeLabel;
+      perMeterProductId = b.id!;
+    } else {
+      baseCostPerMeter = targetCableTech === "IP" ? (settings.cable_copper_coated_ip || 12) : (settings.cable_copper_coated_hd || 8);
+    }
+    
+    // Calculate Dynamic Margin Slabs for the Per-Meter rate
+    let cableMarginPct = (settings as any).margin_cable ?? 50;
+    if (perMeterCable?.enable_margin_slabs && Array.isArray(perMeterCable.margin_slabs)) {
+      const avgMeters = totalMeters / (wiredCameraCount || 1);
+      const slabs = [...perMeterCable.margin_slabs].sort((a, b) => a.max_meters - b.max_meters);
+      for (const slab of slabs) {
+        if (avgMeters <= slab.max_meters) {
+          cableMarginPct += (slab.margin_modifier || 0);
+          break;
         }
       }
     }
+
+    const cableRetailPerMeter = Math.round(baseCostPerMeter * (1 + cableMarginPct / 100));
+
+    // Conduit addition
+    const isConduit = selection.wiring_type === "conduit";
+    const conduitRate = isConduit ? (settings.conduit_cost_per_meter || 20) : 0;
+    const conduitCost = isConduit ? (conduitRate * 0.7) : 0;
+    
+    const finalRatePerMeter = Math.round((cableRetailPerMeter + conduitRate) * locationMultiplier);
+    const costPerMeterFinal = baseCostPerMeter + conduitCost;
+
+    // 5. Optimization Engine (Knapsack for Bundles vs Per-Meter)
+    let bestCombination: any = {
+      bundle: null,
+      bundleCount: 0,
+      remainderMeters: totalMeters,
+      totalRetail: finalRatePerMeter * totalMeters,
+      totalCost: costPerMeterFinal * totalMeters
+    };
+
+    if (bundles.length > 0) {
+      for (const b of bundles) {
+        const bLen = (b as any).parsed_length;
+        if (bLen && bLen > 0) {
+          const bundleCount = Math.floor(totalMeters / bLen);
+          const remainderMeters = totalMeters % bLen;
+          
+          // Base bundle math (ignoring location/conduit for a moment to get pure cable retail)
+          const pureBundleRetail = b.unit_price || Math.round((b.base_cost || 0) * (1 + cableMarginPct/100));
+          const pureBundleCost = b.base_cost || Math.round(pureBundleRetail / 1.5);
+          
+          // Add conduit/location back into the final bundle price
+          const bundleConduitRetail = bLen * conduitRate;
+          const finalBundleRetail = Math.round((pureBundleRetail + bundleConduitRetail) * locationMultiplier);
+          const finalBundleCost = pureBundleCost + (bLen * conduitCost);
+          
+          const comboRetail = (bundleCount * finalBundleRetail) + (remainderMeters * finalRatePerMeter);
+          const comboCost = (bundleCount * finalBundleCost) + (remainderMeters * costPerMeterFinal);
+          
+          if (comboRetail < bestCombination.totalRetail) {
+            bestCombination = {
+              bundle: b,
+              bundleCount,
+              remainderMeters,
+              totalRetail: comboRetail,
+              totalCost: comboCost,
+              finalBundleRetail,
+              finalBundleCost
+            };
+          }
+        }
+      }
+    }
+
+    return {
+      effectiveCableTech: targetCableTech,
+      bestCombination,
+      cableTypeLabel,
+      perMeterProductId,
+      finalRatePerMeter,
+      costPerMeterFinal,
+      isConduit
+    };
+  };
+
+  let selectedCablePlan: ReturnType<typeof solveCableKnapsack>;
+  if (tech === "IP") {
+    selectedCablePlan = solveCableKnapsack("IP");
+  } else if (tech === "HD") {
+    const pinnedCable = String(selection.cable_type || "").toLowerCase();
+    if (pinnedCable === "cat6") {
+      selectedCablePlan = solveCableKnapsack("IP");
+    } else if (pinnedCable === "3+1" || pinnedCable === "coaxial") {
+      selectedCablePlan = solveCableKnapsack("HD");
+    } else {
+      // For new HD Setup: HD supports both 3+1 and CAT6 cable.
+      // Compare both cable options and automatically select the cheaper cable cost for the customer.
+      // If equal, prefer CAT6 for future-proof IP upgradability.
+      const planHD = solveCableKnapsack("HD");
+      const planCAT6 = solveCableKnapsack("IP");
+      if (planCAT6.bestCombination.totalRetail < planHD.bestCombination.totalRetail) {
+        selectedCablePlan = planCAT6;
+      } else {
+        selectedCablePlan = planHD;
+      }
+    }
+  } else {
+    selectedCablePlan = solveCableKnapsack("HD");
   }
+
+  const { bestCombination, cableTypeLabel, perMeterProductId, finalRatePerMeter, costPerMeterFinal, isConduit } = selectedCablePlan;
 
   // 6. Push Line Items
   const typeLabelStr = isConduit ? `Conduit Pipe + ${cableTypeLabel}` : `${cableTypeLabel} (Open)`;
@@ -1627,17 +1719,13 @@ function calculateConnectors(
     pushCatalogLine(userConnector, wiredCameraCount);
   } else {
     const connectorMarginPct = (settings as any).margin_connectors || 50;
-    const isCat6Hd = selection.cable_type === "cat6";
-    const rj45HdQty = isCat6Hd ? hdCount * 2 : 0;
-    let rj45IpQty = 0;
+
+    // IP cameras require RJ45 connectors (Camera & PoE switch ends + uplinks)
     if (ipCount > 0) {
       const transmission = resolveTransmission({ ...selection, camera_count: ipCount }, catalogPool as any[], "IP");
       const transQty = transmission ? Math.ceil(ipCount / (transmission.max_cameras || 4)) : 1;
-      rj45IpQty = (ipCount * 2) + (transQty * 2); // 2 per camera + 2 per PoE switch for uplink
-    }
-    const totalRj45Qty = rj45IpQty + rj45HdQty;
+      const totalRj45Qty = (ipCount * 2) + (transQty * 2); // 2 per camera + 2 per PoE switch for uplink
 
-    if (totalRj45Qty > 0) {
       const catalogRj45 = resolveCatalogRj45Connector(catalogPool);
       if (catalogRj45) {
         pushCatalogLine(catalogRj45, totalRj45Qty);
@@ -1647,7 +1735,7 @@ function calculateConnectors(
         const lineTotal = retailPerPiece * totalRj45Qty;
         items.push({
           product_id: "connector_rj45",
-          display_name: "RJ45 Connectors (Camera & Switch/Balun ends)",
+          display_name: "RJ45 Connectors (Camera & Switch ends)",
           category: "accessory",
           qty: totalRj45Qty,
           unit_price: retailPerPiece,
@@ -1659,11 +1747,12 @@ function calculateConnectors(
       }
     }
 
-    if (hdCount > 0 && !isCat6Hd) {
+    // HD Analog cameras ALWAYS require BNC + DC connectors (Rule 12: CAT6 & 3+1 both pair with BNC/DC for HD analog cameras)
+    if (hdCount > 0) {
       const { bnc, dc, combined } = resolveCatalogHdConnectors(catalogPool);
       if (bnc || dc) {
-        if (bnc) pushCatalogLine(bnc, hdCount * 2); // 2 BNC connectors per coax camera (camera + DVR)
-        if (dc) pushCatalogLine(dc, hdCount);      // 1 DC power pin per coax camera
+        if (bnc) pushCatalogLine(bnc, hdCount * 2); // 2 BNC connectors per camera (camera + DVR)
+        if (dc) pushCatalogLine(dc, hdCount);      // 1 DC power pin per camera
       } else if (combined) {
         pushCatalogLine(combined, hdCount);
       } else {

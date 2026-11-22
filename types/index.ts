@@ -448,6 +448,7 @@ export interface AddonRule {
     property_type?: string;
     technology?: Technology | string;
     cabling_done?: boolean;
+  existing_cabling?: "3+1" | "cat6" | "coaxial" | "unsure";
     requirements?: string[];
     
     // NEW: Scaling rules
@@ -522,6 +523,7 @@ export interface ConfiguratorSelection {
   power_cable_meters?: number;
   total_power_cable_meters?: number;
   cabling_done?: boolean;
+  existing_cabling?: "3+1" | "cat6" | "coaxial" | "unsure";
   partner_id?: string;
   utm_source?: string;
   utm_campaign?: string;
@@ -1493,4 +1495,75 @@ export interface TouchpointLogInput {
   touchpoint_type: "whatsapp" | "call" | "visit_checkin";
   notes?: string;
   coordinates?: { lat: number; lng: number };
+}
+
+
+// ============================================================
+// Vendor Automated CCTV Ingestion & Sync Governance Types
+// ============================================================
+
+export interface VendorSyncSettings {
+  enabled: boolean;
+  frequency: "daily" | "weekly" | "manual";
+  schedule_time: string; // e.g. "03:00" IST
+  schedule_day_of_week?: number; // 0 = Sunday
+  drift_threshold_percent: number; // default: 5%
+  auto_apply_safe_updates: boolean; // default: true for <=5%
+  dismissed_vendor_pids: string[]; // List of dismissed PIDs (Never show again)
+  dismissed_product_titles: string[]; // List of dismissed titles
+  last_run_at?: string;
+  last_run_status?: "success" | "warning" | "error";
+  last_run_summary?: {
+    total_scraped: number;
+    updated: number;
+    unchanged: number;
+    recommended: number;
+    rejected_clutter: number;
+  };
+  notification_email?: string;
+  notify_on_high_drift?: boolean;
+}
+
+export interface VendorSyncRunRecord {
+  id?: string;
+  started_at: string;
+  completed_at: string;
+  duration_ms: number;
+  status: "success" | "warning" | "error";
+  trigger_type: "cron_daily" | "cron_weekly" | "admin_manual" | "batch_cli";
+  summary: {
+    total_evaluated: number;
+    cctv_eligible: number;
+    exact_matches: number;
+    safe_updates: number;
+    high_drift_alerts: number;
+    stock_changes: number;
+    new_recommendations: number;
+    dismissed_skipped: number;
+    rejected_clutter: number;
+  };
+  updated_items: {
+    id: string;
+    pid: string;
+    title: string;
+    old_price: number;
+    new_price: number;
+    drift_percent: number;
+    drift_status: string;
+    taxable_base: number;
+    total_gst: number;
+  }[];
+  unchanged_items: {
+    id: string;
+    pid: string;
+    title: string;
+    unit_price: number;
+  }[];
+  recommended_items: {
+    pid: string;
+    title: string;
+    category: string;
+    price: number;
+    in_stock: boolean;
+  }[];
 }

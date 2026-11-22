@@ -79,7 +79,13 @@
 - **Dual-Collection Cascade Delete & Update (`/api/admin/products`):** The Hardware Management dashboard seamlessly unifies the `products` and `addons` collections. All mutations (batch delete, updates, status toggles) operate across both collections in parallel, eliminating undeletable orphan records.
 - **Row-Level Direct Delete UX (`ProductInventory.tsx`):** Every product row features a dedicated red Trash icon under the `ACTIONS` column with a confirmation dialog, enabling single-click deletion without requiring bulk header selection.
 - **In-Modal Direct Delete:** The Edit Product modal footer includes an immediate "Delete Product" button for quick removal during specification inspection.
-- **Distributor Inventory Integration (Mega Compu World Jaipur):** Ingestion tooling and verification scripts (`scripts/sync-all-megacompu-catalog.js`) map 66 verified SKUs across CP Plus, Hikvision, Prama, A+ Products (Budget), Secureye, Trueview, and matching DVRs with genuine dealer wholesale pricing and exact distributor Item IDs.
+- **Distributor Inventory Integration (Mega Compu World Jaipur):** Ingestion tooling and verification scripts (`scripts/sync-all-megacompu-catalog.js`) map verified SKUs across CP Plus, Hikvision, Prama, A+ Products (Budget), Secureye, Trueview, and matching DVRs with genuine dealer wholesale pricing and exact distributor Item IDs.
+- **Automated CCTV Vendor Ingestion & Price Drift Pipeline (`lib/vendor/cctv-domain-filter.ts`, `app/api/cron/vendor-cctv-sync`):**
+  - **Catalog Sovereignty & Permanent Whitelist:** The system inventory (`products` / `mega-products.generated.json`) is the immutable ground truth. All approved products (including long HDMI cables, specialized extenders, and mounts) are immune to heuristic rejection. Rejection gates apply strictly to unlisted incoming items.
+  - **Strict Non-CCTV Clutter Rejection:** Heuristic gate automatically eliminates consumer TVs, plastic non-PoE desktop switches, consumer PC SSDs, home Wi-Fi repeaters, general computer peripherals, and long-run AV fiber cables.
+  - **Statutory 18% GST-Paid Standard:** All vendor retail prices are GST-inclusive retail customer prices. Reverse GST ($\text{Taxable Base} = \text{Gross} / 1.18$) guarantees exact ₹0.00 mathematical reconciliation.
+  - **Admin Scheduled Auto-Run & Dismissal Blacklist:** Fully configurable via `/admin/vendor-import` (Daily/Weekly/Off, preferred schedule time, ±5% drift threshold). Fluctuations $\le 5\%$ apply safely; $> 5\%$ are staged for 1-click review. Admin can permanently blacklist unwanted recommendation PIDs via "Dismiss & Never Show Again" (`dismissed_vendor_pids`) with 1-click restore.
+  - **₹0.00/Month Operational Cost & Cloudflare Hybrid Fallback:** Regex-based classification (0 LLM tokens) and minimal Firestore footprint ensure zero recurring costs. When vendor anti-bot security challenges serverless cloud cron IPs, the admin can execute a 1-click desktop browser sync directly from the dashboard.
 
 ### 10. Multi-Tier Storage Architecture, Physical Law Inverse Scaling & Market Transparency Rules
 - **Physical Law of Inverse Scaling ($Days \propto \frac{Capacity}{Cameras \times DailyGB}$):** Centralized DVR/NVR hard drives are shared across all wired cameras. As camera count increases on the same hard drive, backup duration strictly decreases proportionally (e.g., 500GB HDD yields ~7 Days for 4 cameras, but strictly ~3 Days for 8 cameras).
@@ -175,6 +181,16 @@ npx tsx scratch/gen_markdown_catalog.ts
 ### 12. Universal CAT6 Dual-Compatibility Standard (HD Analog & IP Systems)
 - **Multi-Core Versatility:** Field technicians natively utilize CAT6 Pure Copper UTP cable for both HD Analog and IP installations by allocating multi-core twisted pairs for direct video and 12V DC power with standard BNC and DC pins.
 - **Future-Proofing by Design:** Delivers enterprise-grade network cabling on HD Analog setups, enabling customers to upgrade to IP in the future without re-cabling. Standardized and certified across the platform.
+
+### 13. Strict Hardware Topology Alignment, Cabling Optimization & Brownfield Decision Matrix
+- **Strict Hardware Topology Alignment:** The pricing engine enforces strict separation: HD Analog cameras must always pair with an HD DVR, 12V SMPS, and BNC/DC pins (never NVR or PoE); IP cameras must pair with an NVR, PoE switch, and RJ45 connectors.
+- **New HD Setup Cable Optimization:** Unpinned HD quotes evaluate both 3+1 Coaxial and CAT6 Pure Copper cables and automatically select the cheaper option for the customer.
+- **Brownfield Cabling Rules:**
+  - Existing 3+1 cabling strictly limits quotes to HD Analog CCTV cameras (IP disqualified as physically incompatible).
+  - Existing CAT6 cabling actively provides both HD Analog and IP camera quotations.
+  - Faulty camera swaps on existing 3+1 setups quote HD Analog cameras with 0m cable and fitting-only labor.
+  - Camera expansion on HD setups compares 3+1 vs. CAT6 for new runs.
+- **Reverse-GST Reconciliation in Quotation Documents:** Updated `calculateGstBreakup` in `pdf-helpers.ts` to compute exact 9% CGST and 9% SGST from 18% GST-inclusive totals, guaranteeing ₹0.00 mathematical reconciliation across all quotes and invoices.
 
 ### Testing & QA
 ```bash

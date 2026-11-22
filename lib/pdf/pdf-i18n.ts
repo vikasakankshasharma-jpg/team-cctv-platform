@@ -1071,14 +1071,50 @@ export function formatHardwarePackageTitle(quote: Record<string, any> | null | u
   );
   // If plan_type already holds Brand_Tech_Resolution (e.g. "CPPLUS_IP_5MP"), extract clean attributes
   const parts = !isLegacyTier && planTypeRaw.includes("_") ? planTypeRaw.split("_") : [];
-  const techRaw = String(req.technology_preference || req.technology || quote.technology || parts[1] || "").trim();
+  let techRaw = String(req.technology_preference || req.technology || quote.technology || parts[1] || "").trim();
   const resRaw = String(req.resolution || quote.resolution || parts[2] || "").trim();
   const recordingDays = Number(req.recording_days || quote.recording_days || 0);
   const storageStr = String(quote.storage_label || quote.storage || "").trim();
 
+  // Inspect actual items for authentic hardware derivation when attributes are unpinned
+  const items = Array.isArray(quote.items) ? quote.items : (Array.isArray((quote.pricingSnapshot as any)?.items) ? (quote.pricingSnapshot as any).items : []);
+  let finalBrand = brand;
+  if (!finalBrand && items.length > 0) {
+    const camWithBrand = items.find((i: any) => i.category === "camera" && i.brand);
+    if (camWithBrand?.brand) finalBrand = camWithBrand.brand;
+  }
+
+  if (items.length > 0) {
+    const camItems = items.filter((i: any) => i.category === "camera");
+    const hasWiredHd = camItems.some((i: any) => {
+      const name = String(i.display_name || "").toLowerCase();
+      return (name.includes("hd") || name.includes("turbo")) && !name.includes("wi-fi") && !name.includes("wifi") && !name.includes("4g");
+    });
+    const hasWiredIp = camItems.some((i: any) => {
+      const name = String(i.display_name || "").toLowerCase();
+      return name.includes("ip") && !name.includes("wi-fi") && !name.includes("wifi") && !name.includes("4g");
+    });
+    const hasWireless = camItems.some((i: any) => {
+      const name = String(i.display_name || "").toLowerCase();
+      return name.includes("wi-fi") || name.includes("wifi") || name.includes("4g");
+    });
+
+    if (hasWiredHd && hasWireless) {
+      techRaw = "Hybrid HD + Wi-Fi";
+    } else if (hasWiredIp && hasWireless) {
+      techRaw = "Hybrid IP + Wi-Fi";
+    } else if (hasWiredHd && !hasWiredIp) {
+      techRaw = "HD";
+    } else if (hasWiredIp && !hasWiredHd) {
+      techRaw = "IP";
+    } else if (hasWireless && !hasWiredHd && !hasWiredIp) {
+      techRaw = "Wi-Fi Wireless";
+    }
+  }
+
   const camPrefix = cameras > 0 ? `${cameras}-Camera` : "";
   const techLabel = techRaw || "HD";
-  const labelCore = [camPrefix, brand, resRaw, techLabel, "CCTV Package"]
+  const labelCore = [camPrefix, finalBrand, resRaw, techLabel, "Package"]
     .filter(Boolean)
     .join(" ");
   const suffix = storageStr

@@ -2,14 +2,15 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
-import { FolderTree, Inbox, Play, CheckCircle2, XCircle, RefreshCw, Trash2, CheckSquare, Square, Plus, Settings, ChevronLeft, ChevronRight } from "lucide-react";
-import type { VendorCategory, StagedProduct, Vendor } from "@/types";
+import { FolderTree, Inbox, Play, CheckCircle2, XCircle, RefreshCw, Trash2, CheckSquare, Square, Plus, Settings, ChevronLeft, ChevronRight, Calendar, Clock, ShieldAlert, Sliders, AlertTriangle, Check, RotateCcw } from "lucide-react";
+import type { VendorCategory, StagedProduct, Vendor, VendorSyncSettings, VendorSyncRunRecord } from "@/types";
 import { guessCategory, guessBrand, guessTechnologies, guessResolution, guessChannels, guessRackUHeight, guessCableLength, guessVoltage, guessAmperage, guessWattage } from "@/lib/vendor/ai-parser";
+import { classifyCCTVProduct } from "@/lib/vendor/cctv-domain-filter";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export default function VendorImportClient() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<"discovery" | "staging">("discovery");
+  const [activeTab, setActiveTab] = useState<"discovery" | "staging" | "automation">("discovery");
   const htmlInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   
@@ -32,6 +33,14 @@ export default function VendorImportClient() {
   const [isRescanning, setIsRescanning] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
+
+  // Automation & Schedule State
+  const [syncSettings, setSyncSettings] = useState<VendorSyncSettings | null>(null);
+  const [syncRuns, setSyncRuns] = useState<VendorSyncRunRecord[]>([]);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [isTriggeringSync, setIsTriggeringSync] = useState(false);
+  const [selectedRun, setSelectedRun] = useState<VendorSyncRunRecord | null>(null);
 
   const filteredStagedProducts = useMemo(() => {
     let filtered = stagedProducts;
@@ -60,10 +69,136 @@ export default function VendorImportClient() {
   }, [stagingCategoryFilter, stagingSearchQuery]);
 
   useEffect(() => {
-    fetchData();
-    fetchVendors();
+    if (activeTab === "automation") {
+      fetchSyncSettings();
+    } else {
+      fetchData();
+      fetchVendors();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
+
+  const fetchSyncSettings = async () => {
+    setIsLoadingSettings(true);
+    try {
+      const [settingsRes, runsRes] = await Promise.all([
+        fetch("/api/admin/vendor/sync-settings"),
+        fetch("/api/admin/vendor/sync-runs")
+      ]);
+      const settingsData = await settingsRes.json();
+      const runsData = await runsRes.json();
+      if (settingsData.success) {
+        setSyncSettings(settingsData.settings);
+      }
+      if (runsData.success) {
+        setSyncRuns(runsData.runs || []);
+        if (runsData.runs && runsData.runs.length > 0) {
+          setSelectedRun(runsData.runs[0]);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load sync settings or runs", err);
+    } finally {
+      setIsLoadingSettings(false);
+    }
+  };
+
+  const handleSaveSyncSettings = async () => {
+    if (!syncSettings) return;
+    setIsSavingSettings(true);
+    try {
+      const res = await fetch("/api/admin/vendor/sync-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(syncSettings)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || "Schedule settings saved successfully.");
+        setSyncSettings(data.settings);
+      } else {
+        toast.error(data.error || "Failed to save settings");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save settings");
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  const handleTriggerManualSync = async () => {
+    setIsTriggeringSync(true);
+    const toastId = toast.loading("Executing live vendor sync...");
+    try {
+      const res = await fetch("/api/cron/vendor-cctv-sync", {
+        headers: {
+          Authorization: "Bearer manual-admin-trigger"
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message || "Sync completed successfully!", { id: toastId });
+        fetchSyncSettings();
+      } else {
+        toast.error(data.error || "Sync completed with warnings", { id: toastId });
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Sync execution failed", { id: toastId });
+    } finally {
+      setIsTriggeringSync(false);
+    }
+  };
+
+  const handleDismissRecommendation = async (product: StagedProduct) => {
+    if (!window.confirm(`Permanently dismiss "${product.raw_title}"?\n\nThis will remove it from recommendations and prevent it from ever showing again in future automated sync runs.`)) return;
+    try {
+      const res = await fetch("/api/admin/vendor/dismiss-recommendation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stagedId: product.id,
+          vendorProductId: product.vendor_product_id,
+          title: product.raw_title
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || "Product dismissed permanently.");
+        setStagedProducts(stagedProducts.filter(p => p.id !== product.id));
+      } else {
+        toast.error(data.error || "Failed to dismiss product");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to dismiss product");
+    }
+  };
+
+  const handleRestorePid = async (pid: string) => {
+    try {
+      const res = await fetch("/api/admin/vendor/dismiss-recommendation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vendorProductId: pid,
+          action: "restore"
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || `Unblocked PID: ${pid}`);
+        if (syncSettings) {
+          setSyncSettings({
+            ...syncSettings,
+            dismissed_vendor_pids: (syncSettings.dismissed_vendor_pids || []).filter(p => p !== pid)
+          });
+        }
+      } else {
+        toast.error(data.error || "Failed to restore product");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to restore product");
+    }
+  };
 
   const fetchVendors = async () => {
     try {
@@ -169,32 +304,43 @@ export default function VendorImportClient() {
         const parser = new DOMParser();
         const doc = parser.parseFromString(text, 'text/html');
         htmlDocs.push({ doc });
-        totalToParse += doc.querySelectorAll('.product-thumb').length;
+        totalToParse += doc.querySelectorAll('.pcard, .product-thumb').length;
       }
 
       setProgress({ status: 'parsing', current: 0, total: totalToParse, staged: 0, updated: 0 });
 
       let currentCount = 0;
       for (const { doc } of htmlDocs) {
-        const thumbs = Array.from(doc.querySelectorAll('.product-thumb'));
+        const cards = Array.from(doc.querySelectorAll('.pcard, .product-thumb'));
         
-        for (let i = 0; i < thumbs.length; i++) {
-          const el = thumbs[i];
-          const title = el.querySelector('.name a')?.textContent?.trim();
+        for (let i = 0; i < cards.length; i++) {
+          const el = cards[i];
+          const textContent = el.textContent || "";
+          
+          // Title extraction: supports modern Mega .pcard (aria-label/title) and legacy .product-thumb (.name a)
+          const title = el.querySelector('a.pcard-img')?.getAttribute('aria-label')
+            || el.querySelector('a.pcard-img')?.getAttribute('title')
+            || el.querySelector('.pcard-title, h3, h2, a.pcard-name')?.textContent?.trim()
+            || el.querySelector('.name a')?.textContent?.trim();
           if (!title) continue;
 
+          // Vendor Product ID: supports modern PID: P8762, Item CD: 110VBI8, and legacy product_id=
           let vendorProductId = "";
-          const linkEl = el.querySelector('.name a');
-          if (linkEl) {
-             const href = linkEl.getAttribute('href') || "";
-             if (href.includes('product_id=')) {
-                 const match = href.match(/product_id=(\d+)/);
-                 if (match) vendorProductId = match[1];
-             }
+          const pidMatch = textContent.match(/PID:\s*([A-Za-z0-9]+)/i);
+          if (pidMatch) {
+            vendorProductId = pidMatch[1].toUpperCase();
+          } else {
+            const linkEl = el.querySelector('a[href*="product_id="], .name a');
+            if (linkEl) {
+              const href = linkEl.getAttribute('href') || "";
+              const match = href.match(/product_id=(\d+)/);
+              if (match) vendorProductId = match[1];
+            }
           }
 
-          let priceText = el.querySelector('.price')?.textContent?.trim() || "";
-          let priceMatches = priceText.match(/₹([\d,]+)/);
+          // Price extraction: supports .pcard-price, .pcard-price-row, .price, or regex in text
+          let priceText = el.querySelector('.pcard-price, .pcard-price-row, .price')?.textContent?.trim() || textContent;
+          let priceMatches = priceText.match(/₹\s*([\d,]+)/);
           let baseCost = 0;
           if (priceMatches && priceMatches[1]) {
               baseCost = parseFloat(priceMatches[1].replace(/,/g, ''));
@@ -245,11 +391,20 @@ export default function VendorImportClient() {
               }
           }
 
-          const textContent = el.textContent?.toLowerCase() || "";
-          const inStock = !(textContent.includes("out of stock") || textContent.includes("sold out"));
+          const textContentLower = textContent.toLowerCase();
+          const inStock = !(textContentLower.includes("out of stock") || textContentLower.includes("sold out"));
 
-          const finalCategory = overrideCategory || guessCategory(title);
-          extractedProducts.push({ title, baseCost, imgUrl, category: finalCategory, inStock, vendorProductId });
+          const cctvClassification = classifyCCTVProduct(title, "", overrideCategory || undefined);
+          const finalCategory = (overrideCategory || (cctvClassification.is_cctv_eligible ? cctvClassification.category : guessCategory(title))) as VendorCategory;
+          extractedProducts.push({
+            title,
+            baseCost,
+            imgUrl,
+            category: finalCategory,
+            inStock,
+            vendorProductId,
+            isCctvEligible: cctvClassification.is_cctv_eligible,
+          });
           currentCount++;
 
           if (currentCount % 25 === 0) {
@@ -531,6 +686,13 @@ export default function VendorImportClient() {
           >
             {t("adm_vi_tab_stag", { count: String(stagedProducts.length) })}
           </button>
+          <button
+            onClick={() => setActiveTab("automation")}
+            className={`pb-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-normal leading-snug ${activeTab === "automation" ? "border-indigo-500 text-indigo-500" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          >
+            <Clock className="w-4 h-4" />
+            Auto Sync & Schedule
+          </button>
         </div>
       </header>
 
@@ -728,7 +890,7 @@ export default function VendorImportClient() {
                  )}
                </div>
           </div>
-        ) : (
+        ) : activeTab === "staging" ? (
           <div className="flex flex-col gap-6">
              {stagedProducts.length > 0 && (
                  <div className="flex justify-between items-center gap-4 flex-wrap bg-muted/30 p-4 rounded-xl border border-dashed">
@@ -1027,6 +1189,13 @@ export default function VendorImportClient() {
                               }} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 text-sm font-medium transition-colors">
                                   <Play className="w-4 h-4 shrink-0" /> {t("adm_vi_mode_deep")}
                               </button>
+                              <button 
+                                onClick={() => handleDismissRecommendation(product)} 
+                                title="Permanently dismiss and never recommend again in future auto-sync runs"
+                                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-500/30 text-amber-500 hover:bg-amber-500/10 text-sm font-medium transition-colors"
+                              >
+                                <ShieldAlert className="w-4 h-4 shrink-0" /> Dismiss & Never Show
+                              </button>
                               <button onClick={() => handleReject(product.id!)} className="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-destructive/10 hover:text-destructive text-sm font-medium transition-colors">
                                   <XCircle className="w-4 h-4 shrink-0" /> {t("adm_vi_btn_rej")}
                               </button>
@@ -1068,6 +1237,337 @@ export default function VendorImportClient() {
                  </div>
                </div>
              )}
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {/* Top Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="p-5 rounded-2xl border bg-card shadow-sm flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Schedule Status</p>
+                  <p className="text-xl font-bold mt-1 flex items-center gap-2">
+                    {syncSettings?.enabled ? (
+                      <span className="text-emerald-500 flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" /> Active ({syncSettings.frequency})
+                      </span>
+                    ) : (
+                      <span className="text-amber-500 flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Paused (OFF)
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <Clock className="w-8 h-8 text-muted-foreground/30" />
+              </div>
+
+              <div className="p-5 rounded-2xl border bg-card shadow-sm flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Run Frequency</p>
+                  <p className="text-xl font-bold mt-1 capitalize">
+                    {syncSettings?.frequency || "Weekly"} @ {syncSettings?.schedule_time || "03:00"} IST
+                  </p>
+                </div>
+                <Calendar className="w-8 h-8 text-muted-foreground/30" />
+              </div>
+
+              <div className="p-5 rounded-2xl border bg-card shadow-sm flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Drift Tolerance</p>
+                  <p className="text-xl font-bold mt-1 text-indigo-500">
+                    ±{syncSettings?.drift_threshold_percent ?? 5}%
+                  </p>
+                </div>
+                <Sliders className="w-8 h-8 text-muted-foreground/30" />
+              </div>
+
+              <div className="p-5 rounded-2xl border bg-card shadow-sm flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Dismissed SKUs</p>
+                  <p className="text-xl font-bold mt-1 text-muted-foreground">
+                    {syncSettings?.dismissed_vendor_pids?.length || 0} Blocked
+                  </p>
+                </div>
+                <ShieldAlert className="w-8 h-8 text-muted-foreground/30" />
+              </div>
+            </div>
+
+            {/* Automation Preferences Form & Action Bar */}
+            <div className="p-6 rounded-2xl border bg-card shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b">
+                <div>
+                  <h3 className="text-lg font-bold">Automated Sync Configuration</h3>
+                  <p className="text-sm text-muted-foreground">Configure periodic background crawler execution, price drift thresholds, and auto-approval policies.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleTriggerManualSync}
+                    disabled={isTriggeringSync}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-indigo-500/30 text-indigo-500 hover:bg-indigo-500/10 text-sm font-semibold transition-all disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isTriggeringSync ? "animate-spin" : ""}`} />
+                    {isTriggeringSync ? "Syncing Vendor..." : "Run Live Sync Now"}
+                  </button>
+                  <button
+                    onClick={handleSaveSyncSettings}
+                    disabled={isSavingSettings}
+                    className="flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 text-sm font-semibold shadow-sm transition-all disabled:opacity-50"
+                  >
+                    <Check className="w-4 h-4" />
+                    {isSavingSettings ? "Saving..." : "Save Preferences"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Switch: Enable / Disable */}
+                <div className="p-4 rounded-xl border bg-muted/20 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-bold">Auto-Sync Status</label>
+                    <button
+                      type="button"
+                      onClick={() => setSyncSettings(s => s ? { ...s, enabled: !s.enabled } : s)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${syncSettings?.enabled ? "bg-emerald-500" : "bg-muted-foreground/30"}`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${syncSettings?.enabled ? "translate-x-6" : "translate-x-1"}`} />
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    When active, the system automatically checks the vendor catalog on the schedule defined below. When paused (OFF), no background requests are made.
+                  </p>
+                </div>
+
+                {/* Frequency & Time */}
+                <div className="p-4 rounded-xl border bg-muted/20 space-y-3">
+                  <label className="text-sm font-bold block">Frequency & Timing</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <select
+                      value={syncSettings?.frequency || "weekly"}
+                      onChange={e => setSyncSettings(s => s ? { ...s, frequency: e.target.value as any } : s)}
+                      className="bg-background border rounded-lg px-3 py-1.5 text-sm"
+                    >
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                    </select>
+                    <input
+                      type="time"
+                      value={syncSettings?.schedule_time || "03:00"}
+                      onChange={e => setSyncSettings(s => s ? { ...s, schedule_time: e.target.value } : s)}
+                      className="bg-background border rounded-lg px-3 py-1.5 text-sm"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Recommended: Weekly on Sunday at 03:00 AM IST (vendor inventory refreshes overnight).
+                  </p>
+                </div>
+
+                {/* Drift Threshold & Safe Auto-Apply */}
+                <div className="p-4 rounded-xl border bg-muted/20 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-bold">Drift & Auto-Approval</label>
+                    <div className="flex items-center gap-1 text-sm font-bold text-indigo-500">
+                      ±
+                      <input
+                        type="number"
+                        min="1"
+                        max="25"
+                        value={syncSettings?.drift_threshold_percent ?? 5}
+                        onChange={e => setSyncSettings(s => s ? { ...s, drift_threshold_percent: parseInt(e.target.value) || 5 } : s)}
+                        className="w-14 bg-background border rounded px-2 py-0.5 text-sm font-bold text-center"
+                      />
+                      %
+                    </div>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer mt-2">
+                    <input
+                      type="checkbox"
+                      checked={syncSettings?.auto_apply_safe_updates ?? true}
+                      onChange={e => setSyncSettings(s => s ? { ...s, auto_apply_safe_updates: e.target.checked } : s)}
+                      className="rounded border-border text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                    />
+                    <span className="text-xs font-medium">Auto-apply safe price updates (≤ {syncSettings?.drift_threshold_percent ?? 5}%)</span>
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    Price changes larger than ±{syncSettings?.drift_threshold_percent ?? 5}% will be placed in Staging for 1-click admin review.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Past Sync Runs History Table */}
+            <div className="p-6 rounded-2xl border bg-card shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold">Execution History & Audit Trail</h3>
+                  <p className="text-sm text-muted-foreground">Review recent automatic and manual sync runs, updated items, unchanged inventory, and new CCTV recommendations.</p>
+                </div>
+                <button
+                  onClick={fetchSyncSettings}
+                  className="p-2 border rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  title="Refresh Run History"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              </div>
+
+              {syncRuns.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-xl border border-dashed">
+                  No sync runs recorded yet. Click "Run Live Sync Now" above or wait for the scheduled cron to execute.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/30 text-xs font-semibold text-muted-foreground">
+                        <th className="p-3">Run Date (IST)</th>
+                        <th className="p-3">Trigger</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3 text-center">Items Checked</th>
+                        <th className="p-3 text-center">Price Updates</th>
+                        <th className="p-3 text-center">Unchanged</th>
+                        <th className="p-3 text-center">Recommendations</th>
+                        <th className="p-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {syncRuns.map(run => (
+                        <tr key={run.id} className={`hover:bg-muted/10 transition-colors ${selectedRun?.id === run.id ? "bg-indigo-500/5 font-medium" : ""}`}>
+                          <td className="p-3 whitespace-nowrap">
+                            {new Date(run.started_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
+                          </td>
+                          <td className="p-3 capitalize">
+                            <span className="px-2 py-0.5 rounded text-xs font-mono bg-muted border">
+                              {run.trigger_type ? run.trigger_type.replace('_', ' ') : 'cron'}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                              run.status === "success" ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30" :
+                              run.status === "warning" ? "bg-amber-500/10 text-amber-600 border border-amber-500/30" :
+                              "bg-red-500/10 text-red-600 border border-red-500/30"
+                            }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${
+                                run.status === "success" ? "bg-emerald-500" :
+                                run.status === "warning" ? "bg-amber-500" : "bg-red-500"
+                              }`} />
+                              {run.status.toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="p-3 text-center font-mono">{run.summary?.total_evaluated ?? 0}</td>
+                          <td className="p-3 text-center font-mono text-indigo-500 font-bold">{run.updated_items?.length ?? 0}</td>
+                          <td className="p-3 text-center font-mono text-muted-foreground">{run.summary?.exact_matches ?? 0}</td>
+                          <td className="p-3 text-center font-mono text-emerald-600 font-bold">{run.summary?.new_recommendations ?? (run.recommended_items?.length ?? 0)}</td>
+                          <td className="p-3 text-right">
+                            <button
+                              onClick={() => setSelectedRun(run)}
+                              className="px-3 py-1 rounded border text-xs font-medium hover:bg-muted transition-colors"
+                            >
+                              Inspect Details
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Selected Run Details Modal / Card */}
+              {selectedRun && (
+                <div className="mt-4 p-5 rounded-xl border bg-muted/10 space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b">
+                    <h4 className="font-bold text-sm">
+                      Run Details — {new Date(selectedRun.started_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
+                    </h4>
+                    <span className="text-xs text-muted-foreground font-mono">
+                      Completed in {selectedRun.completed_at ? `${Math.round((new Date(selectedRun.completed_at).getTime() - new Date(selectedRun.started_at).getTime()) / 1000)}s` : "—"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Updated Products List */}
+                    <div className="p-3 rounded-lg border bg-background space-y-2">
+                      <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider">
+                        Updated Products ({selectedRun.updated_items?.length || 0})
+                      </p>
+                      {(!selectedRun.updated_items || selectedRun.updated_items.length === 0) ? (
+                        <p className="text-xs text-muted-foreground italic">No price drifts detected during this run.</p>
+                      ) : (
+                        <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                          {selectedRun.updated_items.map((item, idx) => (
+                            <div key={idx} className="p-2 rounded bg-muted/30 border text-xs flex justify-between items-center">
+                              <div className="truncate max-w-[240px]">
+                                <p className="font-semibold truncate">{item.title || item.pid || item.id}</p>
+                                <p className="text-[10px] text-muted-foreground font-mono">{item.pid ? `PID: ${item.pid} · ` : ""}₹{item.old_price} → ₹{item.new_price}</p>
+                              </div>
+                              <span className={`font-mono text-xs font-bold ${item.drift_percent > 0 ? "text-amber-500" : "text-emerald-500"}`}>
+                                {item.drift_percent > 0 ? `+${item.drift_percent.toFixed(1)}%` : `${item.drift_percent.toFixed(1)}%`}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Recommended Products */}
+                    <div className="p-3 rounded-lg border bg-background space-y-2">
+                      <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">
+                        Recommended Genuine CCTV Products ({selectedRun.recommended_items?.length || 0})
+                      </p>
+                      {(!selectedRun.recommended_items || selectedRun.recommended_items.length === 0) ? (
+                        <p className="text-xs text-muted-foreground italic">All vendor CCTV products are already active in inventory.</p>
+                      ) : (
+                        <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                          {selectedRun.recommended_items.map((rec, idx) => (
+                            <div key={idx} className="p-2 rounded bg-muted/30 border text-xs flex justify-between items-center">
+                              <div className="truncate max-w-[240px]">
+                                <p className="font-semibold truncate">{rec.title}</p>
+                                <p className="text-[10px] text-muted-foreground font-mono">PID: {rec.pid} · ₹{rec.price}</p>
+                              </div>
+                              <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-muted">
+                                {rec.category}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Dismissed / Blacklisted Products Manager */}
+            <div className="p-6 rounded-2xl border bg-card shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold">Dismissed Recommendation Blacklist</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Products permanently hidden from recommendation. They will never appear in staging or automated suggestion alerts.
+                  </p>
+                </div>
+              </div>
+
+              {(!syncSettings?.dismissed_vendor_pids || syncSettings.dismissed_vendor_pids.length === 0) ? (
+                <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-xl border border-dashed text-xs">
+                  No products have been blacklisted yet. When viewing Staging products, click "Dismiss & Never Show" to block any SKU permanently.
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {syncSettings.dismissed_vendor_pids.map((pid) => (
+                    <div key={pid} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border bg-muted/40 text-xs font-mono">
+                      <span className="font-bold text-foreground">{pid}</span>
+                      <button
+                        onClick={() => handleRestorePid(pid)}
+                        className="text-indigo-500 hover:text-indigo-600 font-sans hover:underline ml-1"
+                        title="Allow this product to be recommended again"
+                      >
+                        Restore
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>

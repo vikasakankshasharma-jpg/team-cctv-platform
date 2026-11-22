@@ -2586,6 +2586,62 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                             </div>
                           )}
 
+                          {/* Pre-installed Cable Type for Add-on / Existing */}
+                          {(req.cabling_done === true || currentMode === "mixed") && (
+                            <div className="mt-2.5 p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 space-y-2 animate-in fade-in">
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-xs text-gray-900 dark:text-white">
+                                  {t("wz_exist_cbl_type_q", "Which type of CCTV cable is pre-installed in your walls?")}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => updateReq({ existing_cabling: "3+1", technology_preference: "HD" })}
+                                  className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                                    (req.existing_cabling === "3+1" || !req.existing_cabling)
+                                      ? 'border-blue-600 bg-white dark:bg-zinc-900 shadow-xs'
+                                      : 'border-gray-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between mb-0.5">
+                                    <span className="font-bold text-xs text-gray-900 dark:text-white">
+                                      🔌 3+1 CCTV Coaxial Cable
+                                    </span>
+                                    <span className="text-[9px] bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-bold px-1 rounded">
+                                      HD Analog Only
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-gray-500 dark:text-zinc-400">
+                                    Standard 3+1 copper wire with video & power. Reused with HD Analog cameras.
+                                  </p>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => updateReq({ existing_cabling: "cat6" })}
+                                  className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                                    req.existing_cabling === "cat6"
+                                      ? 'border-blue-600 bg-white dark:bg-zinc-900 shadow-xs'
+                                      : 'border-gray-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between mb-0.5">
+                                    <span className="font-bold text-xs text-gray-900 dark:text-white">
+                                      🌐 CAT6 LAN / Network Cable
+                                    </span>
+                                    <span className="text-[9px] bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold px-1 rounded">
+                                      Supports HD & IP
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-gray-500 dark:text-zinc-400">
+                                    8-core network wire. Supports both HD Analog (twisted pair) and Digital IP cameras.
+                                  </p>
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
                           {/* Existing Cabling Safety Reminder */}
                           {req.cabling_done === true && (
                             <div className="mt-2.5 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2 animate-in fade-in">
@@ -2663,6 +2719,61 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                               </p>
                             </button>
                           </div>
+
+                          {req.cabling_done === true && (
+                            <div className="mt-2.5 p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 space-y-2 animate-in fade-in">
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-xs text-gray-900 dark:text-white">
+                                  {t("wz_exist_cbl_type_q", "Which type of CCTV cable is pre-installed in your walls?")}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => updateReq({ existing_cabling: "3+1", technology_preference: "HD" })}
+                                  className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                                    (req.existing_cabling === "3+1" || !req.existing_cabling)
+                                      ? 'border-blue-600 bg-white dark:bg-zinc-900 shadow-xs'
+                                      : 'border-gray-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between mb-0.5">
+                                    <span className="font-bold text-xs text-gray-900 dark:text-white">
+                                      🔌 3+1 CCTV Coaxial Cable
+                                    </span>
+                                    <span className="text-[9px] bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-bold px-1 rounded">
+                                      HD Analog Only
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-gray-500 dark:text-zinc-400">
+                                    Standard 3+1 copper wire with video & power. Reused with HD Analog cameras.
+                                  </p>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => updateReq({ existing_cabling: "cat6" })}
+                                  className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                                    req.existing_cabling === "cat6"
+                                      ? 'border-blue-600 bg-white dark:bg-zinc-900 shadow-xs'
+                                      : 'border-gray-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between mb-0.5">
+                                    <span className="font-bold text-xs text-gray-900 dark:text-white">
+                                      🌐 CAT6 LAN / Network Cable
+                                    </span>
+                                    <span className="text-[9px] bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold px-1 rounded">
+                                      Supports HD & IP
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-gray-500 dark:text-zinc-400">
+                                    8-core network wire. Supports both HD Analog (twisted pair) and Digital IP cameras.
+                                  </p>
+                                </button>
+                              </div>
+                            </div>
+                          )}
 
                           {req.cabling_done === true && (
                             <div className="mt-2.5 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2 animate-in fade-in">
