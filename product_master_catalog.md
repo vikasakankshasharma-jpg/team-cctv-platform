@@ -1,7 +1,7 @@
 # TEAM CCTV Product Master Catalog (Deduplicated)
 
-*Last Updated: 17/10/2026, 9:35:00 am*
-*Total Items: 738 (Products: 399, Addons: 339)*
+*Last Updated: 23/11/2026*  
+*Catalog Sovereignty Invariant: All active listed products are permanently whitelisted, verified, and GST-inclusive (18% inclusive standard).*
 
 ## Products
 

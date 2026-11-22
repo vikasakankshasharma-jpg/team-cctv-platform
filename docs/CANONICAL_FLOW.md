@@ -196,3 +196,24 @@ flowchart TD
 - **Auditor Role (`external_ca`):** Dedicated read-only access to statutory ledgers with zero mutation privileges.
 - **GSTR-1 & GSTR-3B Exports:** Automated generation of Monthly/Quarterly Sales Registers with 18% reverse-calculated taxable subtotal and GST components.
 - **Form 26Q TDS Register:** Comprehensive deduction schedule for Section 194C and Section 194H with PAN verification status.
+
+---
+
+### 13. Automated CCTV Vendor Ingestion Pipeline & Scheduled Governance (`/admin/vendor-import`, `/api/cron/vendor-cctv-sync`)
+- **Source of Vendor Ground Truth:** Live catalog ingestion from authorized surveillance distributors (e.g. Mega Compu World Jaipur).
+- **Anti-Staleness Playwright Crawler:** Automated browser agent scrapes live vendor category endpoints with cache-busting headers (`Cache-Control: no-cache`), preventing stale CDN responses.
+- **3-Tier Domain Validation & Catalog Sovereignty Invariant (`cctv-domain-filter.ts`):**
+  - *Tier 1 (Catalog Sovereignty):* All existing catalog items (`products`) are permanently whitelisted and immune to rejection (e.g. `HDMI-10M`, `HDMI-15M`, `HDMI-20M`, `ACC-WIFI-EXTENDER`).
+  - *Tier 2 (Non-CCTV Rejection Gate):* Permanently rejects consumer electronics (smart TVs, non-PoE desktop switches, PC SSDs, home Wi-Fi mesh, general PC parts, fiber cables > 10m).
+  - *Tier 3 (CCTV Categorization):* Genuine surveillance gear (cameras, DVRs/NVRs, surveillance HDDs, PoE switches, CCTV SMPS, pure copper cables, racks) is categorized with standard CCTV metadata.
+- **Statutory 18% Reverse-GST Standard:**
+  - $\text{Taxable Base} = \text{Gross} / 1.18$
+  - $\text{18% GST} = \text{Gross} - \text{Taxable Base}$
+  - Wholesale Base Cost = $\text{round}(\text{Taxable Base} \times 0.82)$ (18% distributor margin with ₹0.00 drift).
+- **Drift Evaluation & Auto-Apply:**
+  - Safe updates ($\le \pm 5\%$ drift) apply automatically if `auto_apply_safe_updates: true`.
+  - Significant drift ($> 5\%$) is staged for 1-click admin approval in `/admin/vendor-import`.
+- **Scheduled Governance & Permanent Recommendation Blacklist:**
+  - Configurable schedule in `settings/vendor_sync` (`Daily` / `Weekly` at custom time, e.g. `03:00` AM IST).
+  - Admin can dismiss unwanted recommendation cards via **[Dismiss & Never Show]** (`dismissed_vendor_pids`), permanently blacklisting the vendor PID from future auto-sync runs, with an **[Unblock / Restore]** manager.
+- **Zero-Cost Footprint:** Operates at ₹0.00/month (0 LLM tokens, minimal Firestore usage within free tier).

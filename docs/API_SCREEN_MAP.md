@@ -157,3 +157,9 @@ This document tracks all API routes, their HTTP methods, the Firestore collectio
 | `/api/payment/refund` | POST | credit_notes, refunds, quotes, audit_logs | RefundDialog.tsx |
 | `/api/admin/salespersons/me` | GET | salespeople | SalespersonHeader.tsx |
 | `/d/[token]` | GET | dispatch_tokens, quotes | PublicDeliveryClient.tsx |
+| `/api/cron/vendor-cctv-sync` | POST | vendor_sync_runs, products, staged_vendor_products, settings | Vercel Cron / GitHub Actions / Admin manual trigger |
+| `/api/admin/vendor/sync-settings` | GET, POST | settings | VendorImportClient.tsx |
+| `/api/admin/vendor/sync-runs` | GET | vendor_sync_runs | VendorImportClient.tsx |
+| `/api/admin/vendor/dismiss-recommendation` | POST | settings, staged_vendor_products | VendorImportClient.tsx |
+| `/api/admin/vendor/sync-json` | POST | products, staged_vendor_products | VendorImportClient.tsx |
+| `/api/admin/vendor/staged-products` | GET, POST, DELETE | staged_vendor_products | VendorImportClient.tsx |

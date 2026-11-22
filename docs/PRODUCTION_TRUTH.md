@@ -1,6 +1,6 @@
 # Production Truth & Credential Tracking
 
-> **Last Updated:** November 16, 2026  
+> **Last Updated:** November 23, 2026  
 > **Production Domain:** `https://cctvquotation.com`  
 > **Vercel Project:** `secure-easy` / `team-cctv-platform`  
 > **Rule:** Never mark a credential as `ROTATED` or `VERIFIED` based solely on local files. Evidence from the actual deployment/environment is mandatory.
@@ -304,3 +304,38 @@
 - **Standardized Field Exception Reporting:** Couriers submit delivery failure reasons (`CUSTOMER_UNAVAILABLE`, `PREMISES_CLOSED`, `REFUSED_DELIVERY`, `WRONG_ADDRESS`) via `reportPublicDeliveryFailure`.
 - **Statutory Section 194C / 194H TDS Calculation (`TaxationEngine` in `lib/taxation-engine.ts`):** 1% TDS for individual contractors with valid PAN; 2% TDS for registered subcontractor firms; 5% TDS for promoters/brokers; 20% penal rate without PAN.
 - **Phase 7 Commercial Lifecycle Certification Suite:** 109/109 tests PASSING in `tests/certification/commercial/` validating end-to-end multi-persona handoffs and reverse-GST mathematical invariants across all 8 personas.
+
+---
+
+### 29. Internal Catalog Sovereignty Whitelist Invariant & CCTV Domain Filtering (Nov 22-23, 2026)
+- **Internal Catalog Supreme Ground Truth:** The platform's active internal inventory (`products`, `data/mega-products.generated.json`, active Firestore inventory) is the supreme, immutable ground truth. All admin-listed or approved products (including specialized items like `HDMI-10M`, `HDMI-15M`, `HDMI-20M`, `ACC-WIFI-EXTENDER`, racks, and display monitors) are permanently whitelisted and immune to heuristic rejection.
+- **Strict Non-CCTV Clutter Rejection:** Only new, unlisted incoming vendor items pass through the heuristic gate. Non-CCTV consumer electronics (consumer smart TVs, unmanaged non-PoE desktop switches, consumer PC SSDs, home mesh Wi-Fi repeaters, general PC peripherals, and > 10m fiber HDMI cables) are permanently rejected before staging.
+- **Strict Evaluation Precedence (`cctv-domain-filter.ts`):**
+  1. *Level 1 (Sovereignty Whitelist):* Existing catalog items matched by SKU, model, or product name bypass rejection automatically.
+  2. *Level 2 (Non-CCTV Rejection Gate):* Unlisted items matching consumer electronics regex patterns are permanently rejected.
+  3. *Level 3 (Legitimate CCTV Categorization):* Genuine surveillance components (cameras, DVRs/NVRs, surveillance HDDs, PoE switches, CCTV SMPS power supplies, racks, connectors, pure copper cables) are classified and staged with calibrated attributes.
+
+### 30. Automated CCTV Vendor Ingestion Pipeline, Anti-Staleness Browser Crawler & Price Drift Governance (Nov 22-23, 2026)
+- **Anti-Staleness Playwright Browser Crawler (`scripts/cctv-live-browser-sync.ts`):** Renders live vendor pages in a real Chromium browser with cache-busting request headers (`Cache-Control: no-cache, no-store`), eliminating stale CDN/edge cached prices. Includes hybrid residential fallback if Cloudflare anti-bot challenges headless serverless runners.
+- **Statutory 18% Reverse-GST Accounting Invariant:**
+  - All vendor retail prices are customer GST-inclusive selling prices.
+  - Taxable Base = $\text{Gross Price} / 1.18$; 18% GST = $\text{Gross Price} - \text{Taxable Base}$.
+  - Wholesale Base Cost = $\text{round}(\text{Taxable Base} \times 0.82)$, maintaining standard 18% distributor trade margin with ₹0.00 mathematical reconciliation.
+- **Drift Governance Engine (`/api/cron/vendor-cctv-sync`):**
+  - Evaluates live vendor prices against active catalog (`pricing-engine.ts`).
+  - Safe Drift ($\le \pm 5\%$): Automatically applies to live inventory when `auto_apply_safe_updates: true`.
+  - Significant Drift ($> 5\%$): Staged in `staged_vendor_products` for 1-click admin approval before mutating production pricing.
+  - New Hardware: Validated through CCTV domain classifier and staged under "New Recommendations" with zero phantom products.
+
+### 31. Scheduled Governance, Configurable Auto-Sync & Permanent Recommendation Blacklist (Nov 23, 2026)
+- **Configurable Auto-Sync Schedule (`settings/vendor_sync`):** Admin can toggle the schedule active/paused, select frequency (`Daily` or `Weekly`), customize execution time (e.g., `03:00` AM IST), and adjust the price drift threshold.
+- **Admin Workspace (`/admin/vendor-import`):** Complete tabbed interface with:
+  1. *Staging Review:* Card-based review with side-by-side catalog vs vendor prices, drift badges, and 1-click apply/discard.
+  2. *Auto Sync & Schedule:* Schedule switch, timing picker, drift threshold slider, safe auto-apply toggle, and 1-click "Run Live Sync Now" button.
+  3. *Sync Runs & Audit History:* Chronological ledger of all sync executions with runtime duration, items evaluated, updated items, and errors.
+- **Permanent Recommendation Blacklist (`dismissed_vendor_pids`):** Admin can click **[Dismiss & Never Show]** on any unwanted vendor recommendation card. The vendor Product ID is saved to `dismissed_vendor_pids` in Firestore, permanently suppressing it from future auto-sync runs, with an **[Unblock / Restore]** manager available in the dashboard.
+
+### 32. Commercial Zero-Cost Standard (₹0.00/Month Operational Footprint) (Nov 23, 2026)
+- **Zero LLM Token Expenditure:** All CCTV domain classification, brand matching, and non-CCTV rejection use pure deterministic regex and keyword heuristics—consuming exactly **0 LLM tokens** per run.
+- **Minimal Firestore Footprint:** Scheduled executions operate within Firebase free quotas (1 read/write per modified SKU, append-only sync logs).
+- **Zero Third-Party SaaS Overhead:** Runs via standard Vercel cron, GitHub Actions, or local desktop browser sync, guaranteeing ₹0.00/month recurring automation cost.

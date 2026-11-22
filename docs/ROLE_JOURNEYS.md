@@ -110,6 +110,8 @@ The platform serves distinct personas with strict route boundaries, tailored cap
   6. **Financial Dashboard & Payout Approval (`/admin/finance`):**
      - Reviews and authorizes payouts for Installers, B2B Partners, and B2C Referrers based on verified site completion with zero open punch-list items.
      - Tracks maturity days and overdue payout alerts.
+  7. **Vendor Catalog Synchronization & Scheduled Governance (`/admin/vendor-import`):**
+     - Configures automated daily or weekly catalog ingestion schedules, sets price drift tolerance thresholds ($\pm 5\%$), reviews staged updates side-by-side, triggers on-demand live crawler runs, and permanently blacklists unwanted recommendation cards (`dismissed_vendor_pids`) with 1-click restore management.
 
 ---
 

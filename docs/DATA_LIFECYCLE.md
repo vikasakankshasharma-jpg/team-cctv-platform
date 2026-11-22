@@ -68,10 +68,12 @@
 - `site_visit_bookings`
 - `specification_knowledge`
 - `staged_products`
+- `staged_vendor_products`
 - `stock_ledger`
 - `temp_otps`
 - `transactions`
 - `vendor_categories`
+- `vendor_sync_runs`
 - `vendors`
 - `warranty_certificates`
 - `wizard_steps`
@@ -120,4 +122,17 @@
 - **Context Hydration (`fetchSingleQuoteProfitContext`):** Joins `commission_records`, `commissions`, `promoters`, `salespersons`, `amc_subscriptions`, `amc_contracts`, `payment_history`, and `settings` for `/api/crm/quotes/[quoteId]` and `/api/analytics/profitability`.
 - **Services Bucket:** Aggregates installation labor (`base_cost_at_quote`), `travel_fee` payout reserve, Paid AMC contracts & Free Promo AMC PM visit obligations (deduplicated against checkout add-ons), and Referral/Salesperson commission deductions.
 - **True Net Pocket Profit (`overheads`):** Deducts Payment Gateway MDR (actual `payment_history.razorpay_fee`, ₹0 on cash/direct transfers, or configured `payment_gateway_fee_percent`), 1st-year warranty visit reserve, job consumables/logistics, and installer bonuses from Gross Profit without modifying customer tax invoices.
+
+### 8. Vendor Ingestion & Price Drift Lifecycle (`vendor_sync_runs`, `staged_vendor_products`)
+- **Sync Trigger**: Automated schedule (Vercel Cron / GitHub Actions via `/api/cron/vendor-cctv-sync`) or Admin on-demand click via `/admin/vendor-import`.
+- **Sync Runs (`vendor_sync_runs` collection)**:
+  - Appended on every execution.
+  - Fields: `run_id`, `started_at`, `completed_at`, `duration_ms`, `status` (`SUCCESS` / `FAILED`), `trigger` (`SCHEDULED` / `MANUAL`), `items_evaluated`, `updated_skus`, `unchanged_inventory`, `new_recommendations`, `rejected_clutter`, `errors`.
+- **Staging Products (`staged_vendor_products` collection)**:
+  - Stores high drift updates ($> 5\%$) and newly discovered CCTV hardware recommendations.
+  - Fields: `vendor_pid`, `title`, `vendor_price`, `catalog_price`, `drift_percent`, `status` (`STAGED` / `APPLIED` / `DISMISSED`), `subsystem`, `brand`, `created_at`.
+- **Recommendation Dismissal Blacklist (`settings/vendor_sync`)**:
+  - Contains `dismissed_vendor_pids: string[]`. When an admin clicks "Dismiss & Never Show", the vendor Product ID is blacklisted and permanently prevented from reappearing in future sync runs.
+- **Production Catalog Mutation (`products` collection)**:
+  - Only applied automatically for safe drift ($\le 5\%$) if `auto_apply_safe_updates: true`, or upon explicit Admin approval in `/admin/vendor-import`. Mutates `unit_price`, `base_cost` (calibrated at 82% of taxable base), and `updated_at`.
 

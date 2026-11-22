@@ -149,6 +149,24 @@ This document serves as the master engineering and operational handover for the 
 - **Decoupled Telemetry & Funnel Widget:** Privacy-safe custom events (`tour_started`, `tour_step_viewed`, `tour_completed`, `tour_skipped`, `tour_skip_all`) with live drop-off funnel analytics widget (`TourPerformanceWidget.tsx`) at `/admin/analytics/funnel`.
 - **11-Language Localization:** Colloquial layman terms across all 11 Indian languages (`en`, `hi`, `mr`, `gu`, `ta`, `te`, `kn`, `bn`, `ml`, `pa`, `or`) dynamically loaded on demand.
 
+### 2.18 Automated CCTV Vendor Ingestion Pipeline & Price Drift Governance
+- **Anti-Staleness Browser Crawler (`scripts/cctv-live-browser-sync.ts`):** Automated Playwright crawler fetching live distributor catalog pages with cache-busting headers (`Cache-Control: no-cache, no-store`), avoiding stale CDN caching.
+- **Price Drift Slicing:** Evaluates price drift between live vendor retail and active database (`pricing-engine.ts`). Safe drift ($\le \pm 5\%$) auto-applies if enabled; high drift ($> 5\%$) stages for 1-click admin sign-off in `/admin/vendor-import`.
+- **Statutory 18% Reverse-GST Standard:**
+  $$\text{Taxable Base} = \frac{\text{Gross Selling Price}}{1.18}$$
+  $$\text{18% GST} = \text{Gross Selling Price} - \text{Taxable Base}$$
+  $$\text{Wholesale Base Cost} = \text{round}(\text{Taxable Base} \times 0.82)$$
+  Maintains exact ₹0.00 accounting reconciliation and 18% distributor margin.
+
+### 2.19 Catalog Sovereignty Whitelist Invariant & CCTV Domain Filtering
+- **Internal Catalog Supreme Authority:** All active, admin-approved inventory items (`products`, `mega-products.generated.json`) are permanently whitelisted and immune to rejection (e.g. `HDMI-10M`, `HDMI-15M`, `HDMI-20M`, `ACC-WIFI-EXTENDER`, racks, display monitors).
+- **Strict Non-CCTV Clutter Rejection:** Only new, unlisted items undergo heuristic checks. Consumer TVs, unmanaged non-PoE desktop switches, consumer PC SSDs, home Wi-Fi mesh, PC peripherals, and fiber cables > 10m are permanently rejected.
+
+### 2.20 Scheduled Sync Governance, Admin Controls & Recommendation Blacklist
+- **Configurable Schedule (`settings/vendor_sync`):** Admin can toggle status (`Active` / `Paused`), set frequency (`Daily` or `Weekly`), customize execution time (`03:00` AM IST), adjust drift threshold, and execute manual on-demand syncs.
+- **Permanent Recommendation Blacklist (`dismissed_vendor_pids`):** Clicking **[Dismiss & Never Show]** blacklists vendor PIDs, permanently suppressing unwanted items from future auto-sync runs, with an unblock/restore manager in the dashboard.
+- **Zero Recurring SaaS Costs:** Operates at ₹0.00/month using deterministic regex classification (0 LLM tokens) and lightweight Firestore execution within free tiers.
+
 ---
 
 ## 3. Operational & Deployment Guide
@@ -172,6 +190,15 @@ The following keys must be set in Vercel Project Settings:
 ```bash
 # Phase 7 Commercial Lifecycle Certification Suite (109 tests across 8 personas)
 npx tsx --test tests/certification/commercial/*.test.ts
+
+# Customer Journey Blueprint & Behavioral Intelligence Suite (7 tests)
+npx tsx --test tests/unit-customer-journey-blueprint.test.ts
+
+# CCTV Vendor Batch Ingestion & Reconciliation Audit (Dry Run)
+npx tsx scripts/cctv-vendor-batch-ingest.ts --dry-run
+
+# Certification Regression Suite (7 gates + manifest integrity)
+npm run cert:regression
 
 # Type Safety Verification (must exit 0)
 npx tsc --noEmit
