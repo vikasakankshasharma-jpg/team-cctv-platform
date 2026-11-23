@@ -7,6 +7,7 @@ import { addLeadActivity, updateNextFollowUp, updateLeadStatus } from "@/app/act
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
+import { getTodayIST, isPastDateIST } from "@/lib/date-utils";
 
 interface ProgressiveDialerProps {
   leads: Lead[];
@@ -74,6 +75,11 @@ export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: Progr
       }
 
       if (followUpDate && followUpDate !== currentLead.next_followup_date) {
+        if (isPastDateIST(followUpDate)) {
+          toast.error("Follow-up date cannot be in the past.");
+          setIsSubmitting(false);
+          return;
+        }
         await updateNextFollowUp(currentLead.id, followUpDate);
       }
 
@@ -185,6 +191,7 @@ export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: Progr
                 <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5 shrink-0"/> {t("adm_drw_next_fu", "Next Follow-Up")}</label>
                 <input 
                   type="date"
+                  min={getTodayIST()}
                   value={followUpDate}
                   onChange={e => setFollowUpDate(e.target.value)}
                   className="w-full h-12 px-4 bg-background border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 font-medium"

@@ -48,6 +48,7 @@ interface SmartAddressInputProps {
   allowMapSelection?: boolean;
   initialCoords?: { lat?: number; lng?: number };
   onCoordinatesChange?: (coords: { lat: number; lng: number }) => void;
+  onLocationResolved?: (loc: { city: string; district: string; state: string; pincode: string }) => void;
 }
 
 export function SmartAddressInput({
@@ -65,6 +66,7 @@ export function SmartAddressInput({
   allowMapSelection = true,
   initialCoords,
   onCoordinatesChange,
+  onLocationResolved,
 }: SmartAddressInputProps) {
   const { t, locale } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -163,6 +165,15 @@ export function SmartAddressInput({
             lat: data.lat,
             lng: data.lng,
           });
+
+          if (onLocationResolved) {
+            onLocationResolved({
+              city: data.city || data.district || "",
+              district: data.district || data.city || "",
+              state: data.state || "",
+              pincode: cleanPin,
+            });
+          }
 
           // If quadrant is already selected or we have default coords, propagate them
           if (data.lat && data.lng && onQuadrantChange && !selectedQuadrant) {

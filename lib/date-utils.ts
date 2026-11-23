@@ -53,3 +53,83 @@ export function safeFormatDate(val: any, fmt: string = "dd MMM yyyy, hh:mm a", f
     return fallback;
   }
 }
+
+/**
+ * Returns today's date in YYYY-MM-DD formatted specifically in Indian Standard Time (Asia/Kolkata).
+ * Eliminates UTC day boundary shifts.
+ */
+export function getTodayIST(): string {
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+  } catch {
+    const d = new Date();
+    const istMs = d.getTime() + (5.5 * 60 * 60 * 1000);
+    return new Date(istMs).toISOString().split("T")[0];
+  }
+}
+
+/**
+ * Returns current hour (0-23) in Indian Standard Time (Asia/Kolkata).
+ */
+export function getCurrentHourIST(): number {
+  try {
+    const str = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Kolkata", hour: "numeric", hour12: false }).format(new Date());
+    return parseInt(str, 10);
+  } catch {
+    const d = new Date();
+    const istMs = d.getTime() + (5.5 * 60 * 60 * 1000);
+    return new Date(istMs).getUTCHours();
+  }
+}
+
+/**
+ * Returns tomorrow's date in YYYY-MM-DD formatted in Indian Standard Time (Asia/Kolkata).
+ */
+export function getTomorrowIST(): string {
+  try {
+    const today = new Date();
+    today.setDate(today.getDate() + 1);
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(today);
+  } catch {
+    const d = new Date();
+    const istMs = d.getTime() + (5.5 * 60 * 60 * 1000) + (24 * 60 * 60 * 1000);
+    return new Date(istMs).toISOString().split("T")[0];
+  }
+}
+
+/**
+ * Checks whether a date string (YYYY-MM-DD or ISO) is strictly before today in IST.
+ */
+export function isPastDateIST(val: any): boolean {
+  if (!val) return false;
+  const todayStr = getTodayIST();
+  let dateStr = "";
+  if (typeof val === "string") {
+    dateStr = val.split("T")[0];
+  } else {
+    const parsed = parseDateSafe(val);
+    if (!parsed) return false;
+    dateStr = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(parsed);
+  }
+  return Boolean(dateStr && dateStr < todayStr);
+}
+
+/**
+ * Checks whether a scheduled time slot on a given date is already in the past in IST.
+ */
+export function isPastSlotIST(dateStr: string, slotStr?: string): boolean {
+  if (isPastDateIST(dateStr)) return true;
+  if (!dateStr || dateStr !== getTodayIST() || !slotStr) return false;
+  const hour = getCurrentHourIST();
+  const lower = slotStr.toLowerCase();
+  if (lower.includes("morning") || lower.includes("10:00 am") || lower.includes("10_1")) {
+    return hour >= 13;
+  }
+  if (lower.includes("afternoon") || lower.includes("01:00 pm") || lower.includes("2_5")) {
+    return hour >= 17;
+  }
+  if (lower.includes("evening") || lower.includes("05:00 pm") || lower.includes("5_7")) {
+    return hour >= 20;
+  }
+  return false;
+}

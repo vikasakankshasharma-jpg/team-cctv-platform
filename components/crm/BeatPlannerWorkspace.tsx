@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { LatLng } from "@/lib/routing/optimizer";
 import { useTranslation } from "@/hooks/useTranslation";
+import { isPastDateIST } from "@/lib/date-utils";
 import type { BeatStop } from "@/types";
 
 interface BeatPlannerWorkspaceProps {
@@ -213,6 +214,10 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
 
   // Schedule stop from backlog to today
   const handleScheduleFromBacklog = async (stop: BeatStop, slot: string = "morning") => {
+    if (isPastDateIST(selectedDate)) {
+      toast.error(t("beat_err_past_date", "Cannot schedule stops on past dates. Please select today or an upcoming date."));
+      return;
+    }
     try {
       await fetch("/api/crm/beat-plan", {
         method: "POST",
@@ -237,6 +242,10 @@ export function BeatPlannerWorkspace({ isAdmin = false }: BeatPlannerWorkspacePr
 
   // Smart-Fill Beat with top priority backlog items
   const handleSmartFillBeat = async (countToSchedule: number = 5) => {
+    if (isPastDateIST(selectedDate)) {
+      toast.error(t("beat_err_past_date", "Cannot schedule stops on past dates. Please select today or an upcoming date."));
+      return;
+    }
     if (overdueBacklog.length === 0) {
       toast.info(t("beat_none_overdue", "No overdue accounts in backlog to schedule."));
       return;

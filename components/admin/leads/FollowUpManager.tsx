@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { safeFormatDate } from "@/lib/date-utils";
+import { safeFormatDate, getTodayIST, isPastDateIST } from "@/lib/date-utils";
 import { useTranslation } from "@/hooks/useTranslation";
+import { toast } from "sonner";
 
 type FollowUp = {
   note: string;
@@ -36,6 +37,10 @@ export function FollowUpManager({ quoteId, followUps = [], onAdded }: { quoteId:
 
   const handleAdd = async () => {
     if (!note) return;
+    if (date && isPastDateIST(date)) {
+      toast.error("Next action date cannot be in the past.");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch(`/api/crm/quotes/${quoteId}/followup`, {
@@ -83,7 +88,7 @@ export function FollowUpManager({ quoteId, followUps = [], onAdded }: { quoteId:
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
           <div className="col-span-1">
             <label className="text-xs text-muted-foreground block mb-1">{t("adm_fu_sched_lbl", "Schedule Next Action")}</label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-white" />
+            <Input type="date" min={getTodayIST()} value={date} onChange={(e) => setDate(e.target.value)} className="bg-white" />
           </div>
           <div className="col-span-1">
             <label className="text-xs text-muted-foreground block mb-1">{t("adm_fu_type_lbl", "Action Type")}</label>

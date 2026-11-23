@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PaymentStagesWidget } from "@/components/shared/PaymentStagesWidget";
 import { useTranslation } from "@/hooks/useTranslation";
+import { getTodayIST, isPastDateIST } from "@/lib/date-utils";
 
 const LOCALE_MAP: Record<string, string> = {
   en: "en-IN", hi: "hi-IN", mr: "mr-IN", gu: "gu-IN", ta: "ta-IN",
@@ -79,6 +80,10 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
 
   const handleSetFollowUp = async () => {
     if (!lead?.id) return;
+    if (followUpDate && isPastDateIST(followUpDate)) {
+      toast.error(t("adm_drw_toast_fu_past", "Follow-up date cannot be in the past."));
+      return;
+    }
     const res = await updateNextFollowUp(lead.id, followUpDate || null);
     if (res.success) {
       toast.success(t("adm_drw_toast_fu_ok", "Follow-up date updated"));
@@ -222,6 +227,7 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
               <div className="flex gap-2">
                 <input 
                   type="date" 
+                  min={getTodayIST()}
                   value={followUpDate}
                   onChange={e => setFollowUpDate(e.target.value)}
                   className="flex-1 h-10 px-3 bg-background border border-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary"

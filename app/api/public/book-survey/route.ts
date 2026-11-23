@@ -4,6 +4,7 @@ import { SiteSurveySchema } from "@/lib/validators";
 import { Msg91WhatsAppProvider } from "@/lib/whatsapp/msg91-provider";
 import { addLeadActivity } from "@/app/actions/leads";
 import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
+import { isPastDateIST } from "@/lib/date-utils";
 
 export async function POST(req: Request) {
   let locale = resolveRequestLocale(req);
@@ -15,6 +16,13 @@ export async function POST(req: Request) {
     const parsed = SiteSurveySchema.omit({ 
       id: true, status: true, created_at: true, updated_at: true 
     }).parse(payload);
+
+    if (isPastDateIST(parsed.date)) {
+      return NextResponse.json({
+        success: false,
+        message: "Site survey date cannot be in the past. Please select an upcoming date."
+      }, { status: 400 });
+    }
 
     const cleanPhone = parsed.customer_phone.replace(/[^0-9]/g, "").slice(-10);
     

@@ -4,6 +4,7 @@ import { verifySession } from "@/lib/auth-server";
 import { getPincodeCoordinates } from "@/lib/geo-utils";
 import { calculateInactivityAging, getLatestTouchpointDate } from "@/lib/inactivity-tracker";
 import { optimizeRouteWithTimeWindows, buildGoogleMapsMultiStopUrl, LatLng } from "@/lib/routing/optimizer";
+import { isPastDateIST } from "@/lib/date-utils";
 import type { BeatStop } from "@/types";
 
 function getISTDateString(date: Date = new Date()): string {
@@ -191,6 +192,9 @@ export async function POST(req: Request) {
       if (!entity_type || !entity_id || !scheduled_date) {
         return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
       }
+      if (isPastDateIST(scheduled_date)) {
+        return NextResponse.json({ success: false, error: "Cannot schedule stops on past dates. Please select today or a future date." }, { status: 400 });
+      }
 
       const collectionName = entity_type === "b2b_partner" || entity_type === "promoter" ? "promoters" : "leads";
       const docRef = adminDb.collection(collectionName).doc(entity_id);
@@ -271,6 +275,9 @@ export async function POST(req: Request) {
       const { stops, scheduled_date } = body;
       if (!Array.isArray(stops) || stops.length === 0 || !scheduled_date) {
         return NextResponse.json({ success: false, error: "stops array and scheduled_date required" }, { status: 400 });
+      }
+      if (isPastDateIST(scheduled_date)) {
+        return NextResponse.json({ success: false, error: "Cannot schedule stops on past dates. Please select today or a future date." }, { status: 400 });
       }
 
       const batch = adminDb.batch();

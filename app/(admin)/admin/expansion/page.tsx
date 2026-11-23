@@ -6,6 +6,7 @@ import { MapPin } from "lucide-react";
 import ExpansionClient from "@/components/admin/ExpansionClient";
 import { getGeoHierarchyData } from "@/lib/geo/geoHierarchyServer";
 import { resolveStaticHierarchy } from "@/lib/geo/geoHierarchy";
+import { resolvePincodeHierarchy } from "@/lib/geo/pincode-resolver";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -34,16 +35,17 @@ export default async function AdminExpansionPage() {
       const data = doc.data();
       const pin = data.detected_pincode || "";
       const meta = pin ? resolveStaticHierarchy(pin) : null;
+      const geo = pin ? resolvePincodeHierarchy(pin) : null;
 
       return {
         id: doc.id,
         customer_name: data.customer_name || "Anonymous",
         mobile_number: data.mobile_number || "N/A",
         detected_pincode: pin || "N/A",
-        detected_tehsil: data.detected_tehsil || meta?.tehsil || "General",
-        detected_city: data.detected_district || data.detected_city || meta?.district || "Unknown",
-        detected_district: data.detected_district || data.detected_city || meta?.district || "Unknown",
-        detected_state: data.detected_state || meta?.state || "Rajasthan",
+        detected_tehsil: data.detected_tehsil || meta?.tehsil || geo?.city || "General",
+        detected_city: data.detected_district || data.detected_city || geo?.city || geo?.district || "India",
+        detected_district: data.detected_district || data.detected_city || geo?.district || geo?.city || "India",
+        detected_state: data.detected_state || meta?.state || geo?.state || "India",
         detected_city_slug: data.detected_city_slug || "",
         waitlist_confirmed: data.waitlist_confirmed || false,
         created_at: data.created_at?.toDate?.()?.toISOString() || null,

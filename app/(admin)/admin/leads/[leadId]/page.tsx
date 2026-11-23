@@ -38,7 +38,8 @@ import {
   Tag
 } from "lucide-react";
 import { format } from "date-fns";
-import { safeFormatDate } from "@/lib/date-utils";
+import { safeFormatDate, isPastDateIST } from "@/lib/date-utils";
+import { formatLocationDisplay } from "@/lib/geo/pincode-resolver";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -217,7 +218,13 @@ export default function LeadDetailPage() {
                 <span>•</span>
                 <span className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 shrink-0" />
-                  {lead.address?.area ? `${lead.address.area}, ` : ""}{lead.address?.city || "Jaipur"} ({lead.address.pincode})
+                  {formatLocationDisplay({
+                    area: lead.address?.area || lead.address?.landmark1,
+                    city: lead.address?.city,
+                    district: lead.address?.district,
+                    state: lead.address?.state,
+                    pincode: lead.address?.pincode
+                  })}
                 </span>
               </>
             )}
@@ -482,6 +489,11 @@ export default function LeadDetailPage() {
                     <p className="font-bold text-zinc-900 dark:text-white text-sm">
                       {safeFormatDate(lead.site_visit_date, "EEEE, dd MMMM yyyy", t("adm_ld_date_tbd", "Date TBD"))}
                     </p>
+                    {isPastDateIST(lead.site_visit_date) && (
+                      <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                        ⚠️ {t("adm_ld_survey_overdue", "Survey Date Expired (Action Needed)")}
+                      </span>
+                    )}
                     <p className="text-purple-700 dark:text-purple-400 font-bold mt-0.5">
                       ⏰ {lead.site_visit_slot || "10:00 AM - 01:00 PM"}
                     </p>
@@ -493,8 +505,14 @@ export default function LeadDetailPage() {
                     </span>
                     <p className="font-medium text-zinc-900 dark:text-white line-clamp-2">
                       {typeof lead.address === "string" 
-                        ? lead.address 
-                        : lead.address?.full_address || lead.address?.street || billing?.address_line1 || t("adm_ld_addr_rec", "Customer address on record")}
+                        ? (lead.address.includes("Unknown") ? formatLocationDisplay({ pincode: lead.address }) : lead.address)
+                        : formatLocationDisplay({
+                            area: lead.address?.area || lead.address?.landmark1,
+                            city: lead.address?.city,
+                            district: lead.address?.district,
+                            state: lead.address?.state,
+                            pincode: lead.address?.pincode,
+                          }) || billing?.address_line1 || t("adm_ld_addr_rec", "Customer address on record")}
                     </p>
                     {lead.address?.pincode && (
                       <p className="text-zinc-500 font-bold mt-1">PIN: {lead.address.pincode}</p>

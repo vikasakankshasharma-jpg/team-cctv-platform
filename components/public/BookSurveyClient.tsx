@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 
 import { SmartAddressInput } from "@/components/shared/SmartAddressInput";
 import { useTranslation } from "@/hooks/useTranslation";
+import { getTodayIST, isPastDateIST } from "@/lib/date-utils";
 
 export function BookSurveyClient() {
   const { t, locale } = useTranslation();
@@ -47,8 +48,8 @@ export function BookSurveyClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.date) {
-      toast.error(t("bs_err_date", "Please select a date for the visit."));
+    if (!formData.date || isPastDateIST(formData.date)) {
+      toast.error(t("bs_err_date", "Please select a valid upcoming date for the visit."));
       return;
     }
     
@@ -135,7 +136,7 @@ export function BookSurveyClient() {
             }`}>
                 <input 
                   type="date"
-                  min={new Date().toISOString().split("T")[0]}
+                  min={getTodayIST()}
                   value={(!availableDates.map(d=>d.toISOString().split("T")[0]).includes(formData.date)) ? formData.date : ""}
                   onChange={(e) => setFormData({...formData, date: e.target.value})}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"

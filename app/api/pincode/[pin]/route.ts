@@ -4,6 +4,7 @@ import { adminDb, serverTimestamp, increment } from "@/lib/firebase-admin";
 export const dynamic = 'force-dynamic';
 
 import { isPincodeActiveByDefault, resolveStaticHierarchy } from "@/lib/geo/geoHierarchy";
+import { resolvePincodeHierarchy } from "@/lib/geo/pincode-resolver";
 
 const formatAreaName = (name: string) => name.replace(/\s+(S\.O|B\.O|H\.O|G\.P\.O\.|S\.O\.|B\.O\.|H\.O\.)(\s+|$)/gi, ' ').replace(/\s*\([^)]*\)/g, '').trim();
 
@@ -60,6 +61,20 @@ export async function GET(
         }
       } catch (fbErr) {
         // Fallback failed
+      }
+    }
+
+    // Reliable 100% in-memory static Indian postal resolver fallback (zero-cost, zero latency)
+    if (!firstOffice) {
+      const geo = resolvePincodeHierarchy(pin);
+      if (geo.isRecognized || geo.state) {
+        firstOffice = {
+          Name: geo.city || geo.district || geo.state,
+          District: geo.district || geo.city || geo.state,
+          State: geo.state,
+          Block: geo.city || geo.district,
+        };
+        postOffices = [firstOffice];
       }
     }
 

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { QuoteSnapshot } from "@/types";
 import { useTranslation } from "@/hooks/useTranslation";
+import { getTodayIST, isPastDateIST } from "@/lib/date-utils";
+import { toast } from "sonner";
 
 export default function LeadIntelligencePanel({ 
   lead, 
@@ -24,6 +26,10 @@ export default function LeadIntelligencePanel({
   );
 
   const handleSave = async () => {
+    if (expectedClosingDate && isPastDateIST(expectedClosingDate)) {
+      toast.error("Expected closing date cannot be in the past.");
+      return;
+    }
     setSaving(true);
     try {
       await fetch(`/api/crm/quotes/${lead.id}`, {
@@ -86,6 +92,7 @@ export default function LeadIntelligencePanel({
           <label className="block text-xs font-medium text-gray-500 mb-1">{t("adm_intel_exp_close", "Expected Closing")}</label>
           <input 
             type="date" 
+            min={getTodayIST()}
             value={expectedClosingDate} 
             onChange={(e) => setExpectedClosingDate(e.target.value)}
             className="w-full p-2 border rounded-md text-sm"

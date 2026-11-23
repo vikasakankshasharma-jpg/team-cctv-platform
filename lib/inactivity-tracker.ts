@@ -37,7 +37,7 @@ export function calculateInactivityAging(
     return {
       days_inactive: null,
       health: "never",
-      badge_text: "⚠️ Unknown",
+      badge_text: "✨ New / Pending",
       badge_color: "bg-zinc-100 text-zinc-600 border-zinc-200",
       is_overdue: false,
       last_touch_formatted: "Invalid date",

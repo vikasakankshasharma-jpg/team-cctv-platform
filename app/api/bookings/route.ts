@@ -6,6 +6,7 @@ import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
 import { COLLECTIONS } from "@/lib/constants";
 import { Msg91WhatsAppProvider } from "@/lib/whatsapp/msg91-provider";
 import { getApiMessage, resolveRequestLocale } from "@/lib/i18n/api-messages";
+import { getTomorrowIST, isPastDateIST, isPastSlotIST } from "@/lib/date-utils";
 
 /**
  * ENTERPRISE BOOKING SYSTEM
@@ -66,12 +67,20 @@ export async function POST(request: NextRequest) {
 
     // 2. Extract detailed visit data
     const { 
-      preferred_date = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0], 
+      preferred_date = getTomorrowIST(), 
       time_slot = "10:00 AM - 01:00 PM", 
       special_notes = "",
       customer_name = leadData?.customer_name || "Customer",
       customer_mobile = leadData?.mobile_number || ""
     } = body;
+
+    // Invariant: Site visit date cannot be in the past (IST)
+    if (!preferred_date || isPastDateIST(preferred_date)) {
+      return ApiResponse.badRequest("Site visit date cannot be in the past. Please select today or an upcoming date.");
+    }
+    if (isPastSlotIST(preferred_date, time_slot)) {
+      return ApiResponse.badRequest("The selected time slot for today has already passed. Please choose an upcoming time slot or tomorrow.");
+    }
 
     // 3. Persist Booking in site_visit_bookings
     const isTestBooking = customer_mobile === "9999999999" || customer_name.toLowerCase().includes("e2e test");

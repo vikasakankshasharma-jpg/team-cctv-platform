@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { extractErrorMessage } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
+import { getTodayIST, getTomorrowIST, isPastDateIST, isPastSlotIST } from "@/lib/date-utils";
 
 const HybridMap = dynamic(() => import("@/components/maps/HybridMap"), { ssr: false });
 
@@ -53,16 +54,18 @@ export function SiteVisitBookingModal({
     { id: "slot-evening", value: "05:00 PM - 08:00 PM", label: t("svb_slot_eve", "Evening (05:00 PM - 08:00 PM)"), icon: "🌆" },
   ];
 
-  const getTomorrowDate = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split("T")[0];
-  };
+  const getTomorrowDate = () => getTomorrowIST();
 
   const getDayAfterDate = () => {
-    const d = new Date();
-    d.setDate(d.getDate() + 2);
-    return d.toISOString().split("T")[0];
+    try {
+      const d = new Date();
+      d.setDate(d.getDate() + 2);
+      return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(d);
+    } catch {
+      const d = new Date();
+      d.setDate(d.getDate() + 2);
+      return d.toISOString().split("T")[0];
+    }
   };
 
   const [selectedDate, setSelectedDate] = useState(getTomorrowDate());
@@ -166,6 +169,14 @@ export function SiteVisitBookingModal({
     }
     if (!address.trim()) {
       toast.error(t("svb_err_addr", "Please enter your house/street address"));
+      return;
+    }
+    if (!selectedDate || isPastDateIST(selectedDate)) {
+      toast.error(t("svb_err_past_date", "Site visit date cannot be in the past. Please select today or a future date."));
+      return;
+    }
+    if (isPastSlotIST(selectedDate, selectedSlot)) {
+      toast.error("The selected time slot for today has already passed. Please choose an upcoming time slot or tomorrow.");
       return;
     }
 
@@ -356,7 +367,7 @@ export function SiteVisitBookingModal({
                   <div className="relative">
                     <input
                       type="date"
-                      min={new Date().toISOString().split("T")[0]}
+                      min={getTodayIST()}
                       value={selectedDate}
                       onChange={(e) => setSelectedDate(e.target.value)}
                       className="w-full h-full px-2 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-center"

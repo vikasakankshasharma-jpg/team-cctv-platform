@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { COLLECTIONS, SUBCOLLECTIONS } from "@/lib/constants";
 import { UpdateLeadStatusSchema } from "@/lib/validators";
 import { calculateCommission, resolvePromoterCommission } from "@/lib/commission";
+import { isPastDateIST } from "@/lib/date-utils";
 import type { Lead, Promoter } from "@/types";
 
 /**
@@ -692,6 +693,9 @@ export async function addLeadActivity(leadId: string, arg2: any, arg3?: any) {
 export async function updateNextFollowUp(leadId: string, dateString: string | null) {
   await requireAdmin();
   try {
+    if (dateString && isPastDateIST(dateString)) {
+      return { success: false, error: "Follow-up date cannot be in the past." };
+    }
     await adminDb.collection("leads").doc(leadId).update({
       next_followup_date: dateString,
       updated_at: serverTimestamp()

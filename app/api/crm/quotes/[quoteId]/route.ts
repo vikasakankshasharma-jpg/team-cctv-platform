@@ -4,6 +4,7 @@ import { toIsoStringSafe } from "@/lib/date-utils";
 import { getOrCreateLeadQuote } from "@/lib/baseline-quote";
 import { calculateQuotationProfitBreakup } from "@/lib/quotation-profit";
 import { fetchSingleQuoteProfitContext } from "@/lib/profit-context";
+import { resolvePincodeHierarchy } from "@/lib/geo/pincode-resolver";
 
 export async function GET(
   request: Request,
@@ -189,52 +190,77 @@ export async function GET(
       quoteData?.detected_pincode ||
       "";
 
-    const resolvedCity =
-      leadData?.address?.city ||
-      quoteData?.address?.city ||
-      leadData?.city ||
-      quoteData?.city ||
-      quoteData?.requirementSnapshot?.city ||
-      leadData?.wizard_answers?.city ||
-      leadData?.detected_city ||
-      "Jaipur";
+    // Universal Indian Pincode Self-Healing & Garbage Sanitizer
+    const fallbackGeo = resolvePincodeHierarchy(resolvedPincode);
+    const isGarbage = (s?: string | null) => {
+      if (!s) return true;
+      const lower = String(s).trim().toLowerCase();
+      return lower === "unknown" || lower === "undefined" || lower === "null" || lower === "";
+    };
 
-    const resolvedState =
-      leadData?.address?.state ||
-      quoteData?.address?.state ||
-      leadData?.state ||
-      quoteData?.state ||
-      quoteData?.requirementSnapshot?.state ||
-      leadData?.wizard_answers?.state ||
-      leadData?.detected_state ||
-      "Rajasthan";
+    const rawCityCandidates = [
+      leadData?.address?.city,
+      quoteData?.address?.city,
+      leadData?.city,
+      quoteData?.city,
+      quoteData?.requirementSnapshot?.city,
+      leadData?.wizard_answers?.city,
+      leadData?.detected_city,
+    ];
+    const foundValidCity = rawCityCandidates.find(c => !isGarbage(c));
+    const resolvedCity = foundValidCity || fallbackGeo.city;
 
-    const resolvedArea =
-      leadData?.address?.area ||
-      quoteData?.address?.area ||
-      leadData?.address?.landmark1 ||
-      quoteData?.requirementSnapshot?.locality ||
-      quoteData?.requirementSnapshot?.quadrant ||
-      quoteData?.requirementSnapshot?.anchor ||
-      quoteData?.requirementSnapshot?.area ||
-      leadData?.wizard_answers?.locality ||
-      leadData?.wizard_answers?.quadrant ||
-      leadData?.wizard_answers?.anchor ||
-      leadData?.locality ||
-      leadData?.area ||
-      "";
+    const rawDistrictCandidates = [
+      leadData?.address?.district,
+      quoteData?.address?.district,
+      leadData?.district,
+      quoteData?.district,
+      leadData?.detected_district,
+    ];
+    const foundValidDistrict = rawDistrictCandidates.find(d => !isGarbage(d));
+    const resolvedDistrict = foundValidDistrict || fallbackGeo.district;
 
-    const resolvedLine1 =
-      leadData?.address?.address_line1 ||
-      quoteData?.address?.address_line1 ||
-      leadData?.address?.full_address ||
-      quoteData?.address?.full_address ||
-      leadData?.full_address ||
-      quoteData?.full_address ||
-      quoteData?.requirementSnapshot?.full_address ||
-      leadData?.wizard_answers?.address_line1 ||
-      leadData?.wizard_answers?.full_address ||
-      "";
+    const rawStateCandidates = [
+      leadData?.address?.state,
+      quoteData?.address?.state,
+      leadData?.state,
+      quoteData?.state,
+      quoteData?.requirementSnapshot?.state,
+      leadData?.wizard_answers?.state,
+      leadData?.detected_state,
+    ];
+    const foundValidState = rawStateCandidates.find(st => !isGarbage(st));
+    const resolvedState = foundValidState || fallbackGeo.state;
+
+    const rawAreaCandidates = [
+      leadData?.address?.area,
+      quoteData?.address?.area,
+      leadData?.address?.landmark1,
+      quoteData?.requirementSnapshot?.locality,
+      quoteData?.requirementSnapshot?.quadrant,
+      quoteData?.requirementSnapshot?.anchor,
+      quoteData?.requirementSnapshot?.area,
+      leadData?.wizard_answers?.locality,
+      leadData?.wizard_answers?.quadrant,
+      leadData?.wizard_answers?.anchor,
+      leadData?.locality,
+      leadData?.area,
+    ];
+    const resolvedArea = rawAreaCandidates.find(a => !isGarbage(a)) || "";
+
+    const rawLine1Candidates = [
+      leadData?.address?.address_line1,
+      quoteData?.address?.address_line1,
+      leadData?.address?.full_address,
+      quoteData?.address?.full_address,
+      leadData?.full_address,
+      quoteData?.full_address,
+      quoteData?.requirementSnapshot?.full_address,
+      leadData?.wizard_answers?.address_line1,
+      leadData?.wizard_answers?.full_address,
+    ];
+    const rawLine1 = rawLine1Candidates.find(l => !isGarbage(l)) || "";
+    const resolvedLine1 = isGarbage(rawLine1) ? "" : rawLine1;
 
     const resolvedCoords =
       leadData?.address?.coordinates ||
@@ -245,14 +271,22 @@ export async function GET(
       (leadData?.wizard_answers?.lat && leadData?.wizard_answers?.lng ? { lat: leadData.wizard_answers.lat, lng: leadData.wizard_answers.lng } : null) ||
       null;
 
+    const cleanFullAddress = resolvedLine1
+      ? resolvedLine1
+      : [resolvedArea, resolvedDistrict !== resolvedCity ? resolvedDistrict : null, resolvedCity, resolvedState, resolvedPincode]
+          .filter(Boolean)
+          .filter(s => !isGarbage(s))
+          .join(", ");
+
     const mergedAddress = {
       pincode: resolvedPincode,
       city: resolvedCity,
+      district: resolvedDistrict,
       state: resolvedState,
       area: resolvedArea,
       landmark1: resolvedArea,
       address_line1: resolvedLine1,
-      full_address: resolvedLine1 || [resolvedArea, resolvedCity, resolvedState, resolvedPincode].filter(Boolean).join(", "),
+      full_address: cleanFullAddress,
       coordinates: resolvedCoords,
       map_url: leadData?.address?.map_url || (resolvedCoords ? `https://www.google.com/maps?q=${resolvedCoords.lat},${resolvedCoords.lng}` : (resolvedPincode ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(resolvedPincode + " " + resolvedCity)}` : "")),
     };

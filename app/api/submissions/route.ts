@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { CreateLeadSchema } from "@/lib/validators";
 import { adminDb, arrayUnion, serverTimestamp, increment } from "@/lib/firebase-admin";
 import { isPincodeActiveByDefault, resolveStaticHierarchy } from "@/lib/geo/geoHierarchy";
+import { resolvePincodeHierarchy } from "@/lib/geo/pincode-resolver";
 import { rateLimit } from "@/lib/rate-limit";
 import { ApiResponse } from "@/lib/api-response";
 import { calculateSlaDeadline, OperatingHours } from "@/lib/sla-engine";
@@ -76,11 +77,28 @@ export async function POST(request: NextRequest) {
     const staticMeta = pincode ? resolveStaticHierarchy(pincode) : null;
     const isServed = pincode ? isPincodeActiveByDefault(pincode) : Boolean(locationData?.served);
 
+    const resolvedGeo = resolvePincodeHierarchy(pincode);
+    const cleanCity = city && city.toLowerCase() !== "unknown" ? city : "";
+    const cleanState = state && state.toLowerCase() !== "unknown" ? state : "";
+
+    const effectiveCity = staticMeta?.district || locationData?.city || cleanCity || (resolvedGeo.isRecognized ? resolvedGeo.city : "Jaipur");
+    const effectiveDistrict = staticMeta?.district || locationData?.city || cleanCity || (resolvedGeo.isRecognized ? resolvedGeo.district : "Jaipur");
+    const effectiveState = staticMeta?.state || cleanState || (resolvedGeo.isRecognized ? resolvedGeo.state : "Rajasthan");
+
     // --- TERRITORY MAPPING & AUTO ASSIGNMENT ---
     const { findEligiblePartners } = await import("@/lib/territory");
     const { sendCustomerWhatsApp, sendAdminNotification } = await import("@/lib/notification-service");
     const { getAllActiveSalespersons } = await import("@/lib/salesperson-utils");
-    const leadAddress = { pincode, city, state, full_address: `${city} ${state} ${pincode}`, coordinates: undefined, landmark1: "", landmark2: "" };
+    const leadAddress = { 
+      pincode, 
+      city: effectiveCity, 
+      district: effectiveDistrict, 
+      state: effectiveState, 
+      full_address: [effectiveCity, effectiveState, pincode].filter(Boolean).filter(s => s.toLowerCase() !== "unknown").join(", "), 
+      coordinates: undefined, 
+      landmark1: "", 
+      landmark2: "" 
+    };
     
     // Fetch active Salespersons (resilient lookup across salespeople / salespersons)
     const allSalespersons = await getAllActiveSalespersons();
@@ -200,13 +218,15 @@ export async function POST(request: NextRequest) {
       sla_breach_at:         slaBreachAt,
       is_escalated:          is_escalated,
 
+      address:               leadAddress,
+
       // Expansion Tracking Fields
       detected_pincode:      pincode || null,
       detected_tehsil:       staticMeta?.tehsil || null,
-      detected_city:         staticMeta?.district || (locationData?.city ?? "Unknown"),
-      detected_district:     staticMeta?.district || (locationData?.city ?? "Unknown"),
-      detected_city_slug:    locationData?.slug ?? (staticMeta?.district ? staticMeta.district.toLowerCase().replace(/\s+/g, '-') : null),
-      detected_state:        staticMeta?.state || state || "Rajasthan",
+      detected_city:         effectiveCity,
+      detected_district:     effectiveDistrict,
+      detected_city_slug:    locationData?.slug ?? (effectiveCity ? effectiveCity.toLowerCase().replace(/\s+/g, '-') : "jaipur"),
+      detected_state:        effectiveState,
       service_status:        isServed ? "active" : "waitlist",
       is_reference_quote:    !isServed,
       waitlist_confirmed:    false,

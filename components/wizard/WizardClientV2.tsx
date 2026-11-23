@@ -3529,6 +3529,17 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                     mode="compact"
                     pincode={req.customer_pincode || ""}
                     onPincodeChange={(val) => setReq(prev => ({ ...prev, customer_pincode: val }))}
+                    onLocationResolved={(loc) => {
+                      setReq(prev => ({
+                        ...prev,
+                        customer_city: loc.city,
+                        customer_district: loc.district,
+                        customer_state: loc.state,
+                        city: loc.city,
+                        district: loc.district,
+                        state: loc.state,
+                      }));
+                    }}
                     selectedQuadrant={req.quadrant || ""}
                     initialCoords={req.lat && req.lng ? { lat: req.lat, lng: req.lng } : undefined}
                     onCoordinatesChange={(coords) => {
