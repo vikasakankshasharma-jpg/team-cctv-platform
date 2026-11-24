@@ -847,7 +847,7 @@ export function calculateQuotationProfitBreakup(
   const warnings: string[] = [];
   let status: "healthy" | "subsidized" | "low_margin" | "critical" = "healthy";
   let badge_text = "Healthy Deal (Strong Product Margin)";
-  let description = "Product margin, service margin, and net pocket profitability meet operational targets.";
+  let description = `Safe & profitable deal: Healthy margins across equipment and labor. You retain approx. ₹${netProfit.toLocaleString("en-IN")} (${netMarginPercent}%) in-hand net profit after all expenses.`;
 
   if (productMarginPercent < 0 || overallMarginPercent < 5 || netMarginPercent < 0) {
     status = "critical";
@@ -866,19 +866,22 @@ export function calculateQuotationProfitBreakup(
     warnings.push(`Target threshold is ${minMarginThreshold}%, but this deal provides ${overallMarginPercent}% blended margin (${netMarginPercent}% net after overheads).`);
   }
 
-  if (referralCommissionCost > 0) {
-    warnings.push(`Referral/Partner deduction: ₹${referralCommissionCost.toLocaleString("en-IN")} (${referralCommissionLabel}) counted in Services.`);
-  }
-  if (hasQuotedPromoFreeAmc) {
-    const promoCost = processedItems.filter(i => i.category === "amc").reduce((s, i) => s + i.cost_total, 0);
-    if (promoCost > 0) {
-      warnings.push(`Free 1st-Yr AMC promo obligation adds ₹${promoCost.toLocaleString("en-IN")} in estimated Service fulfillment cost.`);
+  // Only attach operational overhead deductions to warnings when deal health is actually at risk or subsidized
+  if (status !== "healthy") {
+    if (referralCommissionCost > 0) {
+      warnings.push(`Referral/Partner deduction: ₹${referralCommissionCost.toLocaleString("en-IN")} (${referralCommissionLabel}) counted in Services.`);
     }
-  }
-  if (totalOverheads > 0) {
-    warnings.push(
-      `Overheads deduct ₹${totalOverheads.toLocaleString("en-IN")} (PG Fee: ₹${paymentGatewayFee.toLocaleString("en-IN")}, Warranty Reserve: ₹${warrantyReserve.toLocaleString("en-IN")}, Consumables: ₹${logisticsConsumables.toLocaleString("en-IN")}), leaving ₹${netProfit.toLocaleString("en-IN")} (${netMarginPercent}%) Net Pocket Profit.`
-    );
+    if (hasQuotedPromoFreeAmc) {
+      const promoCost = processedItems.filter(i => i.category === "amc").reduce((s, i) => s + i.cost_total, 0);
+      if (promoCost > 0) {
+        warnings.push(`Free 1st-Yr AMC promo obligation adds ₹${promoCost.toLocaleString("en-IN")} in estimated Service fulfillment cost.`);
+      }
+    }
+    if (totalOverheads > 0) {
+      warnings.push(
+        `Overheads deduct ₹${totalOverheads.toLocaleString("en-IN")} (PG Fee: ₹${paymentGatewayFee.toLocaleString("en-IN")}, Warranty Reserve: ₹${warrantyReserve.toLocaleString("en-IN")}, Consumables: ₹${logisticsConsumables.toLocaleString("en-IN")}), leaving ₹${netProfit.toLocaleString("en-IN")} (${netMarginPercent}%) Net Pocket Profit.`
+      );
+    }
   }
 
   // Supply-Only comparison simulation (hardware revenue is already GST-inclusive)

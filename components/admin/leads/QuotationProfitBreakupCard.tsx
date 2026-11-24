@@ -9,7 +9,10 @@ import {
   TrendingDown, 
   Layers, 
   ShieldCheck, 
-  AlertTriangle, 
+  AlertTriangle,
+  AlertCircle,
+  AlertOctagon,
+  CheckCircle2, 
   Wrench, 
   Package, 
   Cpu, 
@@ -82,11 +85,11 @@ export function QuotationProfitBreakupCard({
 
   const getHealthBadgeText = () => {
     if (health.status === "critical") return t("adm_qpb_hl_crit_b", "Critical Margin Risk");
-    if (health.status === "subsidized") return t("adm_qpb_hl_sub_b", "Service Subsidized (Low Material Margin)");
+    if (health.status === "subsidized") return t("adm_qpb_hl_sub_b", "Low Material Margin (Labor Subsidized)");
     if (health.status === "low_margin") return t("adm_qpb_hl_low_b", "Low Margin Alert");
     return health.badge_text === "No Quote Data"
       ? t("adm_qpb_hl_nodata", "No Quote Data")
-      : t("adm_qpb_hl_healthy", "Healthy Margin");
+      : t("adm_qpb_hl_healthy", "Healthy & Profitable Deal");
   };
 
   const getHealthDescription = () => {
@@ -94,11 +97,14 @@ export function QuotationProfitBreakupCard({
       case "critical":
         return t("adm_qpb_hl_crit_d", "Deal is operating at or near negative margin. Any on-site rework or warranty replacement will generate a net loss.");
       case "subsidized":
-        return t("adm_qpb_hl_sub_d", "Hardware is priced near distributor cost; profitability is almost entirely dependent on installation labor.");
+        return t("adm_qpb_hl_sub_d", "Hardware is priced near distributor cost; profitability depends heavily on installation labor.");
       case "low_margin":
         return t("adm_qpb_hl_low_d", "Total blended margin ({overall}%) is below company target.", { overall: String(overall.margin_percent) });
       default:
-        return health.description;
+        return t("adm_qpb_hl_healthy_d", "Healthy margins across equipment and labor. You retain approx. {amt} ({pct}%) in-hand net profit after all expenses.", {
+          amt: formatInr(overheads?.net_profit ?? overall.profit),
+          pct: formatPct(overheads?.net_margin_percent ?? overall.margin_percent)
+        });
     }
   };
 
@@ -330,7 +336,7 @@ export function QuotationProfitBreakupCard({
             {overheads && overheads.total_overheads > 0 && (
               <div className="mt-2 px-2 py-1.5 rounded-lg bg-emerald-600/10 dark:bg-emerald-950/50 border border-emerald-500/20 flex flex-wrap items-center justify-between gap-1 text-[10px]">
                 <span className="font-semibold text-emerald-900 dark:text-emerald-200">
-                  Net Pocket Profit (after -{formatInr(overheads.total_overheads)} overheads):
+                  {t("adm_qpb_inhand_net_label", "Net In-Hand Profit (after -{amt} overheads):", { amt: formatInr(overheads.total_overheads) })}
                 </span>
                 <span className={`font-black ${overheads.net_profit >= 0 ? "text-emerald-700 dark:text-emerald-300" : "text-rose-600 dark:text-rose-400"}`}>
                   {formatInr(overheads.net_profit)} ({formatPct(overheads.net_margin_percent)})
@@ -345,22 +351,44 @@ export function QuotationProfitBreakupCard({
 
         </div>
 
-        {/* Diagnostic Alert Banner (if any warning or subsidized) */}
-        {health.warnings.length > 0 && (
-          <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs flex items-start gap-2.5 text-amber-900 dark:text-amber-200">
-            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+        {/* Diagnostic Status Banner (Green for Healthy Deal, Dynamic Warning for Risks) */}
+        {health.status === "healthy" ? (
+          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 text-xs flex items-start gap-2.5 text-emerald-900 dark:text-emerald-200">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <p className="font-bold">{t("adm_qpb_hl_healthy_t", "Safe & Profitable Deal (Healthy Margins)")}</p>
+              <p className="text-emerald-800 dark:text-emerald-300 text-[11px] leading-relaxed">
+                {getHealthDescription()}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className={`p-3 rounded-xl text-xs flex items-start gap-2.5 ${
+            health.status === "critical"
+              ? "bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 text-rose-900 dark:text-rose-200"
+              : health.status === "low_margin"
+              ? "bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/60 text-orange-900 dark:text-orange-200"
+              : "bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200"
+          }`}>
+            {health.status === "critical" ? (
+              <AlertOctagon className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            ) : health.status === "low_margin" ? (
+              <AlertCircle className="w-4 h-4 text-orange-600 shrink-0 mt-0.5" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            )}
             <div className="space-y-0.5">
               <p className="font-bold">{getHealthDescription()}</p>
               {getHealthWarning() ? (
                 <>
-                  <p className="text-amber-800 dark:text-amber-300 text-[11px]">• {getHealthWarning()}</p>
+                  <p className="text-[11px] opacity-90">• {getHealthWarning()}</p>
                   {health.warnings.slice(1).map((warn, i) => (
-                    <p key={i} className="text-amber-800 dark:text-amber-300 text-[11px]">• {warn}</p>
+                    <p key={i} className="text-[11px] opacity-90">• {warn}</p>
                   ))}
                 </>
               ) : (
                 health.warnings.map((warn, i) => (
-                  <p key={i} className="text-amber-800 dark:text-amber-300 text-[11px]">• {warn}</p>
+                  <p key={i} className="text-[11px] opacity-90">• {warn}</p>
                 ))
               )}
             </div>
@@ -374,7 +402,7 @@ export function QuotationProfitBreakupCard({
             {/* Visual Revenue Share Bar */}
             <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl space-y-1.5 border border-zinc-200/60 dark:border-zinc-800/60">
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold">
-                <span className="text-muted-foreground">{t("adm_qpb_turnkey_comp", "Turnkey Composition:")}</span>
+                <span className="text-muted-foreground">{t("adm_qpb_turnkey_comp", "Turnkey Composition (Equipment vs Labor):")}</span>
                 <div className="flex flex-wrap items-center gap-4 text-[11px]">
                   <span className="flex items-center gap-1 text-blue-700 dark:text-blue-400">
                     <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block shrink-0" />
@@ -404,43 +432,80 @@ export function QuotationProfitBreakupCard({
 
             {/* True Net Pocket Profit & Operating Overhead Waterfall */}
             {overheads && (
-              <div className="p-3 rounded-xl bg-zinc-50/90 dark:bg-zinc-900/70 border border-zinc-200/80 dark:border-zinc-800 space-y-2">
+              <div className="p-3.5 rounded-xl bg-zinc-50/90 dark:bg-zinc-900/70 border border-zinc-200/80 dark:border-zinc-800 space-y-2.5">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-                    <DollarSign className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    True Net Pocket Profit Waterfall (After Services, Commissions &amp; Overheads)
+                    <DollarSign className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>{t("adm_qpb_net_inhand_t", "In-Hand Net Pocket Profit (After all expenses & warranty reserve)")}</span>
                   </span>
-                  <span className={`font-black font-mono ${overheads.net_profit >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                  <span className={`font-black font-mono text-sm ${overheads.net_profit >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                     {formatInr(overheads.net_profit)} ({formatPct(overheads.net_margin_percent)})
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-                  <div className="p-2 rounded-lg bg-white dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60">
-                    <span className="text-[10px] text-muted-foreground block font-semibold">
-                      PG MDR ({overheads.payment_gateway_is_actual ? "Actual" : overheads.payment_gateway_fee === 0 ? "Cash/UPI" : "Est."})
-                    </span>
-                    <span className="font-mono font-bold text-rose-600 dark:text-rose-400">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px]">
+                  {/* Card 1: PG MDR / Online Fee */}
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[11px] text-zinc-700 dark:text-zinc-300 block font-bold">
+                        {t("adm_qpb_ovh_pg_t", "Payment Gateway Fee")}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground block leading-tight mt-0.5">
+                        {overheads.payment_gateway_fee === 0
+                          ? t("adm_qpb_ovh_pg_cash", "₹0 on Cash/Direct UPI")
+                          : overheads.payment_gateway_is_actual
+                          ? t("adm_qpb_ovh_pg_act", "Actual Razorpay Charge")
+                          : t("adm_qpb_ovh_pg_est", "Card/Online Fee (₹0 on Cash)")}
+                      </span>
+                    </div>
+                    <span className="font-mono font-bold text-rose-600 dark:text-rose-400 text-xs mt-2 block">
                       -{formatInr(overheads.payment_gateway_fee)}
                     </span>
                   </div>
-                  <div className="p-2 rounded-lg bg-white dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60">
-                    <span className="text-[10px] text-muted-foreground block font-semibold">1st-Yr Warranty Reserve</span>
-                    <span className="font-mono font-bold text-rose-600 dark:text-rose-400">
+
+                  {/* Card 2: 1-Yr Warranty Fund */}
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[11px] text-zinc-700 dark:text-zinc-300 block font-bold">
+                        {t("adm_qpb_ovh_warr_t", "1-Yr Warranty Fund")}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground block leading-tight mt-0.5">
+                        {t("adm_qpb_ovh_warr_sub", "Reserve for site warranty visits")}
+                      </span>
+                    </div>
+                    <span className="font-mono font-bold text-rose-600 dark:text-rose-400 text-xs mt-2 block">
                       -{formatInr(overheads.warranty_reserve)}
                     </span>
                   </div>
-                  <div className="p-2 rounded-lg bg-white dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60">
-                    <span className="text-[10px] text-muted-foreground block font-semibold">Consumables &amp; Local Ops</span>
-                    <span className="font-mono font-bold text-rose-600 dark:text-rose-400">
+
+                  {/* Card 3: Consumables & Site Misc */}
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[11px] text-zinc-700 dark:text-zinc-300 block font-bold">
+                        {t("adm_qpb_ovh_cons_t", "Consumables & Site Misc")}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground block leading-tight mt-0.5">
+                        {t("adm_qpb_ovh_cons_sub", "Fasteners, tape & fittings")}
+                      </span>
+                    </div>
+                    <span className="font-mono font-bold text-rose-600 dark:text-rose-400 text-xs mt-2 block">
                       -{formatInr(overheads.logistics_consumables)}
                     </span>
                   </div>
-                  <div className="p-2 rounded-lg bg-white dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60">
-                    <span className="text-[10px] text-muted-foreground block font-semibold">
-                      {overheads.installer_payout_bonus > 0 ? "Installer Bonus & Overheads" : "Total Overheads"}
-                    </span>
-                    <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">
+
+                  {/* Card 4: Total Overheads */}
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[11px] text-zinc-700 dark:text-zinc-300 block font-bold">
+                        {overheads.installer_payout_bonus > 0 
+                          ? t("adm_qpb_ovh_tot_bonus", "Total Deductions & Bonus") 
+                          : t("adm_qpb_ovh_tot_t", "Total Deductions & Overheads")}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground block leading-tight mt-0.5">
+                        {t("adm_qpb_ovh_tot_sub", "Combined operational expenses")}
+                      </span>
+                    </div>
+                    <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100 text-xs mt-2 block">
                       -{formatInr(overheads.total_overheads)}
                     </span>
                   </div>
