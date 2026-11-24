@@ -285,7 +285,7 @@ export function InteractivePageTour({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[9990] bg-black/50 supports-[backdrop-filter]:backdrop-blur-[1px] pointer-events-auto"
+        className="fixed inset-0 z-[9990] bg-black/50 supports-[backdrop-filter]:backdrop-blur-[1px] pointer-events-auto touch-none"
         aria-hidden="true"
         onClick={handleSkipPage}
       />
@@ -322,7 +322,7 @@ export function InteractivePageTour({
         className={`fixed left-3 right-3 sm:left-auto sm:right-6 sm:w-[380px] max-h-[85vh] overflow-y-auto z-[9999] rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-2xl animate-tour-card-enter transition-all duration-200 ${
           position === "bottom"
             ? "bottom-[calc(1rem+env(safe-area-inset-bottom))]"
-            : "top-4"
+            : "top-[calc(1rem+env(safe-area-inset-top))]"
         }`}
       >
         {/* Progress & Skip */}
