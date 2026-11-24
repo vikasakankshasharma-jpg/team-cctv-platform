@@ -215,7 +215,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     };
     
     const initialCamCount = getNum(lead.wizard_answers?.["camera_count"], lead.wizard_answers?.["q_cam_count"], 4);
-    const initialDays = getNum(lead.wizard_answers?.["recording_days"], lead.wizard_answers?.["q_storage"], 15);
+    const initialDays = getNum(lead.wizard_answers?.["recording_days"], lead.wizard_answers?.["q_storage"], 7);
     
     const wantsAmcRaw = lead.wizard_answers?.["wants_amc"] ?? lead.wizard_answers?.["q_amc"];
     const wantsAmc = typeof wantsAmcRaw === 'string' ? wantsAmcRaw === 'true' : !!wantsAmcRaw;
@@ -304,6 +304,10 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       is_4g: !!lead.wizard_answers?.["is_4g"] || !!lead.wizard_answers?.["has_4g_sim"] || lead.wizard_answers?.["broadband_status"] === "independent_4g",
       mixed_camera_requirements: mixedReqs,
       recording_days: initialDays,
+      existing_recorder_channels: Number(lead.wizard_answers?.["existing_recorder_channels"] || lead.wizard_answers?.["existing_channels"] || (lead as any).existing_recorder_channels || 0),
+      existing_working_cameras: Number(lead.wizard_answers?.["existing_working_cameras"] || lead.wizard_answers?.["working_cameras"] || (lead as any).existing_working_cameras || 0),
+      retain_existing_storage: Boolean(lead.wizard_answers?.["retain_existing_storage"] ?? (lead as any).retain_existing_storage ?? false),
+      recorder_mode: (lead.wizard_answers?.["recorder_mode"] as any) || "dual",
       recording_mode: ((lead.wizard_answers?.["recording_mode"] as string) || (lead.wizard_answers?.["q_recording_mode"] as string) || "motion") as "continuous" | "motion" | "smart",
       ceiling_height: (lead.wizard_answers?.["q_height"] as any) || "standard",
       wants_amc: wantsAmc,

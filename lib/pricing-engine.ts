@@ -785,11 +785,18 @@ function calculateHardware(
   if (wiredCameraCount > 0 && !isExistingRecorderSufficient) {
     let requiredRecorderChannels = wiredCameraCount;
     if (existingCh > 0) {
-      if ((selection as any).recorder_mode === "dual") {
+      if ((selection as any).recorder_mode !== "single") {
+        // Default to dual recorder combo for lowest customer price
         const sparePorts = Math.max(0, existingCh - existingWork);
         requiredRecorderChannels = Math.max(1, wiredCameraCount - sparePorts);
       } else {
         requiredRecorderChannels = totalCombinedWired;
+      }
+      if ((selection as any).custom_recorder_channels) {
+        const customCh = Number((selection as any).custom_recorder_channels);
+        if (customCh >= requiredRecorderChannels) {
+          requiredRecorderChannels = customCh;
+        }
       }
     }
 

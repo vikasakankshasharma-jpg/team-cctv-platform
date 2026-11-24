@@ -3,7 +3,7 @@ import { Product, Addon, AppSettings, ConfiguratorSelection, PricingResult } fro
 import { calculatePricing } from "@/lib/pricing-engine";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Check, Filter, Tag, ChevronDown, ChevronRight, Plus, Trash2, Info, HelpCircle, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Sparkles, Check, Filter, Tag, ChevronDown, ChevronRight, Plus, Trash2, Info, HelpCircle, ShieldCheck, AlertTriangle, HardDrive } from "lucide-react";
 import { TagGuideModal } from "./TagGuideModal";
 import { StorageAdvisoryModal } from "./StorageAdvisoryModal";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -154,7 +154,7 @@ export function DynamicVariantGenerator({
   });
 
   const [selectedStorageDays, setSelectedStorageDays] = useState<number>(() => {
-    return Number(selection.recording_days) || 15;
+    return Number(selection.recording_days) || 7;
   });
 
   const [selectedStorageBrand, setSelectedStorageBrand] = useState<string>(() => {
@@ -165,12 +165,15 @@ export function DynamicVariantGenerator({
     return (selection as any).sensor_preference || "all";
   });
 
-  const isFiltered = activeBrand !== "all" || selectedStorageDays !== 15 || selectedStorageBrand !== "all" || selectedSensorType !== "all" || (activeTech === "hybrid" && hybridWiredTech !== "all");
+  const [recorderStrategy, setRecorderStrategy] = useState<"dual_exact" | "dual_future" | "single_master">("dual_exact");
+
+  const isFiltered = activeBrand !== "all" || selectedStorageDays !== 7 || selectedStorageBrand !== "all" || selectedSensorType !== "all" || recorderStrategy !== "dual_exact" || (activeTech === "hybrid" && hybridWiredTech !== "all");
   const handleResetFilters = () => {
     setActiveBrand("all");
-    setSelectedStorageDays(15);
+    setSelectedStorageDays(7);
     setSelectedStorageBrand("all");
     setSelectedSensorType("all");
+    setRecorderStrategy("dual_exact");
     setHybridWiredTech("all");
     setShowModeSwitcher(false);
   };
@@ -322,6 +325,13 @@ export function DynamicVariantGenerator({
   const hasOutdoor = outdoorCount > 0;
   const hasIndoor = indoorCount > 0;
   const isMixed = hasOutdoor && hasIndoor;
+
+  const existingChannels = Number((selection as any).existing_recorder_channels || (selection as any).existing_channels || 0);
+  const existingWorkingCameras = Number((selection as any).existing_working_cameras || (selection as any).working_cameras || 0);
+  const totalCombinedWired = totalWiredCount + existingWorkingCameras;
+  const isExistingUpgradeNeeded = existingChannels > 0 && totalCombinedWired > existingChannels;
+  const sparePorts = existingChannels > 0 ? Math.max(0, existingChannels - existingWorkingCameras) : 0;
+  const minNewChannelsNeeded = Math.max(1, totalWiredCount - sparePorts);
   
   const { availableBrands, availableResolutions } = useMemo(() => {
     const brandSet = new Set<string>();
@@ -811,6 +821,8 @@ export function DynamicVariantGenerator({
             recording_days: selectedStorageDays,
             is_economy_storage: isEconomy as any,
             target_storage_tb: targetStorageTB,
+            recorder_mode: recorderStrategy === "single_master" ? "single" : "dual",
+            custom_recorder_channels: recorderStrategy === "dual_future" ? (minNewChannelsNeeded <= 4 ? 8 : 16) : undefined,
           };
 
           const rawStandard = calculatePricing({
@@ -861,6 +873,8 @@ export function DynamicVariantGenerator({
             recording_days: selectedStorageDays,
             is_economy_storage: isEconomy as any,
             target_storage_tb: targetStorageTB,
+            recorder_mode: recorderStrategy === "single_master" ? "single" : "dual",
+            custom_recorder_channels: recorderStrategy === "dual_future" ? (minNewChannelsNeeded <= 4 ? 8 : 16) : undefined,
           };
 
           const rawColor = calculatePricing({
@@ -905,7 +919,7 @@ export function DynamicVariantGenerator({
       variants: results,
       allHybridCount: activeTech === "hybrid" ? results.length : 0,
     };
-  }, [activeTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, cablingMeters, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions, selectedStorageDays, selectedStorageBrand, selectedSensorType, t]);
+  }, [activeTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, cablingMeters, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions, selectedStorageDays, selectedStorageBrand, selectedSensorType, recorderStrategy, minNewChannelsNeeded, t]);
 
   const variants = useMemo<PricingResult[]>(() => {
     const filtered = activeTech === "hybrid" && hybridWiredTech !== "all"
@@ -1292,6 +1306,67 @@ export function DynamicVariantGenerator({
               >
                 <span>{t("dvg_switch_1tb")}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Existing System Recorder Sizing Strategy Selector */}
+        {isExistingUpgradeNeeded && (
+          <div className="w-full mt-2.5 p-3 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/40 border border-indigo-200/90 dark:border-indigo-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left animate-in fade-in">
+            <div className="space-y-0.5 min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs font-black text-indigo-950 dark:text-indigo-200 flex items-center gap-1">
+                  <HardDrive className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  {t("dvg_rec_strategy_title", "नया रिकॉर्डर विकल्प (पुराने {ch}-Ch में {cam} कैमरे):", { ch: String(existingChannels), cam: String(totalCombinedWired) })}
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-200 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200">
+                  {recorderStrategy === "dual_exact" ? "💰 न्यूनतम बजट (सटीक फिट)" : recorderStrategy === "dual_future" ? "🚀 फ्यूचर रेडी (स्पेयर पोर्ट्स)" : "📺 ऑल-इन-वन (सिंगल स्क्रीन)"}
+                </span>
+              </div>
+              <p className="text-[11px] text-indigo-800/80 dark:text-indigo-300">
+                {recorderStrategy === "dual_exact"
+                  ? t("dvg_rec_exact_desc", "पुराना {ch}-Ch DVR चालू रहेगा + {newCh}-Ch नया DVR कॉम्बो (न्यूनतम बजट, अधिकतम बचत)", { ch: String(existingChannels), newCh: String(minNewChannelsNeeded <= 4 ? 4 : 8) })
+                  : recorderStrategy === "dual_future"
+                  ? t("dvg_rec_future_desc", "पुराना {ch}-Ch चालू रहेगा + {futureCh}-Ch नया DVR (नए कैमरे अभी + {spare} पोर्ट भविष्य के लिए खाली)", { ch: String(existingChannels), futureCh: String(minNewChannelsNeeded <= 4 ? 8 : 16), spare: String(minNewChannelsNeeded <= 4 ? 8 - minNewChannelsNeeded : 16 - minNewChannelsNeeded) })
+                  : t("dvg_rec_single_desc", "पुराना DVR रिप्लेस होगा + 1 नया मास्टर DVR (सभी {tot} कैमरे एक ही टीवी स्क्रीन व एक ऐप पर)", { tot: String(totalCombinedWired) })
+                }
+              </p>
+            </div>
+
+            <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+              <button
+                type="button"
+                onClick={() => setRecorderStrategy("dual_exact")}
+                className={`px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+                  recorderStrategy === "dual_exact"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:border-indigo-400"
+                }`}
+              >
+                <span>💰 {minNewChannelsNeeded <= 4 ? "4-Ch" : "8-Ch"} न्यूनतम लागत</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRecorderStrategy("dual_future")}
+                className={`px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+                  recorderStrategy === "dual_future"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:border-indigo-400"
+                }`}
+              >
+                <span>🚀 {minNewChannelsNeeded <= 4 ? "8-Ch" : "16-Ch"} फ्यूचर रेडी</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRecorderStrategy("single_master")}
+                className={`px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+                  recorderStrategy === "single_master"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:border-indigo-400"
+                }`}
+              >
+                <span>📺 सिंगल स्क्रीन</span>
               </button>
             </div>
           </div>

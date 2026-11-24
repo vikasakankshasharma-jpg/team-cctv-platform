@@ -454,6 +454,7 @@ export interface AddonRule {
   force_new_recorder?: boolean;
   retain_existing_storage?: boolean;
   recorder_mode?: "single" | "dual";
+  custom_recorder_channels?: number;
     requirements?: string[];
     
     // NEW: Scaling rules
@@ -534,6 +535,7 @@ export interface ConfiguratorSelection {
   force_new_recorder?: boolean;
   retain_existing_storage?: boolean;
   recorder_mode?: "single" | "dual";
+  custom_recorder_channels?: number;
   partner_id?: string;
   utm_source?: string;
   utm_campaign?: string;
