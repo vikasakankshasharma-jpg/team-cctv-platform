@@ -325,3 +325,32 @@
        - `[ 📺 16-Ch सिंगल स्क्रीन (ऑल-इन-वन) ]`: Replaces the old DVR with a single master recorder for 1 unified TV and mobile app screen.
      - Tapping any pill recalculates the entire quotation catalog in real-time ($0 reload latency).
      - **Cabling & Power Supply Protection:** SMPS and cabling are sized strictly for the new cameras being installed today ($\text{WiredCameraCount}$), never inflating accessories for future spare ports.
+
+
+## 20. Universal Modal Viewport Containment & Zero-Trap Navigation Invariant (`TrackBookingModal.tsx`, `components/tour/InteractivePageTour.tsx`, `app/(public)/login/page.tsx`)
+
+1. **React Portal Viewport Containment (`createPortal(..., document.body)`):**
+   - In modern CSS and browser engines (Chromium, WebKit/Safari, Firefox), any ancestor container utilizing CSS `backdrop-filter` (e.g. `<header className="sticky top-0 backdrop-blur-md">`), `filter`, `transform`, or `perspective` establishes a new containing block for `position: fixed` elements.
+   - Modals and floating overlays mounted inside such ancestors are constrained by the ancestor's bounds rather than the window, causing top cut-offs and hidden close buttons.
+   - **Mandate:** All full-screen modals, dialogs, and floating sheets must mount via React `createPortal(modalContent, document.body)` with client-side mount guards (`mounted && typeof document !== "undefined"`).
+
+2. **Quadruple Zero-Trap Exit Channels:**
+   - Every modal and dialog must provide four redundant, frictionless exit channels so no user is ever trapped:
+     1. **Top-Right Close Button:** Dedicated `[ ✕ ]` button with a minimum $44 \times 44\text{pt}$ touch target.
+     2. **Explicit Bottom Action Button:** A visible `[ Cancel ]` or `[ Close ]` button paired alongside the primary action button.
+     3. **Backdrop Click-to-Dismiss:** Dimmed overlay listener (`onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}`) allowing instant dismiss on tap outside.
+     4. **Hardware / Keyboard Escape Key:** Global `keydown` listener (`event.key === "Escape"`) automatically closing the active modal.
+
+3. **Laptop & Mobile Viewport Clamping ($\le 560\text{px}$ Visible Height):**
+   - On standard 14-inch laptops (1366x768 resolution) common in India, browser UI (tabs, address bar, bookmarks) and the OS taskbar reduce active viewport height to ~550px.
+   - Modals must strictly enforce `my-auto max-h-[90vh] max-h-[90dvh] overflow-y-auto` rather than fixed vertical margins or static heights, ensuring that headers, inputs, and action buttons remain 100% visible and accessible without clipping.
+   - Body scroll locking (`document.body.style.overflow = "hidden"`) must engage on modal open and cleanly release on unmount.
+
+4. **Zero Dead-End Navigation on Dedicated Pages:**
+   - Secondary portal entry and standalone action pages (e.g., `/login`, `/customer/login`, `/register`, `/track/[id]`) must NEVER form navigation dead-ends.
+   - They must render a prominent, accessible `← Back to Home` or `← Back to Portal Options` navigation link at the top, allowing users to return effortlessly to the main experience.
+
+5. **Cross-Platform Device Optimization (Apple, Android, Windows & Linux):**
+   - **Apple iOS / iPadOS:** Next.js `Viewport` export enforces `viewportFit: "cover"`; tours and modals observe `env(safe-area-inset-top)` and `env(safe-area-inset-bottom)` to protect against Dynamic Island and Home Indicator overlaps. Mobile Safari gesture interference is blocked via `touch-none` on overlay backdrops.
+   - **Android / Low-End Devices:** Text inflation is stabilized with `-webkit-text-size-adjust: 100%`; tap highlight flicker is eliminated via `-webkit-tap-highlight-color: transparent`.
+   - **Horizontal Stability:** `body { overflow-x: clip; }` eliminates unintentional horizontal page jitter on narrow screens (280–360px) while preserving `position: sticky` headers.

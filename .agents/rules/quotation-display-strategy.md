@@ -163,3 +163,11 @@ Never confuse or revert the quotation presentation strategy for this project. Th
       - `[ 📺 16-Ch सिंगल स्क्रीन (ऑल-इन-वन) ]`: Replaces the old DVR with a single master recorder for 1 unified TV and mobile app screen.
     - Tapping any pill recalculates the entire quotation catalog in real-time ($0 reload latency).
     - **Cabling & Power Supply Protection:** SMPS and cabling are sized strictly for the new cameras being installed today ($\text{WiredCameraCount}$), never inflating accessories for future spare ports.
+
+
+## 19. Universal Modal Viewport Containment & Zero-Trap Navigation Invariant (`TrackBookingModal.tsx`, `components/tour/InteractivePageTour.tsx`, `app/(public)/login/page.tsx`)
+- **React Portal Viewport Containment (`createPortal`):** All dialogs and overlays mount to `document.body` to eliminate containing-block clipping caused by sticky headers with `backdrop-filter: blur()`.
+- **Quadruple Zero-Trap Exit Channels:** Every modal strictly implements: (1) Top-right ✕ button ($\ge 44\text{pt}$), (2) Bottom `[ Cancel ]` button, (3) Dimmed backdrop click-to-close, and (4) Keyboard `Esc` key listener.
+- **Laptop Viewport Clamping ($\le 560\text{px}$):** Enforces `my-auto max-h-[90vh] max-h-[90dvh] overflow-y-auto` to prevent header/footer clipping on 1366x768 screens and mobile devices.
+- **Zero Dead-End Pages:** Secondary entry pages (`/login`, `/register`, `/track/[id]`) must render prominent `← Back to Home` navigation links.
+- **Cross-Platform Display Compatibility:** Safe-area insets (`env(safe-area-inset-top)`), `viewportFit: "cover"`, `-webkit-text-size-adjust: 100%`, and `overflow-x: clip` ensure flawless alignment across Apple, Android, Windows, and Linux screens.
