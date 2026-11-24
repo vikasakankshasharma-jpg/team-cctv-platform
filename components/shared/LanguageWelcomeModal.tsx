@@ -144,6 +144,9 @@ export function LanguageWelcomeModal() {
           key="language-full-modal"
           role="dialog"
           aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleDismiss();
+          }}
           className="fixed inset-0 z-[100] flex flex-col justify-end sm:justify-center p-0 sm:p-4 bg-zinc-950/40 backdrop-blur-sm transition-opacity"
         >
           <motion.div

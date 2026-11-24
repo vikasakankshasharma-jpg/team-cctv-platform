@@ -263,9 +263,26 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
   };
 
 
+  // Escape key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-3 sm:p-4 bg-zinc-950/40 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-800/80 shadow-2xl rounded-[32px] w-full max-w-md p-6 sm:p-8 relative overflow-hidden transition-all animate-in zoom-in-95 duration-300">
+    <div 
+      className="fixed inset-0 z-[300] flex items-center justify-center p-3 sm:p-4 bg-zinc-950/40 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div 
+        className="bg-white dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-800/80 shadow-2xl rounded-[32px] w-full max-w-md p-6 sm:p-8 relative overflow-hidden transition-all animate-in zoom-in-95 duration-300 my-auto max-h-[92vh] max-h-[92dvh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Close Button */}
         <button

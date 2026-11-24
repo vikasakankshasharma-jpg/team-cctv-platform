@@ -216,11 +216,26 @@ export function DynamicOnScreenQRCodeModal({
     }
   };
 
+  // Keyboard Escape listener
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !paymentVerified) onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, paymentVerified, onClose]);
+
   if (!isOpen) return null;
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md overflow-y-auto"
+        onClick={(e) => {
+          if (e.target === e.currentTarget && !paymentVerified) onClose();
+        }}
+      >
         <motion.div
           initial={{ opacity: 0, scale: 0.93, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}

@@ -219,6 +219,17 @@ export function CustomerLoginClient() {
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/5 dark:bg-blue-600/10 blur-[120px] pointer-events-none" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-[440px] relative z-10">
+        {/* Back Navigation */}
+        <div className="mb-4">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>{t("cl_back_portal", "← Back to Portal Options")}</span>
+          </Link>
+        </div>
+
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-8">
           <Link href="/" className="inline-flex items-center gap-3 active:scale-95 transition-transform">
