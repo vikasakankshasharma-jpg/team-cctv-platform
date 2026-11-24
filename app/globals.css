@@ -167,6 +167,8 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -175,6 +177,12 @@ body {
   line-height: 1.6;
   position: relative;
   transition: background-color var(--transition-slow), color var(--transition-fast);
+  overflow-x: clip;
+}
+
+/* ─── Touch & Tap Polish (iOS, iPadOS & Android) ─────────────── */
+button, a, input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
 }
 
 @layer base {

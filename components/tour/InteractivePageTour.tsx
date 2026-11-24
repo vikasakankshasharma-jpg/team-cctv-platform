@@ -306,8 +306,8 @@ export function InteractivePageTour({
       <div
         className="pointer-events-none fixed z-[9992] rounded-xl border-2 border-white/80 shadow-[0_0_0_3px_rgba(255,255,255,0.12)] animate-tour-pulse"
         style={{
-          top: targetRect.top - 4,
-          left: targetRect.left - 4,
+          top: Math.max(0, targetRect.top - 4),
+          left: Math.max(0, targetRect.left - 4),
           width: targetRect.width + 8,
           height: targetRect.height + 8,
         }}
@@ -319,7 +319,7 @@ export function InteractivePageTour({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`fixed left-3 right-3 sm:left-auto sm:right-6 sm:w-[380px] max-h-[85vh] overflow-y-auto z-[9999] rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-2xl animate-tour-card-enter transition-all duration-200 ${
+        className={`fixed left-3 right-3 sm:left-auto sm:right-6 sm:w-[380px] max-h-[85vh] max-h-[85dvh] overflow-y-auto z-[9999] rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-2xl animate-tour-card-enter transition-all duration-200 ${
           position === "bottom"
             ? "bottom-[calc(1rem+env(safe-area-inset-bottom))]"
             : "top-[calc(1rem+env(safe-area-inset-top))]"
@@ -408,6 +408,7 @@ function updateTargetRect(
   if (rect.width === 0 && rect.height === 0) return;
 
   const viewportHeight = window.innerHeight;
+  const viewportWidth = window.innerWidth;
   const center = rect.top + rect.height / 2;
 
   // Smart Mobile Inversion:
@@ -417,10 +418,15 @@ function updateTargetRect(
   setPosition(center > threshold ? "top" : "bottom");
 
   const padding = 6;
+  const left = Math.max(0, rect.left - padding);
+  const top = Math.max(0, rect.top - padding);
+  const maxW = Math.max(0, viewportWidth - left);
+  const maxH = Math.max(0, viewportHeight - top);
+
   setTargetRect({
-    top: Math.max(0, rect.top - padding),
-    left: Math.max(0, rect.left - padding),
-    width: rect.width + padding * 2,
-    height: rect.height + padding * 2,
+    top,
+    left,
+    width: Math.min(rect.width + padding * 2, maxW),
+    height: Math.min(rect.height + padding * 2, maxH),
   });
 }
