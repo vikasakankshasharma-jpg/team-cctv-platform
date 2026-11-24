@@ -332,6 +332,20 @@ export function DynamicVariantGenerator({
   const isExistingUpgradeNeeded = existingChannels > 0 && totalCombinedWired > existingChannels;
   const sparePorts = existingChannels > 0 ? Math.max(0, existingChannels - existingWorkingCameras) : 0;
   const minNewChannelsNeeded = Math.max(1, totalWiredCount - sparePorts);
+
+  const effectiveWiredCams = Math.max(1, existingChannels > 0 ? totalCombinedWired : (totalWiredCount || totalHardwareCount || 1));
+  const estimatedDailyGbPerCam = useMemo(() => {
+    const primaryRes = String(cameraBuckets[0]?.resolution || selection.resolution_preference || "2MP").toUpperCase();
+    if (primaryRes.includes("8MP") || primaryRes.includes("4K")) return 35;
+    if (primaryRes.includes("4MP") || primaryRes.includes("5MP") || primaryRes.includes("6MP")) return 20;
+    return 14; // Modern H.265 / H.265+ encoding
+  }, [cameraBuckets, selection.resolution_preference]);
+
+  const totalWiredDailyGb = effectiveWiredCams * estimatedDailyGbPerCam;
+  const days500GB = Math.max(1, Math.floor(465 / totalWiredDailyGb));
+  const days1TB = Math.max(2, Math.floor(930 / totalWiredDailyGb));
+  const days2TB = Math.max(4, Math.floor(1860 / totalWiredDailyGb));
+  const days4TB = Math.max(8, Math.floor(3720 / totalWiredDailyGb));
   
   const { availableBrands, availableResolutions } = useMemo(() => {
     const brandSet = new Set<string>();
@@ -1185,24 +1199,24 @@ export function DynamicVariantGenerator({
               >
                 {activeTech === "wireless" ? (
                   <>
-                    <option value={15}>{t("dvg_ret_15d_sd")}</option>
-                    <option value={7}>{t("dvg_ret_7d_sd")}</option>
-                    <option value={30}>{t("dvg_ret_30d_sd")}</option>
-                    <option value={60}>{t("dvg_ret_60d_sd")}</option>
+                    <option value={7}>32GB SD (~4 {t("wz_days", "दिन")}/कैमरा) • {t("dvg_econ", "इकोनॉमी")}</option>
+                    <option value={15}>64GB SD (~9 {t("wz_days", "दिन")}/कैमरा) • {t("dvg_std", "स्टैंडर्ड (अनुशंसित)")}</option>
+                    <option value={30}>128GB SD (~18 {t("wz_days", "दिन")}/कैमरा) • {t("dvg_ext", "एक्सटेंडेड")}</option>
+                    <option value={60}>256GB SD (~36 {t("wz_days", "दिन")}/कैमरा) • {t("dvg_heavy", "हेवी")}</option>
                   </>
                 ) : activeTech === "hybrid" ? (
                   <>
-                    <option value={15}>{t("dvg_ret_15d_hyb", "15 Days (1TB + 64GB SD) • Standard")}</option>
-                    <option value={7}>{t("dvg_ret_7d_hyb", "7 Days (500GB + 32GB SD) • Economy")}</option>
-                    <option value={30}>{t("dvg_ret_30d_hyb", "30 Days (2TB + 128GB SD) • Extended")}</option>
-                    <option value={60}>{t("dvg_ret_60d_hyb", "60 Days (4TB + 256GB SD) • Heavy")}</option>
+                    <option value={7}>500GB + 32GB SD (~{days500GB} {t("wz_days", "दिन")}) • {t("dvg_econ", "इकोनॉमी")}</option>
+                    <option value={15}>1TB + 64GB SD (~{days1TB} {t("wz_days", "दिन")}) • {t("dvg_std", "स्टैंडर्ड (अनुशंसित)")}</option>
+                    <option value={30}>2TB + 128GB SD (~{days2TB} {t("wz_days", "दिन")}) • {t("dvg_ext", "एक्सटेंडेड")}</option>
+                    <option value={60}>4TB + 256GB SD (~{days4TB} {t("wz_days", "दिन")}) • {t("dvg_heavy", "हेवी")}</option>
                   </>
                 ) : (
                   <>
-                    <option value={15}>{t("dvg_ret_15d_hdd")}</option>
-                    <option value={7}>{t("dvg_ret_7d_hdd")}</option>
-                    <option value={30}>{t("dvg_ret_30d_hdd")}</option>
-                    <option value={60}>{t("dvg_ret_60d_hdd")}</option>
+                    <option value={7}>500GB (~{days500GB} {t("wz_days", "दिन")} बैकअप) • {t("dvg_econ", "इकोनॉमी (न्यूनतम बजट)")}</option>
+                    <option value={15}>1TB (~{days1TB} {t("wz_days", "दिन")} बैकअप) • {t("dvg_std", "स्टैंडर्ड (अनुशंसित)")}</option>
+                    <option value={30}>2TB (~{days2TB} {t("wz_days", "दिन")} बैकअप) • {t("dvg_ext", "एक्सटेंडेड")}</option>
+                    <option value={60}>4TB (~{days4TB} {t("wz_days", "दिन")} बैकअप) • {t("dvg_heavy", "हेवी")}</option>
                   </>
                 )}
               </select>
@@ -1280,14 +1294,17 @@ export function DynamicVariantGenerator({
               <div className="space-y-0.5 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
-                    {t("dvg_econ_title")}
+                    {activeTech === "wireless" ? "⚠️ 32GB बेसिक मेमोरी कार्ड (इकोनॉमी मैच)" : `⚠️ 500GB बेसिक हार्ड डिस्क (${effectiveWiredCams} कैमरों पर ~${days500GB} दिन बैकअप)`}
                   </span>
                   <span className="text-[10px] bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full font-bold">
-                    {t("dvg_econ_days")}
+                    {activeTech === "wireless" ? "~4 दिन/कैमरा" : `~${days500GB} दिन बैकअप`}
                   </span>
                 </div>
                 <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90 leading-snug">
-                  {t("dvg_econ_warn")}
+                  {days500GB <= 3 && activeTech !== "wireless"
+                    ? `⚠️ ध्यान दें: ${effectiveWiredCams} कैमरों के लिए 500GB स्टोरेज बहुत कम (~${days500GB} दिन) है। पुराना वीडियो जल्दी डिलीट होगा। कम से कम 1TB या 2TB चुनें!`
+                    : t("dvg_econ_warn", "लोकल वेंडर अक्सर 500GB रीफर्बिश्ड/डेस्कटॉप डिस्क कोट करते हैं। लंबे बैकअप और 3 साल वारंटी के लिए 1TB+ जेन्युइन सर्विलांस डिस्क की सिफारिश की जाती है।")
+                  }
                 </p>
               </div>
             </div>

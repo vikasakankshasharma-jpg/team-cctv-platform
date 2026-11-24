@@ -138,3 +138,28 @@ Never confuse or revert the quotation presentation strategy for this project. Th
 - **Statutory 18% GST-Paid Standard:** All vendor retail prices are GST-inclusive retail customer prices. Reverse GST ($\text{Taxable Base} = \text{Gross} / 1.18$, $\text{GST} = \text{Gross} - \text{Base}$) guarantees ₹0.00 accounting reconciliation.
 - **Admin Schedule Customization & Blacklist Sovereignty:** Background sync is fully configurable via `settings/vendor_sync` (`enabled: boolean`, `frequency: "daily" | "weekly"`, `schedule_time: "03:00"`, `drift_threshold_percent: 5`, `auto_apply_safe_updates: boolean`). Safe drift ($\le 5\%$) is applied automatically. Admin can permanently blacklist unwanted recommendation PIDs via "Dismiss & Never Show Again" (`dismissed_vendor_pids`) with 1-click restore capability.
 - **₹0.00/Month Operational Cost & Cloudflare Hybrid Fallback:** Regex-based classification (0 LLM tokens) and minimal Firestore footprint ensure zero recurring costs. When vendor anti-bot security challenges serverless cloud cron IPs, the admin can execute a 1-click desktop browser sync directly from the dashboard.
+
+## 16. Zero-Cost Universal Indian Postal Hierarchy & Zero "Unknown" Location Invariant (`lib/geo/pincode-resolver.ts`)
+- **100% In-Memory Static Indian Postal Hierarchy:** Resolves all 6-digit PIN codes across India instantly without paid Google Maps geocoding or external API requests.
+- **Permanent Ban on "Unknown":** Addresses, lead headers, and quote PDFs must never display `"Unknown"` alongside or in place of a PIN code. The system automatically derives authentic District and State (e.g. `📍 Nalgonda, Telangana (508001)`).
+- **Dynamic Self-Healing:** Legacy lead records and quotes with missing or corrupted locations are automatically cleaned and stamped with authentic administrative divisions.
+
+## 17. Indian Standard Time (IST) Date Boundary & Anti-Past Scheduling Invariant (`lib/date-utils.ts`)
+- **IST Calendar Ground Truth (`Asia/Kolkata`):** All booking calendars, survey scheduling, beat planning, and follow-ups operate strictly on Indian Standard Time, eliminating UTC day-boundary drift.
+- **Strict Anti-Past Date Defense ($Date \ge Today_{IST}$):** Server APIs and UI date pickers deterministically block scheduling any visit, survey, or follow-up on past dates.
+- **Intraday Slot Protection:** Time slots that have already elapsed in Indian Standard Time on the current day cannot be selected or booked.
+
+## 18. Lowest-Storage Baseline & Anti-Competitor Shield Invariant (`DynamicVariantGenerator.tsx`, `ConfiguratorView.tsx`)
+- **Lowest Storage (7-Day / 500GB Economy Match) Entry Default:**
+  - To eliminate competitor price-undercutting (where local competitors quote scrap 500GB drives to appear artificially cheaper), the quotation catalog opens by default with **7 Days (500GB / Economy Storage)** or customer-selected storage.
+  - An elegant amber advisory pill renders on the card: `⚠️ Basic 500GB HDD · ~X Days Backup · 1-Yr Local [Advisory ⓘ]`, with an immediate 1-click upgrade button `[Switch to 1TB Rec. →]`.
+  - Packages quoting 100% Genuine 24x7 Surveillance Drives (WD Purple / Seagate SkyHawk) display the Green Trust Badge with official 3-year warranty.
+- **Expansion Recorder Sizing Strategy (Dual DVR Exact vs. Dual DVR Future vs. Single Screen):**
+  - When expanding an existing setup where capacity is exceeded ($\text{TotalCombinedWired} > \text{ExistingChannels}$):
+    - The quotation catalog defaults to the **Dual DVR Combo (Exact Fit)** mode, sizing the additional recorder strictly for $\max(1, \text{Wired} - \text{SparePorts})$ (e.g. 4-Ch DVR), yielding the **cheapest headline price** and saving ₹4,856+ vs an all-in-one 16-Ch replacement.
+    - **Interactive Channel Pills (`recorderStrategy`):**
+      - `[ 💰 4-Ch न्यूनतम लागत (Exact Fit) ]`: Maximum immediate cost saving.
+      - `[ 🚀 8-Ch फ्यूचर रेडी (+4 खाली) ]`: Sizes the add-on recorder to 8-Ch, providing spare ports for planned future expansion without re-purchasing a DVR later.
+      - `[ 📺 16-Ch सिंगल स्क्रीन (ऑल-इन-वन) ]`: Replaces the old DVR with a single master recorder for 1 unified TV and mobile app screen.
+    - Tapping any pill recalculates the entire quotation catalog in real-time ($0 reload latency).
+    - **Cabling & Power Supply Protection:** SMPS and cabling are sized strictly for the new cameras being installed today ($\text{WiredCameraCount}$), never inflating accessories for future spare ports.

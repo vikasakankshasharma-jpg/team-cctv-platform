@@ -242,3 +242,86 @@
    - **Recommendation Blacklist ("Dismiss & Never Show Again"):** Clicking Dismiss on any new recommendation permanently registers the vendor PID in `dismissed_vendor_pids`. The engine permanently blacklists the SKU from future runs, while maintaining an unblock/restore option in the dashboard.
    - **Zero-Cost Architecture:** Pure functional regex evaluation (0 LLM tokens) and minimal Firestore footprint (<0.4% daily quota) guarantee **₹0.00/month** operational cost.
    - **Anti-Staleness & Cloudflare Hybrid Fallback:** Cache-busting headers (`no-cache, no-store`), dynamic query nonces, and React hydration checks guarantee fresh extraction. If Cloudflare blocks serverless cloud IPs, the engine logs a clear notice and activates the 1-click residential desktop sync (`[Run Live Sync Now]`).
+
+
+## 15. Zero-Cost Universal Indian Postal Hierarchy & Zero "Unknown" Location Invariant (`lib/geo/pincode-resolver.ts`)
+
+1. **100% In-Memory Static Indian Postal Hierarchy (Zero-Cost, Zero-Latency):**
+   - Maps all 6-digit Indian PIN codes instantly through hierarchical resolution:
+     - 2-Digit Postal Sub-Region -> State / Union Territory (all 28 states & 8 UTs).
+     - 3-Digit Postal Division -> District & Division Hub (e.g. `508` -> Nalgonda, Telangana; `331` -> Churu, Rajasthan; `302` -> Jaipur, Rajasthan).
+   - Zero external paid API calls (no Google Maps Geocoding bills, no external network timeouts).
+2. **Permanent Ban on the String `"Unknown"` across Locations:**
+   - Under NO circumstances may customer location, address banner, lead table, quote PDF, or CRM view render `"Unknown"` alongside or in place of a PIN code.
+   - `formatLocationDisplay({ area, city, district, state, pincode })` always delivers authentic, human-readable Indian geographical context (e.g. `📍 Nalgonda, Telangana (508001)`).
+3. **Dynamic Self-Healing on CRM & Ingestion Boundaries:**
+   - Lead ingestion (`app/actions/lead.ts`, `app/api/submissions/route.ts`) and quote detail loading (`app/api/crm/quotes/[quoteId]/route.ts`, `app/api/crm/leads/[id]/route.ts`) automatically filter and self-heal any legacy lead records containing `"Unknown"`, replacing them with authentic district and state.
+
+## 16. Indian Standard Time (IST) Date Boundary & Anti-Past Scheduling Invariant (`lib/date-utils.ts`)
+
+1. **Strict Indian Standard Time (`Asia/Kolkata`, UTC+5:30) Enforcement:**
+   - Eliminates UTC day-boundary drift (`new Date().toISOString().split("T")[0]`) which previously caused premature day rollovers before midnight in India.
+   - `getTodayIST()` and `getTomorrowIST()` compute authentic dates matching the customer's Indian wall-clock calendar.
+2. **Deterministic Anti-Past Scheduling Guard ($Date \ge Today_{IST}$):**
+   - Enforced on both server APIs (`/api/bookings`, `/api/public/book-survey`, `/api/crm/beat-plan`, `updateNextFollowUp`) and client components (`SiteVisitBookingModal.tsx`, `BookSurveyClient.tsx`, `FollowUpManager.tsx`, `LeadIntelligencePanel.tsx`, `ProgressiveDialer.tsx`, `LeadDetailsDrawer.tsx`).
+   - Any booking or scheduling attempt on a past date ($Date < Today_{IST}$) is blocked with HTTP 400 and user-friendly error banners.
+3. **Intraday Slot Protection (`isPastSlotIST()`):**
+   - For same-day bookings ($Date == Today_{IST}$), time slots that have already elapsed in Indian Standard Time (e.g., Morning slot after 1:00 PM IST, Afternoon slot after 5:00 PM IST, Evening slot after 8:00 PM IST) are intercepted and rejected, prompting the customer to select an upcoming slot or next day.
+
+
+## 18. Layman Profitability Intelligence & Semantic Deal Health Invariant (`QuotationProfitBreakupCard.tsx`, `quotation-profit.ts`)
+
+1. **Reassuring Green Confirmation for Healthy Deals:**
+   - When a deal is healthy (`health.status === "healthy"`), the quotation intelligence card strictly renders a **reassuring Green status card** (`bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 text-emerald-900`) with `<CheckCircle2 className="text-emerald-600" />` titled `✅ सुरक्षित व मुनाफे वाली डील (बढ़िया मार्जिन)` (EN: `✅ Safe & Profitable Deal (Healthy Margins)`).
+   - Amber (`AlertTriangle`), Orange (`AlertCircle`), and Red (`AlertOctagon`) warning banners are strictly reserved for actual deal risks (`subsidized`, `low_margin`, or `critical`).
+2. **Zero False Warnings from Normal Operating Overheads:**
+   - Standard business overheads (Payment Gateway fee, 1st-year warranty reserve, local fittings/consumables) are expected operating deductions already transparently shown in the In-Hand Profit waterfall.
+   - The pricing engine (`lib/quotation-profit.ts`) must NEVER push informational overhead deductions into `health.warnings` when a deal is healthy, preventing healthy deals from triggering false alert banners.
+3. **Colloquial Layman Indian Market Phrasing:**
+   - Academic corporate finance and MBA jargon is permanently replaced with natural Indian market terminology:
+     - *"Waterfall"* $\rightarrow$ **"जेब में कितनी असली कमाई बचेगी? (खर्चे व सर्विस काटकर शुद्ध मुनाफा)"** / **"In-Hand Net Pocket Profit (After all expenses & warranty reserve)"**
+     - *"Turnkey Composition"* $\rightarrow$ **"बिल का बंटवारा: 📦 सामान (कैमरा, DVR, HDD, तार) vs 🛠️ काम व फिटिंग (मजदूरी)"**
+     - *"PG MDR (Est.)"* $\rightarrow$ **"💳 ऑनलाइन पेमेंट फीस (कार्ड / Razorpay चार्ज; कैश या डायरेक्ट UPI पर ₹0)"**
+     - *"1st-Yr Warranty Reserve"* $\rightarrow$ **"🛡️ 1 साल सर्विस फंड (वारंटी विजिट का रिज़र्व)"**
+     - *"Consumables & Local Ops"* $\rightarrow$ **"🔩 टेप, गिट्टी व पेच (लोकल फिटिंग व फुटकर सामान)"**
+     - *"Total Overheads"* $\rightarrow$ **"📉 कुल अतिरिक्त खर्चे (सारे खर्चे मिलाकर)"**
+
+## 18. System Expansion / Add-to-Existing Quotation Transparency & Recorder Upgrade Invariant (`CustomerJourneyBlueprint.tsx`, `LeadIntelligencePanel.tsx`)
+
+1. **100% Visibility of Wizard Existing System Selections:**
+   - Whenever a customer selects `"मौजूदा सिस्टम में जोड़ना (System Expansion / Add-on)"` (`installation_type: "addon"`), the Admin Lead Pipeline (`/admin/leads/[leadId]`) and Customer Journey Blueprint (`CustomerJourneyBlueprint.tsx`) must NEVER hide the underlying wizard equipment specifications.
+   - The lead detail blueprint prominently displays the dedicated **"मौजूदा सिस्टम का विवरण (Existing System Blueprint)"** sub-card directly inside Box 1 (`परिसर व स्थापना का प्रकार`):
+     - **तकनीकी स्पेसिफिकेशन्स स्थिति:** Customer Declared vs. Unknown Specs / Callback Required (`existing_system_known`).
+     - **मौजूदा टेक्नोलॉजी:** `एनालॉग HD (BNC वायर)` vs `डिजिटल IP (CAT6 तार)`.
+     - **मौजूदा रिकॉर्डर:** `{existing_recorder_channels} चैनल DVR/NVR`.
+     - **सक्रिय कैमरे:** `{existing_working_cameras} चालू कैमरे`.
+     - **खाली पोर्ट (Spare Capacity):** `{spare_channels} खाली पोर्ट उपलब्ध` ($\text{Spare} = \max(0, \text{Channels} - \text{Working})$).
+     - **हार्ड डिस्क / स्टोरेज नीति:** Reusing existing HDD vs. New Surveillance HDD for total active cameras ($\text{TotalActive} = \text{New} + \text{Working}$).
+
+2. **Deterministic Recorder Upgrade vs. Reuse Accounting:**
+   - **Upgrade Required ($\text{TotalActive} > \text{ExistingChannels}$):** The blueprint and behavioral comparison table clearly explain why a new recorder was placed in the BOM:
+     *`"⚠️ नया रिकॉर्डर अपग्रेड शामिल: {new} नए + {working} चालू = कुल {total} कैमरे। पुराने {channels}-Ch DVR की क्षमता कम होने से BOM में नया 16-चैनल DVR शामिल है।"`*
+   - **Compatible / Reused ($\text{TotalActive} \le \text{ExistingChannels}$):** Explains that the customer's existing recorder is sufficient, recording ₹0 recorder cost and highlighting genuine customer savings:
+     *`"✅ मौजूदा रिकॉर्डर कम्पैटिबल: {new} नए कैमरे पुराने {channels}-चैनल रिकॉर्डर में आसानी से जुड़ जाएंगे ({remaining} पोर्ट शेष रहेंगे)। रिकॉर्डर पर ₹0 अतिरिक्त खर्च।"`*
+   - **Unknown Specs / Callback Scenario (`existing_system_known === false`):** Prominently displays:
+     *`"🔍 तकनीकी स्पेसिफिकेशन्स अज्ञात (साइट सर्वे जरूरी): ग्राहक को पुराने रिकॉर्डर की क्षमता की जानकारी नहीं है। इंजीनियर कॉल या साइट पर बैक-पैनल चेक करके कम्पैटिबिलिटी तय करेंगे।"`*
+
+3. **Lead Intelligence Panel Consistency (`LeadIntelligencePanel.tsx`):**
+   - The installation type dropdown must natively support `"Addon"` (`"मौजूदा सिस्टम में जोड़ना"`) and auto-detect addon leads from `lead.wizard_answers.installation_type` instead of silently falling back to `"New"`.
+
+## 19. Lowest-Storage Baseline & Anti-Competitor Shield Invariant (`DynamicVariantGenerator.tsx`, `ConfiguratorView.tsx`)
+
+1. **Lowest Storage (7-Day / 500GB Economy Match) Entry Default:**
+   - To eliminate competitor price-undercutting (where local competitors quote scrap 500GB drives to appear artificially cheaper), the quotation catalog opens by default with **7 Days (500GB / Economy Storage)** or customer-selected storage.
+   - An elegant amber advisory pill renders on the card: `⚠️ Basic 500GB HDD · ~X Days Backup · 1-Yr Local [Advisory ⓘ]`, with an immediate 1-click upgrade button `[Switch to 1TB Rec. →]`.
+   - Packages quoting 100% Genuine 24x7 Surveillance Drives (WD Purple / Seagate SkyHawk) display the Green Trust Badge with official 3-year warranty.
+
+2. **Expansion Recorder Sizing Strategy (Dual DVR Exact vs. Dual DVR Future vs. Single Screen):**
+   - When expanding an existing setup where capacity is exceeded ($\text{TotalCombinedWired} > \text{ExistingChannels}$):
+     - The quotation catalog defaults to the **Dual DVR Combo (Exact Fit)** mode, sizing the additional recorder strictly for $\max(1, \text{Wired} - \text{SparePorts})$ (e.g. 4-Ch DVR), yielding the **cheapest headline price** and saving ₹4,856+ vs an all-in-one 16-Ch replacement.
+     - **Interactive Channel Pills (`recorderStrategy`):**
+       - `[ 💰 4-Ch न्यूनतम लागत (Exact Fit) ]`: Maximum immediate cost saving.
+       - `[ 🚀 8-Ch फ्यूचर रेडी (+4 खाली) ]`: Sizes the add-on recorder to 8-Ch, providing spare ports for planned future expansion without re-purchasing a DVR later.
+       - `[ 📺 16-Ch सिंगल स्क्रीन (ऑल-इन-वन) ]`: Replaces the old DVR with a single master recorder for 1 unified TV and mobile app screen.
+     - Tapping any pill recalculates the entire quotation catalog in real-time ($0 reload latency).
+     - **Cabling & Power Supply Protection:** SMPS and cabling are sized strictly for the new cameras being installed today ($\text{WiredCameraCount}$), never inflating accessories for future spare ports.
