@@ -199,16 +199,69 @@ export function CustomerJourneyBlueprint({
     lead?.installationType || req?.installation_type || wz?.installation_type || "new"
   ).toLowerCase();
 
-  const instTypeLabel = rawInstType.includes("addon")
+  const isAddon = rawInstType.includes("addon") || rawInstType.includes("expansion") || rawInstType.includes("जोड़ना");
+  const isRepair = rawInstType.includes("repair") || rawInstType.includes("service");
+  const isCabling = rawInstType.includes("cabling");
+
+  const instTypeLabel = isAddon
     ? t("adm_jb_inst_addon", "मौजूदा सिस्टम में जोड़ना (System Expansion)")
-    : rawInstType.includes("repair")
+    : isRepair
     ? t("adm_jb_inst_repair", "सर्विस व मेंटेनेंस (Service & Repair)")
-    : rawInstType.includes("cabling")
+    : isCabling
     ? t("adm_jb_inst_cabling", "केवल केबलिंग व फिटिंग (Wiring & Termination)")
     : t("adm_jb_inst_new", "पूरी तरह नया सिस्टम (Complete Fresh Setup)");
 
+  // Existing System (Add-on / System Expansion) Intelligence
+  const existingSystemKnown = req?.existing_system_known ?? wz?.existing_system_known ?? lead?.existing_system_known;
+  const isCallbackScenario = Boolean(req?.callback_requested || wz?.callback_requested || lead?.callback_requested || existingSystemKnown === false);
+
+  const rawExistingTech = String(
+    req?.existing_technology ||
+    wz?.existing_technology ||
+    req?.existing_tech ||
+    wz?.existing_tech ||
+    lead?.existing_technology ||
+    lead?.existing_tech ||
+    "HD"
+  ).toUpperCase();
+  const existingTech = rawExistingTech.includes("IP") ? "IP" : "HD";
+  const existingTechLabel = existingTech === "IP"
+    ? t("wz_ip__network_cat6_wire", "डिजिटल IP (CAT6 तार)")
+    : t("wz_analog_hd_bnc_wire", "एनालॉग HD (BNC वायर)");
+
+  const existingChannels = Number(
+    req?.existing_recorder_channels ||
+    wz?.existing_recorder_channels ||
+    req?.existing_channels ||
+    wz?.existing_channels ||
+    lead?.existing_recorder_channels ||
+    lead?.existing_channels ||
+    0
+  );
+
+  const existingWorkingCameras = Number(
+    req?.existing_working_cameras ||
+    wz?.existing_working_cameras ||
+    req?.working_cameras ||
+    wz?.working_cameras ||
+    lead?.existing_working_cameras ||
+    lead?.working_cameras ||
+    0
+  );
+
   // 6. Cameras Breakdown (Total, Outdoor, Indoor, Wireless)
   const totalCameras = Number(req?.camera_count || wz?.camera_count || lead?.camera_count || 4);
+
+  const spareChannels = existingChannels > 0 ? Math.max(0, existingChannels - existingWorkingCameras) : 0;
+  const totalCombinedCameras = totalCameras + existingWorkingCameras;
+  const isUpgradeNeeded = existingChannels > 0 ? (totalCombinedCameras > existingChannels) : false;
+  const retainStorage = Boolean(req?.retain_existing_storage ?? wz?.retain_existing_storage ?? lead?.retain_existing_storage ?? false);
+
+  const recorderItem = items.find((i) => {
+    const cat = (i.category || "").toLowerCase();
+    const nm = (i.name || i.display_name || "").toLowerCase();
+    return cat.includes("recorder") || nm.includes("dvr") || nm.includes("nvr");
+  });
 
   // Check hardware BOM items for real camera items (excluding cables, junction boxes & accessories with "camera" in name)
   const cameraItems = items.filter((i) => {
@@ -433,15 +486,27 @@ export function CustomerJourneyBlueprint({
 
   // Generate Sales Pitch / Call Prep Summary
   const generateSalesPitch = () => {
+    const existingSysPitch = isAddon
+      ? `• *सेटअप प्रकार:* मौजूदा सिस्टम में जोड़ना (${existingChannels > 0 ? `${existingChannels}-Ch ${existingTech}, ${existingWorkingCameras} चालू, ${spareChannels} खाली` : (existingSystemKnown === false ? "स्पेसिफिकेशन्स अज्ञात - साइट सर्वे जरूरी" : "विस्तार")})\n`
+      : `• *सेटअप प्रकार:* पूरी तरह नया सिस्टम (Fresh Installation)\n`;
+
+    const recorderPitch = isAddon
+      ? (recorderItem
+          ? `• *रिकॉर्डर:* नया ${recorderItem.display_name || recorderItem.name} (अपग्रेड: कुल ${totalCombinedCameras} कैमरों के लिए पुराना ${existingChannels}-Ch DVR छोटा था)\n`
+          : `• *रिकॉर्डर:* मौजूदा ${existingChannels}-Ch DVR का उपयोग (${spareChannels - totalCameras} पोर्ट अभी भी खाली, ₹0 रिकॉर्डर खर्च)\n`)
+      : `• *रिकॉर्डर:* ${recorderItem?.display_name || recorderItem?.name || "शामिल"}\n`;
+
     return (
       `📋 *${customerName}* - ग्राहक चयन व आवश्यकता (TEAM CCTV Call Prep)\n` +
       `• *साइट लोकेशन:* ${fullAddress || locationSummary}\n` +
       `• *परिसर:* ${propertyInfo.title} (सीलिंग: ${ceilingLabel})\n` +
-      `• *सिस्टम:* ${totalCameras} कैमरों का ${techLabel} सेटअप\n` +
+      existingSysPitch +
+      `• *सिस्टम:* ${totalCameras} नए कैमरों का ${techLabel} सेटअप${isAddon ? ` (कुल सक्रिय: ${totalCombinedCameras} कैमरे)` : ""}\n` +
       `• *कैमरा विभाजन:* ${outdoorBullets} आउटडोर वेदरप्रूफ बुलेट + ${indoorDomes} इनडोर डोम + ${wirelessCameras} वायरलेस\n` +
       `• *ब्रांड व क्वालिटी:* ${activeBrand} (${activeResolution})${hasAudio ? " + इन-बिल्ट ऑडियो माइक 🎙️" : ""}${hasColorNight ? " + कलर नाइट विजन 🌈" : ""}\n` +
-      `• *स्टोरेज:* ${storageDays} दिन रिकॉर्डिंग (${storageHardwareTitle})\n` +
-      `• *केबलिंग (दूरी):* ${cablingDone ? "कंसील्ड वायरिंग तैयार" : `${actualCableMeters} मीटर 100% सॉलिड कॉपर केबल (~${avgMetersPerCam}m/कैमरा)`}\n` +
+      recorderPitch +
+      `• *स्टोरेज:* ${storageDays} दिन रिकॉर्डिंग (${storageHardwareTitle})${isAddon && retainStorage ? " [पुराना HDD रीयूज]" : ""}\n` +
+      `• *केबलिंग (दूरी):* ${cablingDone ? "कंसील्ड वायरिंग तैयार (0m नया तार)" : `${actualCableMeters} मीटर 100% सॉलिड कॉपर केबल (~${avgMetersPerCam}m/कैमरा)`}\n` +
       `• *BOM पैकेजिंग:* ${bundleCount90m > 0 ? `${bundleCount90m} बंडल (90m) + ${openMeters}m खुला तार` : `${actualCableMeters}m कॉपर तार`}\n` +
       `• *इंटरनेट:* ${broadbandLabel} (${remoteViewingRequested ? "फ्री मोबाइल ऐप एक्टिव" : "लोकल व्यू"})\n` +
       `• *टाइमलाइन:* ${timelineLabel}\n` +
@@ -569,14 +634,17 @@ export function CustomerJourneyBlueprint({
             {/* Step 2 */}
             <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-100/70 dark:bg-indigo-950/60 text-indigo-900 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800">
               <span className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black">2</span>
-              <span>{propertyInfo.title.split(" ")[0]}</span>
+              <span>
+                {propertyInfo.title.split(" ")[0]}
+                {isAddon ? ` (${existingChannels > 0 ? `${existingChannels}Ch` : "मौजूदा"})` : ""}
+              </span>
             </div>
             <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
 
             {/* Step 3 */}
             <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800">
               <span className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-black">3</span>
-              <span>{totalCameras} कैमरे</span>
+              <span>{totalCameras} नए कैमरे{isAddon && existingWorkingCameras > 0 ? ` (+${existingWorkingCameras})` : ""}</span>
             </div>
             <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
 
@@ -672,8 +740,130 @@ export function CustomerJourneyBlueprint({
                 </div>
                 <div>
                   <p className="text-[11px] text-muted-foreground font-semibold">{t("adm_jb_setup_lbl", "सेटअप का प्रकार:")}</p>
-                  <p className="font-semibold text-zinc-800 dark:text-zinc-200 mt-0.5">{instTypeLabel}</p>
+                  <p className="font-semibold text-zinc-800 dark:text-zinc-200 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                    <span>{instTypeLabel}</span>
+                    {isAddon && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        {existingChannels > 0 ? `${existingChannels}-Ch ${existingTech}` : (isCallbackScenario ? "स्पेस अज्ञात" : "विस्तार")}
+                      </span>
+                    )}
+                  </p>
                 </div>
+
+                {/* DEDICATED EXISTING SYSTEM BLUEPRINT CARD */}
+                {isAddon && (
+                  <div className="mt-2 pt-2 border-t border-dashed border-zinc-300 dark:border-zinc-700 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[11px] text-indigo-900 dark:text-indigo-300 flex items-center gap-1">
+                        <HardDrive className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                        {t("adm_jb_ext_sys_title", "मौजूदा सिस्टम का विवरण (Existing System Blueprint):")}
+                      </span>
+                      {existingSystemKnown === false || isCallbackScenario ? (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                          {t("adm_jb_ext_cb_tag", "कॉल बैक रिक्वेस्ट")}
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                          {t("adm_jb_ext_verified_tag", "कस्टमर द्वारा दर्ज")}
+                        </span>
+                      )}
+                    </div>
+
+                    {existingSystemKnown === false || isCallbackScenario ? (
+                      <div className="p-2 rounded-lg bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/60 text-[11px] space-y-1">
+                        <p className="font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1">
+                          <span>🔍</span>
+                          <span>{t("adm_jb_ext_unk_title", "तकनीकी स्पेसिफिकेशन्स अज्ञात (साइट सर्वे जरूरी)")}</span>
+                        </p>
+                        <p className="text-[10px] text-blue-800 dark:text-blue-300 leading-relaxed">
+                          {t("adm_jb_ext_unk_desc", "ग्राहक को पुराने रिकॉर्डर चैनल/टेक्नोलॉजी की जानकारी नहीं है। इंजीनियर कॉल या साइट पर बैक-पैनल चेक करके कम्पैटिबिलिटी तय करेंगे।")}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                          <div className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/60">
+                            <span className="text-[10px] text-muted-foreground block">{t("adm_jb_ext_tech_lbl", "मौजूदा टेक्नोलॉजी:")}</span>
+                            <span className="font-bold text-zinc-900 dark:text-zinc-100 text-[11px]">{existingTechLabel}</span>
+                          </div>
+                          <div className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/60">
+                            <span className="text-[10px] text-muted-foreground block">{t("adm_jb_ext_ch_lbl", "मौजूदा रिकॉर्डर:")}</span>
+                            <span className="font-bold text-zinc-900 dark:text-zinc-100 text-[11px]">
+                              {existingChannels > 0 ? `${existingChannels} ${t("adm_jb_channels", "चैनल")}` : t("adm_jb_not_specified", "दर्ज नहीं")}
+                            </span>
+                          </div>
+                          <div className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/60">
+                            <span className="text-[10px] text-muted-foreground block">{t("adm_jb_ext_working_lbl", "अभी चालू कैमरे:")}</span>
+                            <span className="font-bold text-zinc-900 dark:text-zinc-100 text-[11px]">{existingWorkingCameras} पीस</span>
+                          </div>
+                          <div className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/60">
+                            <span className="text-[10px] text-muted-foreground block">{t("adm_jb_ext_spare_lbl", "खाली पोर्ट (स्पेयर):")}</span>
+                            <span className={`font-black text-[11px] ${spareChannels > 0 ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"}`}>
+                              {spareChannels} {t("adm_jb_ports", "पोर्ट")}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Feasibility & Upgrade Status Badge */}
+                        <div className={`p-2 rounded-lg border text-[11px] leading-snug ${
+                          isUpgradeNeeded || recorderItem
+                            ? "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60 text-amber-900 dark:text-amber-200"
+                            : "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/60 text-emerald-900 dark:text-emerald-200"
+                        }`}>
+                          {isUpgradeNeeded || recorderItem ? (
+                            <div>
+                              <p className="font-bold flex items-center gap-1">
+                                <span>⚠️</span>
+                                <span>{t("adm_jb_ext_upg_title", "नया रिकॉर्डर अपग्रेड शामिल:")}</span>
+                              </p>
+                              <p className="text-[10px] mt-0.5 opacity-90">
+                                {existingChannels > 0 ? (
+                                  t("adm_jb_ext_upg_desc", "{new} नए + {old} चालू = कुल {total} कैमरे। पुराने {ch}-चैनल DVR की क्षमता कम होने से कोटेशन में नया {rec} शामिल है।", {
+                                    new: String(totalCameras),
+                                    old: String(existingWorkingCameras),
+                                    total: String(totalCombinedCameras),
+                                    ch: String(existingChannels),
+                                    rec: recorderItem?.display_name || recorderItem?.name || "16-Ch DVR"
+                                  })
+                                ) : (
+                                  t("adm_jb_ext_upg_desc_gen", "कुल {total} कैमरों के लिए BOM में नया {rec} शामिल किया गया है।", {
+                                    total: String(totalCameras),
+                                    rec: recorderItem?.display_name || recorderItem?.name || "रिकॉर्डर"
+                                  })
+                                )}
+                              </p>
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="font-bold flex items-center gap-1">
+                                <span>✅</span>
+                                <span>{t("adm_jb_ext_compat_title", "मौजूदा रिकॉर्डर कम्पैटिबल (₹0 अतिरिक्त खर्च):")}</span>
+                              </p>
+                              <p className="text-[10px] mt-0.5 opacity-90">
+                                {t("adm_jb_ext_compat_desc", "{new} नए कैमरे पुराने {ch}-चैनल रिकॉर्डर में आसानी से फिट हो जाएंगे ({rem} पोर्ट शेष रहेंगे)।", {
+                                  new: String(totalCameras),
+                                  ch: String(existingChannels),
+                                  rem: String(Math.max(0, spareChannels - totalCameras))
+                                })}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Storage Note if Addon */}
+                        <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <span>💾</span>
+                          <span>
+                            {retainStorage
+                              ? t("adm_jb_ext_stor_reused", "स्टोरेज: ग्राहक का पुराना हार्ड डिस्क उपयोग होगा (नया HDD चार्ज ₹0)")
+                              : t("adm_jb_ext_stor_new", "स्टोरेज: नए व पुराने सभी {total} कैमरों के बैकअप हेतु नई सर्विलांस HDD शामिल", { total: String(totalCombinedCameras) })}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <div>
                     <p className="text-[10px] text-muted-foreground font-semibold">{t("adm_jb_ceil_lbl", "सीलिंग की ऊंचाई:")}</p>
@@ -960,19 +1150,40 @@ export function CustomerJourneyBlueprint({
                     </li>
                     <li className="flex items-start gap-1.5">
                       <span className="text-blue-600 font-bold shrink-0">•</span>
-                      <span><strong className="text-foreground">परिसर चुनाव:</strong> {propertyInfo.title.split("(")[0]} ({ceilingLabel})</span>
+                      <span><strong className="text-foreground">परिसर व सेटअप:</strong> {propertyInfo.title.split("(")[0]} ({instTypeLabel})</span>
+                    </li>
+                    {isAddon && (
+                      <li className="flex items-start gap-1.5 p-1.5 rounded-lg bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60">
+                        <span className="text-blue-600 font-bold shrink-0">•</span>
+                        <div>
+                          <strong className="text-foreground">मौजूदा सिस्टम इनपुट (Wizard Step 2):</strong>
+                          {existingChannels > 0 ? (
+                            <span className="block mt-0.5 text-blue-950 dark:text-blue-200 font-medium">
+                              {existingTechLabel} • {existingChannels}-चैनल रिकॉर्डर • {existingWorkingCameras} चालू कैमरे ({spareChannels} खाली पोर्ट उपलब्ध)
+                            </span>
+                          ) : existingSystemKnown === false ? (
+                            <span className="block mt-0.5 text-amber-700 dark:text-amber-300 font-medium">
+                              तकनीकी स्पेसिफिकेशन्स अज्ञात (साइट सर्वे / कम्पैटिबिलिटी चेक रिक्वेस्ट दर्ज)
+                            </span>
+                          ) : (
+                            <span className="block mt-0.5 text-blue-950 dark:text-blue-200 font-medium">
+                              मौजूदा सिस्टम विस्तार (Add-on Mode)
+                            </span>
+                          )}
+                        </div>
+                      </li>
+                    )}
+                    <li className="flex items-start gap-1.5">
+                      <span className="text-blue-600 font-bold shrink-0">•</span>
+                      <span><strong className="text-foreground">कैमरा कॉन्फ़िगरेशन:</strong> {totalCameras} नए कैमरे ({outdoorBullets} आउटडोर बुलेट + {indoorDomes} इनडोर){isAddon && existingWorkingCameras > 0 ? ` + ${existingWorkingCameras} पुराने = ${totalCombinedCameras} कुल सक्रिय` : ""}</span>
                     </li>
                     <li className="flex items-start gap-1.5">
                       <span className="text-blue-600 font-bold shrink-0">•</span>
-                      <span><strong className="text-foreground">कैमरा कॉन्फ़िगरेशन:</strong> {totalCameras} कुल ({outdoorBullets} आउटडोर बुलेट + {indoorDomes} इनडोर)</span>
+                      <span><strong className="text-foreground">चुनी गई केबल दूरी:</strong> <span className="font-bold text-blue-700 dark:text-blue-300">{actualCableMeters} मीटर</span> {cablingDone ? "(कंसील्ड वायरिंग तैयार)" : `(~${avgMetersPerCam}m प्रति कैमरा)`}</span>
                     </li>
                     <li className="flex items-start gap-1.5">
                       <span className="text-blue-600 font-bold shrink-0">•</span>
-                      <span><strong className="text-foreground">चुनी गई केबल दूरी:</strong> <span className="font-bold text-blue-700 dark:text-blue-300">{actualCableMeters} मीटर</span> (~{avgMetersPerCam}m प्रति कैमरा)</span>
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <span className="text-blue-600 font-bold shrink-0">•</span>
-                      <span><strong className="text-foreground">स्टोरेज रिटेंशन चयन:</strong> {storageDays} दिन बैकअप</span>
+                      <span><strong className="text-foreground">स्टोरेज रिटेंशन चयन:</strong> {storageDays} दिन बैकअप {isAddon && retainStorage ? "(पुराना HDD रीयूज)" : ""}</span>
                     </li>
                     <li className="flex items-start gap-1.5">
                       <span className="text-blue-600 font-bold shrink-0">•</span>
@@ -1007,19 +1218,30 @@ export function CustomerJourneyBlueprint({
                     </li>
                     <li className="flex items-start gap-1.5">
                       <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                      <span><strong className="text-foreground">DVR / NVR:</strong> {items.find(i => (i.category || "").includes("recorder") || (i.name || "").includes("DVR"))?.display_name || "16-Channel H.265+ DVR"}</span>
+                      <span>
+                        <strong className="text-foreground">DVR / NVR निर्णय:</strong>{" "}
+                        {recorderItem ? (
+                          <span className="font-semibold text-emerald-950 dark:text-emerald-200">
+                            {recorderItem.display_name || recorderItem.name} {isAddon && existingChannels > 0 ? `(अपग्रेड: कुल ${totalCombinedCameras} कैमरों के लिए पुराना ${existingChannels}-Ch DVR छोटा था)` : ""}
+                          </span>
+                        ) : (
+                          <span className="font-semibold text-emerald-800 dark:text-emerald-300">
+                            {isAddon && existingChannels > 0 ? `मौजूदा ${existingChannels}-चैनल रिकॉर्डर का रीयूज (नया DVR शुल्क ₹0 — ग्राहक की बचत)` : "कोई नया रिकॉर्डर आवश्यक नहीं"}
+                          </span>
+                        )}
+                      </span>
                     </li>
                     <li className="flex items-start gap-1.5">
                       <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                      <span><strong className="text-foreground">स्टोरेज ड्राइव:</strong> {storageHardwareTitle} (3 साल वारंटी)</span>
+                      <span><strong className="text-foreground">स्टोरेज ड्राइव:</strong> {storageHardwareTitle} (3 साल वारंटी){isAddon && retainStorage ? " [ग्राहक की पुरानी HDD रीयूज]" : ""}</span>
                     </li>
                     <li className="flex items-start gap-1.5">
                       <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                      <span><strong className="text-foreground">केबल पैकेजिंग:</strong> <span className="font-bold text-emerald-700 dark:text-emerald-300">{bundleCount90m > 0 ? `${bundleCount90m} बंडल (90m = ${bundleCount90m * 90}m) + ${openMeters}m खुला तार = ${actualCableMeters}m कुल` : `${actualCableMeters}m शुद्ध तांबा`}</span></span>
+                      <span><strong className="text-foreground">केबल पैकेजिंग:</strong> <span className="font-bold text-emerald-700 dark:text-emerald-300">{cablingDone ? "कंसील्ड केबलिंग (₹0 नया तार)" : (bundleCount90m > 0 ? `${bundleCount90m} बंडल (90m = ${bundleCount90m * 90}m) + ${openMeters}m खुला तार = ${actualCableMeters}m कुल` : `${actualCableMeters}m शुद्ध तांबा`)}</span></span>
                     </li>
                     <li className="flex items-start gap-1.5">
                       <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                      <span><strong className="text-foreground">पावर सप्लाई:</strong> {items.find(i => (i.name || "").includes("SMPS") || (i.name || "").includes("Power"))?.display_name || "16-Channel 12V 20A Metal SMPS"}</span>
+                      <span><strong className="text-foreground">पावर सप्लाई:</strong> {items.find(i => (i.name || "").includes("SMPS") || (i.name || "").includes("Power"))?.display_name || (isWireless ? "12V पावर एडेप्टर्स" : (isIP ? "PoE स्विच / पावर" : "12V सेंट्रलाइज्ड SMPS"))}</span>
                     </li>
                     <li className="flex items-start gap-1.5">
                       <span className="text-emerald-600 font-bold shrink-0">✓</span>
@@ -1027,7 +1249,7 @@ export function CustomerJourneyBlueprint({
                     </li>
                     <li className="flex items-start gap-1.5">
                       <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                      <span><strong className="text-foreground">इंस्टॉलेशन व फिटिंग:</strong> {totalCameras}x प्रोफेशनल माउंटिंग, फोकसिंग व मोबाइल ऐप कॉन्फ़िगरेशन</span>
+                      <span><strong className="text-foreground">इंस्टॉलेशन व फिटिंग:</strong> {cablingDone ? `${totalCameras}x माउंटिंग व मौजूदा केबलिंग टर्मिनेशन` : `${totalCameras}x फुल टर्नकी वायरिंग, माउंटिंग व ऐप सेटअप`}</span>
                     </li>
                     <li className="flex items-start gap-1.5">
                       <span className="text-emerald-600 font-bold shrink-0">✓</span>
@@ -1060,16 +1282,24 @@ export function CustomerJourneyBlueprint({
             
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-[11px] pt-1">
               <div className="bg-white/80 dark:bg-zinc-900/80 p-2 rounded-lg border border-amber-100 dark:border-amber-900/40">
-                <p className="text-muted-foreground font-medium">परिसर व स्थान</p>
-                <p className="font-bold text-foreground truncate mt-0.5">{propertyInfo.title.split("(")[0]} ({area ? `${area}, ` : ""}{city})</p>
+                <p className="text-muted-foreground font-medium">परिसर व सेटअप</p>
+                <p className="font-bold text-foreground truncate mt-0.5">{propertyInfo.title.split("(")[0]} • {isAddon ? "सिस्टम विस्तार" : "नया"}</p>
               </div>
               <div className="bg-white/80 dark:bg-zinc-900/80 p-2 rounded-lg border border-amber-100 dark:border-amber-900/40">
-                <p className="text-muted-foreground font-medium">कैमरा व ब्रांड</p>
-                <p className="font-bold text-foreground truncate mt-0.5">{totalCameras}x {activeBrand} ({activeResolution.split(" ")[0]})</p>
+                <p className="text-muted-foreground font-medium">{isAddon ? "कैमरा व मौजूदा स्टेटस" : "कैमरा व ब्रांड"}</p>
+                <p className="font-bold text-foreground truncate mt-0.5">
+                  {totalCameras}x {activeBrand} {isAddon && existingChannels > 0 ? `(पुराना: ${existingChannels}Ch)` : `(${activeResolution.split(" ")[0]})`}
+                </p>
               </div>
               <div className="bg-white/80 dark:bg-zinc-900/80 p-2 rounded-lg border border-amber-100 dark:border-amber-900/40">
-                <p className="text-muted-foreground font-medium">केबल व दूरी</p>
-                <p className="font-bold text-foreground truncate mt-0.5">{actualCableMeters}m ({cablingDone ? "कंसील्ड" : `${bundleCount90m} बंडल+60m`})</p>
+                <p className="text-muted-foreground font-medium">{isAddon ? "रिकॉर्डर अपग्रेड निर्णय" : "केबल व दूरी"}</p>
+                <p className="font-bold text-foreground truncate mt-0.5">
+                  {isAddon ? (
+                    recorderItem ? `⚠️ नया 16-Ch अपग्रेड` : `✅ पुराना DVR रीयूज`
+                  ) : (
+                    `${actualCableMeters}m (${cablingDone ? "कंसील्ड" : "कॉपर तार"})`
+                  )}
+                </p>
               </div>
               <div className="bg-white/80 dark:bg-zinc-900/80 p-2 rounded-lg border border-amber-100 dark:border-amber-900/40">
                 <p className="text-muted-foreground font-medium">कुल कोटेशन (GST शामिल)</p>

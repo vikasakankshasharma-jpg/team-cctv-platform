@@ -18,7 +18,22 @@ export default function LeadIntelligencePanel({
   
   // Local state
   const [intentScore, setIntentScore] = useState(lead.intentScore || "Cold");
-  const [installationType, setInstallationType] = useState(lead.installationType || "New");
+  
+  const initialInstallationType = (() => {
+    if (lead.installationType) return lead.installationType;
+    const raw = String(
+      (lead as any).installation_type || 
+      lead.wizard_answers?.installation_type || 
+      (lead as any).requirementSnapshot?.installation_type || 
+      ""
+    ).toLowerCase();
+    if (raw.includes("addon") || raw.includes("expansion") || raw.includes("जोड़ना")) return "Addon";
+    if (raw.includes("upgrade") || raw.includes("replacement")) return "Upgrade";
+    if (raw.includes("repair") || raw.includes("service")) return "Repair";
+    return "New";
+  })();
+
+  const [installationType, setInstallationType] = useState(initialInstallationType);
   const [expectedClosingDate, setExpectedClosingDate] = useState(lead.expectedClosingDate || "");
   const [probabilityPercent, setProbabilityPercent] = useState(lead.probabilityPercent || 0);
   const [expectedValue, setExpectedValue] = useState(
@@ -84,8 +99,10 @@ export default function LeadIntelligencePanel({
             onChange={(e) => setInstallationType(e.target.value as any)}
             className="w-full p-2 border rounded-md text-sm"
           >
-            <option value="New">{t("adm_intel_new_inst", "New Installation")}</option>
-            <option value="Upgrade">{t("adm_intel_upgrade", "Upgrade/Replacement")}</option>
+            <option value="New">{t("adm_intel_new_inst", "नया लगाना है")}</option>
+            <option value="Addon">{t("adm_intel_addon", "मौजूदा सिस्टम में जोड़ना")}</option>
+            <option value="Upgrade">{t("adm_intel_upgrade", "पुराना बदलना / अपग्रेड")}</option>
+            <option value="Repair">{t("adm_intel_repair", "सर्विस व रिपेयर")}</option>
           </select>
         </div>
         <div>
