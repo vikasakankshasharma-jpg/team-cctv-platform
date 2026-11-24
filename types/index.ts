@@ -449,6 +449,11 @@ export interface AddonRule {
     technology?: Technology | string;
     cabling_done?: boolean;
   existing_cabling?: "3+1" | "cat6" | "coaxial" | "unsure";
+  existing_recorder_channels?: number;
+  existing_working_cameras?: number;
+  force_new_recorder?: boolean;
+  retain_existing_storage?: boolean;
+  recorder_mode?: "single" | "dual";
     requirements?: string[];
     
     // NEW: Scaling rules
@@ -524,6 +529,11 @@ export interface ConfiguratorSelection {
   total_power_cable_meters?: number;
   cabling_done?: boolean;
   existing_cabling?: "3+1" | "cat6" | "coaxial" | "unsure";
+  existing_recorder_channels?: number;
+  existing_working_cameras?: number;
+  force_new_recorder?: boolean;
+  retain_existing_storage?: boolean;
+  recorder_mode?: "single" | "dual";
   partner_id?: string;
   utm_source?: string;
   utm_campaign?: string;

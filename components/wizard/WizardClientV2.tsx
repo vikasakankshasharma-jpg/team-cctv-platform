@@ -1259,6 +1259,55 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                   />
                   <Button variant="outline" size="icon" onClick={() => setReq(prev => ({ ...prev, existing_working_cameras: (typeof prev.existing_working_cameras === 'number' ? prev.existing_working_cameras : 0) + 1 }))}>+</Button>
                </div>
+
+               <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white mt-6">
+                 {t("wz_4_existing_storage_action", "4. रिकॉर्डिंग स्टोरेज (हार्ड डिस्क) का क्या करना है?")}
+               </h3>
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                 <button
+                   type="button"
+                   onClick={() => setReq(prev => ({ ...prev, retain_existing_storage: true }))}
+                   className={`p-3.5 sm:p-4 rounded-xl border-2 text-left font-medium transition-all ${
+                     req.retain_existing_storage === true
+                       ? 'border-blue-600 bg-blue-50/80 text-blue-900 dark:bg-blue-950/60 dark:text-blue-200 shadow-xs'
+                       : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 hover:border-blue-300'
+                   }`}
+                 >
+                   <div className="flex items-center justify-between mb-1">
+                     <span className="font-bold text-sm flex items-center gap-1.5">
+                       <span>💾</span> {t("wz_storage_keep_old", "मेरी पुरानी हार्ड डिस्क रखें")}
+                     </span>
+                     <span className="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                       ₹0 नई लागत
+                     </span>
+                   </div>
+                   <p className="text-[11px] text-muted-foreground leading-relaxed">
+                     {t("wz_storage_keep_old_desc", "पुराने DVR की डिस्क ही उपयोग करें (कैमरे बढ़ने पर बैकअप दिन घटकर ~3-5 दिन रह जाएगा)।")}
+                   </p>
+                 </button>
+
+                 <button
+                   type="button"
+                   onClick={() => setReq(prev => ({ ...prev, retain_existing_storage: false }))}
+                   className={`p-3.5 sm:p-4 rounded-xl border-2 text-left font-medium transition-all ${
+                     req.retain_existing_storage !== true
+                       ? 'border-blue-600 bg-blue-50/80 text-blue-900 dark:bg-blue-950/60 dark:text-blue-200 shadow-xs'
+                       : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 hover:border-blue-300'
+                   }`}
+                 >
+                   <div className="flex items-center justify-between mb-1">
+                     <span className="font-bold text-sm flex items-center gap-1.5">
+                       <span>⭐</span> {t("wz_storage_upgrade_new", "नई 2TB/4TB डिस्क अपग्रेड")}
+                     </span>
+                     <span className="text-[10px] font-black px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                       अनुशंसित
+                     </span>
+                   </div>
+                   <p className="text-[11px] text-muted-foreground leading-relaxed">
+                     {t("wz_storage_upgrade_new_desc", "नए व पुराने सभी कैमरों के पूरे 15-30 दिन बैकअप के लिए नई 24×7 सर्विलांस ड्राइव जोड़ें।")}
+                   </p>
+                 </button>
+               </div>
                
                <div className="pt-6 flex items-center gap-3">
                  <Button variant="outline" onClick={handlePrev} className="h-12 px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">

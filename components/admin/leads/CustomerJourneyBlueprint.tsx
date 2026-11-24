@@ -507,7 +507,7 @@ export function CustomerJourneyBlueprint({
       recorderPitch +
       `• *स्टोरेज:* ${storageDays} दिन रिकॉर्डिंग (${storageHardwareTitle})${isAddon && retainStorage ? " [पुराना HDD रीयूज]" : ""}\n` +
       `• *केबलिंग (दूरी):* ${cablingDone ? "कंसील्ड वायरिंग तैयार (0m नया तार)" : `${actualCableMeters} मीटर 100% सॉलिड कॉपर केबल (~${avgMetersPerCam}m/कैमरा)`}\n` +
-      `• *BOM पैकेजिंग:* ${bundleCount90m > 0 ? `${bundleCount90m} बंडल (90m) + ${openMeters}m खुला तार` : `${actualCableMeters}m कॉपर तार`}\n` +
+      `• *BOM पैकेजिंग:* ${cablingDone ? "कंसील्ड वायरिंग तैयार (0m नया तार, ₹0 केबल शुल्क)" : (bundleCount90m > 0 ? `${bundleCount90m} बंडल (90m) + ${openMeters}m खुला तार` : `${actualCableMeters}m कॉपर तार`)}\n` +
       `• *इंटरनेट:* ${broadbandLabel} (${remoteViewingRequested ? "फ्री मोबाइल ऐप एक्टिव" : "लोकल व्यू"})\n` +
       `• *टाइमलाइन:* ${timelineLabel}\n` +
       `• *कुल कोटेशन:* ₹${totalPayable.toLocaleString("en-IN")} (18% GST व डोरस्टेप फिटिंग सहित)`
@@ -1179,7 +1179,12 @@ export function CustomerJourneyBlueprint({
                     </li>
                     <li className="flex items-start gap-1.5">
                       <span className="text-blue-600 font-bold shrink-0">•</span>
-                      <span><strong className="text-foreground">चुनी गई केबल दूरी:</strong> <span className="font-bold text-blue-700 dark:text-blue-300">{actualCableMeters} मीटर</span> {cablingDone ? "(कंसील्ड वायरिंग तैयार)" : `(~${avgMetersPerCam}m प्रति कैमरा)`}</span>
+                      <span>
+                        <strong className="text-foreground">केबलिंग स्थिति:</strong>{" "}
+                        <span className="font-bold text-blue-700 dark:text-blue-300">
+                          {cablingDone ? "कंसील्ड वायरिंग तैयार (0m नया तार, ₹0 केबल शुल्क)" : `${actualCableMeters} मीटर (~${avgMetersPerCam}m प्रति कैमरा)`}
+                        </span>
+                      </span>
                     </li>
                     <li className="flex items-start gap-1.5">
                       <span className="text-blue-600 font-bold shrink-0">•</span>

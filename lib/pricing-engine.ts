@@ -304,7 +304,8 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     totalPurchaseCost += addonCalc.totalCost;
   }
 
-  if (effectiveTravelFee > 0) {
+  const alreadyHasVisitCharge = lineItems.some(item => item.product_id === "labor_visit_charge" || item.product_id === "labor_small_job_minimum");
+  if (effectiveTravelFee > 0 && !alreadyHasVisitCharge) {
     const travelPayoutPct = settings.travel_fee_payout_percent ?? 85;
     const travelCost = Math.round(effectiveTravelFee * (travelPayoutPct / 100));
     lineItems.push({
@@ -443,8 +444,12 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
       })();
 
       // Validate recorder capacity
+      const existingCh = Number(selection.existing_recorder_channels || (selection as any).existing_channels) || 0;
+      const existingWork = Number(selection.existing_working_cameras || (selection as any).working_cameras) || 0;
+      const isExistingRecorderSufficient = existingCh > 0 && (requiredWiredCount + existingWork) <= existingCh && selection.force_new_recorder !== true;
+
       const recorderItem = lineItems.find(item => products.some(p => p.id === item.product_id && p.category === "recorder"));
-      if (!recorderItem && effectiveTech.toUpperCase() !== "WIRELESS" && requiredWiredCount > 0) {
+      if (!recorderItem && effectiveTech.toUpperCase() !== "WIRELESS" && requiredWiredCount > 0 && !isExistingRecorderSufficient) {
         error = true;
         errorMessage = "Missing required recorder hardware in catalog.";
       } else if (recorderItem) {
@@ -772,10 +777,25 @@ function calculateHardware(
 
   // 2. Recorder Selection (sized for wired cameras - DVR for HD, NVR for IP)
   let recorder: Product | undefined = undefined;
-  if (wiredCameraCount > 0) {
+  const existingCh = Number(selection.existing_recorder_channels || (selection as any).existing_channels) || 0;
+  const existingWork = Number(selection.existing_working_cameras || (selection as any).working_cameras) || 0;
+  const totalCombinedWired = wiredCameraCount + existingWork;
+  const isExistingRecorderSufficient = existingCh > 0 && totalCombinedWired <= existingCh && selection.force_new_recorder !== true;
+
+  if (wiredCameraCount > 0 && !isExistingRecorderSufficient) {
+    let requiredRecorderChannels = wiredCameraCount;
+    if (existingCh > 0) {
+      if ((selection as any).recorder_mode === "dual") {
+        const sparePorts = Math.max(0, existingCh - existingWork);
+        requiredRecorderChannels = Math.max(1, wiredCameraCount - sparePorts);
+      } else {
+        requiredRecorderChannels = totalCombinedWired;
+      }
+    }
+
     const recorderSelection = {
       ...selection,
-      camera_count: wiredCameraCount,
+      camera_count: requiredRecorderChannels,
       resolution_preference: `${requiredMaxMP}MP`
     };
     recorder = resolveRecorder(recorderSelection, products, effectiveWiredTech, requiredMaxMP);
@@ -796,12 +816,13 @@ function calculateHardware(
   }
 
   // 3. Storage (HDD / SD Card)
+  const retainStorage = Boolean(selection.retain_existing_storage ?? (selection as any).retain_storage ?? false);
   const hddSelection = {
     ...selection,
-    camera_count: isWirelessTech ? totalHardwareCameraCount : wiredCameraCount
+    camera_count: isWirelessTech ? totalHardwareCameraCount : (existingCh > 0 ? totalCombinedWired : wiredCameraCount)
   };
   const primaryCamera = products.find(prod => items.some(i => i.product_id === prod.id && (prod.category === "cctv_camera" || (prod.category as any) === "camera")));
-  const hdd = resolveHDD(hddSelection, [...products, ...addons] as any[], tech, recorder, primaryCamera, settings);
+  const hdd = !retainStorage ? resolveHDD(hddSelection, [...products, ...addons] as any[], tech, recorder, primaryCamera, settings) : undefined;
   if (hdd) {
     const unitPrice = hdd.unit_price || hdd.price || 0;
     

@@ -185,15 +185,34 @@ export async function getOrCreateLeadQuote(leadOrQuoteId: string): Promise<Basel
   try {
     const { products, addons, settings, geoRules } = await getBaselineCatalogData();
 
+    const outCount = answers.outdoor_camera_count !== undefined 
+      ? Number(answers.outdoor_camera_count) 
+      : (answers.outdoor_bullets !== undefined ? Number(answers.outdoor_bullets) : undefined);
+    const inCount = answers.indoor_camera_count !== undefined 
+      ? Number(answers.indoor_camera_count) 
+      : (answers.indoor_domes !== undefined ? Number(answers.indoor_domes) : undefined);
+    const wifiCount = Number(answers.wifi_camera_count || 0);
+
     const selection: any = {
       plan_type: planType,
       technology: tech,
       camera_count: camCount,
+      outdoor_camera_count: outCount,
+      indoor_camera_count: inCount,
+      wifi_camera_count: wifiCount > 0 ? wifiCount : undefined,
+      mixed_camera_requirements: answers.mixed_camera_requirements,
+      cabling_done: answers.cabling_done ?? leadData?.cabling_done ?? false,
+      existing_cabling: answers.existing_cabling || answers.existing_cabling_type || leadData?.existing_cabling,
       storage_days: recDays,
       brand_preference: brandPref,
-      picture_quality: "good",
-      resolution_preference: "2MP",
-      selected_addons: [],
+      picture_quality: answers.picture_quality || "good",
+      resolution_preference: answers.resolution_preference || answers.q_resolution || "2MP",
+      sensor_preference: answers.sensor_preference || (answers.features?.color ? "colorvu" : "standard_ir"),
+      requested_features: answers.requested_features || (outCount && outCount > 0 ? ["bullet", "outdoor"] : []),
+      selected_addons: answers.selected_addons || [],
+      existing_recorder_channels: answers.existing_recorder_channels || answers.existing_channels,
+      existing_working_cameras: answers.existing_working_cameras || answers.working_cameras,
+      retain_existing_storage: answers.retain_existing_storage ?? false,
     };
 
     const pincode = leadData?.address?.pincode || leadData?.detected_pincode || answers.lead_pincode || answers.pincode;
