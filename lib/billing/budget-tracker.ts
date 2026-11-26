@@ -70,7 +70,7 @@ export interface ServiceUsageSummary {
 }
 
 export const DEFAULT_BUDGET_CONFIG: ServiceCostBudget = {
-  gcp_monthly_limit_inr: 250,
+  gcp_monthly_limit_inr: 1000,
   maps_monthly_requests_limit: 20000,
   resend_monthly_emails_limit: 2400, // 80% of 3,000 free tier
   msg91_wallet_min_inr: 100,
