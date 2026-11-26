@@ -39,7 +39,7 @@ const CSV_COLUMNS: (keyof Product)[] = [
  * Returns a CSV file download.
  */
 export async function GET(req: NextRequest) {
-  const session = await requireRoleApi(["super_admin", "admin"]).catch(() => null);
+  const session = await requireRoleApi(["super_admin", "admin", "inventory_admin", "catalog"]).catch(() => null);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }

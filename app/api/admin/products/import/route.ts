@@ -17,7 +17,7 @@ const BATCH_SIZE = 500;
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await requireRoleApi(["super_admin", "admin"]);
+    const session = await requireRoleApi(["super_admin", "admin", "inventory_admin", "catalog"]);
     const body = await req.json();
     const { ip, ua } = getRequestMetadata(req);
 

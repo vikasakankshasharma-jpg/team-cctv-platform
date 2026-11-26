@@ -12,11 +12,38 @@ import { ImageUploader } from "@/components/admin/ImageUploader";
 import { CategoryGroupSelector } from "@/components/admin/CategoryGroupSelector";
 import { CatalogSubNav } from "@/components/admin/navigation/AdminSubNav";
 import Link from "next/link";
+import { auth } from "@/lib/firebase-client";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [featureTags, setFeatureTags] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Helper to extract bearer token for API calls
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    try {
+      if (auth?.currentUser) {
+        const token = await auth.currentUser.getIdToken();
+        if (token) return { "Authorization": `Bearer ${token}` };
+      }
+    } catch {
+      // Fall back to cookie auth
+    }
+    return {};
+  };
+
+  // Helper for unauthorized toast with 1-click re-login
+  const showUnauthorizedToast = () => {
+    toast.error("सत्र समाप्त हो गया है (Session Expired / Unauthorized)। कृपया पुनः लॉगिन करें।", {
+      action: {
+        label: "लॉगिन करें",
+        onClick: () => {
+          window.location.href = `/admin/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+        }
+      },
+      duration: 8000
+    });
+  };
 
   // Active filters â€” kept in sync with ProductInventory for intelligent export
   const [activeFilters, setActiveFilters] = useState<{ category: string; technology: string }>({
@@ -38,13 +65,19 @@ export default function AdminProductsPage() {
 
   const fetchData = async () => {
     try {
+      const authHeaders = await getAuthHeaders();
       const [prodRes, tagRes] = await Promise.all([
-        fetch(`/api/admin/products?_t=${Date.now()}`),
-        fetch(`/api/admin/features?_t=${Date.now()}`)
+        fetch(`/api/admin/products?_t=${Date.now()}`, { headers: authHeaders }),
+        fetch(`/api/admin/features?_t=${Date.now()}`, { headers: authHeaders })
       ]);
       const prodData = await prodRes.json();
       const tagData = await tagRes.json();
       
+      if (prodRes.status === 401 || prodRes.status === 403 || prodData.error === "Unauthorized") {
+        showUnauthorizedToast();
+        return;
+      }
+
       if (prodData.success) setProducts(prodData.products);
       if (tagData.success) setFeatureTags(tagData.tags);
     } catch (error) {
@@ -57,8 +90,13 @@ export default function AdminProductsPage() {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch(`/api/admin/products?_t=${Date.now()}`);
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(`/api/admin/products?_t=${Date.now()}`, { headers: authHeaders });
       const data = await res.json();
+      if (res.status === 401 || res.status === 403 || data.error === "Unauthorized") {
+        showUnauthorizedToast();
+        return;
+      }
       if (data.success) {
         setProducts(data.products);
       }
@@ -95,8 +133,16 @@ export default function AdminProductsPage() {
 
     const ids = Array.from(selectedIds).join(",");
     try {
-      const res = await fetch(`/api/admin/products?ids=${ids}`, { method: "DELETE" });
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(`/api/admin/products?ids=${ids}`, {
+        method: "DELETE",
+        headers: authHeaders
+      });
       const data = await res.json();
+      if (res.status === 401 || res.status === 403 || data.error === "Unauthorized") {
+        showUnauthorizedToast();
+        return;
+      }
       if (data.success) {
         toast.success("Products deleted successfully");
         setSelectedIds(new Set());
@@ -104,8 +150,8 @@ export default function AdminProductsPage() {
       } else {
         throw new Error(data.error);
       }
-    } catch (err) {
-      toast.error("Failed to delete products");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete products");
     }
   };
 
@@ -114,8 +160,16 @@ export default function AdminProductsPage() {
     if (!confirm(`Are you sure you want to delete "${product.display_name}"?`)) return;
 
     try {
-      const res = await fetch(`/api/admin/products?id=${product.id}`, { method: "DELETE" });
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(`/api/admin/products?id=${product.id}`, {
+        method: "DELETE",
+        headers: authHeaders
+      });
       const data = await res.json();
+      if (res.status === 401 || res.status === 403 || data.error === "Unauthorized") {
+        showUnauthorizedToast();
+        return;
+      }
       if (data.success) {
         toast.success(`"${product.display_name}" deleted successfully`);
         setSelectedIds(prev => {
@@ -139,12 +193,22 @@ export default function AdminProductsPage() {
       // Optimistic update
       setProducts(products.map(p => p.id === id ? { ...p, is_active: !currentStatus } : p));
       
+      const authHeaders = await getAuthHeaders();
       const res = await fetch("/api/admin/products", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders
+        },
         body: JSON.stringify({ id, is_active: !currentStatus })
       });
       
+      if (res.status === 401 || res.status === 403) {
+        // Revert optimistic update
+        setProducts(products.map(p => p.id === id ? { ...p, is_active: currentStatus } : p));
+        showUnauthorizedToast();
+        return;
+      }
       if (!res.ok) throw new Error("Update failed");
       toast.success(currentStatus ? "Marked Out of Stock" : "Marked In Stock");
     } catch (error) {
@@ -412,14 +476,24 @@ export default function AdminProductsPage() {
         payload.features = Array.from(computedFeatures);
       }
 
+      const authHeaders = await getAuthHeaders();
       const res = await fetch("/api/admin/products", {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders
+        },
         body: JSON.stringify(payload)
       });
       
       const data = await res.json();
-      if (!data.success) throw new Error(data.error);
+      if (!data.success) {
+        if (res.status === 401 || res.status === 403 || data.error === "Unauthorized") {
+          showUnauthorizedToast();
+          return;
+        }
+        throw new Error(data.error || "Failed to save product");
+      }
       
       toast.success(isNew ? "Product Added Successfully" : "Product Updated");
       setIsModalOpen(false);
