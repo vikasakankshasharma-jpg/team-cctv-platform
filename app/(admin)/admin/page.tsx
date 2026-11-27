@@ -8,6 +8,9 @@ import { DashboardClient, type WeeklyBucket, type SourceBreakdown, type RecentAc
 import ActionCenterWidget from "@/components/admin/ActionCenterWidget";
 import { PipelineSubNav } from "@/components/admin/navigation/AdminSubNav";
 import { TranslatedText } from "@/components/shared/TranslatedText";
+import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
+import { PwaNotificationPrompt } from "@/components/shared/PwaNotificationPrompt";
+import { DailyBriefingCard } from "@/components/shared/DailyBriefingCard";
 import type { Metadata } from "next";
 import type { Promoter, Lead } from "@/types";
 import fs from "fs";
@@ -255,6 +258,22 @@ export default async function AdminDashboard() {
   return (
     <div className="animate-in fade-in duration-700 pb-6 md:pb-12 space-y-6">
       <PipelineSubNav />
+
+      {/* ── Mobile PWA Install & Notification Activator ── */}
+      <PwaInstallBanner role="admin" />
+      <PwaNotificationPrompt role="admin" userName="Super Admin" />
+
+      {/* ── Start-of-Day & End-of-Day Intelligence Briefing ── */}
+      <DailyBriefingCard
+        role="admin"
+        userName="Admin Command"
+        metrics={[
+          { label: "Pipeline Leads", value: leadsCount, subtext: "Active in funnel" },
+          { label: "Won Bookings", value: wonLeadsCount, subtext: "Revenue converted", highlight: true },
+          { label: "Conversion Yield", value: `${conversionRate}%`, subtext: "Lead efficiency" },
+          { label: "Gross Volume", value: `₹${Math.floor(totalExTaxBusiness / 1000)}k`, subtext: "Ex-tax business" },
+        ]}
+      />
       {/* ── Quota Fallback Alert ── */}
       {isQuotaFallback && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-3">

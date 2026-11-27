@@ -1,4 +1,5 @@
 export const metadata = {
+  manifest: "/manifest-installer.json",
   title: "Field Operations | TEAM CCTV",
   description: "Secure installer access for managing field jobs and wallet.",
 };

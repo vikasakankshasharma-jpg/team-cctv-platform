@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
 import { reportPublicDeliveryFailure } from "@/app/actions/dispatch";
+import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
 
 export default function PublicDeliveryClient({ quoteId, quote }: { quoteId: string; quote: any }) {
   const { t } = useTranslation();
@@ -128,6 +129,7 @@ export default function PublicDeliveryClient({ quoteId, quote }: { quoteId: stri
 
   return (
     <div className="w-full max-w-md bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-zinc-100">
+      <PwaInstallBanner role="delivery" className="mb-6" />
       <div className="flex items-center justify-center gap-2 text-indigo-600 mb-8">
         <Shield className="w-8 h-8" />
         <span className="text-2xl font-bold tracking-tight">TEAM CCTV</span>

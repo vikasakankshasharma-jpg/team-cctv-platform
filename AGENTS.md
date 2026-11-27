@@ -216,6 +216,13 @@
      $$\text{CGST 9%} = \frac{\text{18% GST}}{2}, \quad \text{SGST 9%} = \text{18% GST} - \text{CGST 9%}$$
    - Zero ₹0 CGST/SGST amounts are permitted on standard GST-paid customer quotes.
 
+5. **Existing System Upgrade & Autonomous Wireless Invariant:**
+   - In real-world Indian surveillance setups, wireless/Wi-Fi/4G cameras do NOT physically connect to the customer's existing analog DVR.
+   - When a customer expands an existing setup and adds wireless cameras (or requests a hybrid setup):
+     - Wireless cameras operate autonomously via Wi-Fi or 4G SIM with dedicated MicroSD cards and standalone mobile app view.
+     - Wireless cameras consume 0 channels/ports on the existing recorder, require 0 meters of video cabling to the recorder (zero-cabling notice), and do NOT force an expensive DVR upgrade or multi-channel replacement.
+     - The existing recorder expansion logic evaluates strictly wired cameras against spare physical channels.
+
 ## 14. Automated CCTV Vendor Sync, Catalog Sovereignty & Price Drift Governance (`lib/vendor/cctv-domain-filter.ts`, `app/api/cron/vendor-cctv-sync/`)
 
 1. **Internal Catalog Sovereignty & Whitelist Invariant:**

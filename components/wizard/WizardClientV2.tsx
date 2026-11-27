@@ -1861,90 +1861,488 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
         }
       case 3:
         if (req.installation_type === "addon") {
-           const currentOutdoor = req.outdoor_camera_count || 0;
-           const currentIndoor = req.indoor_camera_count || 0;
-           const newTotal = currentOutdoor + currentIndoor;
-           const existingTotal = req.existing_working_cameras || 0;
-           const combinedTotal = newTotal + existingTotal;
-           const maxChannels = req.existing_recorder_channels || 4;
-           
-           const needsNewRecorder = combinedTotal > maxChannels;
+            const inPtzCount = typeof req.wifi_indoor_ptz_count === 'number' ? req.wifi_indoor_ptz_count : 0;
+            const inFixedCount = typeof req.wifi_indoor_fixed_count === 'number' ? req.wifi_indoor_fixed_count : 0;
+            const outBulletCount = typeof req.wifi_outdoor_bullet_count === 'number' ? req.wifi_outdoor_bullet_count : 0;
+            const outPtzCount = typeof req.wifi_outdoor_ptz_count === 'number' ? req.wifi_outdoor_ptz_count : 0;
+            const sim4gCount = typeof req.wifi_4g_count === 'number' ? req.wifi_4g_count : 0;
 
-           return (
-             <div className="space-y-6 animate-in fade-in">
-               <h2 className="text-3xl font-semibold mb-2">{t("wz_add_new_cameras")}</h2>
-               <p className="text-gray-600 mb-6">{t("wz_select_how_many_cameras_you_wa")}</p>
-               
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                 <div className="p-4 rounded-xl border-2 bg-white">
-                   <h3 className="font-bold mb-3">{t("wz_new_outdoor")}</h3>
-                   <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border">
-                     <Button variant="outline" size="icon" className="bg-white border-2" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, (typeof currentOutdoor === 'number' ? currentOutdoor : 0) - 1), camera_count: Math.max(0, (typeof currentOutdoor === 'number' ? currentOutdoor : 0) - 1) + (typeof currentIndoor === 'number' ? currentIndoor : 0) }))}>-</Button>
-                     <input
-                       type="number"
-                       min="0"
-                       value={currentOutdoor.toString()}
-                        onChange={(e) => {
-                          if (e.target.value === '') {
-                            setReq(prev => ({ ...prev, outdoor_camera_count: '' as any, camera_count: (typeof currentIndoor === 'number' ? currentIndoor : 0) }));
-                            return;
-                          }
-                          const val = parseInt(e.target.value);
-                          if (!isNaN(val)) {
-                            setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, val), camera_count: Math.max(0, val) + (typeof currentIndoor === 'number' ? currentIndoor : 0) }));
-                          }
-                        }}
-                       className="text-2xl font-bold w-16 text-center text-blue-800 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                     />
-                     <Button variant="outline" size="icon" className="bg-white border-2 hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + 1, camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + 1 + (typeof currentIndoor === 'number' ? currentIndoor : 0) }))}>+</Button>
-                   </div>
-                 </div>
-                 <div className="p-4 rounded-xl border-2 bg-white">
-                   <h3 className="font-bold mb-3">{t("wz_new_indoor")}</h3>
-                   <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border">
-                     <Button variant="outline" size="icon" className="bg-white border-2" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, (typeof currentIndoor === 'number' ? currentIndoor : 0) - 1), camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + Math.max(0, (typeof currentIndoor === 'number' ? currentIndoor : 0) - 1) }))}>-</Button>
-                     <input
-                       type="number"
-                       min="0"
-                       value={currentIndoor.toString()}
-                        onChange={(e) => {
-                          if (e.target.value === '') {
-                            setReq(prev => ({ ...prev, indoor_camera_count: '' as any, camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) }));
-                            return;
-                          }
-                          const val = parseInt(e.target.value);
-                          if (!isNaN(val)) {
-                            setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, val), camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + Math.max(0, val) }));
-                          }
-                        }}
-                       className="text-2xl font-bold w-16 text-center text-blue-800 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                     />
-                     <Button variant="outline" size="icon" className="bg-white border-2 hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: (typeof currentIndoor === 'number' ? currentIndoor : 0) + 1, camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + (typeof currentIndoor === 'number' ? currentIndoor : 0) + 1 }))}>+</Button>
-                   </div>
-                 </div>
-               </div>
-               
-               {newTotal > 0 && (
-                 <div className={`p-4 rounded-xl border ${needsNewRecorder ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
-                   {needsNewRecorder ? (
-                     <>
-                       <h4 className="font-bold text-red-800 mb-1">{t("wz_recorder_upgrade_required")}</h4>
-                       <p className="text-sm text-red-700">{t("wz_your_total_active_cameras_")}{combinedTotal}{t("wz__exceed_your")} {maxChannels}{t("wz_channel_dvr_limit_we_will_auto")}</p>
-                     </>
-                   ) : (
-                     <>
-                       <h4 className="font-bold text-green-800 mb-1">{t("wz_dvr_compatible")}</h4>
-                       <p className="text-sm text-green-700">{t("wz_your_total_active_cameras_")}{combinedTotal}{t("wz__fit_perfectly_within_your")} {maxChannels}{t("wz_channel_dvr_limit_you_save_mon")}</p>
-                     </>
-                   )}
-                 </div>
-               )}
-               
-               <div className="pt-4">
-                 <Button onClick={handleNext} disabled={newTotal === 0} className="w-full h-12">{t("wz_next_step")}</Button>
-               </div>
-             </div>
-           );
+            const totalWireless = inPtzCount + inFixedCount + outBulletCount + outPtzCount + sim4gCount;
+            const currentOutdoor = typeof req.outdoor_camera_count === 'number' ? req.outdoor_camera_count : 0;
+            const currentIndoor = typeof req.indoor_camera_count === 'number' ? req.indoor_camera_count : 0;
+            const newWiredTotal = currentOutdoor + currentIndoor;
+            const totalNewCameras = newWiredTotal + totalWireless;
+
+            const existingTotal = typeof req.existing_working_cameras === 'number' ? req.existing_working_cameras : 0;
+            const combinedWiredTotal = newWiredTotal + existingTotal;
+            const maxChannels = req.existing_recorder_channels || 4;
+            const needsNewRecorder = newWiredTotal > 0 && combinedWiredTotal > maxChannels;
+            const spareChannels = Math.max(0, maxChannels - existingTotal);
+
+            const wirelessVariants = [
+              {
+                key: "wifi_indoor_ptz_count",
+                name: t("wz_wv_in_ptz_n", "Indoor 360° Pan-Tilt (Wi-Fi)"),
+                icon: "🏠",
+                desc: t("wz_wv_in_ptz_d", "Living room, bedroom, baby room, cashier counter"),
+                badge: t("wz_wv_in_ptz_b", "360° Motorized View & 2-Way Audio"),
+                count: inPtzCount
+              },
+              {
+                key: "wifi_indoor_fixed_count",
+                name: t("wz_wv_in_fix_n", "Indoor Fixed Dome / Cube (Wi-Fi)"),
+                icon: "🏢",
+                desc: t("wz_wv_in_fix_d", "Hallways, corridors, reception desk, billing desk"),
+                badge: t("wz_wv_in_fix_b", "Fixed Angle • Compact • Tamper Resistant"),
+                count: inFixedCount
+              },
+              {
+                key: "wifi_outdoor_bullet_count",
+                name: t("wz_wv_out_bul_n", "Outdoor Fixed Weatherproof Bullet (Wi-Fi)"),
+                icon: "🌧️",
+                desc: t("wz_wv_out_bul_d", "Main gate, porch, driveway, perimeter wall"),
+                badge: t("wz_wv_out_bul_b", "Weatherproof IP66 • Night Color Vision"),
+                count: outBulletCount
+              },
+              {
+                key: "wifi_outdoor_ptz_count",
+                name: t("wz_wv_out_ptz_n", "Outdoor 360° Pan-Tilt PTZ (Wi-Fi)"),
+                icon: "🔄",
+                desc: t("wz_wv_out_ptz_d", "Open courtyard, terrace, front garden, yard"),
+                badge: t("wz_wv_out_ptz_b", "360° Remote Sweep via Phone App • IP66"),
+                count: outPtzCount
+              },
+              {
+                key: "wifi_4g_count",
+                name: t("wz_wv_4g_n", "4G SIM / Solar Standalone Camera"),
+                icon: "📡",
+                desc: t("wz_wv_4g_d", "Farmhouse, empty plot, remote gate, construction site"),
+                badge: t("wz_wv_4g_b", "No Broadband Wi-Fi Needed • In-built 4G SIM"),
+                count: sim4gCount
+              }
+            ];
+
+            const updateWirelessCount = (vKey: string, newCount: number) => {
+              const safeCount = Math.max(0, newCount);
+              const nextVals: Record<string, number> = {
+                wifi_indoor_ptz_count: vKey === "wifi_indoor_ptz_count" ? safeCount : inPtzCount,
+                wifi_indoor_fixed_count: vKey === "wifi_indoor_fixed_count" ? safeCount : inFixedCount,
+                wifi_outdoor_bullet_count: vKey === "wifi_outdoor_bullet_count" ? safeCount : outBulletCount,
+                wifi_outdoor_ptz_count: vKey === "wifi_outdoor_ptz_count" ? safeCount : outPtzCount,
+                wifi_4g_count: vKey === "wifi_4g_count" ? safeCount : sim4gCount,
+              };
+              const sumWifi = Object.values(nextVals).reduce((a, b) => a + b, 0);
+              const sumIn = nextVals.wifi_indoor_ptz_count + nextVals.wifi_indoor_fixed_count;
+              const sumOut = nextVals.wifi_outdoor_bullet_count + nextVals.wifi_outdoor_ptz_count + nextVals.wifi_4g_count;
+              const sumAll = currentOutdoor + currentIndoor + sumWifi;
+
+              const nextReq: Partial<CCTVRequirement> = {
+                ...req,
+                ...nextVals,
+                wifi_camera_count: sumWifi,
+                wifi_indoor_count: sumIn,
+                wifi_outdoor_count: sumOut,
+                camera_count: sumAll,
+                indoor_camera_count: currentIndoor,
+                outdoor_camera_count: currentOutdoor,
+                has_4g_sim: nextVals.wifi_4g_count > 0 || !!req.is_4g
+              };
+              nextReq.mixed_camera_requirements = buildMixedCameraRequirements(nextReq);
+              setReq(nextReq);
+            };
+
+            const updateWiredOutdoor = (count: number) => {
+              const safeVal = Math.max(0, count);
+              const sumAll = safeVal + currentIndoor + totalWireless;
+              const nextReq: Partial<CCTVRequirement> = {
+                ...req,
+                outdoor_camera_count: safeVal,
+                camera_count: sumAll
+              };
+              nextReq.mixed_camera_requirements = buildMixedCameraRequirements(nextReq);
+              setReq(nextReq);
+            };
+
+            const updateWiredIndoor = (count: number) => {
+              const safeVal = Math.max(0, count);
+              const sumAll = currentOutdoor + safeVal + totalWireless;
+              const nextReq: Partial<CCTVRequirement> = {
+                ...req,
+                indoor_camera_count: safeVal,
+                camera_count: sumAll
+              };
+              nextReq.mixed_camera_requirements = buildMixedCameraRequirements(nextReq);
+              setReq(nextReq);
+            };
+
+            return (
+              <div className="space-y-4 sm:space-y-6 animate-in fade-in">
+                <div>
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span className="inline-block px-2.5 py-0.5 text-[10px] font-bold uppercase rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">
+                      {t("wz_addon_exp_b", "System Expansion")}
+                    </span>
+                    <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300">
+                      {t("wz_addon_curr_status", "Current: {ch}-Ch DVR ({work} Working)", { ch: String(maxChannels), work: String(existingTotal) })}
+                    </span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">
+                    {t("wz_add_new_cameras", "Add New Cameras")}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">
+                    {t("wz_addon_cam_intro", "Select wired cameras to connect to your existing recorder, or add smart wireless cameras for spots without video cables.")}
+                  </p>
+                </div>
+
+                {/* Section 1: Wired Cameras (Connects to existing DVR) */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-xs sm:text-sm font-bold text-gray-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>🔌</span> {t("wz_addon_wired_h", "1. Wired Cameras (Connects to your DVR/NVR)")}
+                    </h3>
+                    <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400">
+                      {newWiredTotal} {newWiredTotal === 1 ? t("wz_cam_word_one", "Camera") : t("wz_cam_word_many", "Cameras")}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="p-3.5 sm:p-4 rounded-xl border-2 border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs flex items-center justify-between">
+                      <div>
+                        <h4 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">
+                          {t("wz_new_outdoor", "New Outdoor Bullet")}
+                        </h4>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                          {t("wz_weatherproof_bullet", "Weatherproof IP67")}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 bg-gray-50 dark:bg-zinc-800 p-1 rounded-xl border border-gray-200 dark:border-zinc-700">
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-8 w-8 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-gray-100" 
+                          onClick={() => updateWiredOutdoor(currentOutdoor - 1)} 
+                          disabled={currentOutdoor === 0}
+                        >
+                          -
+                        </Button>
+                        <input
+                          type="number"
+                          min="0"
+                          value={currentOutdoor.toString()}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value);
+                            updateWiredOutdoor(isNaN(val) ? 0 : val);
+                          }}
+                          className="text-lg font-black w-10 text-center text-blue-700 dark:text-blue-400 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-8 w-8 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-blue-50" 
+                          onClick={() => updateWiredOutdoor(currentOutdoor + 1)}
+                        >
+                          +
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 sm:p-4 rounded-xl border-2 border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs flex items-center justify-between">
+                      <div>
+                        <h4 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">
+                          {t("wz_new_indoor", "New Indoor Dome")}
+                        </h4>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                          {t("wz_ceiling_dome", "Ceiling / Flush Dome")}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 bg-gray-50 dark:bg-zinc-800 p-1 rounded-xl border border-gray-200 dark:border-zinc-700">
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-8 w-8 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-gray-100" 
+                          onClick={() => updateWiredIndoor(currentIndoor - 1)} 
+                          disabled={currentIndoor === 0}
+                        >
+                          -
+                        </Button>
+                        <input
+                          type="number"
+                          min="0"
+                          value={currentIndoor.toString()}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value);
+                            updateWiredIndoor(isNaN(val) ? 0 : val);
+                          }}
+                          className="text-lg font-black w-10 text-center text-blue-700 dark:text-blue-400 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-8 w-8 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-blue-50" 
+                          onClick={() => updateWiredIndoor(currentIndoor + 1)}
+                        >
+                          +
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Smart Wireless Cameras (Standalone Wi-Fi & 4G SIM) */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-xs sm:text-sm font-bold text-gray-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>📡</span> {t("wz_addon_wifi_h", "2. Smart Wireless Cameras (Wi-Fi / 4G SIM — Hybrid)")}
+                    </h3>
+                    {totalWireless > 0 && (
+                      <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400">
+                        {totalWireless} {totalWireless === 1 ? t("wz_cam_word_one", "Camera") : t("wz_cam_word_many", "Cameras")}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Ground Truth Reassurance Note */}
+                  <div className="p-3 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/70 dark:bg-blue-950/30 text-left flex items-start gap-2.5">
+                    <span className="text-base shrink-0">💡</span>
+                    <p className="text-[11px] sm:text-xs text-blue-900 dark:text-blue-300 leading-relaxed font-medium">
+                      <strong>{t("wz_addon_wf_note_t", "Note for Wireless Cameras:")}</strong> {t("wz_addon_wf_note_d", "Wireless cameras do NOT connect to your existing recorder. They operate independently via Wi-Fi/4G with dedicated MicroSD storage & phone app, saving you from expensive DVR upgrades and complex wall cabling!")}
+                    </p>
+                  </div>
+
+                  {/* Collapsible Wireless Selector */}
+                  {!isWirelessExpanded && totalWireless === 0 ? (
+                    <div 
+                      onClick={() => setIsWirelessExpanded(true)}
+                      className="p-3.5 sm:p-4 rounded-xl border-2 border-dashed border-blue-200 dark:border-blue-900/60 bg-blue-50/20 dark:bg-zinc-900/40 hover:bg-blue-50/50 dark:hover:bg-zinc-900/70 transition-all cursor-pointer flex items-center justify-between group shadow-xs"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-base shrink-0 group-hover:scale-105 transition-transform">
+                          📡
+                        </div>
+                        <div className="space-y-0.5 text-left">
+                          <h4 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            {t("wz_hyb_add_t", "Add Smart Wireless Cameras (Wi-Fi / 4G SIM)")}
+                          </h4>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                            {t("wz_hyb_add_d", "For remote gate, terrace, baby room, or farm corners without video cables.")}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-2.5 rounded-lg border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400 font-bold text-xs shrink-0 flex items-center gap-1 group-hover:bg-blue-600 group-hover:text-white transition-all pointer-events-none"
+                      >
+                        <span>+ {t("wz_hyb_add_btn", "Add")}</span>
+                      </Button>
+                    </div>
+                  ) : !isWirelessExpanded && totalWireless > 0 ? (
+                    <div 
+                      onClick={() => setIsWirelessExpanded(true)}
+                      className="p-3.5 sm:p-4 rounded-xl border-2 border-blue-500/70 bg-blue-50/40 dark:bg-blue-950/20 hover:bg-blue-50/60 transition-all cursor-pointer flex items-center justify-between group shadow-xs"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center text-base shrink-0">
+                          📡
+                        </div>
+                        <div className="space-y-0.5 text-left">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-bold text-xs sm:text-sm text-blue-950 dark:text-blue-100">
+                              {t("wz_hyb_wf_cams", "Smart Wireless Cameras")}
+                            </h4>
+                            <span className="text-[10px] bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full">
+                              {t("wz_hyb_n_added", "{n} Added", { n: String(totalWireless) })}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-blue-700/80 dark:text-blue-300/80">
+                            {[
+                              inPtzCount > 0 ? t("wz_hyb_s_in_ptz", "{n}x 360° PTZ", { n: String(inPtzCount) }) : null,
+                              inFixedCount > 0 ? t("wz_hyb_s_in_fix", "{n}x Indoor Fixed", { n: String(inFixedCount) }) : null,
+                              outBulletCount > 0 ? t("wz_hyb_s_out_bul", "{n}x Outdoor Bullet", { n: String(outBulletCount) }) : null,
+                              outPtzCount > 0 ? t("wz_hyb_s_out_ptz", "{n}x Outdoor PTZ", { n: String(outPtzCount) }) : null,
+                              sim4gCount > 0 ? t("wz_hyb_s_4g", "{n}x 4G SIM", { n: String(sim4gCount) }) : null,
+                            ].filter(Boolean).join(" • ") || t("wz_hyb_click_edit", "Click to edit selection")}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2.5 rounded-lg text-blue-700 dark:text-blue-300 font-bold text-xs shrink-0 flex items-center gap-1 hover:bg-blue-100 pointer-events-none"
+                      >
+                        <span>{t("wz_hyb_edit_btn", "Edit")}</span>
+                        <ChevronDown className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="p-3.5 sm:p-4 rounded-xl border-2 border-blue-200 dark:border-blue-900/60 bg-blue-50/20 dark:bg-zinc-900/50 shadow-xs space-y-3 transition-all animate-in fade-in duration-200">
+                      <div 
+                        className="flex items-center justify-between gap-2 cursor-pointer select-none pb-2 border-b border-blue-100 dark:border-zinc-800"
+                        onClick={() => setIsWirelessExpanded(false)}
+                      >
+                        <div className="space-y-0.5 text-left">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-base">📡</span>
+                            <h4 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white">
+                              {t("wz_hyb_panel_t", "Smart Wireless Cameras (Wi-Fi & 4G SIM)")}
+                            </h4>
+                            <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">
+                              {totalWireless > 0 ? t("wz_hyb_n_selected", "{n} Selected", { n: String(totalWireless) }) : t("wz_hyb_opt_b", "Optional • Hybrid")}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                            {t("wz_hyb_add_d", "For remote gate, terrace, baby room, or farm corners without video cables.")}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 transition-colors shrink-0 flex items-center gap-1 text-xs font-semibold"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsWirelessExpanded(false);
+                          }}
+                        >
+                          <span>{t("wz_hyb_done_btn", "Done")}</span>
+                          <ChevronUp className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        {wirelessVariants.map((v) => (
+                          <div 
+                            key={v.key} 
+                            className={`p-2.5 sm:p-3 rounded-xl border flex items-center justify-between transition-all ${
+                              v.count > 0 
+                                ? 'bg-white dark:bg-zinc-900 border-blue-400 dark:border-blue-700 shadow-xs ring-1 ring-blue-300' 
+                                : 'bg-white/70 dark:bg-zinc-900/60 border-gray-200 dark:border-zinc-800 hover:border-gray-300'
+                            }`}
+                          >
+                            <div className="space-y-0.5 text-left pr-2">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-sm">{v.icon}</span>
+                                <h5 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white">
+                                  {v.name}
+                                </h5>
+                              </div>
+                              <p className="text-[10px] sm:text-[11px] text-gray-500 dark:text-zinc-400 leading-tight">
+                                {v.desc}
+                              </p>
+                              <span className="inline-block text-[9px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.2 rounded mt-0.5">
+                                {v.badge}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1 bg-gray-50 dark:bg-zinc-800 p-1 rounded-xl border border-gray-200 dark:border-zinc-700 shrink-0">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7 bg-white dark:bg-zinc-900 border text-sm font-black hover:bg-gray-100"
+                                onClick={() => updateWirelessCount(v.key, v.count - 1)}
+                                disabled={v.count === 0}
+                              >
+                                -
+                              </Button>
+                              <span className="text-base font-black w-7 text-center text-blue-700 dark:text-blue-400">
+                                {v.count}
+                              </span>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7 bg-white dark:bg-zinc-900 border text-sm font-black hover:bg-blue-50"
+                                onClick={() => updateWirelessCount(v.key, v.count + 1)}
+                              >
+                                +
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Section 3: Real-Time Live System Status Card */}
+                {totalNewCameras > 0 && (
+                  <div className={`p-4 rounded-xl border ${needsNewRecorder ? 'bg-amber-50 border-amber-300 dark:bg-amber-950/30 dark:border-amber-900/60' : 'bg-emerald-50 border-emerald-300 dark:bg-emerald-950/30 dark:border-emerald-900/60'} text-left space-y-2`}>
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-zinc-300">
+                        {t("wz_addon_summary_t", "Compatibility & Sizing Analysis")}
+                      </span>
+                      <span className="text-[11px] font-black px-2 py-0.5 rounded bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800">
+                        {t("wz_addon_total_req", "Total New: {n} Cameras ({wired} Wired + {wifi} Wireless)", { n: String(totalNewCameras), wired: String(newWiredTotal), wifi: String(totalWireless) })}
+                      </span>
+                    </div>
+
+                    {newWiredTotal > 0 && (
+                      <div className="text-xs space-y-1">
+                        {needsNewRecorder ? (
+                          <div className="text-amber-900 dark:text-amber-200">
+                            <span className="font-bold block">⚠️ {t("wz_recorder_upgrade_required", "Recorder Upgrade / Add-on DVR Required")}</span>
+                            <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
+                              {t("wz_addon_rec_full_d", "Your {work} working + {new} new wired cameras = {comb} wired cameras, which exceeds your {ch}-channel DVR capacity. We will automatically size a cost-saving add-on DVR (saving ₹4,856+ over an expensive 16-Ch replacement)!", { work: String(existingTotal), new: String(newWiredTotal), comb: String(combinedWiredTotal), ch: String(maxChannels) })}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="text-emerald-900 dark:text-emerald-200">
+                            <span className="font-bold block">✅ {t("wz_dvr_compatible", "100% Compatible with Existing DVR")}</span>
+                            <p className="text-[11px] text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                              {t("wz_addon_rec_fits_d", "Your {work} working + {new} new wired cameras = {comb}/{ch} channels ({rem} spare ports remaining). Your existing DVR is sufficient — ₹0 recorder cost!", { work: String(existingTotal), new: String(newWiredTotal), comb: String(combinedWiredTotal), ch: String(maxChannels), rem: String(maxChannels - combinedWiredTotal) })}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {totalWireless > 0 && (
+                      <div className="pt-1.5 border-t border-slate-200 dark:border-zinc-800 text-[11px] text-slate-700 dark:text-zinc-300 flex items-start gap-1.5">
+                        <span className="text-sm shrink-0">📡</span>
+                        <span>
+                          <strong>{t("wz_addon_wf_summary_t", "Standalone Wireless:")}</strong> {t("wz_addon_wf_summary_d", "{n} camera(s) operate autonomously on Wi-Fi/4G with dedicated MicroSD cards. Zero ports consumed on your DVR!", { n: String(totalWireless) })}
+                        </span>
+                      </div>
+                    )}
+
+                    {newWiredTotal === 0 && totalWireless > 0 && (
+                      <div className="text-xs text-emerald-900 dark:text-emerald-200">
+                        <span className="font-bold block">🚀 {t("wz_addon_pure_wf_t", "Zero DVR Impact & Zero Wall Wiring")}</span>
+                        <p className="text-[11px] text-emerald-800 dark:text-emerald-300">
+                          {t("wz_addon_pure_wf_d", "Your existing DVR remains 100% untouched. Wireless cameras run standalone on power sockets with their own memory cards.")}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {Number(req.wifi_camera_count) > 0 && (
+                  <div className="p-3.5 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/70 dark:bg-blue-950/30 text-xs text-blue-900 dark:text-blue-300 flex items-start gap-2.5">
+                    <span className="text-base shrink-0">💾</span>
+                    <div>
+                      <span className="font-bold block mb-0.5">{t("wz_addon_sd_badge_t", "Dedicated MicroSD Storage Included")}</span>
+                      <p className="text-[11px] text-blue-800 dark:text-blue-300/90 leading-relaxed">
+                        {t("wz_addon_sd_badge_d", "Each of your {n} wireless camera(s) includes a dedicated surveillance MicroSD card for autonomous recording, independent of the DVR.", { n: String(req.wifi_camera_count) })}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
+                  <Button variant="outline" onClick={handlePrev} className="h-11 px-5 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
+                    {t("wz_back")}
+                  </Button>
+                  <Button 
+                    onClick={handleNext} 
+                    disabled={totalNewCameras === 0} 
+                    className="flex-1 h-11 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm"
+                  >
+                    {t("wz_confirm__proceed", "Confirm & Proceed")}
+                  </Button>
+                </div>
+              </div>
+            );
         } else {
             return (
             <div className="space-y-3.5 sm:space-y-5 animate-in fade-in">
@@ -2471,7 +2869,8 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
                 ) : (() => {
                   const isAddonFlow = req.installation_type === "addon";
                   const wifiCameraCount = Number(req.wifi_camera_count) || 0;
-                  const wiredCameraCount = Math.max(1, (Number(req.outdoor_camera_count) || 0) + (Number(req.indoor_camera_count) || 0));
+                  const rawWiredCount = (Number(req.outdoor_camera_count) || 0) + (Number(req.indoor_camera_count) || 0);
+                  const wiredCameraCount = isAddonFlow ? rawWiredCount : Math.max(1, rawWiredCount);
                   const canShowMixed = isAddonFlow && wiredCameraCount > 1;
 
                   const currentMode = req.cabling_mode || (req.cabling_done === true ? "all_existing" : "all_new");
@@ -2491,7 +2890,17 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
 
                   return (
                     <div>
-                      {isAddonFlow ? (
+                      {isAddonFlow && wiredCameraCount === 0 && wifiCameraCount > 0 ? (
+                        <div className="p-4 rounded-xl border-2 border-emerald-500/60 bg-emerald-50/80 dark:bg-emerald-950/30 text-left space-y-1.5 animate-in fade-in">
+                          <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200 font-bold text-sm">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <span>{t("wz_addon_pure_wf_cbl_t", "Zero Video Cabling Required (Plug & Play)")}</span>
+                          </div>
+                          <p className="text-xs text-emerald-800/90 dark:text-emerald-300/80 leading-relaxed font-medium">
+                            {t("wz_addon_pure_wf_cbl_d", "Your {n} wireless camera(s) plug directly into nearby 2-pin electrical sockets and connect over Wi-Fi/4G. No coaxial or CAT6 video cabling to the DVR is needed.", { n: String(wifiCameraCount) })}
+                          </p>
+                        </div>
+                      ) : isAddonFlow ? (
                         <div>
                           <div className="mb-2">
                             <div className="flex flex-wrap items-center justify-between gap-2 mb-1">

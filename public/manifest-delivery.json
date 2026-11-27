@@ -1,0 +1,25 @@
+{
+  "name": "CCTVQuotation Delivery Pass",
+  "short_name": "CCTV Delivery",
+  "description": "CCTVQuotation - Dispatch & Field Delivery Handover",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "start_url": "/delivery",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0284c7",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ]
+}

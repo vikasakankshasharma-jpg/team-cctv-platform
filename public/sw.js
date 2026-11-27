@@ -1,11 +1,18 @@
-const CACHE_NAME = 'cctvquotation-v13';
+const CACHE_NAME = 'cctvquotation-v14';
 const OFFLINE_URL = '/offline';
 const URLS_TO_CACHE = [
   '/',
   OFFLINE_URL,
   '/manifest.json',
+  '/manifest-admin.json',
+  '/manifest-installer.json',
+  '/manifest-partner.json',
+  '/manifest-salesperson.json',
+  '/manifest-delivery.json',
   '/favicon.ico',
   '/og-image.png',
+  '/icon-192x192.png',
+  '/icon-512x512.png',
   '/data/india-locations.json'
 ];
 
@@ -123,3 +130,75 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// ── Web Push Notification Listeners ──────────────────────────────────────────
+self.addEventListener('push', (event) => {
+  let data = {};
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data = {
+        title: 'TEAM CCTV Notification',
+        body: event.data.text() || 'New operational update.'
+      };
+    }
+  }
+
+  const title = data.title || 'TEAM CCTV Update';
+  const options = {
+    body: data.body || 'You have a new update in your dashboard.',
+    icon: data.icon || '/icon-192x192.png',
+    badge: data.badge || '/favicon-32x32.png',
+    tag: data.tag || 'team-cctv-alert',
+    renotify: true,
+    data: {
+      url: data.url || '/',
+      role: data.role || 'general',
+      timestamp: Date.now()
+    },
+    vibrate: [200, 100, 200],
+    actions: data.actions || [
+      { action: 'open', title: 'Open Dashboard' },
+      { action: 'dismiss', title: 'Dismiss' }
+    ]
+  };
+
+  // Update native app badge on desktop taskbar / mobile home screen
+  if ('setAppBadge' in self.navigator) {
+    self.navigator.setAppBadge().catch(() => {});
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  // Clear app badge when notification is interacted with
+  if ('clearAppBadge' in self.navigator) {
+    self.navigator.clearAppBadge().catch(() => {});
+  }
+
+  if (event.action === 'dismiss') {
+    return;
+  }
+
+  const targetUrl = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.includes(targetUrl) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+

@@ -27,6 +27,14 @@
     {
       "path": "/api/cron/vendor-cctv-sync",
       "schedule": "30 21 * * *"
+    },
+    {
+      "path": "/api/cron/daily-briefing",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/daily-briefing",
+      "schedule": "0 14 * * *"
     }
   ]
 }

@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { EDMGenerator } from "./EDMGenerator";
 import { useTranslation } from "@/hooks/useTranslation";
+import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
+import { PwaNotificationPrompt } from "@/components/shared/PwaNotificationPrompt";
+import { DailyBriefingCard } from "@/components/shared/DailyBriefingCard";
 
 interface PartnerDashboardClientProps {
   partnerName: string;
@@ -55,6 +58,22 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       
+      {/* ── Mobile PWA Install & Notification Activator ── */}
+      <PwaInstallBanner role="partner" />
+      <PwaNotificationPrompt role="partner" userName={welcomeName} />
+
+      {/* ── Start-of-Day & End-of-Day Partner Briefing ── */}
+      <DailyBriefingCard
+        role="partner"
+        userName={welcomeName}
+        metrics={[
+          { label: "Total Earned", value: `₹${stats.totalEarned.toLocaleString('en-IN')}`, highlight: true },
+          { label: "Pending Payout", value: `₹${stats.pendingPayout.toLocaleString('en-IN')}` },
+          { label: "Total Referrals", value: stats.totalLeads },
+          { label: "Total Paid", value: `₹${stats.totalPaid.toLocaleString('en-IN')}` },
+        ]}
+      />
+
       {/* ── WELCOME BANNER ──────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden rounded-[32px] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 p-4 md:p-8 lg:p-10 shadow-xl dark:shadow-2xl">
         <div className="absolute -right-20 -top-20 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px]" />

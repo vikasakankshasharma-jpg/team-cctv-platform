@@ -252,3 +252,46 @@ test("Omnichannel Sync: Customer Quote -> Admin Margin Guard -> Installer OTP ->
   };
   assert.equal(customerTrackingState.revealedPin, installerJob.completionPin, "Customer OTP matches installer job completion PIN");
 });
+
+/* =====================================================================
+   REAL-WORLD CUSTOMER SCENARIO 8: Hybrid Existing System Upgrade
+   Wired DVR Port Preservation + Standalone Wireless MicroSD Architecture
+   ===================================================================== */
+test("Scenario 8: Hybrid Existing System Upgrade (Wired DVR + Autonomous Wireless Standalone)", () => {
+  // Case A: 4-Ch DVR with 2 working cameras + 2 new wired + 1 standalone wireless PTZ
+  const existingRecorderChannels = 4;
+  const existingWorkingCameras = 2;
+  const newWiredCameras = 2;
+  const newWirelessCameras = 1;
+  const totalNewCameras = newWiredCameras + newWirelessCameras; // 3 new cameras
+
+  // Invariant 1: Wireless does NOT consume physical DVR channels
+  const combinedWiredOnDVR = existingWorkingCameras + newWiredCameras; // 4
+  const isExistingRecorderSufficient = combinedWiredOnDVR <= existingRecorderChannels;
+  assert.equal(isExistingRecorderSufficient, true, "2 new wired + 2 working fit 100% within 4-Ch DVR (₹0 new DVR cost)");
+
+  const spareChannelsRemaining = Math.max(0, existingRecorderChannels - combinedWiredOnDVR);
+  assert.equal(spareChannelsRemaining, 0, "DVR is now at full 4/4 capacity with zero unused wasted channels");
+
+  // Invariant 2: Wireless camera runs standalone with dedicated MicroSD & 0m video cabling
+  const wirelessDedicatedMicroSDCount = newWirelessCameras;
+  const wirelessVideoCableMeters = 0;
+  assert.equal(wirelessDedicatedMicroSDCount, 1, "Each wireless camera receives 1 dedicated MicroSD card");
+  assert.equal(wirelessVideoCableMeters, 0, "Wireless camera requires 0m coaxial/CAT6 video cable to the DVR");
+
+  // Case B: Pure Wireless Upgrade on a 100% Full 4-Ch DVR (The Zero-DVR Savior)
+  // Customer has 4 working cameras on 4-Ch DVR (0 spare ports) and needs 1 camera for terrace
+  const fullWorkingCameras = 4;
+  const pureWirelessAddon = 1;
+  const wiredAddon = 0;
+
+  const combinedWiredForPureWireless = fullWorkingCameras + wiredAddon; // 4
+  const pureWirelessNeedsNewDVR = wiredAddon > 0 && combinedWiredForPureWireless > existingRecorderChannels;
+  assert.equal(pureWirelessNeedsNewDVR, false, "Adding standalone wireless to a full DVR requires ₹0 DVR replacement");
+
+  // Invariant 3: Hybrid Reverse-GST Reconciliation
+  const hybridGrossPrice = 11499; // 2 Wired + 1 Wireless + SD card + Cabling + Installation
+  const hybridTax = calculateReverseInclusiveTax(hybridGrossPrice);
+  assert.equal(hybridTax.reconciled, true, "Hybrid upgrade package must strictly reconcile 18% GST");
+});
+

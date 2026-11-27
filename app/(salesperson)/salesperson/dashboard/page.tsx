@@ -11,6 +11,9 @@ import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { ActivePipeline } from "@/components/salesperson/ActivePipeline";
 import { TranslatedText } from "@/components/shared/TranslatedText";
+import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
+import { PwaNotificationPrompt } from "@/components/shared/PwaNotificationPrompt";
+import { DailyBriefingCard } from "@/components/shared/DailyBriefingCard";
 
 export const metadata: Metadata = {
   title: "Sales Dashboard | TEAM CCTV",
@@ -177,6 +180,22 @@ export default async function SalespersonDashboard() {
         icon={LayoutDashboard}
         title={<TranslatedText tKey="sls_dash_title" defaultText="Command Centre" />}
         description={<TranslatedText tKey="sls_dash_desc" defaultText="Monitor your active pipeline and conversion performance." />}
+      />
+
+      {/* ── Mobile PWA Install & Notification Activator ── */}
+      <PwaInstallBanner role="salesperson" />
+      <PwaNotificationPrompt role="salesperson" userId={spId} userName={spName || "Sales Agent"} />
+
+      {/* ── Daily Briefing & Sales Target Engine ── */}
+      <DailyBriefingCard
+        role="salesperson"
+        userName={spName || "Sales Agent"}
+        metrics={[
+          { label: "Active Pipeline", value: activeCount, subtext: "In negotiation", highlight: true },
+          { label: "Follow-Ups Today", value: todayFollowUps, subtext: todayFollowUps > 0 ? "Action required" : "All clear" },
+          { label: "Won Deals", value: wonLeads, subtext: "Booked sales" },
+          { label: "Conversion Rate", value: `${conversionRate}%`, subtext: "Closing efficacy" },
+        ]}
       />
 
       {/* KPI Grid */}

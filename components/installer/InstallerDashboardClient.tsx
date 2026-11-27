@@ -5,6 +5,9 @@ import Link from "next/link";
 import { Activity, CheckCircle, Clock, Wallet, Navigation, ArrowRight, MapPin } from "lucide-react";
 import { InstallerPipeline } from "./InstallerPipeline";
 import { useTranslation } from "@/hooks/useTranslation";
+import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
+import { PwaNotificationPrompt } from "@/components/shared/PwaNotificationPrompt";
+import { DailyBriefingCard } from "@/components/shared/DailyBriefingCard";
 import type { Lead } from "@/types";
 
 interface InstallerDashboardClientProps {
@@ -37,6 +40,22 @@ export function InstallerDashboardClient({
           {t("inst_dash_sub", "Here is your field operations overview and urgent broadcasts.")}
         </p>
       </div>
+
+      {/* ── Mobile PWA Install & Notification Activator ── */}
+      <PwaInstallBanner role="installer" />
+      <PwaNotificationPrompt role="installer" userId={installerId} userName={installerName} />
+
+      {/* ── Start-of-Day & End-of-Day Field Briefing ── */}
+      <DailyBriefingCard
+        role="installer"
+        userName={displayName}
+        metrics={[
+          { label: "Active Jobs Today", value: activeLeads.filter(l => l.assigned_installer_id === installerId).length, highlight: true },
+          { label: "Wallet Balance", value: `₹${walletBalance.toLocaleString("en-IN")}` },
+          { label: "SLA Score", value: `${slaScore}%` },
+          { label: "Completed Jobs", value: jobsCompleted },
+        ]}
+      />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
