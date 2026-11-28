@@ -196,11 +196,36 @@ export function InteractivePageTour({
 
       if (element) {
         targetRef.current = element;
-        element.scrollIntoView({
-          behavior: "auto",
-          block: "center",
-          inline: "nearest",
-        });
+
+        const vh = window.innerHeight;
+        const vw = window.innerWidth;
+        const isMobile = vw < 640;
+        const initialRect = element.getBoundingClientRect();
+
+        // On mobile, if element is tall (> 120px) or centered/low, scroll it so the card has ample clearance
+        if (isMobile) {
+          if (initialRect.height > 120 || initialRect.top > vh * 0.35) {
+            element.scrollIntoView({
+              behavior: "auto",
+              block: "start",
+              inline: "nearest",
+            });
+            window.scrollBy({ top: -56, behavior: "auto" });
+          } else {
+            element.scrollIntoView({
+              behavior: "auto",
+              block: "center",
+              inline: "nearest",
+            });
+          }
+        } else {
+          element.scrollIntoView({
+            behavior: "auto",
+            block: "center",
+            inline: "nearest",
+          });
+        }
+
         updateTargetRect(element, setTargetRect, setPosition);
 
         requestAnimationFrame(() => {
@@ -233,16 +258,25 @@ export function InteractivePageTour({
       const element = targetRef.current;
       if (!element) return;
       updateTargetRect(element, setTargetRect, setPosition);
+      requestAnimationFrame(() => {
+        if (targetRef.current) {
+          updateTargetRect(targetRef.current, setTargetRect, setPosition);
+        }
+      });
     };
 
     window.addEventListener("resize", update);
     window.addEventListener("orientationchange", update);
     window.addEventListener("scroll", update, true);
+    window.visualViewport?.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("scroll", update);
 
     return () => {
       window.removeEventListener("resize", update);
       window.removeEventListener("orientationchange", update);
       window.removeEventListener("scroll", update, true);
+      window.visualViewport?.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("scroll", update);
     };
   }, [tour.isRunning]);
 
@@ -283,16 +317,16 @@ export function InteractivePageTour({
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop for click-to-dismiss */}
       <div
-        className="fixed inset-0 z-[9990] bg-black/50 supports-[backdrop-filter]:backdrop-blur-[1px] pointer-events-auto touch-none"
+        className="fixed inset-0 z-[9990] bg-transparent pointer-events-auto touch-none"
         aria-hidden="true"
         onClick={handleSkipPage}
       />
 
       {/* Spotlight cutout */}
       <div
-        className="fixed z-[9991] rounded-xl ring-4 ring-blue-500/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.60)] pointer-events-none transition-[top,left,width,height] duration-200 ease-out"
+        className="fixed z-[9991] rounded-xl ring-4 ring-blue-500/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] pointer-events-none transition-[top,left,width,height] duration-200 ease-out"
         style={{
           top: targetRect.top,
           left: targetRect.left,
@@ -304,7 +338,7 @@ export function InteractivePageTour({
 
       {/* Pulsing spotlight ring (compositor-friendly, ring-only scale) */}
       <div
-        className="pointer-events-none fixed z-[9992] rounded-xl border-2 border-white/80 shadow-[0_0_0_3px_rgba(255,255,255,0.12)] animate-tour-pulse"
+        className="pointer-events-none fixed z-[9992] rounded-xl border-2 border-white/90 shadow-[0_0_0_3px_rgba(59,130,246,0.35)] animate-tour-pulse"
         style={{
           top: Math.max(0, targetRect.top - 4),
           left: Math.max(0, targetRect.left - 4),
@@ -319,29 +353,29 @@ export function InteractivePageTour({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`fixed left-3 right-3 sm:left-auto sm:right-6 sm:w-[380px] max-h-[85vh] max-h-[85dvh] overflow-y-auto z-[9999] rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-2xl animate-tour-card-enter transition-all duration-200 ${
+        className={`fixed left-3 right-3 sm:left-auto sm:right-6 sm:w-[380px] max-h-[85vh] max-h-[85dvh] overflow-y-auto z-[9999] rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3 sm:p-4.5 shadow-2xl animate-tour-card-enter transition-all duration-200 ${
           position === "bottom"
-            ? "bottom-[calc(1rem+env(safe-area-inset-bottom))]"
-            : "top-[calc(1rem+env(safe-area-inset-top))]"
+            ? "bottom-[calc(0.75rem+env(safe-area-inset-bottom))] sm:bottom-[calc(1rem+env(safe-area-inset-bottom))]"
+            : "top-[calc(0.75rem+env(safe-area-inset-top))] sm:top-[calc(1rem+env(safe-area-inset-top))]"
         }`}
       >
         {/* Progress & Skip */}
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400">
+        <div className="mb-1.5 sm:mb-2 flex items-center justify-between">
+          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400">
             Step {tour.currentIndex + 1} of {tour.applicableSteps.length}
           </span>
 
           <button
             type="button"
             onClick={handleSkipPage}
-            className="min-h-[44px] px-2 text-xs font-semibold text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white cursor-pointer"
+            className="min-h-[36px] sm:min-h-[44px] px-2 text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white cursor-pointer"
           >
             Skip
           </button>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-3.5 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800">
+        <div className="mb-2 sm:mb-3.5 h-1 sm:h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800">
           <div
             className="h-full rounded-full bg-blue-600 transition-all duration-300"
             style={{ width: `${tour.progress}%` }}
@@ -349,29 +383,29 @@ export function InteractivePageTour({
         </div>
 
         {/* Title */}
-        <h3 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
+        <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug">
           {title}
         </h3>
 
         {/* Description */}
-        <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-zinc-300">
+        <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm leading-normal sm:leading-relaxed text-slate-600 dark:text-zinc-300">
           {description}
         </p>
 
         {/* Action Prompt */}
         {actionPrompt && (
-          <div className="mt-3 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 px-3 py-2 text-xs font-medium text-blue-800 dark:text-blue-300">
+          <div className="mt-2 sm:mt-3 rounded-lg sm:rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 px-2.5 py-1.5 sm:px-3 sm:py-2 text-[11px] sm:text-xs font-medium text-blue-800 dark:text-blue-300">
             👉 {actionPrompt}
           </div>
         )}
 
         {/* Next / Back Buttons */}
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-3 sm:mt-4 flex items-center gap-2">
           {!tour.isFirstStep && (
             <button
               type="button"
               onClick={tour.previous}
-              className="min-h-[44px] rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 text-xs sm:text-sm font-semibold text-slate-700 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer"
+              className="min-h-[38px] sm:min-h-[44px] rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-slate-700 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer"
             >
               Back
             </button>
@@ -380,7 +414,7 @@ export function InteractivePageTour({
           <button
             type="button"
             onClick={handleNext}
-            className="min-h-[44px] flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] px-4 text-xs sm:text-sm font-bold text-white shadow-sm transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="min-h-[38px] sm:min-h-[44px] flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] px-3.5 sm:px-4 text-xs sm:text-sm font-bold text-white shadow-sm transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             {nextLabel}
           </button>
@@ -390,7 +424,7 @@ export function InteractivePageTour({
         <button
           type="button"
           onClick={handleSkipAll}
-          className="mt-2.5 min-h-[40px] w-full text-center text-[11px] font-medium text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 cursor-pointer"
+          className="mt-1.5 sm:mt-2.5 min-h-[30px] sm:min-h-[40px] w-full text-center text-[10px] sm:text-[11px] font-medium text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 cursor-pointer"
         >
           Don't show guides automatically again
         </button>
@@ -409,13 +443,27 @@ function updateTargetRect(
 
   const viewportHeight = window.innerHeight;
   const viewportWidth = window.innerWidth;
-  const center = rect.top + rect.height / 2;
+  const isMobile = viewportWidth < 640;
 
-  // Smart Mobile Inversion:
-  // Tour cards are ~320-380px tall. If target is in the lower 55% of the screen,
-  // dock the card at top to prevent covering the spotlighted element on mobile.
-  const threshold = viewportHeight * 0.45;
-  setPosition(center > threshold ? "top" : "bottom");
+  // Estimated compact card height
+  const estimatedCardHeight = isMobile ? 210 : 300;
+  const safetyMargin = 12;
+
+  const spaceAbove = rect.top;
+  const spaceBelow = viewportHeight - (rect.top + rect.height);
+
+  // Determine optimal docking position based on real available space
+  let optimalPosition: TourPosition;
+  if (spaceBelow >= estimatedCardHeight + safetyMargin) {
+    optimalPosition = "bottom";
+  } else if (spaceAbove >= estimatedCardHeight + safetyMargin) {
+    optimalPosition = "top";
+  } else {
+    // If tight on both, pick whichever side has more clearance
+    optimalPosition = spaceBelow >= spaceAbove ? "bottom" : "top";
+  }
+
+  setPosition(optimalPosition);
 
   const padding = 6;
   const left = Math.max(0, rect.left - padding);

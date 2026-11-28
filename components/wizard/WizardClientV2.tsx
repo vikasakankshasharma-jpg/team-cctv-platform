@@ -848,8 +848,10 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
               <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{t("wz_select_setup_type_calc_wire")}</p>
             </div>
             
-            <div data-tour="installation-type" className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              <button onClick={() => { updateReq({ installation_type: "new", technology_preference: "HD", is_4g: false, property_type: req.property_type || "home" }); handleNext(); }}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              <button
+                data-tour="installation-type"
+                onClick={() => { updateReq({ installation_type: "new", technology_preference: "HD", is_4g: false, property_type: req.property_type || "home" }); handleNext(); }}
                 className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left hover:border-blue-500 transition-all cursor-pointer group ${req.installation_type === "new" && req.technology_preference !== "Wireless" ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40 shadow-sm" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
                 <div className="flex items-center gap-1.5 mb-2 flex-wrap">
                   <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">{t("wz_wired_setup_tag")}</span>
@@ -2643,14 +2645,14 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
         }
       case 4:
           return (
-            <div data-tour="site-conditions" className="space-y-3.5 sm:space-y-5 animate-in fade-in">
+            <div className="space-y-3.5 sm:space-y-5 animate-in fade-in">
               <div>
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{t("wz_site_t", "Site & Mounting Conditions")}</h2>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{t("wz_site_d", "Help us prepare the right mounting hardware and cabling length for your site.")}</p>
               </div>
               
               <div className="space-y-3 sm:space-y-4">
-                <div>
+                <div data-tour="site-conditions">
                   <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">{t("wz_1_approximate_mounting_height")}</h3>
                   <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
                     <button onClick={() => updateReq({ ceiling_height: "standard" })}
@@ -3536,7 +3538,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
 
         case 5:
           return (
-            <div data-tour="wizard-remote-viewing" className="space-y-4 sm:space-y-6 animate-in fade-in">
+            <div className="space-y-4 sm:space-y-6 animate-in fade-in">
               <div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-[11px] font-black uppercase tracking-wider mb-2">
                   <span>{t("wz_remote_phone_pill")}</span>
@@ -3550,7 +3552,7 @@ export function WizardClientV2({ searchParams: serverSearchParams }: WizardClien
               </div>
 
               {/* Quick Customer Value Banner */}
-              <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50/60 dark:from-blue-950/40 dark:to-indigo-950/30 border border-blue-100 dark:border-blue-900/40 text-xs text-blue-900 dark:text-blue-200 flex items-center gap-2.5">
+              <div data-tour="wizard-remote-viewing" className="p-3 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50/60 dark:from-blue-950/40 dark:to-indigo-950/30 border border-blue-100 dark:border-blue-900/40 text-xs text-blue-900 dark:text-blue-200 flex items-center gap-2.5">
                 <span className="text-lg shrink-0">✨</span>
                 <span className="font-medium">
                   {t("wz_net_app_note", "All packages include free lifetime mobile app setup (Android & iOS) with multi-phone access for your family or staff.")}
